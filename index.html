@@ -175,7 +175,9 @@
              border: none;
              background-color: transparent;
         }
-
+        .special_skill_note_input {
+            margin-top : 3px;
+        }
         .item_new_layout {
             display: flex;
             align-items: flex-start; 
@@ -604,18 +606,20 @@
                     <div class="box_title">特技</div>
                     <div class="box_contents">
                         <ul id="special_skills_list" style="margin-bottom: 10px;padding-left:0; list-style-type:none;">
-                            <li v-for="(specialSkill, index) in specialSkills" :key="index" class="item_new_layout">
+                            <li v-for="(specialSkill, index) in specialSkills" :key="index" class="item_new_layout" style="margin-bottom: 5px;">
                                 <div class="delete-button-wrapper">
                                     <button type="button" class="list_item_button_small list_item_delete_small" 
                                             @click="removeSpecialSkill(index)" 
                                             :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)">－</button>
                                 </div>
                                 <div style="flex-grow: 1;">
-                                    <div style="display: flex; gap: 8px; margin-bottom: 5px;">
+                                    <div style="display: flex; gap: 8px; ">
                                         <select v-model="specialSkill.group" @change="updateSpecialSkillOptions(index)" style="flex: 1;"> <option value="">種類を選択</option> <option value="tactics">戦術</option> <option value="magic">魔術</option> <option value="features">特徴</option> </select>
                                         <select v-model="specialSkill.name" @change="updateSpecialSkillNoteVisibility(index)" :disabled="!specialSkill.group" style="flex: 2;"> <option value="">---</option> <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value" :value="opt.value">{{ opt.label }}</option> </select>
                                     </div>
-                                    <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote" placeholder="追記事項"/>
+                                    <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote" 
+                                    class="special_skill_note_input"
+                                    placeholder="追記事項"/>
                                 </div>
                             </li>
                         </ul>
