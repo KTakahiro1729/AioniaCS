@@ -709,7 +709,7 @@
                 <div class="status-display weight-display"> 荷重: {{ currentWeight }} </div>  
             </div>
             <div id="save_button" @click="saveData" class="footer-button"> データ保存 </div>
-            <div id="load_button_vue_wrapper" class="footer-button"> <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json" style="display: none;"/> <label for="load_input_vue">データ読込</label> </div>
+            <div id="load_button_vue_wrapper" class="footer-button"> <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" style="display: none;"/> <label for="load_input_vue">データ読込</label> </div>
             <div id="output_button" @click="outputToCocofolia" class="footer-button"> {{ outputButtonText }} </div>
             <transition name="fade">  
                 <div id="help-vue" v-if="showHelp" v-html="helpText"></div>
@@ -728,7 +728,8 @@
                         otherItems: '', 
                         initScar: 0, initWeakness1: '', initWeakness2: '', memo: '',
                     },
-                    skills: [
+                    // Master list of all available skills in this application's internal format
+                    skills: [ 
                         { id: 'motion', name: '運動', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
                         { id: 'avoidance', name: '回避', checked: false, canHaveExperts: false, experts: [] },
                         { id: 'sense', name: '感覚', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
@@ -740,6 +741,7 @@
                         { id: 'combat', name: '白兵', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
                         { id: 'defense', name: '防御', checked: false, canHaveExperts: false, experts: [] },
                     ],
+                    externalSkillOrder: ['motion', 'avoidance', 'sense', 'observation', 'technique', 'shooting', 'sociality', 'knowledge', 'combat', 'defense'],
                     initialSpecialSkillCount: 8,
                     specialSkills: [],
                     equipments: { 
@@ -772,7 +774,7 @@
             },
             computed: {
                 maxExperimentPoints() {
-                    let scarExp = this.character.initScar || 0;
+                    let scarExp = Number(this.character.initScar) || 0;
                     let weaknessExp = 0;
                     if (this.character.initWeakness1) weaknessExp += 10;
                     if (this.character.initWeakness2) weaknessExp += 10;
@@ -852,7 +854,7 @@
                          character: this.character,
                          skills: this.skills.map(s => ({ 
                              id: s.id, checked: s.checked, canHaveExperts: s.canHaveExperts,
-                             experts: s.canHaveExperts ? s.experts.filter(e => e.value.trim() !== '').map(e => ({value: e.value})) : []
+                             experts: s.canHaveExperts ? s.experts.filter(e => e.value && e.value.trim() !== '').map(e => ({value: e.value})) : []
                          })),
                          specialSkills: this.specialSkills.filter(ss => ss.group && ss.name), 
                          equipments: this.equipments, 
@@ -875,38 +877,173 @@
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
+                            const fileContent = e.target.result;
                             try {
-                                const loadedData = JSON.parse(e.target.result);
-                                this.parseLoadedData(loadedData);
+                                const rawJsonData = JSON.parse(fileContent);
+                                this.parseLoadedData(rawJsonData); // Pass raw JSON to be adapted and parsed
                             } catch (error) {
-                                console.error("Failed to parse JSON:", error);
-                                this.showCustomAlert("データ読み込みに失敗しました。ファイル形式を確認してください。");
+                                console.error("Failed to parse JSON file:", error);
+                                this.showCustomAlert("ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。");
                             }
                         };
                         reader.readAsText(file);
                     }
                     event.target.value = null; 
                 },
-                parseLoadedData(data) {
+                convertExternalJsonToInternalFormat(externalData) {
+                    // This function converts JSON from the external tool to this app's internal format.
+                    const internalData = {
+                        character: {
+                            name: externalData.name || '',
+                            playerName: externalData.player || '', // Key mapping
+                            species: externalData.species || '',
+                            rareSpecies: externalData.rare_species || '',
+                            occupation: externalData.occupation || '', // Assuming it might exist
+                            age: externalData.age ? parseInt(externalData.age) : null, // Assuming it might exist
+                            gender: externalData.gender || '', // Assuming it might exist
+                            height: externalData.height || '', // Assuming it might exist
+                            weight: externalData.weight || '', // Assuming it might exist
+                            otherItems: externalData.otherItems || '', // Assuming it might exist
+                            initScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
+                            initWeakness1: externalData.init_weakness1 || '',
+                            initWeakness2: externalData.init_weakness2 || '',
+                            memo: externalData.character_memo || ''
+                        },
+                        skills: [], // To be populated based on this.skills definition
+                        specialSkills: [],
+                        equipments: { 
+                            weapon1: { group: '', name: '' }, 
+                            weapon2: { group: '', name: '' }, 
+                            armor: { group: '', name: '' } 
+                        },
+                        histories: []
+                    };
+
+                    // Convert skills
+                    // The external `skills` array is positional and corresponds to `this.externalSkillOrder`
+                    if (externalData.skills && Array.isArray(externalData.skills)) {
+                        this.externalSkillOrder.forEach((skillId, index) => {
+                            const appSkillDefinition = this.skills.find(s => s.id === skillId);
+                            if (appSkillDefinition && externalData.skills[index]) {
+                                const externalSkill = externalData.skills[index];
+                                const newSkill = {
+                                    id: appSkillDefinition.id,
+                                    name: appSkillDefinition.name, // Keep name from internal definition
+                                    checked: !!externalSkill.selected,
+                                    canHaveExperts: appSkillDefinition.canHaveExperts,
+                                    experts: []
+                                };
+                                if (newSkill.checked && newSkill.canHaveExperts) {
+                                    if (externalSkill.expert_skills && externalSkill.expert_skills.length > 0) {
+                                        newSkill.experts = externalSkill.expert_skills.map(es => ({ value: es || '' })).filter(e => e.value);
+                                    }
+                                    // If checked and can have experts, but no expert_skills, ensure one empty slot
+                                    if (newSkill.experts.length === 0) {
+                                        newSkill.experts.push({ value: '' });
+                                    }
+                                }
+                                internalData.skills.push(newSkill);
+                            } else if (appSkillDefinition) { // If external skill data is missing for this position, add default
+                                internalData.skills.push(JSON.parse(JSON.stringify(appSkillDefinition))); // Add a copy of the default
+                            }
+                        });
+                    } else { // If no skills in external data, use this app's defaults
+                        internalData.skills = JSON.parse(JSON.stringify(this.skills));
+                    }
+
+
+                    // Convert special skills
+                    if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
+                        internalData.specialSkills = externalData.special_skills
+                            .filter(ss => ss.group && ss.name) // Filter out empty ones from external tool
+                            .map(ss => ({
+                                group: ss.group || '',
+                                name: ss.name || '',
+                                note: ss.note || '',
+                                showNote: false // Will be set by updateSpecialSkillNoteVisibility later
+                            }));
+                    }
+
+                    // Convert equipments
+                    if (externalData.equipments) {
+                        internalData.equipments.weapon1 = { ... (externalData.equipments.weapon1 || { group: '', name: '' }) };
+                        internalData.equipments.weapon2 = { ... (externalData.equipments.weapon2 || { group: '', name: '' }) };
+                        internalData.equipments.armor = { ... (externalData.equipments.armor || { group: '', name: '' }) };
+                    }
+                    
+                    // Convert histories
+                    if (externalData.histories && Array.isArray(externalData.histories)) {
+                        internalData.histories = externalData.histories.map(h => ({
+                            sessionName: h.name || '', // Key mapping
+                            lastScar: h.scar ? parseInt(h.scar) : null,
+                            gotExperiments: h.experiments ? parseInt(h.experiments) : null,
+                            gotAftereffects: h.aftereffects || ''
+                            // stress is not directly mapped
+                        }));
+                    }
+
+                    return internalData;
+                },
+
+                parseLoadedData(rawJsonData) {
+                    let dataToParse = rawJsonData;
+                    // Check if the rawJsonData is from the external tool
+                    // A simple check could be the presence of 'player' key vs 'playerName'
+                    // or the structure of the 'skills' array (external tool uses 'selected' and 'expert_skills')
+                    if (rawJsonData && typeof rawJsonData.player !== 'undefined' && typeof rawJsonData.character_memo !== 'undefined') {
+                         console.log("External JSON format detected, converting...");
+                        dataToParse = this.convertExternalJsonToInternalFormat(rawJsonData);
+                    } else if (rawJsonData && rawJsonData.character && typeof rawJsonData.character.playerName !== 'undefined') {
+                        console.log("Internal JSON format detected.");
+                        // It's already in the internal format (or close enough)
+                    } else {
+                        console.warn("Unknown JSON format, attempting to parse as is.");
+                        // If format is unknown, try to proceed, but it might lead to errors or missing data.
+                        // For robustness, ensure top-level keys exist.
+                        dataToParse = {
+                            character: {},
+                            skills: [],
+                            specialSkills: [],
+                            equipments: {},
+                            histories: [],
+                            ...rawJsonData // Spread raw data, allowing defaults to be overridden
+                        };
+                    }
+
+
+                    // Reset character data with defaults, then apply loaded data
                     const defaultCharacter = { 
                         name: '', playerName: '', species: '', rareSpecies: '', 
                         occupation: '', age: null, gender: '', height: '', weight: '', 
                         otherItems: '',
                         initScar: 0, initWeakness1: '', initWeakness2: '', memo: ''
                     };
-                    this.character = { ...defaultCharacter, ...(data.character || {}) };
+                    // Ensure dataToParse.character exists before spreading
+                    this.character = { ...defaultCharacter, ...(dataToParse.character || {}) };
 
 
-                    if (data.skills) {
+                    // Process skills: Iterate through the app's master skill list
+                    // dataToParse.skills should now be in the internal format (array of objects with id, checked, experts)
+                    if (dataToParse.skills && Array.isArray(dataToParse.skills)) {
+                        const loadedSkillsById = new Map(dataToParse.skills.map(s => [s.id, s]));
+                        
                         this.skills.forEach(appSkill => {
-                            const loadedSkill = data.skills.find(ls => ls.id === appSkill.id);
-                            if (loadedSkill) {
-                                appSkill.checked = loadedSkill.checked;
+                            const loadedSkillData = loadedSkillsById.get(appSkill.id);
+                            if (loadedSkillData) {
+                                appSkill.checked = !!loadedSkillData.checked;
                                 if (appSkill.canHaveExperts) {
-                                    appSkill.experts = loadedSkill.experts && loadedSkill.experts.length > 0 ? 
-                                                        loadedSkill.experts.map(e => ({value: e.value })) : [{ value: '' }]; 
+                                    if (appSkill.checked && loadedSkillData.experts && loadedSkillData.experts.length > 0) {
+                                        appSkill.experts = loadedSkillData.experts.map(e => ({value: e.value || '' })).filter(e => e.value);
+                                        if (appSkill.experts.length === 0) appSkill.experts = [{value: ''}];
+                                    } else if (appSkill.checked) {
+                                        appSkill.experts = [{ value: '' }];
+                                    } else { 
+                                        appSkill.experts = [{ value: '' }]; 
+                                    }
+                                } else {
+                                    appSkill.experts = [];
                                 }
-                            } else {
+                            } else { // Skill from app's list not found in loaded file, reset it
                                 appSkill.checked = false;
                                 appSkill.experts = appSkill.canHaveExperts ? [{ value: '' }] : [];
                             }
@@ -918,30 +1055,44 @@
                         });
                     }
                     
+                    // Process special skills
                     let loadedSSCount = 0;
-                    if (data.specialSkills && Array.isArray(data.specialSkills)) {
-                        loadedSSCount = data.specialSkills.length;
+                    if (dataToParse.specialSkills && Array.isArray(dataToParse.specialSkills)) {
+                        loadedSSCount = dataToParse.specialSkills.length;
                     }
                     const targetSpecialSkillsLength = Math.min(Math.max(this.initialSpecialSkillCount, loadedSSCount), 20);
                     this.specialSkills = []; 
 
                     for (let i = 0; i < targetSpecialSkillsLength; i++) {
-                        if (data.specialSkills && i < data.specialSkills.length) {
-                            this.specialSkills.push({ ...data.specialSkills[i] });
-                            this.updateSpecialSkillNoteVisibility(i);
+                        if (dataToParse.specialSkills && i < dataToParse.specialSkills.length) {
+                            const loadedSS = dataToParse.specialSkills[i];
+                            this.specialSkills.push({ 
+                                group: loadedSS.group || '',
+                                name: loadedSS.name || '',
+                                note: loadedSS.note || '',
+                                showNote: false 
+                            });
+                            this.updateSpecialSkillNoteVisibility(i); 
                         } else {
                             this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
                         }
                     }
 
-                    if (data.equipments) Object.assign(this.equipments, data.equipments);
-                    else this.equipments = { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' }};
+                    // Process equipment
+                    if (dataToParse.equipments) {
+                        this.equipments.weapon1 = { group: '', name: '', ...(dataToParse.equipments.weapon1 || {}) };
+                        this.equipments.weapon2 = { group: '', name: '', ...(dataToParse.equipments.weapon2 || {}) };
+                        this.equipments.armor = { group: '', name: '', ...(dataToParse.equipments.armor || {}) };
+                    } else { 
+                        this.equipments = { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' }};
+                    }
 
-                    if (data.histories && data.histories.length > 0) {
-                        this.histories = data.histories.map(h => ({ 
+                    // Process histories
+                    if (dataToParse.histories && dataToParse.histories.length > 0) {
+                        this.histories = dataToParse.histories.map(h => ({ 
                             sessionName: h.sessionName || '', 
-                            lastScar: h.lastScar === null ? null : Number(h.lastScar),
-                            gotExperiments: h.gotExperiments === null ? null : Number(h.gotExperiments),
+                            lastScar: (h.lastScar === null || h.lastScar === undefined || h.lastScar === '') ? null : Number(h.lastScar),
+                            gotExperiments: (h.gotExperiments === null || h.gotExperiments === undefined || h.gotExperiments === '') ? null : Number(h.gotExperiments),
                             gotAftereffects: h.gotAftereffects || ''
                         })); 
                     } else {
@@ -1068,6 +1219,7 @@
                         modal.style.borderRadius = '5px';
                         modal.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
                         modal.style.zIndex = '2000'; 
+                        modal.style.whiteSpace = 'pre-wrap'; 
                         
                         const messageP = document.createElement('p');
                         messageP.style.margin = '0 0 15px 0';
