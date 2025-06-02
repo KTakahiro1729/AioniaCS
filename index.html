@@ -658,23 +658,34 @@
                 </div>
             </div>
 
-            <div id="session_history_wrapper">
+<div id="session_history_wrapper">
                 <div id="session_history">
                     <div class="box_title">セッション履歴</div>
                     <div class="box_contents">
+                        <div class="history_labels_header item_new_layout" style="padding-top: 0; padding-bottom: 0; border-bottom: 1px solid #4a4a4a; margin-bottom: 8px;">
+                             <div style="width: 30px; height: 0px; flex-shrink: 0;"></div> <div style="flex-grow: 1;">
+                                <div class="history_item_inputs">
+                                    <div style="flex: 2 1 200px;"> <label>セッション名</label> </div>
+                                    <div style="flex: 1 1 100px;"> <label>最終傷痕</label> </div>
+                                    <div style="flex: 1 1 100px;"> <label>経験点</label> </div>
+                                    <div style="flex: 2 1 200px;"> <label>後遺症</label> </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <ul id="histories" style="margin-bottom: 10px; padding-left:0; list-style-type:none;">
                             <li v-for="(history, index) in histories" :key="index" class="item_new_layout">
                                  <div class="delete-button-wrapper">
-                                    <button type="button" class="list_item_button_small list_item_delete_small" 
-                                            @click="removeHistoryItem(index)" 
+                                    <button type="button" class="list_item_button_small list_item_delete_small"
+                                            @click="removeHistoryItem(index)"
                                             :disabled="histories.length <= 1 && !hasHistoryContent(history)">－</button>
                                 </div>
                                 <div style="flex-grow: 1;">
                                     <div class="history_item_inputs">
-                                        <div style="flex: 2 1 200px;"> <label>セッション名</label> <input type="text" v-model="history.sessionName"/> </div>
-                                        <div style="flex: 1 1 100px;"> <label>傷痕</label> <input type="number" v-model.number="history.lastScar" min="0"/> </div>
-                                        <div style="flex: 1 1 100px;"> <label>経験点</label> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
-                                        <div style="flex: 2 1 200px;"> <label>後遺症</label> <input type="text" v-model="history.gotAftereffects"/> </div>
+                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.sessionName"/> </div>
+                                        <div style="flex: 1 1 100px;"> <input type="number" v-model.number="history.lastScar" min="0"/> </div>
+                                        <div style="flex: 1 1 100px;"> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
+                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.gotAftereffects"/> </div>
                                     </div>
                                 </div>
                             </li>
