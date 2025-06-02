@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aionia TRPG Character Sheet</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基本スタイル */
+        body {
+            font-family: 'Noto Sans JP', sans-serif; 
+            margin: 0;
+            padding-bottom: 120px; 
+            background-color: #1a1a1a;
+            color: #d1d1d1;
+            line-height: 1.7;
+        }
+
+        #app {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .tool-title {
+            font-family: 'Cinzel Decorative', cursive;
+            text-align: center;
+            margin: 25px 0px 40px;
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #c09a69;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+
+        /* Vueのトランジション用 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.4s ease-in-out;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+
+        /* 経験点・荷重表示のスタイル */
+        .status-display-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .status-display {
+            padding: 7px 14px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.9em;
+            display: inline-block;
+            border-width: 2px;
+            border-style: solid;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3) inset;
+        }
+        .experience-ok {
+            border-color: #5a8b5a;
+            color: #9aeaa4;
+            background-color: #2f3d2f;
+        }
+        .experience-over {
+            border-color: #8B0000;
+            color: #ffacac;
+            background-color: #4d2626;
+        }
+        .weight-display {
+            border-color: #647687;
+            color: #b0c4de;
+            background-color: #2a3038;
+        }
+
+        /* ヘルプテキストのスタイル */
+        #help-vue {
+            position: fixed;
+            bottom: 80px; 
+            left: 20px;
+            background-color: #282828;
+            border: 1px solid #444;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 1000;
+            max-width: 90%;
+            width: 420px; 
+            font-size: 0.9em; 
+            color: #c5c5c5;
+        }
+        #help-vue h4 {
+            font-family: 'Noto Serif JP', serif;
+            color: #c09a69;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        #help-vue ul {
+            padding-left: 20px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        #help-vue li {
+            margin-bottom: 5px;
+        }
+        #help-vue p {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+
+        /* ボックス共通スタイル */
+        .box_title {
+            font-family: 'Noto Serif JP', serif; 
+            background-color: #333333;
+            padding: 12px 18px;
+            font-weight: 700;
+            border-bottom: 1px solid #555;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            color: #c09a69;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1em;
+        }
+        .box_contents {
+            padding: 18px;
+            border: 1px solid #444;
+            border-top: none;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            margin-bottom: 25px;
+            background-color: #242424;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        /* リストスタイル */
+        #skills_list, #special_skills_list, #histories {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0; 
+            margin-bottom: 0;
+        }
+        #skills_list.box_contents {
+             padding-bottom: 10px;
+        }
+
+
+        #skills_list > li {
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px solid #383838;
+            border-radius: 3px;
+            background-color: #2c2c2c;
+        }
+        #skills_list > li .skill_header {
+             margin-bottom: 8px; 
+        }
+         #skills_list > li .experts_section {
+             margin-top: 0; 
+        }
+
+
+        #special_skills_list > li, #histories > li {
+             margin-bottom: 0;
+             padding: 0;
+             border: none;
+             background-color: transparent;
+        }
+
+        .item_new_layout {
+            display: flex;
+            align-items: flex-start; 
+            gap: 10px; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #3a3a3a;
+        }
+        .item_new_layout:last-of-type {
+            border-bottom: none;
+            padding-bottom: 8px;
+        }
+        
+        .delete-button-wrapper {
+            width: 30px; 
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .item_new_layout .delete-button-wrapper {
+             margin-top: 6px; 
+        }
+
+        .expert_list_item_new_layout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .expert_list_item_new_layout:last-child {
+            margin-bottom: 0;
+        }
+
+        .history_item_inputs {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .history_item_inputs > div {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+            flex-grow: 1;
+        }
+        .history_item_inputs > div > label {
+            font-size: 0.85em;
+            margin-bottom: 4px;
+            color: #aaa;
+        }
+
+        .list_item_button_small {
+            cursor: pointer;
+            padding: 0;
+            border-radius: 3px; 
+            user-select: none;
+            font-size: 1.2em; 
+            font-weight: bold;
+            border: 1px solid #555; 
+            width: 30px; 
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+            line-height: 1;
+            background-color: #3a3a3a; 
+            color: #c09a69; 
+        }
+        .list_item_button_small:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+            background-color: #2a2a2a;
+            color: #666;
+            border-color: #444;
+        }
+
+        .list_item_add_small:hover:not(:disabled) {
+            background-color: #4a4a4a;
+            border-color: #c09a69;
+        }
+        .list_item_delete_small {
+            color: #8c5353; 
+            border-color: #5c3939; 
+        }
+        .list_item_delete_small:hover:not(:disabled) {
+            background-color: #4a3a3a; 
+            border-color: #8c5353; 
+            color: #a86f6f; 
+        }
+        
+        .add_button_container_left {
+            margin-top: 12px;
+        }
+
+        /* フォーム要素 */
+        label {
+            margin-right: 10px;
+            font-weight: 700; 
+            font-size: 0.95em; 
+            color: #b0b0b0;
+        }
+        input[type="text"], input[type="number"], select, textarea {
+            padding: 9px 12px;
+            border-radius: 3px;
+            border: 1px solid #555;
+            box-sizing: border-box;
+            width: 100%;
+            font-size: 0.95em; 
+            background-color: #2c2c2c; 
+            color: #d1d1d1; 
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            border-color: #c09a69; 
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(192, 154, 105, 0.25); 
+        }
+        select { appearance: auto; }
+        input[type="checkbox"] { 
+            width: auto; 
+            margin-right: 10px; 
+            transform: scale(1.2);
+            accent-color: #c09a69; 
+        }
+        
+        .info-row { 
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 15px; 
+            margin-bottom: 12px;
+        }
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        .info-item {
+            flex: 1 1 auto; 
+            min-width: 150px; 
+        }
+        .info-item-full {
+            flex-basis: 100%;
+        }
+        .info-item-triple { 
+             flex-basis: calc(33.333% - 10px); 
+        }
+        .info-item-double { 
+            flex-basis: calc(50% - 7.5px); 
+        }
+        .items_textarea { 
+            min-height: 100px;
+            resize: vertical;
+        }
+
+
+        /* グリッドレイアウト */
+        #status_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        #character_info_wrapper { grid-area: charinfo; }
+        #init_experiments_wrapper { grid-area: initexp; }
+        #skills_wrapper { grid-area: skills; }
+        #special_skills_wrapper { grid-area: specialskills; }
+        #items_wrapper { grid-area: items; grid-column: 1 / -1; } 
+        #character_memo_wrapper { grid-area: memo; grid-column: 1 / -1; }
+        #session_history_wrapper { grid-area: history; grid-column: 1 / -1; }
+        #status_grid {
+            grid-template-areas:
+                "charinfo initexp"
+                "skills specialskills"
+                "items items" 
+                "memo memo"
+                "history history";
+        }
+
+        #character_memo .box_contents { max-width: 100%; }
+        #character_text { width: 100%; min-height: 180px; resize: vertical; }
+
+        @media (max-width: 768px) {
+            #status_grid {
+                grid-template-columns: 1fr;
+                grid-template-areas: "charinfo" "initexp" "skills" "specialskills" "items" "memo" "history";
+                gap: 20px;
+            }
+            .history_item_inputs { flex-direction: column; align-items: stretch; }
+            .history_item_inputs > div { width: 100%; }
+            #footer_right { flex-direction: column; align-items: flex-end; gap: 10px; }
+            .status-display-container { flex-direction: column; align-items: flex-end; gap: 8px; }
+            .status-display { margin-left: 0; text-align: right; }
+            #help-vue { width: calc(100% - 40px); max-width: none; bottom: 200px; }
+            body { padding-bottom: 220px; }
+            .info-row { flex-direction: column; gap: 12px; } 
+            .info-item, .info-item-triple, .info-item-double { flex-basis: auto; min-width: 0;}
+
+        }
+         @media (max-width: 480px) {
+            .tool-title { font-size: 1.8em; }
+            #help-vue { bottom: 230px; }
+            body { padding-bottom: 240px; }
+        }
+
+
+        /* フッター */
+        #footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; 
+            border-top: 1px solid #555; 
+            position: fixed;
+            bottom: 0; left: 0; width: 100%; 
+            background-color: #1f1f1f; 
+            box-sizing: border-box; z-index: 100; 
+            box-shadow: 0 -3px 8px rgba(0,0,0,0.5);
+        }
+        #footer_right { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: flex-end;}
+        .footer-button { 
+            cursor: pointer; 
+            padding: 10px 18px; 
+            border-radius: 3px; 
+            font-size: 0.95em; font-weight: 700; text-align: center; 
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            border: 1px solid; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            min-height: 42px; 
+            box-sizing: border-box;
+        }
+        
+        #save_button, #load_button_vue_wrapper, #output_button {
+            background-color: #3a434d;
+            color: #b0c4de;
+            border-color: #647687;
+        }
+        #save_button:hover, #load_button_vue_wrapper:hover, #output_button:hover {
+            background-color: #454f5a;
+            border-color: #8298ad;
+            color: #c8d4e2; 
+        }
+        #load_button_vue_wrapper { 
+            padding: 0; 
+        }
+        #load_button_vue_wrapper > label { 
+            color: inherit; 
+            font-weight: 700; 
+            padding: 10px 18px; 
+            display: block; 
+            height: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        #footer_left > div {
+             cursor: help; padding: 10px 14px; border: 1px solid #555; border-radius: 3px; 
+             background-color: #3a3a3a; color: #c09a69; font-size: 1.1em; font-weight: bold;
+        }
+        #footer_left > div:hover { background-color: #4a4a4a; border-color: #c09a69; }
+
+        .copyright-footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8em;
+            color: #777;
+            background-color: #161616; 
+            border-top: 1px solid #333;
+            position: fixed; 
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 90; 
+        }
+        .copyright-footer a {
+            color: #999;
+            text-decoration: underline;
+        }
+        .copyright-footer a:hover {
+            color: #bbb;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="tool-title">Aionia TRPG Character Sheet</div>
+        
+        <div id="status_grid">
+            <div id="character_info_wrapper">
+                <div id="character_info">
+                    <div class="box_title">基本情報</div>
+                    <div class="box_contents">
+                        <div class="info-row">
+                            <div class="info-item info-item-full"> <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name"/> </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-item info-item-full"> <label for="player_name">プレイヤー名</label> <input type="text" id="player_name" v-model="character.playerName"/> </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-item info-item-triple"> <label for="occupation">職業</label> <input type="text" id="occupation" v-model="character.occupation"/> </div>
+                            <div class="info-item info-item-triple"> <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age" min="0"/> </div>
+                            <div class="info-item info-item-triple"> <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender"/> </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-item info-item-double"> <label for="height">身長</label> <input type="text" id="height" v-model="character.height"/> </div>
+                            <div class="info-item info-item-double"> <label for="weight_char">体重</label> <input type="text" id="weight_char" v-model="character.weight"/> </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-item info-item-double"> <label for="species">種族</label> <select id="species" v-model="character.species" @change="handleSpeciesChange"> <option value="" disabled>選択してください</option> <option value="human">人間</option> <option value="elf">エルフ</option> <option value="dwarf">ドワーフ</option> <option value="halfling">ディグリング</option> <option value="therianthropy">獣人</option> <option value="dragonfolk">竜人</option> <option value="treefolk">ツリーフォーク</option> <option value="other">希少人種</option> </select> </div>
+                            <div class="info-item info-item-double" v-show="character.species === 'other'"> <label for="rare_species">種族名（希少人種）</label> <input type="text" id="rare_species" v-model="character.rareSpecies"/> </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="init_experiments_wrapper">
+                <div id="init_experiments">
+                    <div class="box_title">初期状態</div>
+                    <div id="init_disadvantages" class="box_contents">
+                        <div style="margin-bottom: 12px;"> <label for="init_scar">初期傷痕</label> <input type="number" id="init_scar" v-model.number="character.initScar" min="0" max="20"/> </div>
+                        <div style="margin-bottom: 12px;"> <label for="init_weakness_1">弱点1</label> <input type="text" id="init_weakness_1" v-model="character.initWeakness1"/> </div>
+                        <div> <label for="init_weakness_2">弱点2</label> <input type="text" id="init_weakness_2" v-model="character.initWeakness2"/> </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="skills_wrapper">
+                <div id="skills">
+                    <div class="box_title">技能</div>
+                    <ul id="skills_list" class="box_contents">
+                        <li v-for="(skill) in skills" :key="skill.id">
+                            <div class="skill_header"> <input type="checkbox" :id="skill.id" v-model="skill.checked"/> <label :for="skill.id" class="skill_name">{{ skill.name }}</label> </div>
+                            <div v-if="skill.canHaveExperts && skill.checked" class="experts_section">
+                                <ul class="expert_list" style="padding-left: 0; list-style-type: none; margin-top:0; margin-bottom: 0;">
+                                    <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="expert_list_item_new_layout">
+                                        <div class="delete-button-wrapper">
+                                            <button type="button" class="list_item_button_small list_item_delete_small" 
+                                                    @click="removeExpert(skill, expIndex)" 
+                                                    :disabled="skill.experts.length <= 1 && expert.value === ''">－</button>
+                                        </div>
+                                        <input type="text" v-model="expert.value" :placeholder="expertPlaceholder(skill)" :disabled="!skill.checked" style="flex-grow: 1;"/>
+                                    </li>
+                                </ul>
+                                <div class="add_button_container_left">
+                                    <button type="button" class="list_item_button_small list_item_add_small" @click="addExpert(skill)">＋</button>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="special_skills_wrapper">
+                <div id="special_skills">
+                    <div class="box_title">特技</div>
+                    <div class="box_contents">
+                        <ul id="special_skills_list" style="margin-bottom: 10px;">
+                            <li v-for="(specialSkill, index) in specialSkills" :key="index" class="item_new_layout">
+                                <div class="delete-button-wrapper">
+                                    <button type="button" class="list_item_button_small list_item_delete_small" 
+                                            @click="removeSpecialSkill(index)" 
+                                            :disabled="specialSkills.length <= 1">－</button>
+                                </div>
+                                <div style="flex-grow: 1;">
+                                    <div style="display: flex; gap: 8px; margin-bottom: 5px;">
+                                        <select v-model="specialSkill.group" @change="updateSpecialSkillOptions(index)" style="flex: 1;"> <option value="">種類を選択</option> <option value="tactics">戦術</option> <option value="magic">魔術</option> <option value="features">特徴</option> </select>
+                                        <select v-model="specialSkill.name" @change="updateSpecialSkillNoteVisibility(index)" :disabled="!specialSkill.group" style="flex: 2;"> <option value="">---</option> <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value" :value="opt.value">{{ opt.label }}</option> </select>
+                                    </div>
+                                    <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote" placeholder="追記事項"/>
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="add_button_container_left" v-if="specialSkills.length < 20">
+                            <button type="button" class="list_item_button_small list_item_add_small" @click="addSpecialSkillItem()">＋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="items_wrapper">
+                <div id="items_section">
+                    <div class="box_title">所持品</div>
+                    <div class="box_contents">
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                                <div style="flex: 1 1 300px; min-width: 280px;">
+                                    <div class="equipment" style="margin-bottom: 12px;"> <label for="weapon1">武器1</label> <div style="display: flex; gap: 8px;"> <select id="weapon1" v-model="equipments.weapon1.group" style="flex: 1;"> <option value="" selected>なし</option> <option value="combat_small">小型白兵武器</option> <option value="combat_medium">中型白兵武器</option> <option value="combat_large">大型白兵武器</option> <option value="shooting">射撃武器</option> <option value="catalyst">魔術触媒</option> </select> <input type="text" id="weapon1_name" v-model="equipments.weapon1.name" placeholder="装備名" style="flex: 2;"/> </div> </div>
+                                    <div class="equipment" style="margin-bottom: 12px;"> <label for="weapon2">武器2</label> <div style="display: flex; gap: 8px;"> <select id="weapon2" v-model="equipments.weapon2.group" style="flex: 1;"> <option value="" selected>なし</option> <option value="combat_small">小型白兵武器</option> <option value="combat_medium">中型白兵武器</option> <option value="combat_large">大型白兵武器</option> <option value="shooting">射撃武器</option> <option value="catalyst">魔術触媒</option> </select> <input type="text" id="weapon2_name" v-model="equipments.weapon2.name" placeholder="装備名" style="flex: 2;"/> </div> </div>
+                                    <div class="equipment"> <label for="armor">防具</label> <div style="display: flex; gap: 8px;"> <select id="armor" v-model="equipments.armor.group" style="flex: 1;"> <option value="" selected>なし</option> <option value="light_armor">軽装防具</option> <option value="heavy_armor">重装防具</option> </select> <input type="text" id="armor_name" v-model="equipments.armor.name" placeholder="装備名" style="flex: 2;"/> </div> </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="other_items" style="display: block; margin-bottom: 5px;">その他所持品</label>
+                            <textarea id="other_items" class="items_textarea" v-model="character.otherItems"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="character_memo_wrapper">
+                <div id="character_memo">
+                    <div class="box_title">キャラクターメモ</div>
+                    <div class="box_contents"> <textarea id="character_text" placeholder="キャラクター背景、設定、その他メモを記入" v-model="character.memo"></textarea> </div>
+                </div>
+            </div>
+
+            <div id="session_history_wrapper">
+                <div id="session_history">
+                    <div class="box_title">セッション履歴</div>
+                    <div class="box_contents">
+                        <ul id="histories" style="margin-bottom: 10px;">
+                            <li v-for="(history, index) in histories" :key="index" class="item_new_layout">
+                                 <div class="delete-button-wrapper">
+                                    <button type="button" class="list_item_button_small list_item_delete_small" 
+                                            @click="removeHistoryItem(index)" 
+                                            :disabled="histories.length <= 1">－</button>
+                                 </div>
+                                <div style="flex-grow: 1;">
+                                    <div class="history_item_inputs">
+                                        <div style="flex: 2 1 200px;"> <label>セッション名</label> <input type="text" v-model="history.sessionName"/> </div>
+                                        <div style="flex: 1 1 100px;"> <label>最終傷痕</label> <input type="number" v-model.number="history.lastScar" min="0"/> </div>
+                                        <div style="flex: 1 1 100px;"> <label>増加経験点</label> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
+                                        <div style="flex: 2 1 200px;"> <label>付与後遺症</label> <input type="text" v-model="history.gotAftereffects"/> </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="add_button_container_left">
+                            <button type="button" class="list_item_button_small list_item_add_small" @click="addHistoryItem()">＋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="footer">
+            <div id="footer_left"> <div @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？</div> </div>
+            <div id="footer_right">
+                <div class="status-display-container"> 
+                    <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{ maxExperimentPoints }} </div> 
+                    <div class="status-display weight-display"> 荷重: {{ currentWeight }} </div> 
+                </div>
+                <div id="save_button" @click="saveData" class="footer-button"> データ保存 </div>
+                <div id="load_button_vue_wrapper" class="footer-button"> <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json" style="display: none;"/> <label for="load_input_vue">データ読込</label> </div>
+                <div id="output_button" @click="outputToCocofolia" class="footer-button"> {{ outputButtonText }} </div>
+            </div>
+             <transition name="fade"> 
+                <div id="help-vue" v-if="showHelp" v-html="helpText"></div>
+            </transition>
+        </div>
+        <div class="copyright-footer">
+            <p>本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">「イチ（フシギ製作所）」様が権利を有する「慈悲なきアイオニア」</a>の二次創作物です(Ver 1.2対応)。</p>
+            <p>本サイトは<a href="https://www.aioniatrpg.com/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに作成しました。(Vue 3版)</p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        const app = createApp({
+            data() {
+                return {
+                    character: {
+                        name: '', playerName: '', species: '', rareSpecies: '',
+                        occupation: '', age: null, gender: '', height: '', weight: '', 
+                        otherItems: '', 
+                        initScar: 0, initWeakness1: '', initWeakness2: '', memo: '',
+                    },
+                    skills: [
+                        { id: 'motion', name: '運動', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'avoidance', name: '回避', checked: false, canHaveExperts: false, experts: [] },
+                        { id: 'sense', name: '感覚', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'observation', name: '観察', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'technique', name: '技巧', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'shooting', name: '射撃', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'sociality', name: '社交', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'knowledge', name: '知識', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'combat', name: '白兵', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
+                        { id: 'defense', name: '防御', checked: false, canHaveExperts: false, experts: [] },
+                    ],
+                    initialSpecialSkillCount: 8,
+                    specialSkills: [],
+                    equipments: { 
+                        weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' },
+                    },
+                    histories: [
+                        { sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' }
+                    ],
+                    showHelp: false,
+                    helpText: `
+                        <h4>使い方</h4>
+                        <ul>
+                            <li>「データ保存」ボタンで、入力内容をダウンロードできます。</li>
+                            <li>「データ読込」ボタンで、保存したファイルを読み込めます。</li>
+                            <li>「ココフォリア駒出力」ボタンをクリックすると、駒データがクリップボードにコピーされます。</li>
+                            <li>コピーされたデータをココフォリアのチャット欄に貼り付けることで、キャラクター駒を作成できます。</li>
+                        </ul>
+                        <h4>注意点</h4>
+                        <ul>
+                            <li>このツールはブラウザ上で動作し、入力データはサーバーには保存されません。定期的なデータ保存を推奨します。</li>
+                        </ul>
+                    `,
+                    outputButtonText: 'ココフォリア駒出力',
+                    specialSkillData: {}, 
+                    specialSkillsRequiringNote: ["enchant", "ritual_of_spirit", "familiar", "magic_weapon", "wisdom", "connection", "hide_object", "instant", "training", "spoofing", "other_name", "honor"],
+                    speciesLabelMap: {}, 
+                    equipmentGroupLabelMap: {},
+                    weaponDamage: {"": "", "combat_small": "1d4+1", "combat_medium": "1d6+1", "combat_large": "1d10", "shooting": "1d8", "catalyst": ""},
+                };
+            },
+            computed: {
+                maxExperimentPoints() {
+                    let scarExp = this.character.initScar || 0;
+                    let weaknessExp = 0;
+                    if (this.character.initWeakness1) weaknessExp += 10;
+                    if (this.character.initWeakness2) weaknessExp += 10;
+                    let historyExp = this.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
+                    return 100 + scarExp + weaknessExp + historyExp;
+                },
+                currentExperiencePoints() {
+                    let skillExp = this.skills.reduce((sum, s) => sum + (s.checked ? 10 : 0), 0);
+                    let expertExp = this.skills.reduce((sum, s) => {
+                        if (s.checked && s.canHaveExperts) {
+                            return sum + s.experts.reduce((expSum, exp) => expSum + (exp.value ? 5 : 0), 0);
+                        }
+                        return sum;
+                    }, 0);
+                    let specialSkillExp = this.specialSkills.reduce((sum, ss) => sum + (ss.name ? 5 : 0), 0);
+                    return skillExp + expertExp + specialSkillExp;
+                },
+                currentWeight() {
+                    const weaponWeights = {"": 0, "combat_small": 1, "combat_medium": 3, "combat_large": 5, "shooting": 2, "catalyst": 1};
+                    const armorWeights = {"": 0, "light_armor": 2, "heavy_armor": 5};
+                    let weight = 0;
+                    weight += weaponWeights[this.equipments.weapon1.group] || 0;
+                    weight += weaponWeights[this.equipments.weapon2.group] || 0;
+                    weight += armorWeights[this.equipments.armor.group] || 0;
+                    return weight;
+                },
+                experienceStatusClass() {
+                    return this.currentExperiencePoints > this.maxExperimentPoints ? 'experience-over' : 'experience-ok';
+                }
+            },
+            methods: {
+                hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
+                hasHistoryContent(h) { return !!(h.sessionName || h.lastScar !== null || h.gotExperiments !== null || h.gotAftereffects); },
+
+                addSpecialSkillItem() {
+                    if (this.specialSkills.length < 20) {
+                        this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
+                    }
+                },
+                removeSpecialSkill(index) {
+                    if (this.specialSkills.length > 1) { 
+                        this.specialSkills.splice(index, 1);
+                    } else if (this.specialSkills.length === 1 && this.hasSpecialSkillContent(this.specialSkills[index])) { 
+                        this.specialSkills[index] = { group: '', name: '', note: '', showNote: false };
+                    }
+                },
+                expertPlaceholder(skill) { return skill.checked ? "専門技能" : "専門技能 (技能選択で有効)"; },
+                handleSpeciesChange() { if (this.character.species !== 'other') { this.character.rareSpecies = ''; } },
+                addExpert(skill) { if (skill.canHaveExperts) { skill.experts.push({ value: '' }); } },
+                removeExpert(skill, expertIndex) {
+                    if (skill.experts.length > 1) {
+                        skill.experts.splice(expertIndex, 1);
+                    } else if (skill.experts.length === 1 && skill.experts[expertIndex].value !== '') {
+                         skill.experts[expertIndex].value = '';
+                    }
+                },
+                availableSpecialSkillNames(index) {
+                    if (this.specialSkills[index]) { const group = this.specialSkills[index].group; return this.specialSkillData[group] || []; }
+                    return [];
+                },
+                updateSpecialSkillOptions(index) {
+                    if (this.specialSkills[index]) { this.specialSkills[index].name = ''; this.updateSpecialSkillNoteVisibility(index); }
+                },
+                updateSpecialSkillNoteVisibility(index) {
+                     if (this.specialSkills[index]) { const skillName = this.specialSkills[index].name; this.specialSkills[index].showNote = this.specialSkillsRequiringNote.includes(skillName); }
+                },
+                addHistoryItem() { this.histories.push({ sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' }); },
+                removeHistoryItem(index) {
+                    if (this.histories.length > 1) {
+                        this.histories.splice(index, 1);
+                    } else if (this.histories.length === 1 && this.hasHistoryContent(this.histories[index])) {
+                         this.histories[index] = { sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' };
+                    }
+                },
+                saveData() {
+                     const dataToSave = {
+                        character: this.character,
+                        skills: this.skills.map(s => ({ 
+                            id: s.id, checked: s.checked, canHaveExperts: s.canHaveExperts,
+                            experts: s.canHaveExperts ? s.experts.filter(e => e.value.trim() !== '').map(e => ({value: e.value})) : []
+                        })),
+                        specialSkills: this.specialSkills.filter(ss => ss.group && ss.name), 
+                        equipments: this.equipments, 
+                        histories: this.histories.filter(h => h.sessionName || h.lastScar !== null || h.gotExperiments !== null || h.gotAftereffects)
+                    };
+                    const jsonData = JSON.stringify(dataToSave, null, 2);
+                    const blob = new Blob([jsonData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const filename = this.character.name || 'キャラクター';
+                    a.download = `${filename}_AioniaSheet.json`; 
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                },
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const loadedData = JSON.parse(e.target.result);
+                                this.parseLoadedData(loadedData);
+                            } catch (error) {
+                                console.error("Failed to parse JSON:", error);
+                                alert("データ読み込みに失敗しました。ファイル形式を確認してください。");
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                    event.target.value = null; 
+                },
+                parseLoadedData(data) {
+                    const defaultCharacter = { 
+                        name: '', playerName: '', species: '', rareSpecies: '', 
+                        occupation: '', age: null, gender: '', height: '', weight: '', 
+                        otherItems: '',
+                        initScar: 0, initWeakness1: '', initWeakness2: '', memo: ''
+                    };
+                    this.character = { ...defaultCharacter, ...(data.character || {}) };
+
+
+                    if (data.skills) {
+                        this.skills.forEach(appSkill => {
+                            const loadedSkill = data.skills.find(ls => ls.id === appSkill.id);
+                            if (loadedSkill) {
+                                appSkill.checked = loadedSkill.checked;
+                                if (appSkill.canHaveExperts) {
+                                    appSkill.experts = loadedSkill.experts && loadedSkill.experts.length > 0 ? 
+                                                       loadedSkill.experts.map(e => ({value: e.value })) : [{ value: '' }]; 
+                                }
+                            } else {
+                                appSkill.checked = false;
+                                appSkill.experts = appSkill.canHaveExperts ? [{ value: '' }] : [];
+                            }
+                        });
+                    } else {
+                         this.skills.forEach(appSkill => {
+                            appSkill.checked = false;
+                            appSkill.experts = appSkill.canHaveExperts ? [{ value: '' }] : [];
+                        });
+                    }
+                    
+                    let loadedSSCount = 0;
+                    if (data.specialSkills && Array.isArray(data.specialSkills)) {
+                        loadedSSCount = data.specialSkills.length;
+                    }
+                    const targetSpecialSkillsLength = Math.min(Math.max(this.initialSpecialSkillCount, loadedSSCount), 20);
+                    this.specialSkills = []; 
+
+                    for (let i = 0; i < targetSpecialSkillsLength; i++) {
+                        if (data.specialSkills && i < data.specialSkills.length) {
+                            this.specialSkills.push({ ...data.specialSkills[i] });
+                            this.updateSpecialSkillNoteVisibility(i);
+                        } else {
+                            this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
+                        }
+                    }
+
+                    if (data.equipments) Object.assign(this.equipments, data.equipments);
+                    else this.equipments = { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' }};
+
+                    if (data.histories && data.histories.length > 0) {
+                        this.histories = data.histories.map(h => ({ 
+                            sessionName: h.sessionName || '', 
+                            lastScar: h.lastScar === null ? null : Number(h.lastScar),
+                            gotExperiments: h.gotExperiments === null ? null : Number(h.gotExperiments),
+                            gotAftereffects: h.gotAftereffects || ''
+                        })); 
+                    } else {
+                        this.histories = [{ sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' }];
+                    }
+                },
+                outputToCocofolia() {
+                    const lastHistory = this.histories.length > 0 ? this.histories[this.histories.length - 1] : {};
+                    const scar = lastHistory.lastScar !== null && lastHistory.lastScar !== undefined ? Number(lastHistory.lastScar) : Number(this.character.initScar) || 0;
+                    const stress = 0; 
+
+                    let memo = `名前：${this.character.name || '名無し'}`;
+                    memo += this.character.playerName ? `（${this.character.playerName}）\n` : "\n";
+                    
+                    const speciesText = this.speciesLabelMap[this.character.species] || this.character.species;
+                    memo += `種族：${this.character.species === 'other' ? `${speciesText}（${this.character.rareSpecies || '未設定'}）` : speciesText}\n`;
+                    if (this.character.occupation) memo += `職業：${this.character.occupation}\n`;
+                    if (this.character.age !== null) memo += `年齢：${this.character.age}\n`;
+                    if (this.character.gender) memo += `性別：${this.character.gender}\n`;
+                    if (this.character.height) memo += `身長：${this.character.height}\n`;
+                    if (this.character.weight) memo += `体重：${this.character.weight}\n`;
+
+
+                    let weaknesses = [];
+                    if (this.character.initWeakness1) weaknesses.push(this.character.initWeakness1);
+                    if (this.character.initWeakness2) weaknesses.push(this.character.initWeakness2);
+                    this.histories.forEach(h => { if (h.gotAftereffects) weaknesses.push(h.gotAftereffects); });
+                    if (weaknesses.length > 0) memo += "\n【弱点・後遺症】\n" + weaknesses.join("\n") + "\n";
+
+                    let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2\n:ダメージ=0\n`;
+                    this.skills.forEach(skill => {
+                        const dice = skill.checked ? "2d10" : "1d10";
+                        commands += `${dice} 〈${skill.name}〉\n`;
+                        if (skill.checked && skill.canHaveExperts) {
+                            skill.experts.forEach(expert => { if (expert.value) commands += `3d10 〈${skill.name}：${expert.value}〉\n`; });
+                        }
+                    });
+
+                    let specialSkillListText = "";
+                    this.specialSkills.forEach(ss => {
+                        if (ss.group && ss.name) {
+                            const groupOptions = this.specialSkillData[ss.group] || [];
+                            const skillOption = groupOptions.find(opt => opt.value === ss.name);
+                            const skillLabel = skillOption ? skillOption.label : ss.name;
+                            specialSkillListText += this.specialSkillsRequiringNote.includes(ss.name) && ss.note ? `《${skillLabel}：${ss.note}》` : `《${skillLabel}》`;
+                        }
+                    });
+                    if (specialSkillListText) memo += "\n【特技】\n" + specialSkillListText + "\n";
+                    
+                    let equipmentText = "";
+                     if (this.equipments.weapon1.group || this.equipments.weapon1.name) { 
+                        const groupLabel = this.equipmentGroupLabelMap[this.equipments.weapon1.group] || this.equipments.weapon1.group;
+                        equipmentText += `${this.equipments.weapon1.name || '武器1'}（${groupLabel || '種別なし'}）\n`;
+                        if (this.equipments.weapon1.group && this.weaponDamage[this.equipments.weapon1.group]) {
+                             commands += `${this.weaponDamage[this.equipments.weapon1.group]} 〈ダメージ判定（${this.equipments.weapon1.name || '武器1'}）〉\n`;
+                        }
+                    }
+                    if (this.equipments.weapon2.group || this.equipments.weapon2.name) {
+                        const groupLabel = this.equipmentGroupLabelMap[this.equipments.weapon2.group] || this.equipments.weapon2.group;
+                        equipmentText += `${this.equipments.weapon2.name || '武器2'}（${groupLabel || '種別なし'}）\n`;
+                         if (this.equipments.weapon2.group && this.weaponDamage[this.equipments.weapon2.group]) {
+                             commands += `${this.weaponDamage[this.equipments.weapon2.group]} 〈ダメージ判定（${this.equipments.weapon2.name || '武器2'}）〉\n`;
+                        }
+                    }
+                    if (this.equipments.armor.group || this.equipments.armor.name) {
+                         const groupLabel = this.equipmentGroupLabelMap[this.equipments.armor.group] || this.equipments.armor.group;
+                        equipmentText += `${this.equipments.armor.name || '防具'}（${groupLabel || '種別なし'}）\n`;
+                    }
+                    if (equipmentText) memo += "\n【武器・防具】\n" + equipmentText;
+
+                    if (this.character.otherItems) { 
+                        memo += "\n【その他所持品】\n" + this.character.otherItems + "\n";
+                    }
+
+
+                    if (this.character.memo) memo += "\n【キャラクターメモ】\n" + this.character.memo;
+
+                    const cocofoliaCharacter = {
+                        kind: "character",
+                        data: {
+                            params: [], status: [ { label: "ダメージ", value: 0 }, { label: "傷痕", value: scar }, { label: "ストレス", value: stress } ],
+                            name: this.character.name || '名無し', initiative: this.currentWeight * -1,
+                            memo: memo.trim(), externalUrl: "", commands: commands.trim()
+                        }
+                    };
+                    const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
+                    if (!navigator.clipboard) { this.fallbackCopyTextToClipboard(textToCopy); return; }
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => { this.outputButtonText = '　　コピー完了　　'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000); })
+                        .catch(err => { console.error('Failed to copy: ', err); this.fallbackCopyTextToClipboard(textToCopy); });
+                },
+                fallbackCopyTextToClipboard(text) {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.top = "0"; textArea.style.left = "0"; textArea.style.position = "fixed"; textArea.style.opacity = "0"; 
+                    document.body.appendChild(textArea);
+                    textArea.focus(); textArea.select();
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            this.outputButtonText = '　　コピー完了　　'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                        } else {
+                            this.outputButtonText = 'コピー失敗'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                        }
+                    } catch (err) {
+                        this.outputButtonText = 'コピーエラー'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                    }
+                    document.body.removeChild(textArea);
+                }
+            },
+            mounted() {
+                this.specialSkills = Array(this.initialSpecialSkillCount).fill(null).map(() => ({ group: '', name: '', note: '', showNote: false }));
+                this.specialSkillData= {
+                    tactics: [ { value: "concealed_weapon", label: "暗器" }, { value: "fence_off", label: "受け流し" }, { value: "covering_fire", label: "援護射撃" }, { value: "stance", label: "構え" }, { value: "riding_combat", label: "騎乗戦闘" }, { value: "fatal_spot_attack", label: "急所の一撃" }, { value: "high_angle_fire", label: "曲射" }, { value: "ready_to_die", label: "決死の覚悟" }, { value: "martial_arts", label: "拳闘術" }, { value: "escort", label: "護衛" }, { value: "heavy_attack", label: "重撃" }, { value: "risk_attack", label: "捨て身の一撃" }, { value: "machine_gunning", label: "掃射" }, { value: "snipe", label: "狙撃" }, { value: "provoke", label: "挑発" }, { value: "lightning_speed", label: "電光石火" }, { value: "rush", label: "突撃" }, { value: "cleave", label: "凪払い" }, { value: "knock_shooting", label: "弾き落とし" }, { value: "parry", label: "パリィ" }, { value: "feint", label: "フェイント" }, { value: "throw_weapon", label: "武器投げの習熟" }, { value: "break_weapon", label: "武器破壊" }, { value: "fortitude", label: "不屈" }, { value: "gait", label: "歩法" }, { value: "anticipate", label: "見切り" }, { value: "pierce_armor", label: "鎧通し" } ],
+                    magic: [ { value: "light", label: "灯り" }, { value: "dozing", label: "居眠り" }, { value: "enchant", label: "エンチャント" }, { value: "send_sound", label: "音送り" }, { value: "silence", label: "音消し" }, { value: "recovery", label: "回復" }, { value: "read_wind", label: "風読み" }, { value: "activate", label: "活性" }, { value: "fear", label: "恐怖" }, { value: "warning", label: "警報" }, { value: "barrier", label: "結界" }, { value: "illusion", label: "幻影" }, { value: "telecommunication", label: "交信" }, { value: "power_of_word", label: "言霊" }, { value: "ritual_of_spirit", label: "死儀" }, { value: "heal", label: "治癒" }, { value: "calling", label: "通話" }, { value: "familiar", label: "使い魔" }, { value: "ignite", label: "点火" }, { value: "extend_magic", label: "範囲魔術" }, { value: "light_brush", label: "光の筆" }, { value: "cover", label: "被覆" }, { value: "float", label: "浮遊" }, { value: "magic_weapon", label: "魔術の得物" } ],
+                    features: [ { value: "wisdom", label: "叡智" }, { value: "concentrate", label: "過集中" }, { value: "acrobatics", label: "軽業" }, { value: "connivance", label: "看破" }, { value: "thin", label: "希薄" }, { value: "cajolery", label: "口車" }, { value: "connection", label: "コネクション" }, { value: "change_clothes", label: "様変わりの衣" }, { value: "hide_object", label: "仕込み" }, { value: "auto_writing", label: "自動筆記具" }, { value: "pickpocket", label: "スリの極意" }, { value: "instant", label: "即席" }, { value: "infinite_bagpack", label: "底なしの鞄" }, { value: "training", label: "調教" }, { value: "instruction", label: "伝授" }, { value: "cleverness", label: "天性の小手先" }, { value: "adaptability", label: "踏破" }, { value: "cipher", label: "独自暗号" }, { value: "spoofing", label: "なりすまし" }, { value: "beauty", label: "美貌" }, { value: "other_name", label: "二つ名" }, { value: "decompose", label: "分解" }, { value: "honor", label: "誉れ" }, { value: "night_vision", label: "夜目" } ]
+                };
+                this.speciesLabelMap = { "human": "人間", "elf": "エルフ", "dwarf": "ドワーフ", "halfling": "ディグリング", "therianthropy": "獣人", "dragonfolk": "竜人", "treefolk": "ツリーフォーク", "other": "希少人種", "": "未選択" };
+                this.equipmentGroupLabelMap = { "": "なし", "combat_small": "小型白兵武器", "combat_medium": "中型白兵武器", "combat_large": "大型白兵武器", "shooting": "射撃武器", "catalyst": "魔術触媒", "light_armor": "軽装防具", "heavy_armor": "重装防具" };
+            }
+        });
+        app.mount('#app');
+    </script>
+</body>
+</html>
