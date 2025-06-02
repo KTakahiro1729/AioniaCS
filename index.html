@@ -137,6 +137,7 @@
             margin-bottom: 25px;
             background-color: #242424;
             box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            overflow-x: hidden; 
         }
 
         /* リストスタイル */
@@ -209,22 +210,23 @@
             margin-bottom: 0;
         }
 
+        
         .history_item_inputs {
             display: flex;
             flex-wrap: wrap;
-            align-items: flex-start;
+            align-items: end;
             gap: 10px;
         }
         .history_item_inputs > div {
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            flex-grow: 0;
         }
-        .history_item_inputs > div > label {
-            font-size: 0.85em;
-            margin-bottom: 4px;
-            color: #aaa;
-            display: block; 
+    .history_item_inputs > div > label {
+        font-size: 0.85em;
+        margin-bottom: 4px;
+        color: #aaa;
+        display: block;
         }
 
         .list_item_button_small {
@@ -371,10 +373,19 @@
                 grid-template-areas: "charinfo" "initexp" "skills" "specialskills" "items" "memo" "history";
                 gap: 20px;
             }
-            .history_item_inputs { flex-direction: column; align-items: stretch; }
-            .history_item_inputs > div { width: 100%; margin-bottom: 10px; }
-            .history_item_inputs > div:last-child { margin-bottom: 0; }
-                   #help-vue { width: calc(100% - 40px); max-width: none; 
+
+            #session_history_wrapper .history_item_inputs {
+                display: flex;
+                flex-direction: row; 
+                flex-wrap: nowrap;   
+                gap: 10px;
+            }
+            #session_history_wrapper .history_item_inputs > div {
+                margin-bottom: 0; 
+            }
+
+            
+            #help-vue { width: calc(100% - 40px); max-width: none; 
             }
             .info-row { flex-direction: column; gap: 12px; }  
             .info-item, .info-item-triple, .info-item-double { flex-basis: auto; min-width: 0;}
@@ -643,9 +654,9 @@
                                 <div style="flex-grow: 1;">
                                     <div class="history_item_inputs">
                                         <div style="flex: 2 1 200px;"> <label>セッション名</label> <input type="text" v-model="history.sessionName"/> </div>
-                                        <div style="flex: 1 1 100px;"> <label>最終傷痕</label> <input type="number" v-model.number="history.lastScar" min="0"/> </div>
-                                        <div style="flex: 1 1 100px;"> <label>増加経験点</label> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
-                                        <div style="flex: 2 1 200px;"> <label>付与後遺症</label> <input type="text" v-model="history.gotAftereffects"/> </div>
+                                        <div style="flex: 1 1 100px;"> <label>傷痕</label> <input type="number" v-model.number="history.lastScar" min="0"/> </div>
+                                        <div style="flex: 1 1 100px;"> <label>経験点</label> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
+                                        <div style="flex: 2 1 200px;"> <label>後遺症</label> <input type="text" v-model="history.gotAftereffects"/> </div>
                                     </div>
                                 </div>
                             </li>
