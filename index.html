@@ -474,6 +474,20 @@
             color: #b0c4de;
             border-color: #647687;
         }
+        #save_button {
+            width: 110px;
+        }
+
+        #load_button_vue_wrapper { 
+            width: 110px;
+        }
+
+        #output_button {
+            width: 175px;
+        }
+        #load_button_vue_wrapper > label {
+            margin: 0px;
+        }
         #save_button:hover, #load_button_vue_wrapper:hover, #output_button:hover {
             background-color: #454f5a;
             border-color: #8298ad;
@@ -1000,7 +1014,7 @@
                     const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
                     if (!navigator.clipboard) { this.fallbackCopyTextToClipboard(textToCopy); return; }
                     navigator.clipboard.writeText(textToCopy)
-                        .then(() => { this.outputButtonText = '　　コピー完了　　'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000); })
+                        .then(() => { this.outputButtonText = 'コピー完了　'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000); })
                         .catch(err => { console.error('Failed to copy: ', err); this.fallbackCopyTextToClipboard(textToCopy); });
                 },
                 fallbackCopyTextToClipboard(text) {
