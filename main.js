@@ -1,4 +1,4 @@
-const { createApp, watch, nextTick } = Vue; // `watch` と `nextTick` を Vue からインポート
+const { createApp, watch, nextTick } = Vue;
 
 const app = createApp({
     data() {
@@ -12,53 +12,28 @@ const app = createApp({
                 initialScar: 0,
                 linkCurrentToInitialScar: true,
                 memo: '',
-                weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' })),
+                weaknesses: Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' })),
             },
-            skills: [
-                { id: 'motion', name: '運動', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'avoidance', name: '回避', checked: false, canHaveExperts: false, experts: [] },
-                { id: 'sense', name: '感覚', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'observation', name: '観察', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'technique', name: '技巧', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'shooting', name: '射撃', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'sociality', name: '社交', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'knowledge', name: '知識', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'combat', name: '白兵', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
-                { id: 'defense', name: '防御', checked: false, canHaveExperts: false, experts: [] },
-            ],
-            externalSkillOrder: ['motion', 'avoidance', 'sense', 'observation', 'technique', 'shooting', 'sociality', 'knowledge', 'combat', 'defense'],
-            initialSpecialSkillCount: 8,
-            specialSkills: Array(8).fill(null).map(() => ({ group: '', name: '', note: '', showNote: false })),
+            skills: JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills)),
+            externalSkillOrder: window.AioniaGameData.externalSkillOrder,
+            initialSpecialSkillCount: window.AioniaGameData.config.initialSpecialSkillCount,
+            specialSkills: Array(window.AioniaGameData.config.initialSpecialSkillCount).fill(null).map(() => ({ group: '', name: '', note: '', showNote: false })),
             equipments: {
-                weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' },
+                weapon1: { group: '', name: '' },
+                weapon2: { group: '', name: '' },
+                armor: { group: '', name: '' },
             },
             histories: [
                 { sessionName: '', gotExperiments: null, memo: '' }
             ],
             showHelp: false,
-            helpText: `
-                        <h4>使い方</h4>
-                        <ul>
-                            <li>「データ保存」ボタンで、入力内容をダウンロードできます。</li>
-                            <li>「データ読込」ボタンで、保存したファイルを読み込めます。</li>
-                            <li>「ココフォリア駒出力」ボタンをクリックすると、駒データがクリップボードにコピーされます。</li>
-                            <li>コピーされたデータをココフォリアのチャット欄に貼り付けることで、キャラクター駒を作成できます。</li>
-                        </ul>
-                        <h4>注意点</h4>
-                        <ul>
-                            <li>このツールはブラウザ上で動作し、入力データはサーバーには保存されません。定期的なデータ保存を推奨します。</li>
-                        </ul>
-                    `,
+            helpText: window.AioniaGameData.helpText,
             outputButtonText: 'ココフォリア駒出力',
-            specialSkillData: {
-                tactics: [{ value: "concealed_weapon", label: "暗器" }, { value: "fence_off", label: "受け流し" }, { value: "covering_fire", label: "援護射撃" }, { value: "stance", label: "構え" }, { value: "riding_combat", label: "騎乗戦闘" }, { value: "fatal_spot_attack", label: "急所の一撃" }, { value: "high_angle_fire", label: "曲射" }, { value: "ready_to_die", label: "決死の覚悟" }, { value: "martial_arts", label: "拳闘術" }, { value: "escort", label: "護衛" }, { value: "heavy_attack", label: "重撃" }, { value: "risk_attack", label: "捨て身の一撃" }, { value: "machine_gunning", label: "掃射" }, { value: "snipe", label: "狙撃" }, { value: "provoke", label: "挑発" }, { value: "lightning_speed", label: "電光石火" }, { value: "rush", label: "突撃" }, { value: "cleave", label: "凪払い" }, { value: "knock_shooting", label: "弾き落とし" }, { value: "parry", label: "パリィ" }, { value: "feint", label: "フェイント" }, { value: "throw_weapon", label: "武器投げの習熟" }, { value: "break_weapon", label: "武器破壊" }, { value: "fortitude", label: "不屈" }, { value: "gait", label: "歩法" }, { value: "anticipate", label: "見切り" }, { value: "pierce_armor", label: "鎧通し" }],
-                magic: [{ value: "light", label: "灯り" }, { value: "dozing", label: "居眠り" }, { value: "enchant", label: "エンチャント" }, { value: "send_sound", label: "音送り" }, { value: "silence", label: "音消し" }, { value: "recovery", label: "回復" }, { value: "read_wind", label: "風読み" }, { value: "activate", label: "活性" }, { value: "fear", label: "恐怖" }, { value: "warning", label: "警報" }, { value: "barrier", label: "結界" }, { value: "illusion", label: "幻影" }, { value: "telecommunication", label: "交信" }, { value: "power_of_word", label: "言霊" }, { value: "ritual_of_spirit", label: "死儀" }, { value: "heal", label: "治癒" }, { value: "calling", label: "通話" }, { value: "familiar", label: "使い魔" }, { value: "ignite", label: "点火" }, { value: "extend_magic", label: "範囲魔術" }, { value: "light_brush", label: "光の筆" }, { value: "cover", label: "被覆" }, { value: "float", label: "浮遊" }, { value: "magic_weapon", label: "魔術の得物" }],
-                features: [{ value: "wisdom", label: "叡智" }, { value: "concentrate", label: "過集中" }, { value: "acrobatics", label: "軽業" }, { value: "connivance", label: "看破" }, { value: "thin", label: "希薄" }, { value: "cajolery", label: "口車" }, { value: "connection", label: "コネクション" }, { value: "change_clothes", label: "様変わりの衣" }, { value: "hide_object", label: "仕込み" }, { value: "auto_writing", label: "自動筆記具" }, { value: "pickpocket", label: "スリの極意" }, { value: "instant", label: "即席" }, { value: "infinite_bagpack", label: "底なしの鞄" }, { value: "training", label: "調教" }, { value: "instruction", label: "伝授" }, { value: "cleverness", label: "天性の小手先" }, { value: "adaptability", label: "踏破" }, { value: "cipher", label: "独自暗号" }, { value: "spoofing", label: "なりすまし" }, { value: "beauty", label: "美貌" }, { value: "other_name", label: "二つ名" }, { value: "decompose", label: "分解" }, { value: "honor", label: "誉れ" }, { value: "night_vision", label: "夜目" }]
-            },
-            specialSkillsRequiringNote: ["enchant", "ritual_of_spirit", "familiar", "magic_weapon", "wisdom", "connection", "hide_object", "training", "spoofing", "other_name", "honor"],
-            speciesLabelMap: { "human": "人間", "elf": "エルフ", "dwarf": "ドワーフ", "halfling": "ディグリング", "therianthropy": "獣人", "dragonfolk": "竜人", "treefolk": "ツリーフォーク", "other": "希少人種", "": "未選択" },
-            equipmentGroupLabelMap: { "": "なし", "combat_small": "小型白兵武器", "combat_medium": "中型白兵武器", "combat_large": "大型白兵武器", "shooting": "射撃武器", "catalyst": "魔術触媒", "light_armor": "軽装防具", "heavy_armor": "重装防具" },
-            weaponDamage: { "": "", "combat_small": "1d4+1", "combat_medium": "1d6+1", "combat_large": "1d10", "shooting": "1d8", "catalyst": "" },
+            specialSkillData: window.AioniaGameData.specialSkillData,
+            specialSkillsRequiringNote: window.AioniaGameData.specialSkillsRequiringNote,
+            speciesLabelMap: window.AioniaGameData.speciesLabelMap,
+            equipmentGroupLabelMap: window.AioniaGameData.equipmentGroupLabelMap,
+            weaponDamage: window.AioniaGameData.weaponDamage,
         };
     },
     computed: {
@@ -136,14 +111,13 @@ const app = createApp({
                     this.character.linkCurrentToInitialScar = false;
                     this.character.currentScar = enteredValue;
                 }
-            } else {
             }
         },
         hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
         addSpecialSkillItem() {
-            if (this.specialSkills.length < 20) {
+            if (this.specialSkills.length < window.AioniaGameData.config.maxSpecialSkills) {
                 this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
             }
         },
@@ -169,14 +143,23 @@ const app = createApp({
             }
         },
         availableSpecialSkillNames(index) {
-            if (this.specialSkills[index]) { const group = this.specialSkills[index].group; return this.specialSkillData[group] || []; }
+            if (this.specialSkills[index]) {
+                const group = this.specialSkills[index].group;
+                return this.specialSkillData[group] || [];
+            }
             return [];
         },
         updateSpecialSkillOptions(index) {
-            if (this.specialSkills[index]) { this.specialSkills[index].name = ''; this.updateSpecialSkillNoteVisibility(index); }
+            if (this.specialSkills[index]) {
+                this.specialSkills[index].name = '';
+                this.updateSpecialSkillNoteVisibility(index);
+            }
         },
         updateSpecialSkillNoteVisibility(index) {
-            if (this.specialSkills[index]) { const skillName = this.specialSkills[index].name; this.specialSkills[index].showNote = this.specialSkillsRequiringNote.includes(skillName); }
+            if (this.specialSkills[index]) {
+                const skillName = this.specialSkills[index].name;
+                this.specialSkills[index].showNote = this.specialSkillsRequiringNote.includes(skillName);
+            }
         },
         addHistoryItem() { this.histories.push({ sessionName: '', gotExperiments: null, memo: '' }); },
         removeHistoryItem(index) {
@@ -246,7 +229,7 @@ const app = createApp({
                     currentScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
                     linkCurrentToInitialScar: typeof externalData.linkCurrentToInitialScar === 'boolean' ? externalData.linkCurrentToInitialScar : true,
                     memo: externalData.character_memo || '',
-                    weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' }))
+                    weaknesses: Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }))
                 },
                 skills: [], specialSkills: [],
                 equipments: { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' } },
@@ -262,7 +245,7 @@ const app = createApp({
 
             if (externalData.skills && Array.isArray(externalData.skills)) {
                 this.externalSkillOrder.forEach((skillId, index) => {
-                    const appSkillDefinition = this.skills.find(s => s.id === skillId);
+                    const appSkillDefinition = window.AioniaGameData.baseSkills.find(s => s.id === skillId);
                     if (appSkillDefinition && externalData.skills[index]) {
                         const externalSkill = externalData.skills[index];
                         const newSkill = {
@@ -284,7 +267,7 @@ const app = createApp({
                     }
                 });
             } else {
-                internalData.skills = JSON.parse(JSON.stringify(this.skills));
+                internalData.skills = JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills));
             }
 
             if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
@@ -336,28 +319,28 @@ const app = createApp({
                 occupation: '', age: null, gender: '', height: '', weight: '',
                 origin: '', faith: '',
                 otherItems: '',
-                currentScar: 0, initialScar: 0, linkCurrentToInitialScar: true, memo: '', // **変更点**
-                weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' }))
+                currentScar: 0, initialScar: 0, linkCurrentToInitialScar: true, memo: '',
+                weaknesses: Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }))
             };
             this.character = { ...defaultCharacter, ...(dataToParse.character || {}) };
-            if (typeof this.character.linkCurrentToInitialScar === 'undefined') { // **変更点**
+            if (typeof this.character.linkCurrentToInitialScar === 'undefined') {
                 this.character.linkCurrentToInitialScar = true;
             }
 
             if (this.character.weaknesses && Array.isArray(this.character.weaknesses)) {
-                const numMissingWeaknesses = 10 - this.character.weaknesses.length;
+                const numMissingWeaknesses = window.AioniaGameData.config.maxWeaknesses - this.character.weaknesses.length;
                 if (numMissingWeaknesses > 0) {
                     for (let i = 0; i < numMissingWeaknesses; i++) {
                         this.character.weaknesses.push({ text: '', acquired: '--' });
                     }
-                } else if (this.character.weaknesses.length > 10) {
-                    this.character.weaknesses = this.character.weaknesses.slice(0, 10);
+                } else if (this.character.weaknesses.length > window.AioniaGameData.config.maxWeaknesses) {
+                    this.character.weaknesses = this.character.weaknesses.slice(0, window.AioniaGameData.config.maxWeaknesses);
                 }
             } else {
-                this.character.weaknesses = Array(10).fill(null).map(() => ({ text: '', acquired: '--' }));
+                this.character.weaknesses = Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }));
             }
 
-            const baseSkills = JSON.parse(JSON.stringify(this.$options.data().skills));
+            const baseSkills = JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills));
             if (dataToParse.skills && Array.isArray(dataToParse.skills)) {
                 const loadedSkillsById = new Map(dataToParse.skills.map(s => [s.id, s]));
                 this.skills = baseSkills.map(appSkill => {
@@ -387,7 +370,7 @@ const app = createApp({
             if (dataToParse.specialSkills && Array.isArray(dataToParse.specialSkills)) {
                 loadedSSCount = dataToParse.specialSkills.length;
             }
-            const targetSpecialSkillsLength = Math.min(Math.max(this.initialSpecialSkillCount, loadedSSCount), 20);
+            const targetSpecialSkillsLength = Math.min(Math.max(this.initialSpecialSkillCount, loadedSSCount), window.AioniaGameData.config.maxSpecialSkills);
             this.specialSkills = [];
 
             for (let i = 0; i < targetSpecialSkillsLength; i++) {
