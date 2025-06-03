@@ -36,15 +36,10 @@
                                 :class="{'info-item-full': character.species !== 'other', 'info-item-custom-double': character.species === 'other'}">
                                 <label for="species">種族</label>
                                 <select id="species" v-model="character.species" @change="handleSpeciesChange">
-                                    <option value="" disabled>選択してください</option>
-                                    <option value="human">人間</option>
-                                    <option value="elf">エルフ</option>
-                                    <option value="dwarf">ドワーフ</option>
-                                    <option value="halfling">ディグリング</option>
-                                    <option value="therianthropy">獣人</option>
-                                    <option value="dragonfolk">竜人</option>
-                                    <option value="treefolk">ツリーフォーク</option>
-                                    <option value="other">希少人種</option>
+                                    <option v-for="option in gameData.speciesOptions" :key="option.value"
+                                        :value="option.value" :disabled="option.disabled">
+                                        {{ option.label }}
+                                    </option>
                                 </select>
                             </div>
                             <div class="info-item info-item-custom-double" v-if="character.species === 'other'">
@@ -183,10 +178,10 @@
                                     <div class="flex-gap-8">
                                         <select v-model="specialSkill.group" @change="updateSpecialSkillOptions(index)"
                                             class="flex-1">
-                                            <option value="">種類を選択</option>
-                                            <option value="tactics">戦術</option>
-                                            <option value="magic">魔術</option>
-                                            <option value="features">特徴</option>
+                                            <option v-for="option in gameData.specialSkillGroupOptions"
+                                                :key="option.value" :value="option.value">
+                                                {{ option.label }}
+                                            </option>
                                         </select>
                                         <select v-model="specialSkill.name"
                                             @change="updateSpecialSkillNoteVisibility(index)"
@@ -197,7 +192,8 @@
                                         </select>
                                     </div>
                                     <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote"
-                                        class="special_skill_note_input" placeholder="追記事項" />
+                                        class="special_skill_note_input"
+                                        :placeholder="gameData.placeholderTexts.specialSkillNote" />
                                 </div>
                             </li>
                         </ul>
@@ -217,39 +213,40 @@
                             <div class="equipment-container">
                                 <div class="equipment-section">
                                     <div class="equipment mb-12"> <label for="weapon1">武器1</label>
-                                        <div class="flex-gap-8"> <select id="weapon1" v-model="equipments.weapon1.group"
-                                                class="flex-1">
-                                                <option value="" selected>なし</option>
-                                                <option value="combat_small">小型白兵武器</option>
-                                                <option value="combat_medium">中型白兵武器</option>
-                                                <option value="combat_large">大型白兵武器</option>
-                                                <option value="shooting">射撃武器</option>
-                                                <option value="catalyst">魔術触媒</option>
-                                            </select> <input type="text" id="weapon1_name"
-                                                v-model="equipments.weapon1.name" placeholder="装備名" class="flex-2" />
+                                        <div class="flex-gap-8">
+                                            <select id="weapon1" v-model="equipments.weapon1.group" class="flex-1">
+                                                <option v-for="option in gameData.weaponOptions" :key="option.value"
+                                                    :value="option.value">
+                                                    {{ option.label }}
+                                                </option>
+                                            </select>
+                                            <input type="text" id="weapon1_name" v-model="equipments.weapon1.name"
+                                                :placeholder="gameData.placeholderTexts.weaponName" class="flex-2" />
                                         </div>
                                     </div>
                                     <div class="equipment mb-12"> <label for="weapon2">武器2</label>
-                                        <div class="flex-gap-8"> <select id="weapon2" v-model="equipments.weapon2.group"
-                                                class="flex-1">
-                                                <option value="" selected>なし</option>
-                                                <option value="combat_small">小型白兵武器</option>
-                                                <option value="combat_medium">中型白兵武器</option>
-                                                <option value="combat_large">大型白兵武器</option>
-                                                <option value="shooting">射撃武器</option>
-                                                <option value="catalyst">魔術触媒</option>
-                                            </select> <input type="text" id="weapon2_name"
-                                                v-model="equipments.weapon2.name" placeholder="装備名" class="flex-2" />
+                                        <div class="flex-gap-8">
+                                            <select id="weapon2" v-model="equipments.weapon2.group" class="flex-1">
+                                                <option v-for="option in gameData.weaponOptions" :key="option.value"
+                                                    :value="option.value">
+                                                    {{ option.label }}
+                                                </option>
+                                            </select>
+                                            <input type="text" id="weapon2_name" v-model="equipments.weapon2.name"
+                                                :placeholder="gameData.placeholderTexts.weaponName" class="flex-2" />
                                         </div>
                                     </div>
                                     <div class="equipment"> <label for="armor">防具</label>
-                                        <div class="flex-gap-8"> <select id="armor" v-model="equipments.armor.group"
-                                                class="flex-1">
-                                                <option value="" selected>なし</option>
-                                                <option value="light_armor">軽装防具</option>
-                                                <option value="heavy_armor">重装防具</option>
-                                            </select> <input type="text" id="armor_name" v-model="equipments.armor.name"
-                                                placeholder="装備名" class="flex-2" /> </div>
+                                        <div class="flex-gap-8">
+                                            <select id="armor" v-model="equipments.armor.group" class="flex-1">
+                                                <option v-for="option in gameData.armorOptions" :key="option.value"
+                                                    :value="option.value">
+                                                    {{ option.label }}
+                                                </option>
+                                            </select>
+                                            <input type="text" id="armor_name" v-model="equipments.armor.name"
+                                                :placeholder="gameData.placeholderTexts.armorName" class="flex-2" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -265,8 +262,10 @@
             <div id="character_memo_wrapper">
                 <div id="character_memo">
                     <div class="box_title">キャラクターメモ</div>
-                    <div class="box_contents"> <textarea id="character_text" placeholder="キャラクター背景、設定、その他メモを記入"
-                            v-model="character.memo"></textarea> </div>
+                    <div class="box_contents">
+                        <textarea id="character_text" :placeholder="gameData.placeholderTexts.characterMemo"
+                            v-model="character.memo"></textarea>
+                    </div>
                 </div>
             </div>
 
