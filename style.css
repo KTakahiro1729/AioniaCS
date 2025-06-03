@@ -488,7 +488,7 @@ input[type="checkbox"] {
 
 #special_skills_list>li,
 #histories>li {
-    margin-bottom: 0;
+    margin-bottom: 5px;
     padding: 0;
     border: none;
     background-color: transparent;
