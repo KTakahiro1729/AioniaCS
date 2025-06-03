@@ -34,6 +34,8 @@ const app = createApp({
             speciesLabelMap: window.AioniaGameData.speciesLabelMap,
             equipmentGroupLabelMap: window.AioniaGameData.equipmentGroupLabelMap,
             weaponDamage: window.AioniaGameData.weaponDamage,
+            // ココフォリア出力機能のインスタンス
+            cocofoliaExporter: null,
         };
     },
     computed: {
@@ -405,160 +407,85 @@ const app = createApp({
                 this.histories = [{ sessionName: '', gotExperiments: null, memo: '' }];
             }
         },
+
+
         outputToCocofolia() {
-            const scar = Number(this.character.currentScar) || 0;
-            const stress = 0;
-
-            let memoLines = [];
-            memoLines.push(`名前：${this.character.name || '名無し'}${this.character.playerName ? `（${this.character.playerName}）` : ""}`);
-
-            const speciesText = this.speciesLabelMap[this.character.species] || this.character.species;
-            memoLines.push(`種族：${this.character.species === 'other' ? `${speciesText}（${this.character.rareSpecies || '未設定'}）` : speciesText}`);
-            if (this.character.gender) memoLines.push(`性別：${this.character.gender}`);
-            if (this.character.age !== null) memoLines.push(`年齢：${this.character.age}`);
-            if (this.character.origin) memoLines.push(`出身地：${this.character.origin}`);
-            if (this.character.occupation) memoLines.push(`職業：${this.character.occupation}`);
-            if (this.character.faith) memoLines.push(`信仰：${this.character.faith}`);
-            if (this.character.height) memoLines.push(`身長：${this.character.height}`);
-            if (this.character.weight) memoLines.push(`体重：${this.character.weight}`);
-
-            let cocofoliaWeaknesses = [];
-            this.character.weaknesses.forEach(w => {
-                if (w.text && w.text.trim() !== '') {
-                    let acquiredText = '';
-                    if (w.acquired && w.acquired !== '--' && w.acquired !== 'help-text') {
-                        acquiredText = ` (${w.acquired})`;
-                    }
-                    cocofoliaWeaknesses.push(`${w.text}${acquiredText}`);
-                }
-            });
-            if (cocofoliaWeaknesses.length > 0) {
-                memoLines.push("\n【弱点】", ...cocofoliaWeaknesses);
-            }
-
-            let skillsMemoTextLines = [];
-            this.skills.forEach(skill => {
-                if (skill.checked) {
-                    let skillLine = `・${skill.name}`;
-                    if (skill.canHaveExperts && skill.experts.some(e => e.value && e.value.trim() !== '')) {
-                        const expertTexts = skill.experts.filter(e => e.value && e.value.trim() !== '').map(e => e.value);
-                        if (expertTexts.length > 0) {
-                            skillLine += ` (${expertTexts.join('/')})`;
-                        }
-                    }
-                    skillsMemoTextLines.push(skillLine);
-                }
-            });
-            if (skillsMemoTextLines.length > 0) {
-                memoLines.push("\n【技能】", ...skillsMemoTextLines);
-            }
-
-            let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2\n:ダメージ=0\n`;
-            this.skills.forEach(skill => {
-                const dice = skill.checked ? "2d10" : "1d10";
-                commands += `${dice} 〈${skill.name}〉\n`;
-                if (skill.checked && skill.canHaveExperts) {
-                    skill.experts.forEach(expert => { if (expert.value && expert.value.trim() !== '') commands += `3d10 〈${skill.name}：${expert.value}〉\n`; });
-                }
-            });
-
-            let specialSkillListText = "";
-            this.specialSkills.forEach(ss => {
-                if (ss.group && ss.name) {
-                    const groupOptions = this.specialSkillData[ss.group] || [];
-                    const skillOption = groupOptions.find(opt => opt.value === ss.name);
-                    const skillLabel = skillOption ? skillOption.label : ss.name;
-                    specialSkillListText += this.specialSkillsRequiringNote.includes(ss.name) && ss.note ? `《${skillLabel}：${ss.note}》` : `《${skillLabel}》`;
-                }
-            });
-            if (specialSkillListText) memoLines.push("\n【特技】", specialSkillListText);
-
-            let equipmentTextLines = [];
-            if (this.equipments.weapon1.group || this.equipments.weapon1.name) {
-                const groupLabel = this.equipmentGroupLabelMap[this.equipments.weapon1.group] || this.equipments.weapon1.group;
-                equipmentTextLines.push(`${this.equipments.weapon1.name || '武器1'}（${groupLabel || '種別なし'}）`);
-                if (this.equipments.weapon1.group && this.weaponDamage[this.equipments.weapon1.group]) {
-                    commands += `${this.weaponDamage[this.equipments.weapon1.group]} 〈ダメージ判定（${this.equipments.weapon1.name || '武器1'}）〉\n`;
-                }
-            }
-            if (this.equipments.weapon2.group || this.equipments.weapon2.name) {
-                const groupLabel = this.equipmentGroupLabelMap[this.equipments.weapon2.group] || this.equipments.weapon2.group;
-                equipmentTextLines.push(`${this.equipments.weapon2.name || '武器2'}（${groupLabel || '種別なし'}）`);
-                if (this.equipments.weapon2.group && this.weaponDamage[this.equipments.weapon2.group]) {
-                    commands += `${this.weaponDamage[this.equipments.weapon2.group]} 〈ダメージ判定（${this.equipments.weapon2.name || '武器2'}）〉\n`;
-                }
-            }
-            if (this.equipments.armor.group || this.equipments.armor.name) {
-                const groupLabel = this.equipmentGroupLabelMap[this.equipments.armor.group] || this.equipments.armor.group;
-                equipmentTextLines.push(`${this.equipments.armor.name || '防具'}（${groupLabel || '種別なし'}）`);
-            }
-            if (equipmentTextLines.length > 0) memoLines.push("\n【武器・防具】", ...equipmentTextLines);
-
-            if (this.character.otherItems) {
-                memoLines.push("\n【その他所持品】", this.character.otherItems);
-            }
-
-            if (this.character.memo) {
-                let charMemo = this.character.memo;
-                let truncatedCharMemo = "";
-                const maxLength = 200;
-
-                if (charMemo.length <= maxLength) {
-                    truncatedCharMemo = charMemo;
-                } else {
-                    let sub = charMemo.substring(0, maxLength);
-                    let lastBreak = -1;
-                    const breakChars = ['\n', '。', '．'];
-
-                    for (const char of breakChars) {
-                        let idx = sub.lastIndexOf(char);
-                        if (idx > lastBreak && idx > maxLength / 2) {
-                            lastBreak = idx;
-                        }
-                    }
-
-                    if (lastBreak !== -1) {
-                        truncatedCharMemo = charMemo.substring(0, lastBreak + 1) + (charMemo.length > lastBreak + 1 ? "…" : "");
-                    } else {
-                        truncatedCharMemo = charMemo.substring(0, maxLength) + "…";
-                    }
-                }
-                memoLines.push("\n【キャラクターメモ】", truncatedCharMemo.trim());
-            }
-
-            const finalMemo = memoLines.join("\n").trim();
-            const cocofoliaCharacter = {
-                kind: "character",
-                data: {
-                    params: [], status: [{ label: "ダメージ", value: 0 }, { label: "傷痕", value: scar }, { label: "ストレス", value: stress }],
-                    name: this.character.name || '名無し', initiative: this.currentWeight * -1,
-                    memo: finalMemo, externalUrl: "", commands: commands.trim()
-                }
+            const exportData = {
+                character: this.character,
+                skills: this.skills,
+                specialSkills: this.specialSkills,
+                equipments: this.equipments,
+                currentWeight: this.currentWeight,
+                speciesLabelMap: this.speciesLabelMap,
+                equipmentGroupLabelMap: this.equipmentGroupLabelMap,
+                specialSkillData: this.specialSkillData,
+                specialSkillsRequiringNote: this.specialSkillsRequiringNote,
+                weaponDamage: this.weaponDamage
             };
+
+            const cocofoliaCharacter = this.cocofoliaExporter.generateCocofoliaData(exportData);
+
+
             const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
-            if (!navigator.clipboard) { this.fallbackCopyTextToClipboard(textToCopy); return; }
-            navigator.clipboard.writeText(textToCopy)
-                .then(() => { this.outputButtonText = 'コピー完了！'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000); })
-                .catch(err => { console.error('Failed to copy: ', err); this.fallbackCopyTextToClipboard(textToCopy); });
+            this.copyToClipboard(textToCopy);
         },
+
+        async copyToClipboard(text) {
+            if (!navigator.clipboard) {
+                this.fallbackCopyTextToClipboard(text);
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(text);
+                this.setOutputButtonSuccess();
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                this.fallbackCopyTextToClipboard(text);
+            }
+        },
+
+        setOutputButtonSuccess() {
+            this.outputButtonText = 'コピー完了！';
+            setTimeout(() => {
+                this.outputButtonText = 'ココフォリア駒出力';
+            }, 3000);
+        },
+
         fallbackCopyTextToClipboard(text) {
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            textArea.style.top = "0"; textArea.style.left = "0"; textArea.style.position = "fixed"; textArea.style.opacity = "0";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
             document.body.appendChild(textArea);
-            textArea.focus(); textArea.select();
+            textArea.focus();
+            textArea.select();
+
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    this.outputButtonText = 'コピー完了！ (fallback)'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                    this.outputButtonText = 'コピー完了！ (fallback)';
+                    setTimeout(() => {
+                        this.outputButtonText = 'ココフォリア駒出力';
+                    }, 3000);
                 } else {
-                    this.outputButtonText = 'コピー失敗 (fallback)'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                    this.outputButtonText = 'コピー失敗 (fallback)';
+                    setTimeout(() => {
+                        this.outputButtonText = 'ココフォリア駒出力';
+                    }, 3000);
                 }
             } catch (err) {
-                this.outputButtonText = 'コピーエラー (fallback)'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                this.outputButtonText = 'コピーエラー (fallback)';
+                setTimeout(() => {
+                    this.outputButtonText = 'ココフォリア駒出力';
+                }, 3000);
             }
+
             document.body.removeChild(textArea);
         },
+
         showCustomAlert(message) {
             const alertModalId = 'custom-alert-modal';
             let modal = document.getElementById(alertModalId);
@@ -599,9 +526,12 @@ const app = createApp({
         }
     },
     mounted() {
+        this.cocofoliaExporter = new window.CocofoliaExporter();
+
         if (this.character.linkCurrentToInitialScar) {
             this.character.currentScar = this.character.initialScar;
         }
     }
 });
+
 app.mount('#app');
