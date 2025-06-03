@@ -384,7 +384,7 @@ input[type="checkbox"] {
 
 .weakness-table th,
 .weakness-table td {
-    padding: 8px;
+    padding: 5px;
     border-bottom: 1px solid #3a3a3a;
     text-align: left;
     vertical-align: middle;
