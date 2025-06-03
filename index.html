@@ -12,7 +12,7 @@
     <style>
         /* 基本スタイル */
         body {
-            font-family: 'Noto Sans JP', sans-serif; 
+            font-family: 'Noto Sans JP', sans-serif;
             margin: 0;
             background-color: #1a1a1a;
             color: #d1d1d1;
@@ -141,6 +141,28 @@
             overflow-x: hidden; 
         }
 
+        /* サブボックスタイトル（傷痕・弱点用） */
+        .sub-box-title {
+            font-size: 1em;
+            background-color: #2e2e2e;
+            border-bottom: 1px solid #4a4a4a;
+            padding: 10px 18px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            /* 親のbox_contentsのpaddingを相殺するためのマージン */
+            margin-left: -18px;
+            margin-right: -18px;
+        }
+        .sub-box-title-scar {
+            margin-top: -18px; /* box_contentsのpadding-topを相殺 */
+            margin-bottom: 15px;
+        }
+        .sub-box-title-weakness {
+            margin-top: 0px;
+            margin-bottom: 10px;
+        }
+
+
         /* リストスタイル */
         #skills_list, #special_skills_list, #histories {
             list-style-type: none;
@@ -177,7 +199,7 @@
              background-color: transparent;
         }
         .special_skill_note_input {
-            margin-top : 3px;
+             margin-top : 3px;
         }
         .item_new_layout {
             display: flex;
@@ -225,12 +247,23 @@
             flex-direction: column;
             flex-grow: 0;
         }
-    .history_item_inputs > div > label {
-        font-size: 0.85em;
-        margin-bottom: 4px;
-        color: #aaa;
-        display: block;
+        .history_item_inputs > div > label {
+            font-size: 0.85em;
+            margin-bottom: 4px;
+            color: #aaa;
+            display: block;
         }
+        /* 冒険の記録ヘッダーのカスタムスタイル */
+        .history-labels-header-custom {
+            padding-top: 0;
+            padding-bottom: 0;
+            border-bottom: 1px solid #4a4a4a;
+            margin-bottom: 8px;
+        }
+        .history-labels-header-custom .delete-button-wrapper { /* ヘッダーの削除ボタン分のスペース調整 */
+             height: 0px; /* 中身がないので高さを0に */
+        }
+
 
         .list_item_button_small {
             cursor: pointer;
@@ -431,7 +464,7 @@
             #session_history_wrapper .history_item_inputs { 
                 display: flex;
                 flex-direction: row; 
-                flex-wrap: nowrap;    
+                flex-wrap: nowrap;  
                 gap: 10px;
             }
             #session_history_wrapper .history_item_inputs > div { 
@@ -447,7 +480,7 @@
             
             #help-vue { width: calc(100% - 40px); max-width: none; 
             }
-            .info-row { flex-direction: column; gap: 12px; }  
+            .info-row { flex-direction: column; gap: 12px; } 
             .info-item, .info-item-custom-triple, .info-item-custom-double { 
                 flex-basis: auto !important; 
                 min-width: 0 !important; 
@@ -544,7 +577,7 @@
             border-color: #647687;
         }
 
-        #save_button #load_button_vue_wrapper {
+        #save_button, #load_button_vue_wrapper { /* サイズ統一のため修正 */
             height: 48px; 
             width: 110px;
         }
@@ -572,6 +605,10 @@
             height: 100%;
             box-sizing: border-box;
             cursor: pointer;
+            /* ボタン内のテキストを中央揃えにするために追加 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
 
@@ -647,7 +684,7 @@
                     <div class="box_title">傷痕と弱点</div>
                     <div class="box_contents">
                         <div style="margin-bottom: 25px;">
-                            <div class="box_title" style="font-size: 1em; background-color: #2e2e2e; border-bottom: 1px solid #4a4a4a; margin: -18px -18px 15px -18px; padding: 10px 18px; border-top-left-radius: 0; border-top-right-radius: 0;">傷痕</div>
+                            <div class="box_title sub-box-title sub-box-title-scar">傷痕</div>
                             <div class="info-row">
                                 <div class="info-item info-item-custom-double">
                                     <label for="current_scar">現在の傷痕</label>
@@ -660,7 +697,7 @@
                             </div>
                         </div>
                         <div>
-                            <div class="box_title" style="font-size: 1em; background-color: #2e2e2e; border-bottom: 1px solid #4a4a4a; margin: 0px -18px 10px -18px; padding: 10px 18px; border-top-left-radius: 0; border-top-right-radius: 0;">弱点</div>
+                            <div class="box_title sub-box-title sub-box-title-weakness">弱点</div>
                             <table class="weakness-table">
                                 <thead>
                                     <tr>
@@ -773,8 +810,8 @@
             </div>
 
             <div id="session_history_wrapper"> <div id="adventure_log_section"> <div class="box_title">冒険の記録</div> <div class="box_contents">
-                        <div class="history_labels_header item_new_layout" style="padding-top: 0; padding-bottom: 0; border-bottom: 1px solid #4a4a4a; margin-bottom: 8px;">
-                             <div style="width: 30px; height: 0px; flex-shrink: 0;"></div> <div style="flex-grow: 1;">
+                        <div class="item_new_layout history-labels-header-custom">
+                             <div class="delete-button-wrapper"></div> <div style="flex-grow: 1;">
                                 <div class="history_item_inputs">
                                     <div style="flex: 2 1 200px;"> <label>シナリオ名</label> </div> <div style="flex: 1 1 100px;"> <label>経験点</label> </div>
                                     <div style="flex: 2 1 200px;"> <label>メモ</label> </div> </div>
@@ -849,9 +886,9 @@
                         { id: 'combat', name: '白兵', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
                         { id: 'defense', name: '防御', checked: false, canHaveExperts: false, experts: [] },
                     ],
-                    externalSkillOrder: ['motion', 'avoidance', 'sense', 'observation', 'technique', 'shooting', 'sociality', 'knowledge', 'combat', 'defense'],
+                    externalSkillOrder: ['motion', 'avoidance', 'sense', 'observation', 'technique', 'shooting', 'sociality', 'knowledge', 'combat', 'defense'], // 外部JSON読み込み時のスキル順序
                     initialSpecialSkillCount: 8,
-                    specialSkills: [],
+                    specialSkills: Array(8).fill(null).map(() => ({ group: '', name: '', note: '', showNote: false })), // mountedから移動
                     equipments: { 
                         weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' },
                     },
@@ -873,10 +910,15 @@
                         </ul>
                     `,
                     outputButtonText: 'ココフォリア駒出力',
-                    specialSkillData: {}, 
+                    // 静的データはdataの初期値として定義
+                    specialSkillData: {
+                        tactics: [ { value: "concealed_weapon", label: "暗器" }, { value: "fence_off", label: "受け流し" }, { value: "covering_fire", label: "援護射撃" }, { value: "stance", label: "構え" }, { value: "riding_combat", label: "騎乗戦闘" }, { value: "fatal_spot_attack", label: "急所の一撃" }, { value: "high_angle_fire", label: "曲射" }, { value: "ready_to_die", label: "決死の覚悟" }, { value: "martial_arts", label: "拳闘術" }, { value: "escort", label: "護衛" }, { value: "heavy_attack", label: "重撃" }, { value: "risk_attack", label: "捨て身の一撃" }, { value: "machine_gunning", label: "掃射" }, { value: "snipe", label: "狙撃" }, { value: "provoke", label: "挑発" }, { value: "lightning_speed", label: "電光石火" }, { value: "rush", label: "突撃" }, { value: "cleave", label: "凪払い" }, { value: "knock_shooting", label: "弾き落とし" }, { value: "parry", label: "パリィ" }, { value: "feint", label: "フェイント" }, { value: "throw_weapon", label: "武器投げの習熟" }, { value: "break_weapon", label: "武器破壊" }, { value: "fortitude", label: "不屈" }, { value: "gait", label: "歩法" }, { value: "anticipate", label: "見切り" }, { value: "pierce_armor", label: "鎧通し" } ],
+                        magic: [ { value: "light", label: "灯り" }, { value: "dozing", label: "居眠り" }, { value: "enchant", label: "エンチャント" }, { value: "send_sound", label: "音送り" }, { value: "silence", label: "音消し" }, { value: "recovery", label: "回復" }, { value: "read_wind", label: "風読み" }, { value: "activate", label: "活性" }, { value: "fear", label: "恐怖" }, { value: "warning", label: "警報" }, { value: "barrier", label: "結界" }, { value: "illusion", label: "幻影" }, { value: "telecommunication", label: "交信" }, { value: "power_of_word", label: "言霊" }, { value: "ritual_of_spirit", label: "死儀" }, { value: "heal", label: "治癒" }, { value: "calling", label: "通話" }, { value: "familiar", label: "使い魔" }, { value: "ignite", label: "点火" }, { value: "extend_magic", label: "範囲魔術" }, { value: "light_brush", label: "光の筆" }, { value: "cover", label: "被覆" }, { value: "float", label: "浮遊" }, { value: "magic_weapon", label: "魔術の得物" } ],
+                        features: [ { value: "wisdom", label: "叡智" }, { value: "concentrate", label: "過集中" }, { value: "acrobatics", label: "軽業" }, { value: "connivance", label: "看破" }, { value: "thin", label: "希薄" }, { value: "cajolery", label: "口車" }, { value: "connection", label: "コネクション" }, { value: "change_clothes", label: "様変わりの衣" }, { value: "hide_object", label: "仕込み" }, { value: "auto_writing", label: "自動筆記具" }, { value: "pickpocket", label: "スリの極意" }, { value: "instant", label: "即席" }, { value: "infinite_bagpack", label: "底なしの鞄" }, { value: "training", label: "調教" }, { value: "instruction", label: "伝授" }, { value: "cleverness", label: "天性の小手先" }, { value: "adaptability", label: "踏破" }, { value: "cipher", label: "独自暗号" }, { value: "spoofing", label: "なりすまし" }, { value: "beauty", label: "美貌" }, { value: "other_name", label: "二つ名" }, { value: "decompose", label: "分解" }, { value: "honor", label: "誉れ" }, { value: "night_vision", label: "夜目" } ]
+                    }, 
                     specialSkillsRequiringNote: ["enchant", "ritual_of_spirit", "familiar", "magic_weapon", "wisdom", "connection", "hide_object", "training", "spoofing", "other_name", "honor"],
-                    speciesLabelMap: {}, 
-                    equipmentGroupLabelMap: {},
+                    speciesLabelMap: { "human": "人間", "elf": "エルフ", "dwarf": "ドワーフ", "halfling": "ディグリング", "therianthropy": "獣人", "dragonfolk": "竜人", "treefolk": "ツリーフォーク", "other": "希少人種", "": "未選択" }, 
+                    equipmentGroupLabelMap: { "": "なし", "combat_small": "小型白兵武器", "combat_medium": "中型白兵武器", "combat_large": "大型白兵武器", "shooting": "射撃武器", "catalyst": "魔術触媒", "light_armor": "軽装防具", "heavy_armor": "重装防具" },
                     weaponDamage: {"": "", "combat_small": "1d4+1", "combat_medium": "1d6+1", "combat_large": "1d10", "shooting": "1d8", "catalyst": ""},
                 };
             },
@@ -887,20 +929,21 @@
                         return sum + (weakness.text && weakness.text.trim() !== '' && weakness.acquired === '作成時' ? 10 : 0);
                     }, 0);
                     
+                    // 初期作成時のボーナス経験点は最大20点
                     const combinedInitialBonus = Math.min(initialScarExp + creationWeaknessExp, 20);
 
                     const historyExp = this.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
-                    return 100 + combinedInitialBonus + historyExp;
+                    return 100 + combinedInitialBonus + historyExp; // 基本経験点100点
                 },
                 currentExperiencePoints() {
                     let skillExp = this.skills.reduce((sum, s) => sum + (s.checked ? 10 : 0), 0);
                     let expertExp = this.skills.reduce((sum, s) => {
                         if (s.checked && s.canHaveExperts) {
-                            return sum + s.experts.reduce((expSum, exp) => expSum + (exp.value ? 5 : 0), 0);
+                            return sum + s.experts.reduce((expSum, exp) => expSum + (exp.value && exp.value.trim() !== '' ? 5 : 0), 0); // 空の専門技能はカウントしない
                         }
                         return sum;
                     }, 0);
-                    let specialSkillExp = this.specialSkills.reduce((sum, ss) => sum + (ss.name ? 5 : 0), 0);
+                    let specialSkillExp = this.specialSkills.reduce((sum, ss) => sum + (ss.name && ss.name.trim() !== '' ? 5 : 0), 0); // 空の特技はカウントしない
                     return skillExp + expertExp + specialSkillExp;
                 },
                 currentWeight() {
@@ -932,7 +975,7 @@
             },
             methods: {
                 hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
-                hasHistoryContent(h) { return !!(h.sessionName || h.gotExperiments !== null || h.memo); }, // v-modelはsessionNameのまま
+                hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); }, // v-modelはsessionNameのまま
 
                 addSpecialSkillItem() {
                     if (this.specialSkills.length < 20) {
@@ -951,7 +994,7 @@
                     if (this.character.species !== 'other') { 
                         this.character.rareSpecies = ''; 
                     }
-                    this.$forceUpdate();
+                    // Vue 3ではオブジェクトのプロパティ変更は自動的に検知されるため、$forceUpdateは通常不要
                 },
                 addExpert(skill) { if (skill.canHaveExperts) { skill.experts.push({ value: '' }); } },
                 removeExpert(skill, expertIndex) {
@@ -988,14 +1031,14 @@
                          })),
                          specialSkills: this.specialSkills.filter(ss => ss.group && ss.name), 
                          equipments: this.equipments, 
-                         histories: this.histories.filter(h => h.sessionName || h.gotExperiments !== null || h.memo) // v-modelはsessionNameのまま
+                         histories: this.histories.filter(h => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo) // v-modelはsessionNameのまま
                      };
                     const jsonData = JSON.stringify(dataToSave, null, 2);
                     const blob = new Blob([jsonData], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    const filename = this.character.name || 'キャラクター';
+                    const filename = this.character.name || 'Aionia_Character'; // ファイル名を変更
                     a.download = `${filename}_AioniaSheet.json`; 
                     document.body.appendChild(a);
                     a.click();
@@ -1018,8 +1061,9 @@
                         };
                         reader.readAsText(file);
                     }
-                    event.target.value = null; 
+                    event.target.value = null; // 同じファイルを連続してアップロードできるようにするため
                 },
+                // 外部JSON (bright-trpg様ツール形式) から内部データ形式への変換
                 convertExternalJsonToInternalFormat(externalData) {
                     const internalData = {
                         character: {
@@ -1034,7 +1078,7 @@
                             weight: externalData.weight || '',
                             origin: externalData.origin || '', 
                             faith: externalData.faith || '',   
-                            otherItems: externalData.otherItems || '',
+                            otherItems: externalData.otherItems || '', // otherItemsは元データにない可能性あり
                             initialScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
                             currentScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0, 
                             memo: externalData.character_memo || '',
@@ -1052,9 +1096,10 @@
                         internalData.character.weaknesses[1] = { text: externalData.init_weakness2, acquired: '作成時' };
                     }
 
+                    // スキルデータの変換
                     if (externalData.skills && Array.isArray(externalData.skills)) {
                         this.externalSkillOrder.forEach((skillId, index) => {
-                            const appSkillDefinition = this.skills.find(s => s.id === skillId);
+                            const appSkillDefinition = this.skills.find(s => s.id === skillId); // this.skillsは現在のアプリの定義
                             if (appSkillDefinition && externalData.skills[index]) {
                                 const externalSkill = externalData.skills[index];
                                 const newSkill = {
@@ -1066,39 +1111,46 @@
                                     if (externalSkill.expert_skills && externalSkill.expert_skills.length > 0) {
                                         newSkill.experts = externalSkill.expert_skills.map(es => ({ value: es || '' })).filter(e => e.value);
                                     }
-                                    if (newSkill.experts.length === 0) newSkill.experts.push({ value: '' });
-                                } else if (newSkill.canHaveExperts) {
+                                    if (newSkill.experts.length === 0) newSkill.experts.push({ value: '' }); // 専門技能が空でも枠は作る
+                                } else if (newSkill.canHaveExperts) { // checkedでなくても枠だけは保持
                                      newSkill.experts.push({ value: '' });
                                 }
                                 internalData.skills.push(newSkill);
-                            } else if (appSkillDefinition) {
-                                internalData.skills.push(JSON.parse(JSON.stringify(appSkillDefinition)));
+                            } else if (appSkillDefinition) { // 外部データにスキル情報がない場合、アプリのデフォルト定義を使用
+                                internalData.skills.push(JSON.parse(JSON.stringify(appSkillDefinition))); // 深いコピー
                             }
                         });
-                    } else {
+                    } else { // 外部データにスキル情報がない場合、アプリのデフォルト定義を使用
                         internalData.skills = JSON.parse(JSON.stringify(this.skills));
                     }
-
+                    
+                    // 特技データの変換
                     if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
                         internalData.specialSkills = externalData.special_skills
-                            .filter(ss => ss.group && ss.name)
+                            .filter(ss => ss.group && ss.name) // groupとnameがあるもののみ
                             .map(ss => ({
                                 group: ss.group || '', name: ss.name || '',
-                                note: ss.note || '', showNote: false
+                                note: ss.note || '', showNote: this.specialSkillsRequiringNote.includes(ss.name || '') // showNoteを適切に設定
                             }));
                     }
-
-                    if (externalData.equipments) {
-                        internalData.equipments.weapon1 = { ... (externalData.equipments.weapon1 || { group: '', name: '' }) };
-                        internalData.equipments.weapon2 = { ... (externalData.equipments.weapon2 || { group: '', name: '' }) };
-                        internalData.equipments.armor = { ... (externalData.equipments.armor || { group: '', name: '' }) };
+                    
+                    // 装備データの変換 (外部JSONにequipmentsブロックがないので、個別キーから取得)
+                    if(externalData.weapon1_type || externalData.weapon1_name) {
+                        internalData.equipments.weapon1 = { group: externalData.weapon1_type || '', name: externalData.weapon1_name || '' };
+                    }
+                    if(externalData.weapon2_type || externalData.weapon2_name) {
+                        internalData.equipments.weapon2 = { group: externalData.weapon2_type || '', name: externalData.weapon2_name || '' };
+                    }
+                    if(externalData.armor_type || externalData.armor_name) {
+                        internalData.equipments.armor = { group: externalData.armor_type || '', name: externalData.armor_name || '' };
                     }
                     
-                    if (externalData.histories && Array.isArray(externalData.histories)) {
-                        internalData.histories = externalData.histories.map(h => ({
-                            sessionName: h.name || '', // v-modelはsessionNameのまま
+                    // 冒険の記録の変換 (外部JSON形式に合わせる。元データにstressやnameがあった場合)
+                    if (externalData.history && Array.isArray(externalData.history)) { // 'history'が正しいか確認
+                        internalData.histories = externalData.history.map(h => ({
+                            sessionName: h.name || '', // 'name' を 'sessionName'にマップ
                             gotExperiments: h.experiments ? parseInt(h.experiments) : null,
-                            memo: h.stress || h.memo || '' 
+                            memo: h.stress || h.memo || '' // 'stress' も 'memo' に含めるか、別途処理
                         }));
                     }
                     return internalData;
@@ -1106,16 +1158,19 @@
 
                 parseLoadedData(rawJsonData) {
                     let dataToParse = rawJsonData;
+                    // 外部JSON形式 (bright-trpg様ツール) かどうかを判定
                     if (rawJsonData && typeof rawJsonData.player !== 'undefined' && typeof rawJsonData.character_memo !== 'undefined') {
-                        console.log("External JSON format detected, converting...");
+                        console.log("External JSON format (bright-trpg tool) detected, converting...");
                         dataToParse = this.convertExternalJsonToInternalFormat(rawJsonData);
                     } else if (rawJsonData && rawJsonData.character && typeof rawJsonData.character.playerName !== 'undefined') {
-                        console.log("Internal JSON format detected.");
+                        // このアプリの内部JSON形式
+                        console.log("Internal JSON format (this tool) detected.");
                     } else {
-                        console.warn("Unknown JSON format, attempting to parse as is.");
-                        dataToParse = {
+                        console.warn("Unknown JSON format, attempting to parse as is. Data integrity not guaranteed.");
+                        // 不明な形式の場合、最低限のフォールバック構造を用意
+                        dataToParse = { 
                             character: {}, skills: [], specialSkills: [], equipments: {}, histories: [],
-                            ...rawJsonData
+                            ...rawJsonData // 不明なデータを展開してみる
                         };
                     }
 
@@ -1129,6 +1184,7 @@
                     };
                     this.character = { ...defaultCharacter, ...(dataToParse.character || {}) };
 
+                    // 弱点リストの長さを10に固定
                     if (this.character.weaknesses && Array.isArray(this.character.weaknesses)) {
                         const numMissingWeaknesses = 10 - this.character.weaknesses.length;
                         if (numMissingWeaknesses > 0) {
@@ -1142,37 +1198,37 @@
                         this.character.weaknesses = Array(10).fill(null).map(() => ({ text: '', acquired: '--' }));
                     }
 
-
+                    // スキルデータの読み込みと初期化
+                    const baseSkills = JSON.parse(JSON.stringify(this.$options.data().skills)); // dataオプションの初期状態を取得
                     if (dataToParse.skills && Array.isArray(dataToParse.skills)) {
                         const loadedSkillsById = new Map(dataToParse.skills.map(s => [s.id, s]));
-                        this.skills.forEach(appSkill => {
+                        this.skills = baseSkills.map(appSkill => {
                             const loadedSkillData = loadedSkillsById.get(appSkill.id);
                             if (loadedSkillData) {
                                 appSkill.checked = !!loadedSkillData.checked;
                                 if (appSkill.canHaveExperts) {
-                                    if (appSkill.checked && loadedSkillData.experts && loadedSkillData.experts.length > 0) {
-                                        appSkill.experts = loadedSkillData.experts.map(e => ({value: e.value || '' })).filter(e => e.value);
-                                         if (appSkill.experts.length === 0 && appSkill.checked) appSkill.experts = [{value: ''}];
-                                    } else if (appSkill.checked) {
+                                    if (loadedSkillData.experts && loadedSkillData.experts.length > 0) {
+                                        appSkill.experts = loadedSkillData.experts.map(e => ({value: e.value || '' }));
+                                        // 専門技能が全て空文字列の場合でも、１つの空の入力欄は保持する（ユーザーが入力できるように）
+                                        if (appSkill.experts.every(e => e.value === '')) {
+                                             appSkill.experts = [{value: ''}];
+                                        }
+                                    } else { // 読み込んだデータにexpertsがない場合
                                         appSkill.experts = [{ value: '' }];
-                                    } else { 
-                                        appSkill.experts = [{ value: '' }]; 
                                     }
                                 } else {
                                     appSkill.experts = [];
                                 }
-                            } else { 
-                                appSkill.checked = false;
-                                appSkill.experts = appSkill.canHaveExperts ? [{ value: '' }] : [];
                             }
+                            // 読み込まれたスキルにexpertsがない場合や、canHaveExpertsでない場合、
+                            // baseSkillsのexperts（空の配列 or [{value: ''}]）が使われる。
+                            return appSkill;
                         });
-                    } else {
-                         this.skills.forEach(appSkill => {
-                            appSkill.checked = false;
-                            appSkill.experts = appSkill.canHaveExperts ? [{ value: '' }] : [];
-                        });
+                    } else { // 読み込むデータにskillsがない場合、初期状態のスキルリストを使用
+                         this.skills = baseSkills;
                     }
                     
+                    // 特技リストの初期化と読み込み
                     let loadedSSCount = 0;
                     if (dataToParse.specialSkills && Array.isArray(dataToParse.specialSkills)) {
                         loadedSSCount = dataToParse.specialSkills.length;
@@ -1187,14 +1243,14 @@
                                 group: loadedSS.group || '',
                                 name: loadedSS.name || '',
                                 note: loadedSS.note || '',
-                                showNote: false 
+                                showNote: this.specialSkillsRequiringNote.includes(loadedSS.name || '') // showNoteを適切に設定
                             });
-                            this.updateSpecialSkillNoteVisibility(i); 
                         } else {
                             this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
                         }
                     }
 
+                    // 装備データの読み込み
                     if (dataToParse.equipments) {
                         this.equipments.weapon1 = { group: '', name: '', ...(dataToParse.equipments.weapon1 || {}) };
                         this.equipments.weapon2 = { group: '', name: '', ...(dataToParse.equipments.weapon2 || {}) };
@@ -1202,7 +1258,8 @@
                     } else { 
                         this.equipments = { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' }};
                     }
-
+                    
+                    // 冒険の記録の読み込み
                     if (dataToParse.histories && dataToParse.histories.length > 0) {
                         this.histories = dataToParse.histories.map(h => ({ 
                             sessionName: h.sessionName || '', // v-modelはsessionNameのまま
@@ -1215,62 +1272,58 @@
                 },
                 outputToCocofolia() {
                     const scar = Number(this.character.currentScar) || 0; 
-                    const stress = 0; 
+                    const stress = 0; // ストレスは現在このシートでは管理されていない
 
-                    let memo = `名前：${this.character.name || '名無し'}`;
-                    memo += this.character.playerName ? `（${this.character.playerName}）\n` : "\n";
+                    let memoLines = [];
+                    memoLines.push(`名前：${this.character.name || '名無し'}${this.character.playerName ? `（${this.character.playerName}）` : ""}`);
                     
                     const speciesText = this.speciesLabelMap[this.character.species] || this.character.species;
-                    memo += `種族：${this.character.species === 'other' ? `${speciesText}（${this.character.rareSpecies || '未設定'}）` : speciesText}\n`;
-                    if (this.character.gender) memo += `性別：${this.character.gender}\n`;
-                    if (this.character.age !== null) memo += `年齢：${this.character.age}\n`;
-                    if (this.character.origin) memo += `出身地：${this.character.origin}\n`;
-                    if (this.character.occupation) memo += `職業：${this.character.occupation}\n`;
-                    if (this.character.faith) memo += `信仰：${this.character.faith}\n`;
-                    if (this.character.height) memo += `身長：${this.character.height}\n`;
-                    if (this.character.weight) memo += `体重：${this.character.weight}\n`;
-
+                    memoLines.push(`種族：${this.character.species === 'other' ? `${speciesText}（${this.character.rareSpecies || '未設定'}）` : speciesText}`);
+                    if (this.character.gender) memoLines.push(`性別：${this.character.gender}`);
+                    if (this.character.age !== null) memoLines.push(`年齢：${this.character.age}`);
+                    if (this.character.origin) memoLines.push(`出身地：${this.character.origin}`);
+                    if (this.character.occupation) memoLines.push(`職業：${this.character.occupation}`);
+                    if (this.character.faith) memoLines.push(`信仰：${this.character.faith}`);
+                    if (this.character.height) memoLines.push(`身長：${this.character.height}`);
+                    if (this.character.weight) memoLines.push(`体重：${this.character.weight}`);
 
                     let cocofoliaWeaknesses = [];
                     this.character.weaknesses.forEach(w => {
                         if (w.text && w.text.trim() !== '') {
                             let acquiredText = '';
-                            if (w.acquired && w.acquired !== '--' && w.acquired !== 'help-text') { // help-textは表示しない
+                            if (w.acquired && w.acquired !== '--' && w.acquired !== 'help-text') { 
                                 acquiredText = ` (${w.acquired})`;
                             }
                             cocofoliaWeaknesses.push(`${w.text}${acquiredText}`);
                         }
                     });
                     if (cocofoliaWeaknesses.length > 0) {
-                        memo += "\n【弱点】\n" + cocofoliaWeaknesses.join("\n") + "\n";
+                        memoLines.push("\n【弱点】", ...cocofoliaWeaknesses);
                     }
                     
-                    let skillsMemoText = "\n【技能】\n";
-                    let hasSkills = false;
+                    let skillsMemoTextLines = [];
                     this.skills.forEach(skill => {
                         if (skill.checked) {
-                            hasSkills = true;
-                            skillsMemoText += `・${skill.name}`;
+                            let skillLine = `・${skill.name}`;
                             if (skill.canHaveExperts && skill.experts.some(e => e.value && e.value.trim() !== '')) {
                                 const expertTexts = skill.experts.filter(e => e.value && e.value.trim() !== '').map(e => e.value);
                                 if (expertTexts.length > 0) {
-                                    skillsMemoText += ` (${expertTexts.join('/')})`;
+                                    skillLine += ` (${expertTexts.join('/')})`;
                                 }
                             }
-                            skillsMemoText += "\n";
+                            skillsMemoTextLines.push(skillLine);
                         }
                     });
-                    if (hasSkills) {
-                         memo += skillsMemoText;
+                    if (skillsMemoTextLines.length > 0) {
+                        memoLines.push("\n【技能】", ...skillsMemoTextLines);
                     }
-
 
                     let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2\n:ダメージ=0\n`;
                     this.skills.forEach(skill => {
                         const dice = skill.checked ? "2d10" : "1d10";
                         commands += `${dice} 〈${skill.name}〉\n`;
                         if (skill.checked && skill.canHaveExperts) {
-                            skill.experts.forEach(expert => { if (expert.value) commands += `3d10 〈${skill.name}：${expert.value}〉\n`; });
+                            skill.experts.forEach(expert => { if (expert.value && expert.value.trim() !== '') commands += `3d10 〈${skill.name}：${expert.value}〉\n`; });
                         }
                     });
 
@@ -1283,37 +1336,37 @@
                             specialSkillListText += this.specialSkillsRequiringNote.includes(ss.name) && ss.note ? `《${skillLabel}：${ss.note}》` : `《${skillLabel}》`;
                         }
                     });
-                    if (specialSkillListText) memo += "\n【特技】\n" + specialSkillListText + "\n";
+                    if (specialSkillListText) memoLines.push("\n【特技】", specialSkillListText);
                     
-                    let equipmentText = "";
+                    let equipmentTextLines = [];
                      if (this.equipments.weapon1.group || this.equipments.weapon1.name) { 
                         const groupLabel = this.equipmentGroupLabelMap[this.equipments.weapon1.group] || this.equipments.weapon1.group;
-                        equipmentText += `${this.equipments.weapon1.name || '武器1'}（${groupLabel || '種別なし'}）\n`;
+                        equipmentTextLines.push(`${this.equipments.weapon1.name || '武器1'}（${groupLabel || '種別なし'}）`);
                         if (this.equipments.weapon1.group && this.weaponDamage[this.equipments.weapon1.group]) {
                              commands += `${this.weaponDamage[this.equipments.weapon1.group]} 〈ダメージ判定（${this.equipments.weapon1.name || '武器1'}）〉\n`;
                         }
                     }
                     if (this.equipments.weapon2.group || this.equipments.weapon2.name) {
                         const groupLabel = this.equipmentGroupLabelMap[this.equipments.weapon2.group] || this.equipments.weapon2.group;
-                        equipmentText += `${this.equipments.weapon2.name || '武器2'}（${groupLabel || '種別なし'}）\n`;
+                        equipmentTextLines.push(`${this.equipments.weapon2.name || '武器2'}（${groupLabel || '種別なし'}）`);
                          if (this.equipments.weapon2.group && this.weaponDamage[this.equipments.weapon2.group]) {
                              commands += `${this.weaponDamage[this.equipments.weapon2.group]} 〈ダメージ判定（${this.equipments.weapon2.name || '武器2'}）〉\n`;
                         }
                     }
                     if (this.equipments.armor.group || this.equipments.armor.name) {
                          const groupLabel = this.equipmentGroupLabelMap[this.equipments.armor.group] || this.equipments.armor.group;
-                        equipmentText += `${this.equipments.armor.name || '防具'}（${groupLabel || '種別なし'}）\n`;
+                        equipmentTextLines.push(`${this.equipments.armor.name || '防具'}（${groupLabel || '種別なし'}）`);
                     }
-                    if (equipmentText) memo += "\n【武器・防具】\n" + equipmentText;
+                    if (equipmentTextLines.length > 0) memoLines.push("\n【武器・防具】", ...equipmentTextLines);
 
                     if (this.character.otherItems) { 
-                        memo += "\n【その他所持品】\n" + this.character.otherItems + "\n";
+                        memoLines.push("\n【その他所持品】", this.character.otherItems);
                     }
 
                     if (this.character.memo) {
                         let charMemo = this.character.memo;
                         let truncatedCharMemo = "";
-                        const maxLength = 200;
+                        const maxLength = 200; // ココフォリアのメモ欄の長さを考慮
 
                         if (charMemo.length <= maxLength) {
                             truncatedCharMemo = charMemo;
@@ -1324,6 +1377,7 @@
 
                             for (const char of breakChars) {
                                 let idx = sub.lastIndexOf(char);
+                                // あまりにも短い位置での改行は避ける（例: 全体の半分以上は表示したい）
                                 if (idx > lastBreak && idx > maxLength / 2) { 
                                     lastBreak = idx;
                                 }
@@ -1331,26 +1385,26 @@
                             
                             if (lastBreak !== -1) {
                                 truncatedCharMemo = charMemo.substring(0, lastBreak + 1) + (charMemo.length > lastBreak + 1 ? "…" : "");
-                            } else {
+                            } else { // 適切な区切り文字が見つからない場合
                                 truncatedCharMemo = charMemo.substring(0, maxLength) + "…";
                             }
                         }
-                        memo += "\n【キャラクターメモ】\n" + truncatedCharMemo.trim() + "\n";
+                        memoLines.push("\n【キャラクターメモ】", truncatedCharMemo.trim());
                     }
 
-
+                    const finalMemo = memoLines.join("\n").trim();
                     const cocofoliaCharacter = {
                         kind: "character",
                         data: {
                             params: [], status: [ { label: "ダメージ", value: 0 }, { label: "傷痕", value: scar }, { label: "ストレス", value: stress } ],
-                            name: this.character.name || '名無し', initiative: this.currentWeight * -1,
-                            memo: memo.trim(), externalUrl: "", commands: commands.trim()
+                            name: this.character.name || '名無し', initiative: this.currentWeight * -1, // 荷重をイニシアチブに利用
+                            memo: finalMemo, externalUrl: "", commands: commands.trim()
                         }
                     };
                     const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
                     if (!navigator.clipboard) { this.fallbackCopyTextToClipboard(textToCopy); return; }
                     navigator.clipboard.writeText(textToCopy)
-                        .then(() => { this.outputButtonText = 'コピー完了　'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000); })
+                        .then(() => { this.outputButtonText = 'コピー完了！'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000); })
                         .catch(err => { console.error('Failed to copy: ', err); this.fallbackCopyTextToClipboard(textToCopy); });
                 },
                 fallbackCopyTextToClipboard(text) {
@@ -1362,16 +1416,17 @@
                     try {
                         const successful = document.execCommand('copy');
                         if (successful) {
-                            this.outputButtonText = '　　コピー完了　　'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                            this.outputButtonText = 'コピー完了！ (fallback)'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
                         } else {
-                            this.outputButtonText = 'コピー失敗'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                            this.outputButtonText = 'コピー失敗 (fallback)'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
                         }
                     } catch (err) {
-                        this.outputButtonText = 'コピーエラー'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
+                        this.outputButtonText = 'コピーエラー (fallback)'; setTimeout(() => { this.outputButtonText = 'ココフォリア駒出力'; }, 3000);
                     }
                     document.body.removeChild(textArea);
                 },
                 showCustomAlert(message) {
+                    // 既存のカスタムアラート表示ロジック
                     const alertModalId = 'custom-alert-modal';
                     let modal = document.getElementById(alertModalId);
                     if (!modal) {
@@ -1411,14 +1466,6 @@
                 }
             },
             mounted() {
-                this.specialSkills = Array(this.initialSpecialSkillCount).fill(null).map(() => ({ group: '', name: '', note: '', showNote: false }));
-                this.specialSkillData= {
-                    tactics: [ { value: "concealed_weapon", label: "暗器" }, { value: "fence_off", label: "受け流し" }, { value: "covering_fire", label: "援護射撃" }, { value: "stance", label: "構え" }, { value: "riding_combat", label: "騎乗戦闘" }, { value: "fatal_spot_attack", label: "急所の一撃" }, { value: "high_angle_fire", label: "曲射" }, { value: "ready_to_die", label: "決死の覚悟" }, { value: "martial_arts", label: "拳闘術" }, { value: "escort", label: "護衛" }, { value: "heavy_attack", label: "重撃" }, { value: "risk_attack", label: "捨て身の一撃" }, { value: "machine_gunning", label: "掃射" }, { value: "snipe", label: "狙撃" }, { value: "provoke", label: "挑発" }, { value: "lightning_speed", label: "電光石火" }, { value: "rush", label: "突撃" }, { value: "cleave", label: "凪払い" }, { value: "knock_shooting", label: "弾き落とし" }, { value: "parry", label: "パリィ" }, { value: "feint", label: "フェイント" }, { value: "throw_weapon", label: "武器投げの習熟" }, { value: "break_weapon", label: "武器破壊" }, { value: "fortitude", label: "不屈" }, { value: "gait", label: "歩法" }, { value: "anticipate", label: "見切り" }, { value: "pierce_armor", label: "鎧通し" } ],
-                    magic: [ { value: "light", label: "灯り" }, { value: "dozing", label: "居眠り" }, { value: "enchant", label: "エンチャント" }, { value: "send_sound", label: "音送り" }, { value: "silence", label: "音消し" }, { value: "recovery", label: "回復" }, { value: "read_wind", label: "風読み" }, { value: "activate", label: "活性" }, { value: "fear", label: "恐怖" }, { value: "warning", label: "警報" }, { value: "barrier", label: "結界" }, { value: "illusion", label: "幻影" }, { value: "telecommunication", label: "交信" }, { value: "power_of_word", label: "言霊" }, { value: "ritual_of_spirit", label: "死儀" }, { value: "heal", label: "治癒" }, { value: "calling", label: "通話" }, { value: "familiar", label: "使い魔" }, { value: "ignite", label: "点火" }, { value: "extend_magic", label: "範囲魔術" }, { value: "light_brush", label: "光の筆" }, { value: "cover", label: "被覆" }, { value: "float", label: "浮遊" }, { value: "magic_weapon", label: "魔術の得物" } ],
-                    features: [ { value: "wisdom", label: "叡智" }, { value: "concentrate", label: "過集中" }, { value: "acrobatics", label: "軽業" }, { value: "connivance", label: "看破" }, { value: "thin", label: "希薄" }, { value: "cajolery", label: "口車" }, { value: "connection", label: "コネクション" }, { value: "change_clothes", label: "様変わりの衣" }, { value: "hide_object", label: "仕込み" }, { value: "auto_writing", label: "自動筆記具" }, { value: "pickpocket", label: "スリの極意" }, { value: "instant", label: "即席" }, { value: "infinite_bagpack", label: "底なしの鞄" }, { value: "training", label: "調教" }, { value: "instruction", label: "伝授" }, { value: "cleverness", label: "天性の小手先" }, { value: "adaptability", label: "踏破" }, { value: "cipher", label: "独自暗号" }, { value: "spoofing", label: "なりすまし" }, { value: "beauty", label: "美貌" }, { value: "other_name", label: "二つ名" }, { value: "decompose", label: "分解" }, { value: "honor", label: "誉れ" }, { value: "night_vision", label: "夜目" } ]
-                };
-                this.speciesLabelMap = { "human": "人間", "elf": "エルフ", "dwarf": "ドワーフ", "halfling": "ディグリング", "therianthropy": "獣人", "dragonfolk": "竜人", "treefolk": "ツリーフォーク", "other": "希少人種", "": "未選択" };
-                this.equipmentGroupLabelMap = { "": "なし", "combat_small": "小型白兵武器", "combat_medium": "中型白兵武器", "combat_large": "大型白兵武器", "shooting": "射撃武器", "catalyst": "魔術触媒", "light_armor": "軽装防具", "heavy_armor": "重装防具" };
             }
         });
         app.mount('#app');
