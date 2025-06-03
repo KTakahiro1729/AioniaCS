@@ -10,7 +10,7 @@ const app = createApp({
                 otherItems: '',
                 currentScar: 0,
                 initialScar: 0,
-                linkCurrentToInitialScar: true, // **変更点:** デフォルトをtrueに
+                linkCurrentToInitialScar: true,
                 memo: '',
                 weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' })),
             },
