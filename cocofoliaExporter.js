@@ -41,11 +41,7 @@ class CocofoliaExporter {
 
     weaknesses.forEach(w => {
       if (w.text && w.text.trim() !== '') {
-        let acquiredText = '';
-        if (w.acquired && w.acquired !== '--' && w.acquired !== 'help-text') {
-          acquiredText = ` (${w.acquired})`;
-        }
-        weaknessList.push(`${w.text}${acquiredText}`);
+        weaknessList.push(w.text);
       }
     });
 
@@ -59,11 +55,11 @@ class CocofoliaExporter {
    * 技能情報を構築
    */
   buildSkillsInfo(skills) {
-    const skillLines = [];
+    const skillTexts = [];
 
     skills.forEach(skill => {
       if (skill.checked) {
-        let skillLine = `・${skill.name}`;
+        let skillText = `〈${skill.name}〉`;
 
         if (skill.canHaveExperts && skill.experts.some(e => e.value && e.value.trim() !== '')) {
           const expertTexts = skill.experts
@@ -71,15 +67,15 @@ class CocofoliaExporter {
             .map(e => e.value);
 
           if (expertTexts.length > 0) {
-            skillLine += ` (${expertTexts.join('/')})`;
+            skillText = `〈${skill.name}：${expertTexts.join('/')}〉`;
           }
         }
-        skillLines.push(skillLine);
+        skillTexts.push(skillText);
       }
     });
 
-    if (skillLines.length > 0) {
-      return ["\n【技能】", ...skillLines];
+    if (skillTexts.length > 0) {
+      return ["\n【技能】", skillTexts.join('')];
     }
     return [];
   }
@@ -176,6 +172,7 @@ class CocofoliaExporter {
     const sub = memo.substring(0, maxLength);
     let lastBreak = -1;
 
+    // 適切な区切り位置を探す
     for (const char of this.BREAK_CHARS) {
       const idx = sub.lastIndexOf(char);
       if (idx > lastBreak && idx > maxLength * this.MIN_BREAK_POSITION_RATIO) {
