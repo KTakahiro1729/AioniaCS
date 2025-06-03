@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +9,12 @@
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div id="app">
         <div class="tool-title">Aionia TRPG Character Sheet</div>
@@ -20,34 +24,52 @@
                     <div class="box_title">基本情報</div>
                     <div class="box_contents">
                         <div class="info-row">
-                            <div class="info-item info-item-full"> <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name"/> </div>
+                            <div class="info-item info-item-full"> <label for="name">キャラクター名</label> <input type="text"
+                                    id="name" v-model="character.name" /> </div>
                         </div>
                         <div class="info-row">
-                            <div class="info-item info-item-full"> <label for="player_name">プレイヤー名</label> <input type="text" id="player_name" v-model="character.playerName"/> </div>
+                            <div class="info-item info-item-full"> <label for="player_name">プレイヤー名</label> <input
+                                    type="text" id="player_name" v-model="character.playerName" /> </div>
                         </div>
                         <div class="info-row">
-                            <div class="info-item" :class="{'info-item-full': character.species !== 'other', 'info-item-custom-double': character.species === 'other'}">
+                            <div class="info-item"
+                                :class="{'info-item-full': character.species !== 'other', 'info-item-custom-double': character.species === 'other'}">
                                 <label for="species">種族</label>
                                 <select id="species" v-model="character.species" @change="handleSpeciesChange">
-                                    <option value="" disabled>選択してください</option> <option value="human">人間</option> <option value="elf">エルフ</option> <option value="dwarf">ドワーフ</option> <option value="halfling">ディグリング</option> <option value="therianthropy">獣人</option> <option value="dragonfolk">竜人</option> <option value="treefolk">ツリーフォーク</option> <option value="other">希少人種</option>
+                                    <option value="" disabled>選択してください</option>
+                                    <option value="human">人間</option>
+                                    <option value="elf">エルフ</option>
+                                    <option value="dwarf">ドワーフ</option>
+                                    <option value="halfling">ディグリング</option>
+                                    <option value="therianthropy">獣人</option>
+                                    <option value="dragonfolk">竜人</option>
+                                    <option value="treefolk">ツリーフォーク</option>
+                                    <option value="other">希少人種</option>
                                 </select>
                             </div>
                             <div class="info-item info-item-custom-double" v-if="character.species === 'other'">
                                 <label for="rare_species">種族名（希少人種）</label>
-                                <input type="text" id="rare_species" v-model="character.rareSpecies"/>
+                                <input type="text" id="rare_species" v-model="character.rareSpecies" />
                             </div>
                         </div>
                         <div class="info-row">
-                            <div class="info-item info-item-custom-quadruple"> <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender"/> </div>
-                            <div class="info-item info-item-custom-quadruple"> <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age" min="0"/> </div>
-                            <div class="info-item info-item-custom-quadruple"> <label for="height">身長</label> <input type="text" id="height" v-model="character.height"/> </div>
-                            <div class="info-item info-item-custom-quadruple"> <label for="weight_char">体重</label> <input type="text" id="weight_char" v-model="character.weight"/> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="gender">性別</label> <input
+                                    type="text" id="gender" v-model="character.gender" /> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="age">年齢</label> <input
+                                    type="number" id="age" v-model.number="character.age" min="0" /> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="height">身長</label> <input
+                                    type="text" id="height" v-model="character.height" /> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="weight_char">体重</label>
+                                <input type="text" id="weight_char" v-model="character.weight" /> </div>
 
                         </div>
                         <div class="info-row">
-                            <div class="info-item info-item-custom-triple"> <label for="origin">出身地</label> <input type="text" id="origin" v-model="character.origin"/> </div>
-                            <div class="info-item info-item-custom-triple"> <label for="occupation">職業</label> <input type="text" id="occupation" v-model="character.occupation"/> </div>
-                            <div class="info-item info-item-custom-triple"> <label for="faith">信仰</label> <input type="text" id="faith" v-model="character.faith"/> </div>
+                            <div class="info-item info-item-custom-triple"> <label for="origin">出身地</label> <input
+                                    type="text" id="origin" v-model="character.origin" /> </div>
+                            <div class="info-item info-item-custom-triple"> <label for="occupation">職業</label> <input
+                                    type="text" id="occupation" v-model="character.occupation" /> </div>
+                            <div class="info-item info-item-custom-triple"> <label for="faith">信仰</label> <input
+                                    type="text" id="faith" v-model="character.faith" /> </div>
                         </div>
                     </div>
                 </div>
@@ -62,36 +84,22 @@
                             <div class="info-row">
                                 <div class="info-item info-item-custom-double">
                                     <div style="display: flex; align-items: center;">
-                                    <label for="current_scar" style="margin-right: 8px;">現在値</label>
-                                    <input
-                                        type="checkbox"
-                                        id="link_current_to_initial_scar_checkbox"
-                                        v-model="character.linkCurrentToInitialScar"
-                                        style="margin-right: 4px; margin-bottom: 2px; accent-color: #c09a69; transform: scale(1.1); width: auto;"
-                                    >
-                                    <label
-                                        for="link_current_to_initial_scar_checkbox"
-                                        style="font-size: 0.9em; color: #a0a0a0; font-weight: normal; user-select: none; margin-bottom: 0;"
-                                    >連動</label>
+                                        <label for="current_scar" style="margin-right: 8px;">現在値</label>
+                                        <input type="checkbox" id="link_current_to_initial_scar_checkbox"
+                                            v-model="character.linkCurrentToInitialScar"
+                                            style="margin-right: 4px; margin-bottom: 2px; accent-color: #c09a69; transform: scale(1.1); width: auto;">
+                                        <label for="link_current_to_initial_scar_checkbox"
+                                            style="font-size: 0.9em; color: #a0a0a0; font-weight: normal; user-select: none; margin-bottom: 0;">連動</label>
                                     </div>
-                                    <input
-                                    type="number"
-                                    id="current_scar"
-                                    v-model.number="character.currentScar"
-                                    @input="handleCurrentScarInput"
-                                    :class="{'greyed-out': character.linkCurrentToInitialScar}"
-                                    min="0"
-                                    style="margin-top: 6px;"
-                                    >
+                                    <input type="number" id="current_scar" v-model.number="character.currentScar"
+                                        @input="handleCurrentScarInput"
+                                        :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0"
+                                        style="margin-top: 6px;">
                                 </div>
                                 <div class="info-item info-item-custom-double">
                                     <label for="initial_scar">初期値</label>
-                                    <input
-                                    type="number"
-                                    id="initial_scar"
-                                    v-model.number="character.initialScar"
-                                    min="0"
-                                    >
+                                    <input type="number" id="initial_scar" v-model.number="character.initialScar"
+                                        min="0">
                                 </div>
                             </div>
                         </div>
@@ -113,7 +121,9 @@
                                         </td>
                                         <td class="col-acquired">
                                             <select v-model="weakness.acquired">
-                                                <option v-for="option in sessionNamesForWeaknessDropdown" :key="option.value" :value="option.value" :disabled="option.disabled">{{ option.text }}</option>
+                                                <option v-for="option in sessionNamesForWeaknessDropdown"
+                                                    :key="option.value" :value="option.value"
+                                                    :disabled="option.disabled">{{ option.text }}</option>
                                             </select>
                                         </td>
                                     </tr>
@@ -130,20 +140,26 @@
                     <div class="box_title">技能</div>
                     <ul id="skills_list" class="box_contents">
                         <li v-for="(skill) in skills" :key="skill.id">
-                            <div class="skill_header"> <input type="checkbox" :id="skill.id" v-model="skill.checked"/> <label :for="skill.id" class="skill_name">{{ skill.name }}</label> </div>
+                            <div class="skill_header"> <input type="checkbox" :id="skill.id" v-model="skill.checked" />
+                                <label :for="skill.id" class="skill_name">{{ skill.name }}</label> </div>
                             <div v-if="skill.canHaveExperts && skill.checked" class="experts_section">
-                                <ul class="expert_list" style="padding-left: 0; list-style-type: none; margin-top:5px; margin-bottom: 0;">
-                                    <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="expert_list_item_new_layout">
+                                <ul class="expert_list"
+                                    style="padding-left: 0; list-style-type: none; margin-top:5px; margin-bottom: 0;">
+                                    <li v-for="(expert, expIndex) in skill.experts" :key="expIndex"
+                                        class="expert_list_item_new_layout">
                                         <div class="delete-button-wrapper">
-                                            <button type="button" class="list_item_button_small list_item_delete_small" 
-                                                    @click="removeExpert(skill, expIndex)" 
-                                                    :disabled="skill.experts.length <= 1 && expert.value === ''">－</button>
+                                            <button type="button" class="list_item_button_small list_item_delete_small"
+                                                @click="removeExpert(skill, expIndex)"
+                                                :disabled="skill.experts.length <= 1 && expert.value === ''">－</button>
                                         </div>
-                                        <input type="text" v-model="expert.value" :placeholder="expertPlaceholder(skill)" :disabled="!skill.checked" style="flex-grow: 1;"/>
+                                        <input type="text" v-model="expert.value"
+                                            :placeholder="expertPlaceholder(skill)" :disabled="!skill.checked"
+                                            style="flex-grow: 1;" />
                                     </li>
                                 </ul>
                                 <div class="add_button_container_left">
-                                    <button type="button" class="list_item_button_small list_item_add_small" @click="addExpert(skill)">＋</button>
+                                    <button type="button" class="list_item_button_small list_item_add_small"
+                                        @click="addExpert(skill)">＋</button>
                                 </div>
                             </div>
                         </li>
@@ -156,25 +172,38 @@
                     <div class="box_title">特技</div>
                     <div class="box_contents">
                         <ul id="special_skills_list" style="margin-bottom: 10px;padding-left:0; list-style-type:none;">
-                            <li v-for="(specialSkill, index) in specialSkills" :key="index" class="item_new_layout" style="margin-bottom: 5px;">
+                            <li v-for="(specialSkill, index) in specialSkills" :key="index" class="item_new_layout"
+                                style="margin-bottom: 5px;">
                                 <div class="delete-button-wrapper">
-                                    <button type="button" class="list_item_button_small list_item_delete_small" 
-                                            @click="removeSpecialSkill(index)" 
-                                            :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)">－</button>
+                                    <button type="button" class="list_item_button_small list_item_delete_small"
+                                        @click="removeSpecialSkill(index)"
+                                        :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)">－</button>
                                 </div>
                                 <div style="flex-grow: 1;">
                                     <div style="display: flex; gap: 8px; ">
-                                        <select v-model="specialSkill.group" @change="updateSpecialSkillOptions(index)" style="flex: 1;"> <option value="">種類を選択</option> <option value="tactics">戦術</option> <option value="magic">魔術</option> <option value="features">特徴</option> </select>
-                                        <select v-model="specialSkill.name" @change="updateSpecialSkillNoteVisibility(index)" :disabled="!specialSkill.group" style="flex: 2;"> <option value="">---</option> <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value" :value="opt.value">{{ opt.label }}</option> </select>
+                                        <select v-model="specialSkill.group" @change="updateSpecialSkillOptions(index)"
+                                            style="flex: 1;">
+                                            <option value="">種類を選択</option>
+                                            <option value="tactics">戦術</option>
+                                            <option value="magic">魔術</option>
+                                            <option value="features">特徴</option>
+                                        </select>
+                                        <select v-model="specialSkill.name"
+                                            @change="updateSpecialSkillNoteVisibility(index)"
+                                            :disabled="!specialSkill.group" style="flex: 2;">
+                                            <option value="">---</option>
+                                            <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value"
+                                                :value="opt.value">{{ opt.label }}</option>
+                                        </select>
                                     </div>
-                                    <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote" 
-                                    class="special_skill_note_input"
-                                    placeholder="追記事項"/>
+                                    <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote"
+                                        class="special_skill_note_input" placeholder="追記事項" />
                                 </div>
                             </li>
                         </ul>
                         <div class="add_button_container_left" v-if="specialSkills.length < 20">
-                            <button type="button" class="list_item_button_small list_item_add_small" @click="addSpecialSkillItem()">＋</button>
+                            <button type="button" class="list_item_button_small list_item_add_small"
+                                @click="addSpecialSkillItem()">＋</button>
                         </div>
                     </div>
                 </div>
@@ -187,9 +216,43 @@
                         <div style="margin-bottom: 15px;">
                             <div style="display: flex; flex-wrap: wrap; gap: 15px;">
                                 <div style="flex: 1 1 300px; min-width: 280px;">
-                                    <div class="equipment" style="margin-bottom: 12px;"> <label for="weapon1">武器1</label> <div style="display: flex; gap: 8px;"> <select id="weapon1" v-model="equipments.weapon1.group" style="flex: 1;"> <option value="" selected>なし</option> <option value="combat_small">小型白兵武器</option> <option value="combat_medium">中型白兵武器</option> <option value="combat_large">大型白兵武器</option> <option value="shooting">射撃武器</option> <option value="catalyst">魔術触媒</option> </select> <input type="text" id="weapon1_name" v-model="equipments.weapon1.name" placeholder="装備名" style="flex: 2;"/> </div> </div>
-                                    <div class="equipment" style="margin-bottom: 12px;"> <label for="weapon2">武器2</label> <div style="display: flex; gap: 8px;"> <select id="weapon2" v-model="equipments.weapon2.group" style="flex: 1;"> <option value="" selected>なし</option> <option value="combat_small">小型白兵武器</option> <option value="combat_medium">中型白兵武器</option> <option value="combat_large">大型白兵武器</option> <option value="shooting">射撃武器</option> <option value="catalyst">魔術触媒</option> </select> <input type="text" id="weapon2_name" v-model="equipments.weapon2.name" placeholder="装備名" style="flex: 2;"/> </div> </div>
-                                    <div class="equipment"> <label for="armor">防具</label> <div style="display: flex; gap: 8px;"> <select id="armor" v-model="equipments.armor.group" style="flex: 1;"> <option value="" selected>なし</option> <option value="light_armor">軽装防具</option> <option value="heavy_armor">重装防具</option> </select> <input type="text" id="armor_name" v-model="equipments.armor.name" placeholder="装備名" style="flex: 2;"/> </div> </div>
+                                    <div class="equipment" style="margin-bottom: 12px;"> <label
+                                            for="weapon1">武器1</label>
+                                        <div style="display: flex; gap: 8px;"> <select id="weapon1"
+                                                v-model="equipments.weapon1.group" style="flex: 1;">
+                                                <option value="" selected>なし</option>
+                                                <option value="combat_small">小型白兵武器</option>
+                                                <option value="combat_medium">中型白兵武器</option>
+                                                <option value="combat_large">大型白兵武器</option>
+                                                <option value="shooting">射撃武器</option>
+                                                <option value="catalyst">魔術触媒</option>
+                                            </select> <input type="text" id="weapon1_name"
+                                                v-model="equipments.weapon1.name" placeholder="装備名" style="flex: 2;" />
+                                        </div>
+                                    </div>
+                                    <div class="equipment" style="margin-bottom: 12px;"> <label
+                                            for="weapon2">武器2</label>
+                                        <div style="display: flex; gap: 8px;"> <select id="weapon2"
+                                                v-model="equipments.weapon2.group" style="flex: 1;">
+                                                <option value="" selected>なし</option>
+                                                <option value="combat_small">小型白兵武器</option>
+                                                <option value="combat_medium">中型白兵武器</option>
+                                                <option value="combat_large">大型白兵武器</option>
+                                                <option value="shooting">射撃武器</option>
+                                                <option value="catalyst">魔術触媒</option>
+                                            </select> <input type="text" id="weapon2_name"
+                                                v-model="equipments.weapon2.name" placeholder="装備名" style="flex: 2;" />
+                                        </div>
+                                    </div>
+                                    <div class="equipment"> <label for="armor">防具</label>
+                                        <div style="display: flex; gap: 8px;"> <select id="armor"
+                                                v-model="equipments.armor.group" style="flex: 1;">
+                                                <option value="" selected>なし</option>
+                                                <option value="light_armor">軽装防具</option>
+                                                <option value="heavy_armor">重装防具</option>
+                                            </select> <input type="text" id="armor_name" v-model="equipments.armor.name"
+                                                placeholder="装備名" style="flex: 2;" /> </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -204,55 +267,76 @@
             <div id="character_memo_wrapper">
                 <div id="character_memo">
                     <div class="box_title">キャラクターメモ</div>
-                    <div class="box_contents"> <textarea id="character_text" placeholder="キャラクター背景、設定、その他メモを記入" v-model="character.memo"></textarea> </div>
+                    <div class="box_contents"> <textarea id="character_text" placeholder="キャラクター背景、設定、その他メモを記入"
+                            v-model="character.memo"></textarea> </div>
                 </div>
             </div>
 
-            <div id="session_history_wrapper"> <div id="adventure_log_section"> <div class="box_title">冒険の記録</div> <div class="box_contents">
+            <div id="session_history_wrapper">
+                <div id="adventure_log_section">
+                    <div class="box_title">冒険の記録</div>
+                    <div class="box_contents">
                         <div class="item_new_layout history-labels-header-custom">
-                             <div class="delete-button-wrapper"></div> <div style="flex-grow: 1;">
+                            <div class="delete-button-wrapper"></div>
+                            <div style="flex-grow: 1;">
                                 <div class="history_item_inputs">
-                                    <div style="flex: 2 1 200px;"> <label>シナリオ名</label> </div> <div style="flex: 1 1 100px;"> <label>経験点</label> </div>
-                                    <div style="flex: 2 1 200px;"> <label>メモ</label> </div> </div>
+                                    <div style="flex: 2 1 200px;"> <label>シナリオ名</label> </div>
+                                    <div style="flex: 1 1 100px;"> <label>経験点</label> </div>
+                                    <div style="flex: 2 1 200px;"> <label>メモ</label> </div>
+                                </div>
                             </div>
                         </div>
 
                         <ul id="histories" style="margin-bottom: 10px; padding-left:0; list-style-type:none;">
                             <li v-for="(history, index) in histories" :key="index" class="item_new_layout">
-                                 <div class="delete-button-wrapper">
+                                <div class="delete-button-wrapper">
                                     <button type="button" class="list_item_button_small list_item_delete_small"
-                                            @click="removeHistoryItem(index)"
-                                            :disabled="histories.length <= 1 && !hasHistoryContent(history)">－</button>
+                                        @click="removeHistoryItem(index)"
+                                        :disabled="histories.length <= 1 && !hasHistoryContent(history)">－</button>
                                 </div>
                                 <div style="flex-grow: 1;">
                                     <div class="history_item_inputs">
-                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.sessionName"/> </div> <div style="flex: 1 1 100px;"> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
-                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.memo"/> </div> </div>
+                                        <div style="flex: 2 1 200px;"> <input type="text"
+                                                v-model="history.sessionName" /> </div>
+                                        <div style="flex: 1 1 100px;"> <input type="number"
+                                                v-model.number="history.gotExperiments" min="0" /> </div>
+                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.memo" />
+                                        </div>
+                                    </div>
                                 </div>
                             </li>
                         </ul>
                         <div class="add_button_container_left">
-                            <button type="button" class="list_item_button_small list_item_add_small" @click="addHistoryItem()">＋</button>
+                            <button type="button" class="list_item_button_small list_item_add_small"
+                                @click="addHistoryItem()">＋</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div> <div class="copyright-footer"> 
-            <p>本サイトは<a href="https://www.aioniatrpg.com/" target="_blank" rel="noopener noreferrer">「イチ（フシギ製作所）」様が権利を有する「慈悲なきアイオニア」</a>の二次創作物です(Ver 1.2対応)。
-            <br>
-                本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。</p>
+        </div>
+        <div class="copyright-footer">
+            <p>本サイトは<a href="https://www.aioniatrpg.com/" target="_blank"
+                    rel="noopener noreferrer">「イチ（フシギ製作所）」様が権利を有する「慈悲なきアイオニア」</a>の二次創作物です(Ver 1.2対応)。
+                <br>
+                本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank"
+                    rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。
+            </p>
         </div>
 
         <div id="footer">
-             <div class="footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？</div>
-             <div class="status-display-container">  
-                 <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{ maxExperimentPoints }} </div>  
-                 <div class="status-display weight-display"> 荷重: {{ currentWeight }} </div>  
+            <div class="footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？
+            </div>
+            <div class="status-display-container">
+                <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
+                    maxExperimentPoints }} </div>
+                <div class="status-display weight-display"> 荷重: {{ currentWeight }} </div>
             </div>
             <div id="save_button" @click="saveData" class="footer-button"> データ保存 </div>
-            <div id="load_button_vue_wrapper" class="footer-button"> <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" style="display: none;"/> <label for="load_input_vue">データ読込</label> </div>
+            <div id="load_button_vue_wrapper" class="footer-button"> <input type="file" id="load_input_vue"
+                    @change="handleFileUpload" accept=".json,.txt" style="display: none;" /> <label
+                    for="load_input_vue">データ読込</label> </div>
             <div id="output_button" @click="outputToCocofolia" class="footer-button"> {{ outputButtonText }} </div>
-            <transition name="fade">  
+            <transition name="fade">
                 <div id="help-vue" v-if="showHelp" v-html="helpText"></div>
             </transition>
         </div>
@@ -260,4 +344,5 @@
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>
