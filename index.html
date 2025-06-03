@@ -18,295 +18,293 @@
 <body>
     <div id="app">
         <div class="tool-title">Aionia TRPG Character Sheet</div>
-        <div id="status_grid">
-            <div id="character_info_wrapper">
-                <div id="character_info">
-                    <div class="box_title">基本情報</div>
-                    <div class="box_contents">
-                        <div class="info-row">
-                            <div class="info-item info-item-full"> <label for="name">キャラクター名</label> <input type="text"
-                                    id="name" v-model="character.name" /> </div>
+        <div class="main-grid">
+            <div id="character_info" class="character-info">
+                <div class="box-title">基本情報</div>
+                <div class="box-content">
+                    <div class="info-row">
+                        <div class="info-item info-item--full">
+                            <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name" />
                         </div>
-                        <div class="info-row">
-                            <div class="info-item info-item-full"> <label for="player_name">プレイヤー名</label> <input
-                                    type="text" id="player_name" v-model="character.playerName" /> </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item info-item--full">
+                            <label for="player_name">プレイヤー名</label> <input type="text" id="player_name"
+                                v-model="character.playerName" />
                         </div>
-                        <div class="info-row">
-                            <div class="info-item"
-                                :class="{'info-item-full': character.species !== 'other', 'info-item-custom-double': character.species === 'other'}">
-                                <label for="species">種族</label>
-                                <select id="species" v-model="character.species" @change="handleSpeciesChange">
-                                    <option v-for="option in gameData.speciesOptions" :key="option.value"
-                                        :value="option.value" :disabled="option.disabled">
-                                        {{ option.label }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="info-item info-item-custom-double" v-if="character.species === 'other'">
-                                <label for="rare_species">種族名（希少人種）</label>
-                                <input type="text" id="rare_species" v-model="character.rareSpecies" />
-                            </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item"
+                            :class="{'info-item--full': character.species !== 'other', 'info-item--double': character.species === 'other'}">
+                            <label for="species">種族</label>
+                            <select id="species" v-model="character.species" @change="handleSpeciesChange">
+                                <option v-for="option in gameData.speciesOptions" :key="option.value"
+                                    :value="option.value" :disabled="option.disabled">
+                                    {{ option.label }}
+                                </option>
+                            </select>
                         </div>
-                        <div class="info-row">
-                            <div class="info-item info-item-custom-quadruple"> <label for="gender">性別</label> <input
-                                    type="text" id="gender" v-model="character.gender" /> </div>
-                            <div class="info-item info-item-custom-quadruple"> <label for="age">年齢</label> <input
-                                    type="number" id="age" v-model.number="character.age" min="0" /> </div>
-                            <div class="info-item info-item-custom-quadruple"> <label for="height">身長</label> <input
-                                    type="text" id="height" v-model="character.height" /> </div>
-                            <div class="info-item info-item-custom-quadruple"> <label for="weight_char">体重</label>
-                                <input type="text" id="weight_char" v-model="character.weight" />
-                            </div>
+                        <div class="info-item info-item--double" v-if="character.species === 'other'">
+                            <label for="rare_species">種族名（希少人種）</label>
+                            <input type="text" id="rare_species" v-model="character.rareSpecies" />
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item info-item--quadruple">
+                            <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender" />
+                        </div>
+                        <div class="info-item info-item--quadruple">
+                            <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age"
+                                min="0" />
+                        </div>
+                        <div class="info-item info-item--quadruple">
+                            <label for="height">身長</label> <input type="text" id="height" v-model="character.height" />
+                        </div>
+                        <div class="info-item info-item--quadruple">
+                            <label for="weight_char">体重</label>
+                            <input type="text" id="weight_char" v-model="character.weight" />
+                        </div>
 
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item info-item--triple">
+                            <label for="origin">出身地</label> <input type="text" id="origin" v-model="character.origin" />
                         </div>
-                        <div class="info-row">
-                            <div class="info-item info-item-custom-triple"> <label for="origin">出身地</label> <input
-                                    type="text" id="origin" v-model="character.origin" /> </div>
-                            <div class="info-item info-item-custom-triple"> <label for="occupation">職業</label> <input
-                                    type="text" id="occupation" v-model="character.occupation" /> </div>
-                            <div class="info-item info-item-custom-triple"> <label for="faith">信仰</label> <input
-                                    type="text" id="faith" v-model="character.faith" /> </div>
+                        <div class="info-item info-item--triple">
+                            <label for="occupation">職業</label> <input type="text" id="occupation"
+                                v-model="character.occupation" />
+                        </div>
+                        <div class="info-item info-item--triple">
+                            <label for="faith">信仰</label> <input type="text" id="faith" v-model="character.faith" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="scar_weakness_wrapper">
-                <div id="scar_weakness_section">
-                    <div class="box_title">傷痕と弱点</div>
-                    <div class="box_contents">
-                        <div class="scar-section">
-                            <div class="box_title sub-box-title sub-box-title-scar">傷痕</div>
-                            <div class="info-row">
-                                <div class="info-item info-item-custom-double">
-                                    <div class="link-checkbox-container">
-                                        <label for="current_scar" class="link-checkbox-main-label">現在値</label>
-                                        <input type="checkbox" id="link_current_to_initial_scar_checkbox"
-                                            v-model="character.linkCurrentToInitialScar" class="link-checkbox">
-                                        <label for="link_current_to_initial_scar_checkbox"
-                                            class="link-checkbox-label">連動</label>
+            <div id="scar_weakness_section" class="scar-weakness">
+                <div class="box-title">傷痕と弱点</div>
+                <div class="box-content">
+                    <div class="scar-section">
+                        <div class="box-title sub-box-title sub-box-title--scar">傷痕</div>
+                        <div class="info-row">
+                            <div class="info-item info-item--double">
+                                <div class="link-checkbox-container">
+                                    <label for="current_scar" class="link-checkbox-main-label">現在値</label>
+                                    <input type="checkbox" id="link_current_to_initial_scar_checkbox"
+                                        v-model="character.linkCurrentToInitialScar" class="link-checkbox">
+                                    <label for="link_current_to_initial_scar_checkbox"
+                                        class="link-checkbox-label">連動</label>
+                                </div>
+                                <input type="number" id="current_scar" v-model.number="character.currentScar"
+                                    @input="handleCurrentScarInput"
+                                    :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0" class="mt-6">
+                            </div>
+                            <div class="info-item info-item--double">
+                                <label for="initial_scar">初期値</label>
+                                <input type="number" id="initial_scar" v-model.number="character.initialScar" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="weakness-section">
+                        <div class="box-title sub-box-title sub-box-title--weakness">弱点</div>
+                        <table class="weakness-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-number"></th>
+                                    <th class="col-weakness">弱点</th>
+                                    <th class="col-acquired">獲得</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(weakness, index) in character.weaknesses" :key="index">
+                                    <td class="col-number">{{ index + 1 }}</td>
+                                    <td>
+                                        <input type="text" v-model="weakness.text">
+                                    </td>
+                                    <td class="col-acquired">
+                                        <select v-model="weakness.acquired">
+                                            <option v-for="option in sessionNamesForWeaknessDropdown"
+                                                :key="option.value" :value="option.value" :disabled="option.disabled">{{
+                                                option.text }}</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="skills" class="skills">
+                <div class="box-title">技能</div>
+                <ul class="skills-list box-content list-reset">
+                    <li v-for="(skill) in skills" :key="skill.id">
+                        <div class="skill-header">
+                            <input type="checkbox" :id="skill.id" v-model="skill.checked" />
+                            <label :for="skill.id" class="skill-name">{{ skill.name }}</label>
+                        </div>
+                        <div v-if="skill.canHaveExperts && skill.checked" class="experts-section">
+                            <ul class="expert-list list-reset list-reset--with-top-margin">
+                                <li v-for="(expert, expIndex) in skill.experts" :key="expIndex"
+                                    class="expert-list-item">
+                                    <div class="delete-button-wrapper">
+                                        <button type="button" class="list-button list-button--delete"
+                                            @click="removeExpert(skill, expIndex)" :disabled="skill.experts.length
+                                            <= 1 && expert.value===''">－</button>
                                     </div>
-                                    <input type="number" id="current_scar" v-model.number="character.currentScar"
-                                        @input="handleCurrentScarInput"
-                                        :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0"
-                                        class="mt-6">
-                                </div>
-                                <div class="info-item info-item-custom-double">
-                                    <label for="initial_scar">初期値</label>
-                                    <input type="number" id="initial_scar" v-model.number="character.initialScar"
-                                        min="0">
-                                </div>
+                                    <input type="text" v-model="expert.value" :placeholder="expertPlaceholder(skill)"
+                                        :disabled="!skill.checked" class="flex-grow" />
+                                </li>
+                            </ul>
+                            <div class="add-button-container-left">
+                                <button type="button" class="list-button list-button--add"
+                                    @click="addExpert(skill)">＋</button>
                             </div>
                         </div>
-                        <div class="weakness-section">
-                            <div class="box_title sub-box-title sub-box-title-weakness">弱点</div>
-                            <table class="weakness-table">
-                                <thead>
-                                    <tr>
-                                        <th class="col-number"></th>
-                                        <th class="col-weakness">弱点</th>
-                                        <th class="col-acquired">獲得</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(weakness, index) in character.weaknesses" :key="index">
-                                        <td class="col-number">{{ index + 1 }}</td>
-                                        <td>
-                                            <input type="text" v-model="weakness.text">
-                                        </td>
-                                        <td class="col-acquired">
-                                            <select v-model="weakness.acquired">
-                                                <option v-for="option in sessionNamesForWeaknessDropdown"
-                                                    :key="option.value" :value="option.value"
-                                                    :disabled="option.disabled">{{ option.text }}</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="special_skills" class="special-skills">
+                <div class="box-title">特技</div>
+                <div class="box-content">
+                    <ul class="list-reset">
+                        <li v-for="(specialSkill, index) in specialSkills" :key="index" class="list-item mb-5">
+                            <div class="delete-button-wrapper">
+                                <button type="button" class="list-button list-button--delete"
+                                    @click="removeSpecialSkill(index)"
+                                    :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)">
+                                    －</button>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex-group">
+                                    <select v-model="specialSkill.group" @change="updateSpecialSkillOptions(index)"
+                                        class="flex-item-1">
+                                        <option v-for="option in gameData.specialSkillGroupOptions" :key="option.value"
+                                            :value="option.value">
+                                            {{ option.label }}
+                                        </option>
+                                    </select>
+                                    <select v-model="specialSkill.name"
+                                        @change="updateSpecialSkillNoteVisibility(index)"
+                                        :disabled="!specialSkill.group" class="flex-item-2">
+                                        <option value="">---</option>
+                                        <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value"
+                                            :value="opt.value">{{ opt.label }}</option>
+                                    </select>
+                                </div>
+                                <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote"
+                                    class="special-skill-note-input"
+                                    :placeholder="gameData.placeholderTexts.specialSkillNote" />
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="add-button-container-left" v-if="specialSkills.length < 20">
+                        <button type="button" class="list-button list-button--add"
+                            @click="addSpecialSkillItem()">＋</button>
                     </div>
                 </div>
             </div>
 
-
-            <div id="skills_wrapper">
-                <div id="skills">
-                    <div class="box_title">技能</div>
-                    <ul id="skills_list" class="box_contents">
-                        <li v-for="(skill) in skills" :key="skill.id">
-                            <div class="skill_header"> <input type="checkbox" :id="skill.id" v-model="skill.checked" />
-                                <label :for="skill.id" class="skill_name">{{ skill.name }}</label>
+            <div id="items_section" class="items">
+                <div class="box-title">所持品</div>
+                <div class="box-content">
+                    <div class="mb-15">
+                        <div class="equipment-container">
+                            <div class="equipment-section">
+                                <div class="equipment-item mb-12">
+                                    <label for="weapon1">武器1</label>
+                                    <div class="flex-group">
+                                        <select id="weapon1" v-model="equipments.weapon1.group" class="flex-item-1">
+                                            <option v-for="option in gameData.weaponOptions" :key="option.value"
+                                                :value="option.value">
+                                                {{ option.label }}
+                                            </option>
+                                        </select>
+                                        <input type="text" id="weapon1_name" v-model="equipments.weapon1.name"
+                                            :placeholder="gameData.placeholderTexts.weaponName" class="flex-item-2" />
+                                    </div>
+                                </div>
+                                <div class="equipment-item mb-12">
+                                    <label for="weapon2">武器2</label>
+                                    <div class="flex-group">
+                                        <select id="weapon2" v-model="equipments.weapon2.group" class="flex-item-1">
+                                            <option v-for="option in gameData.weaponOptions" :key="option.value"
+                                                :value="option.value">
+                                                {{ option.label }}
+                                            </option>
+                                        </select>
+                                        <input type="text" id="weapon2_name" v-model="equipments.weapon2.name"
+                                            :placeholder="gameData.placeholderTexts.weaponName" class="flex-item-2" />
+                                    </div>
+                                </div>
+                                <div class="equipment-item">
+                                    <label for="armor">防具</label>
+                                    <div class="flex-group">
+                                        <select id="armor" v-model="equipments.armor.group" class="flex-item-1">
+                                            <option v-for="option in gameData.armorOptions" :key="option.value"
+                                                :value="option.value">
+                                                {{ option.label }}
+                                            </option>
+                                        </select>
+                                        <input type="text" id="armor_name" v-model="equipments.armor.name"
+                                            :placeholder="gameData.placeholderTexts.armorName" class="flex-item-2" />
+                                    </div>
+                                </div>
                             </div>
-                            <div v-if="skill.canHaveExperts && skill.checked" class="experts_section">
-                                <ul class="expert_list reset-list-with-margin">
-                                    <li v-for="(expert, expIndex) in skill.experts" :key="expIndex"
-                                        class="expert_list_item_new_layout">
-                                        <div class="delete-button-wrapper">
-                                            <button type="button" class="list_item_button_small list_item_delete_small"
-                                                @click="removeExpert(skill, expIndex)"
-                                                :disabled="skill.experts.length <= 1 && expert.value === ''">－</button>
-                                        </div>
-                                        <input type="text" v-model="expert.value"
-                                            :placeholder="expertPlaceholder(skill)" :disabled="!skill.checked"
-                                            class="flex-grow" />
-                                    </li>
-                                </ul>
-                                <div class="add_button_container_left">
-                                    <button type="button" class="list_item_button_small list_item_add_small"
-                                        @click="addExpert(skill)">＋</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="other_items" class="block-label">その他所持品</label>
+                        <textarea id="other_items" class="items-textarea" v-model="character.otherItems"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="character_memo" class="character-memo">
+                <div class="box-title">キャラクターメモ</div>
+                <div class="box-content">
+                    <textarea id="character_text" :placeholder="gameData.placeholderTexts.characterMemo"
+                        v-model="character.memo" class="character-memo-textarea"></textarea>
+                </div>
+            </div>
+
+            <div id="adventure_log_section" class="session-history">
+                <div class="box-title">冒険の記録</div>
+                <div class="box-content">
+                    <div class="list-item history-labels-header">
+                        <div class="delete-button-wrapper"></div>
+                        <div class="flex-grow">
+                            <div class="history-item-inputs">
+                                <div class="flex-history-name"> <label>シナリオ名</label> </div>
+                                <div class="flex-history-exp"> <label>経験点</label> </div>
+                                <div class="flex-history-memo"> <label>メモ</label> </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul id="histories" class="list-reset">
+                        <li v-for="(history, index) in histories" :key="index" class="list-item">
+                            <div class="delete-button-wrapper">
+                                <button type="button" class="list-button list-button--delete"
+                                    @click="removeHistoryItem(index)"
+                                    :disabled="histories.length <= 1 && !hasHistoryContent(history)">－</button>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="history-item-inputs">
+                                    <div class="flex-history-name"> <input type="text" v-model="history.sessionName" />
+                                    </div>
+                                    <div class="flex-history-exp"> <input type="number"
+                                            v-model.number="history.gotExperiments" min="0" /> </div>
+                                    <div class="flex-history-memo"> <input type="text" v-model="history.memo" />
+                                    </div>
                                 </div>
                             </div>
                         </li>
                     </ul>
-                </div>
-            </div>
-
-            <div id="special_skills_wrapper">
-                <div id="special_skills">
-                    <div class="box_title">特技</div>
-                    <div class="box_contents">
-                        <ul id="special_skills_list" class="reset-list-bottom-margin">
-                            <li v-for="(specialSkill, index) in specialSkills" :key="index"
-                                class="item_new_layout mb-5">
-                                <div class="delete-button-wrapper">
-                                    <button type="button" class="list_item_button_small list_item_delete_small"
-                                        @click="removeSpecialSkill(index)"
-                                        :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)">－</button>
-                                </div>
-                                <div class="flex-grow">
-                                    <div class="flex-gap-8">
-                                        <select v-model="specialSkill.group" @change="updateSpecialSkillOptions(index)"
-                                            class="flex-1">
-                                            <option v-for="option in gameData.specialSkillGroupOptions"
-                                                :key="option.value" :value="option.value">
-                                                {{ option.label }}
-                                            </option>
-                                        </select>
-                                        <select v-model="specialSkill.name"
-                                            @change="updateSpecialSkillNoteVisibility(index)"
-                                            :disabled="!specialSkill.group" class="flex-2">
-                                            <option value="">---</option>
-                                            <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value"
-                                                :value="opt.value">{{ opt.label }}</option>
-                                        </select>
-                                    </div>
-                                    <input type="text" v-model="specialSkill.note" v-show="specialSkill.showNote"
-                                        class="special_skill_note_input"
-                                        :placeholder="gameData.placeholderTexts.specialSkillNote" />
-                                </div>
-                            </li>
-                        </ul>
-                        <div class="add_button_container_left" v-if="specialSkills.length < 20">
-                            <button type="button" class="list_item_button_small list_item_add_small"
-                                @click="addSpecialSkillItem()">＋</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="items_wrapper">
-                <div id="items_section">
-                    <div class="box_title">所持品</div>
-                    <div class="box_contents">
-                        <div class="mb-15">
-                            <div class="equipment-container">
-                                <div class="equipment-section">
-                                    <div class="equipment mb-12"> <label for="weapon1">武器1</label>
-                                        <div class="flex-gap-8">
-                                            <select id="weapon1" v-model="equipments.weapon1.group" class="flex-1">
-                                                <option v-for="option in gameData.weaponOptions" :key="option.value"
-                                                    :value="option.value">
-                                                    {{ option.label }}
-                                                </option>
-                                            </select>
-                                            <input type="text" id="weapon1_name" v-model="equipments.weapon1.name"
-                                                :placeholder="gameData.placeholderTexts.weaponName" class="flex-2" />
-                                        </div>
-                                    </div>
-                                    <div class="equipment mb-12"> <label for="weapon2">武器2</label>
-                                        <div class="flex-gap-8">
-                                            <select id="weapon2" v-model="equipments.weapon2.group" class="flex-1">
-                                                <option v-for="option in gameData.weaponOptions" :key="option.value"
-                                                    :value="option.value">
-                                                    {{ option.label }}
-                                                </option>
-                                            </select>
-                                            <input type="text" id="weapon2_name" v-model="equipments.weapon2.name"
-                                                :placeholder="gameData.placeholderTexts.weaponName" class="flex-2" />
-                                        </div>
-                                    </div>
-                                    <div class="equipment"> <label for="armor">防具</label>
-                                        <div class="flex-gap-8">
-                                            <select id="armor" v-model="equipments.armor.group" class="flex-1">
-                                                <option v-for="option in gameData.armorOptions" :key="option.value"
-                                                    :value="option.value">
-                                                    {{ option.label }}
-                                                </option>
-                                            </select>
-                                            <input type="text" id="armor_name" v-model="equipments.armor.name"
-                                                :placeholder="gameData.placeholderTexts.armorName" class="flex-2" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="other_items" class="block-with-margin">その他所持品</label>
-                            <textarea id="other_items" class="items_textarea" v-model="character.otherItems"></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="character_memo_wrapper">
-                <div id="character_memo">
-                    <div class="box_title">キャラクターメモ</div>
-                    <div class="box_contents">
-                        <textarea id="character_text" :placeholder="gameData.placeholderTexts.characterMemo"
-                            v-model="character.memo"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div id="session_history_wrapper">
-                <div id="adventure_log_section">
-                    <div class="box_title">冒険の記録</div>
-                    <div class="box_contents">
-                        <div class="item_new_layout history-labels-header-custom">
-                            <div class="delete-button-wrapper"></div>
-                            <div class="flex-grow">
-                                <div class="history_item_inputs">
-                                    <div class="flex-history-name"> <label>シナリオ名</label> </div>
-                                    <div class="flex-history-exp"> <label>経験点</label> </div>
-                                    <div class="flex-history-memo"> <label>メモ</label> </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <ul id="histories" class="reset-list-bottom-margin">
-                            <li v-for="(history, index) in histories" :key="index" class="item_new_layout">
-                                <div class="delete-button-wrapper">
-                                    <button type="button" class="list_item_button_small list_item_delete_small"
-                                        @click="removeHistoryItem(index)"
-                                        :disabled="histories.length <= 1 && !hasHistoryContent(history)">－</button>
-                                </div>
-                                <div class="flex-grow">
-                                    <div class="history_item_inputs">
-                                        <div class="flex-history-name"> <input type="text"
-                                                v-model="history.sessionName" /> </div>
-                                        <div class="flex-history-exp"> <input type="number"
-                                                v-model.number="history.gotExperiments" min="0" /> </div>
-                                        <div class="flex-history-memo"> <input type="text" v-model="history.memo" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                        <div class="add_button_container_left">
-                            <button type="button" class="list_item_button_small list_item_add_small"
-                                @click="addHistoryItem()">＋</button>
-                        </div>
+                    <div class="add-button-container-left">
+                        <button type="button" class="list-button list-button--add" @click="addHistoryItem()">＋</button>
                     </div>
                 </div>
             </div>
@@ -320,21 +318,22 @@
             </p>
         </div>
 
-        <div id="footer">
+        <div class="main-footer">
             <div class="footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？
             </div>
             <div class="status-display-container">
                 <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
                     maxExperimentPoints }} </div>
-                <div class="status-display weight-display"> 荷重: {{ currentWeight }} </div>
+                <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
             </div>
-            <div id="save_button" @click="saveData" class="footer-button"> データ保存 </div>
-            <div id="load_button_vue_wrapper" class="footer-button"> <input type="file" id="load_input_vue"
-                    @change="handleFileUpload" accept=".json,.txt" class="hidden" /> <label
-                    for="load_input_vue">データ読込</label> </div>
-            <div id="output_button" @click="outputToCocofolia" class="footer-button"> {{ outputButtonText }} </div>
+            <div class="footer-button footer-button--save" @click="saveData"> データ保存 </div>
+            <div class="footer-button footer-button--load">
+                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" class="hidden" />
+                <label for="load_input_vue">データ読込</label>
+            </div>
+            <div class="footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText }} </div>
             <transition name="fade">
-                <div id="help-vue" v-if="showHelp" v-html="helpText"></div>
+                <div class="help-panel" v-if="showHelp" v-html="helpText"></div>
             </transition>
         </div>
 

@@ -66,7 +66,7 @@ const app = createApp({
             return weight;
         },
         experienceStatusClass() {
-            return this.currentExperiencePoints > this.maxExperimentPoints ? 'experience-over' : 'experience-ok';
+            return this.currentExperiencePoints > this.maxExperimentPoints ? 'status-display--experience-over' : 'status-display--experience-ok';
         },
         sessionNamesForWeaknessDropdown() {
             const defaultOptions = [...this.gameData.weaknessAcquisitionOptions];
@@ -482,31 +482,15 @@ const app = createApp({
             if (!modal) {
                 modal = document.createElement('div');
                 modal.id = alertModalId;
-                modal.style.position = 'fixed';
-                modal.style.left = '50%';
-                modal.style.top = '50%';
-                modal.style.transform = 'translate(-50%, -50%)';
-                modal.style.backgroundColor = '#333';
-                modal.style.color = '#fff';
-                modal.style.padding = '20px';
-                modal.style.border = '1px solid #555';
-                modal.style.borderRadius = '5px';
-                modal.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
-                modal.style.zIndex = '2000';
-                modal.style.whiteSpace = 'pre-wrap';
+                modal.classList.add('custom-alert-modal'); // CSSクラスを追加
 
                 const messageP = document.createElement('p');
-                messageP.style.margin = '0 0 15px 0';
+                messageP.classList.add('custom-alert-message'); // CSSクラスを追加
                 modal.appendChild(messageP);
 
                 const closeButton = document.createElement('button');
                 closeButton.textContent = 'OK';
-                closeButton.style.padding = '8px 15px';
-                closeButton.style.backgroundColor = '#c09a69';
-                closeButton.style.color = '#1a1a1a';
-                closeButton.style.border = 'none';
-                closeButton.style.borderRadius = '3px';
-                closeButton.style.cursor = 'pointer';
+                closeButton.classList.add('custom-alert-button'); // CSSクラスを追加
                 closeButton.onclick = () => modal.remove();
                 modal.appendChild(closeButton);
                 document.body.appendChild(modal);
