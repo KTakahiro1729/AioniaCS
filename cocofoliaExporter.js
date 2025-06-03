@@ -1,3 +1,6 @@
+/**
+ * ココフォリア出力機能を管理するクラス
+ */
 class CocofoliaExporter {
   constructor() {
     this.MAX_MEMO_LENGTH = 200;
@@ -41,6 +44,7 @@ class CocofoliaExporter {
 
     weaknesses.forEach(w => {
       if (w.text && w.text.trim() !== '') {
+        // 獲得情報は省略し、弱点名のみを追加
         weaknessList.push(w.text);
       }
     });
@@ -75,7 +79,7 @@ class CocofoliaExporter {
     });
 
     if (skillTexts.length > 0) {
-      return ["\n【技能】", skillTexts.join('')];
+      return ["\n【技能】", skillTexts.join(' ')];
     }
     return [];
   }
@@ -192,12 +196,17 @@ class CocofoliaExporter {
    */
   buildCocofoliaCommands(character, skills, equipments, weaponDamage) {
     const scar = Number(character.currentScar) || 0;
-    let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2\n:ダメージ=0\n`;
+    let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2 〈治癒①〉\n:ダメージ=0                 〈治癒②〉\n`;
 
     // 技能チェックコマンド
     skills.forEach(skill => {
       const dice = skill.checked ? "2d10" : "1d10";
       commands += `${dice} 〈${skill.name}〉\n`;
+
+      // 防御技能の場合は防具ありバージョンも追加
+      if (skill.name === '防御') {
+        commands += `${dice}+2 〈${skill.name}（防具）〉\n`;
+      }
 
       // 専門技能コマンド
       if (skill.checked && skill.canHaveExperts) {
