@@ -135,7 +135,7 @@
             border-top: none;
             border-bottom-left-radius: 4px;
             border-bottom-right-radius: 4px;
-            margin-bottom: 25px;
+            /* margin-bottom: 25px; */
             background-color: #242424;
             box-shadow: 0 2px 8px rgba(0,0,0,0.4);
             overflow-x: hidden; 
@@ -164,26 +164,27 @@
 
 
         /* リストスタイル */
-        #skills_list, #special_skills_list, #histories {
+        #special_skills_list, #histories {
             list-style-type: none;
             padding-left: 0;
             margin-top: 0; 
             margin-bottom: 0;
         }
         #skills_list.box_contents {
-             padding-bottom: 10px;
-        }
-
+            padding: 18px;
+            list-style-type: none;
+            margin-top: 0; 
+            margin-bottom: 0;
+        } 
 
         #skills_list > li {
-            margin-bottom: 15px;
-            padding: 12px;
+            margin-bottom: 5px;
+            padding: 10px;
             border: 1px solid #383838;
             border-radius: 3px;
             background-color: #2c2c2c;
         }
         #skills_list > li .skill_header {
-             margin-bottom: 8px; 
              display: flex; 
              align-items: center; 
         }
@@ -199,7 +200,7 @@
              background-color: transparent;
         }
         #histories > li {
-            margin-top: 3px;
+            margin-top: 5px;
         }
         .special_skill_note_input {
              margin-top : 3px;
@@ -310,7 +311,7 @@
         }
         
         .add_button_container_left {
-            margin-top: 12px;
+            margin-top: 5px;
         }
 
         /* フォーム要素 */
@@ -439,7 +440,7 @@
 
 
         /* グリッドレイアウト */
-        #status_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        #status_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 10px; }
         #character_info_wrapper { grid-area: charinfo; }
         #scar_weakness_wrapper { grid-area: scarweakness; } 
         #skills_wrapper { grid-area: skills; }
@@ -746,7 +747,7 @@
                         <li v-for="(skill) in skills" :key="skill.id">
                             <div class="skill_header"> <input type="checkbox" :id="skill.id" v-model="skill.checked"/> <label :for="skill.id" class="skill_name">{{ skill.name }}</label> </div>
                             <div v-if="skill.canHaveExperts && skill.checked" class="experts_section">
-                                <ul class="expert_list" style="padding-left: 0; list-style-type: none; margin-top:0; margin-bottom: 0;">
+                                <ul class="expert_list" style="padding-left: 0; list-style-type: none; margin-top:5px; margin-bottom: 0;">
                                     <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="expert_list_item_new_layout">
                                         <div class="delete-button-wrapper">
                                             <button type="button" class="list_item_button_small list_item_delete_small" 
