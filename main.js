@@ -3,6 +3,9 @@ const { createApp, watch, nextTick } = Vue;
 const app = createApp({
     data() {
         return {
+            // gameData.jsへの参照を追加
+            gameData: window.AioniaGameData,
+
             character: {
                 name: '', playerName: '', species: '', rareSpecies: '',
                 occupation: '', age: null, gender: '', height: '', weight: '',
@@ -28,13 +31,7 @@ const app = createApp({
             ],
             showHelp: false,
             helpText: window.AioniaGameData.helpText,
-            outputButtonText: 'ココフォリア駒出力',
-            specialSkillData: window.AioniaGameData.specialSkillData,
-            specialSkillsRequiringNote: window.AioniaGameData.specialSkillsRequiringNote,
-            speciesLabelMap: window.AioniaGameData.speciesLabelMap,
-            equipmentGroupLabelMap: window.AioniaGameData.equipmentGroupLabelMap,
-            weaponDamage: window.AioniaGameData.weaponDamage,
-            // ココフォリア出力機能のインスタンス
+            outputButtonText: window.AioniaGameData.uiMessages.outputButton.default,
             cocofoliaExporter: null,
         };
     },
@@ -42,26 +39,26 @@ const app = createApp({
         maxExperimentPoints() {
             const initialScarExp = Number(this.character.initialScar) || 0;
             const creationWeaknessExp = this.character.weaknesses.reduce((sum, weakness) => {
-                return sum + (weakness.text && weakness.text.trim() !== '' && weakness.acquired === '作成時' ? 10 : 0);
+                return sum + (weakness.text && weakness.text.trim() !== '' && weakness.acquired === '作成時' ? this.gameData.experiencePointValues.weakness : 0);
             }, 0);
-            const combinedInitialBonus = Math.min(initialScarExp + creationWeaknessExp, 20);
+            const combinedInitialBonus = Math.min(initialScarExp + creationWeaknessExp, this.gameData.experiencePointValues.maxInitialBonus);
             const historyExp = this.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
-            return 100 + combinedInitialBonus + historyExp;
+            return this.gameData.experiencePointValues.basePoints + combinedInitialBonus + historyExp;
         },
         currentExperiencePoints() {
-            let skillExp = this.skills.reduce((sum, s) => sum + (s.checked ? 10 : 0), 0);
+            let skillExp = this.skills.reduce((sum, s) => sum + (s.checked ? this.gameData.experiencePointValues.skillBase : 0), 0);
             let expertExp = this.skills.reduce((sum, s) => {
                 if (s.checked && s.canHaveExperts) {
-                    return sum + s.experts.reduce((expSum, exp) => expSum + (exp.value && exp.value.trim() !== '' ? 5 : 0), 0);
+                    return sum + s.experts.reduce((expSum, exp) => expSum + (exp.value && exp.value.trim() !== '' ? this.gameData.experiencePointValues.expertSkill : 0), 0);
                 }
                 return sum;
             }, 0);
-            let specialSkillExp = this.specialSkills.reduce((sum, ss) => sum + (ss.name && ss.name.trim() !== '' ? 5 : 0), 0);
+            let specialSkillExp = this.specialSkills.reduce((sum, ss) => sum + (ss.name && ss.name.trim() !== '' ? this.gameData.experiencePointValues.specialSkill : 0), 0);
             return skillExp + expertExp + specialSkillExp;
         },
         currentWeight() {
-            const weaponWeights = { "": 0, "combat_small": 1, "combat_medium": 3, "combat_large": 5, "shooting": 2, "catalyst": 1 };
-            const armorWeights = { "": 0, "light_armor": 2, "heavy_armor": 5 };
+            const weaponWeights = this.gameData.equipmentWeights.weapon;
+            const armorWeights = this.gameData.equipmentWeights.armor;
             let weight = 0;
             weight += weaponWeights[this.equipments.weapon1.group] || 0;
             weight += weaponWeights[this.equipments.weapon2.group] || 0;
@@ -72,15 +69,12 @@ const app = createApp({
             return this.currentExperiencePoints > this.maxExperimentPoints ? 'experience-over' : 'experience-ok';
         },
         sessionNamesForWeaknessDropdown() {
-            const defaultOptions = [
-                { value: '--', text: '--', disabled: false },
-                { value: '作成時', text: '作成時', disabled: false }
-            ];
+            const defaultOptions = [...this.gameData.weaknessAcquisitionOptions];
             const sessionOptions = this.histories
                 .map(h => h.sessionName)
                 .filter(name => name && name.trim() !== '')
                 .map(name => ({ value: name, text: name, disabled: false }));
-            const helpOption = { value: 'help-text', text: '（冒険の記録を追加すると選択肢が増えます）', disabled: true };
+            const helpOption = { value: 'help-text', text: this.gameData.uiMessages.weaknessDropdownHelp, disabled: true };
             return defaultOptions.concat(sessionOptions).concat(helpOption);
         }
     },
@@ -119,7 +113,7 @@ const app = createApp({
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
         addSpecialSkillItem() {
-            if (this.specialSkills.length < window.AioniaGameData.config.maxSpecialSkills) {
+            if (this.specialSkills.length < this.gameData.config.maxSpecialSkills) {
                 this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
             }
         },
@@ -130,7 +124,9 @@ const app = createApp({
                 this.specialSkills[index] = { group: '', name: '', note: '', showNote: false };
             }
         },
-        expertPlaceholder(skill) { return skill.checked ? "専門技能" : "専門技能 (技能選択で有効)"; },
+        expertPlaceholder(skill) {
+            return skill.checked ? this.gameData.placeholderTexts.expertSkill : this.gameData.placeholderTexts.expertSkillDisabled;
+        },
         handleSpeciesChange() {
             if (this.character.species !== 'other') {
                 this.character.rareSpecies = '';
@@ -147,7 +143,7 @@ const app = createApp({
         availableSpecialSkillNames(index) {
             if (this.specialSkills[index]) {
                 const group = this.specialSkills[index].group;
-                return this.specialSkillData[group] || [];
+                return this.gameData.specialSkillData[group] || [];
             }
             return [];
         },
@@ -160,7 +156,7 @@ const app = createApp({
         updateSpecialSkillNoteVisibility(index) {
             if (this.specialSkills[index]) {
                 const skillName = this.specialSkills[index].name;
-                this.specialSkills[index].showNote = this.specialSkillsRequiringNote.includes(skillName);
+                this.specialSkills[index].showNote = this.gameData.specialSkillsRequiringNote.includes(skillName);
             }
         },
         addHistoryItem() { this.histories.push({ sessionName: '', gotExperiments: null, memo: '' }); },
@@ -205,7 +201,7 @@ const app = createApp({
                         this.parseLoadedData(rawJsonData);
                     } catch (error) {
                         console.error("Failed to parse JSON file:", error);
-                        this.showCustomAlert("ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。");
+                        this.showCustomAlert(this.gameData.uiMessages.fileLoadError);
                     }
                 };
                 reader.readAsText(file);
@@ -231,7 +227,7 @@ const app = createApp({
                     currentScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
                     linkCurrentToInitialScar: typeof externalData.linkCurrentToInitialScar === 'boolean' ? externalData.linkCurrentToInitialScar : true,
                     memo: externalData.character_memo || '',
-                    weaknesses: Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }))
+                    weaknesses: Array(this.gameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }))
                 },
                 skills: [], specialSkills: [],
                 equipments: { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' } },
@@ -247,7 +243,7 @@ const app = createApp({
 
             if (externalData.skills && Array.isArray(externalData.skills)) {
                 this.externalSkillOrder.forEach((skillId, index) => {
-                    const appSkillDefinition = window.AioniaGameData.baseSkills.find(s => s.id === skillId);
+                    const appSkillDefinition = this.gameData.baseSkills.find(s => s.id === skillId);
                     if (appSkillDefinition && externalData.skills[index]) {
                         const externalSkill = externalData.skills[index];
                         const newSkill = {
@@ -269,7 +265,7 @@ const app = createApp({
                     }
                 });
             } else {
-                internalData.skills = JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills));
+                internalData.skills = JSON.parse(JSON.stringify(this.gameData.baseSkills));
             }
 
             if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
@@ -277,7 +273,7 @@ const app = createApp({
                     .filter(ss => ss.group && ss.name)
                     .map(ss => ({
                         group: ss.group || '', name: ss.name || '',
-                        note: ss.note || '', showNote: this.specialSkillsRequiringNote.includes(ss.name || '')
+                        note: ss.note || '', showNote: this.gameData.specialSkillsRequiringNote.includes(ss.name || '')
                     }));
             }
 
@@ -317,12 +313,8 @@ const app = createApp({
             }
 
             const defaultCharacter = {
-                name: '', playerName: '', species: '', rareSpecies: '',
-                occupation: '', age: null, gender: '', height: '', weight: '',
-                origin: '', faith: '',
-                otherItems: '',
-                currentScar: 0, initialScar: 0, linkCurrentToInitialScar: true, memo: '',
-                weaknesses: Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }))
+                ...this.gameData.defaultCharacterData,
+                weaknesses: Array(this.gameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }))
             };
             this.character = { ...defaultCharacter, ...(dataToParse.character || {}) };
             if (typeof this.character.linkCurrentToInitialScar === 'undefined') {
@@ -330,19 +322,19 @@ const app = createApp({
             }
 
             if (this.character.weaknesses && Array.isArray(this.character.weaknesses)) {
-                const numMissingWeaknesses = window.AioniaGameData.config.maxWeaknesses - this.character.weaknesses.length;
+                const numMissingWeaknesses = this.gameData.config.maxWeaknesses - this.character.weaknesses.length;
                 if (numMissingWeaknesses > 0) {
                     for (let i = 0; i < numMissingWeaknesses; i++) {
                         this.character.weaknesses.push({ text: '', acquired: '--' });
                     }
-                } else if (this.character.weaknesses.length > window.AioniaGameData.config.maxWeaknesses) {
-                    this.character.weaknesses = this.character.weaknesses.slice(0, window.AioniaGameData.config.maxWeaknesses);
+                } else if (this.character.weaknesses.length > this.gameData.config.maxWeaknesses) {
+                    this.character.weaknesses = this.character.weaknesses.slice(0, this.gameData.config.maxWeaknesses);
                 }
             } else {
-                this.character.weaknesses = Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }));
+                this.character.weaknesses = Array(this.gameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' }));
             }
 
-            const baseSkills = JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills));
+            const baseSkills = JSON.parse(JSON.stringify(this.gameData.baseSkills));
             if (dataToParse.skills && Array.isArray(dataToParse.skills)) {
                 const loadedSkillsById = new Map(dataToParse.skills.map(s => [s.id, s]));
                 this.skills = baseSkills.map(appSkill => {
@@ -372,7 +364,7 @@ const app = createApp({
             if (dataToParse.specialSkills && Array.isArray(dataToParse.specialSkills)) {
                 loadedSSCount = dataToParse.specialSkills.length;
             }
-            const targetSpecialSkillsLength = Math.min(Math.max(this.initialSpecialSkillCount, loadedSSCount), window.AioniaGameData.config.maxSpecialSkills);
+            const targetSpecialSkillsLength = Math.min(Math.max(this.initialSpecialSkillCount, loadedSSCount), this.gameData.config.maxSpecialSkills);
             this.specialSkills = [];
 
             for (let i = 0; i < targetSpecialSkillsLength; i++) {
@@ -382,7 +374,7 @@ const app = createApp({
                         group: loadedSS.group || '',
                         name: loadedSS.name || '',
                         note: loadedSS.note || '',
-                        showNote: this.specialSkillsRequiringNote.includes(loadedSS.name || '')
+                        showNote: this.gameData.specialSkillsRequiringNote.includes(loadedSS.name || '')
                     });
                 } else {
                     this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
@@ -408,7 +400,6 @@ const app = createApp({
             }
         },
 
-
         outputToCocofolia() {
             const exportData = {
                 character: this.character,
@@ -416,15 +407,14 @@ const app = createApp({
                 specialSkills: this.specialSkills,
                 equipments: this.equipments,
                 currentWeight: this.currentWeight,
-                speciesLabelMap: this.speciesLabelMap,
-                equipmentGroupLabelMap: this.equipmentGroupLabelMap,
-                specialSkillData: this.specialSkillData,
-                specialSkillsRequiringNote: this.specialSkillsRequiringNote,
-                weaponDamage: this.weaponDamage
+                speciesLabelMap: this.gameData.speciesLabelMap,
+                equipmentGroupLabelMap: this.gameData.equipmentGroupLabelMap,
+                specialSkillData: this.gameData.specialSkillData,
+                specialSkillsRequiringNote: this.gameData.specialSkillsRequiringNote,
+                weaponDamage: this.gameData.weaponDamage
             };
 
             const cocofoliaCharacter = this.cocofoliaExporter.generateCocofoliaData(exportData);
-
 
             const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
             this.copyToClipboard(textToCopy);
@@ -446,9 +436,9 @@ const app = createApp({
         },
 
         setOutputButtonSuccess() {
-            this.outputButtonText = 'コピー完了！';
+            this.outputButtonText = this.gameData.uiMessages.outputButton.success;
             setTimeout(() => {
-                this.outputButtonText = 'ココフォリア駒出力';
+                this.outputButtonText = this.gameData.uiMessages.outputButton.default;
             }, 3000);
         },
 
@@ -466,20 +456,20 @@ const app = createApp({
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    this.outputButtonText = 'コピー完了！ (fallback)';
+                    this.outputButtonText = this.gameData.uiMessages.outputButton.successFallback;
                     setTimeout(() => {
-                        this.outputButtonText = 'ココフォリア駒出力';
+                        this.outputButtonText = this.gameData.uiMessages.outputButton.default;
                     }, 3000);
                 } else {
-                    this.outputButtonText = 'コピー失敗 (fallback)';
+                    this.outputButtonText = this.gameData.uiMessages.outputButton.failed;
                     setTimeout(() => {
-                        this.outputButtonText = 'ココフォリア駒出力';
+                        this.outputButtonText = this.gameData.uiMessages.outputButton.default;
                     }, 3000);
                 }
             } catch (err) {
-                this.outputButtonText = 'コピーエラー (fallback)';
+                this.outputButtonText = this.gameData.uiMessages.outputButton.error;
                 setTimeout(() => {
-                    this.outputButtonText = 'ココフォリア駒出力';
+                    this.outputButtonText = this.gameData.uiMessages.outputButton.default;
                 }, 3000);
             }
 

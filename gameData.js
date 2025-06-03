@@ -108,6 +108,50 @@ window.AioniaGameData = {
     "connection", "hide_object", "training", "spoofing", "other_name", "honor"
   ],
 
+  // 種族選択肢データ
+  speciesOptions: [
+    { value: "", label: "選択してください", disabled: true },
+    { value: "human", label: "人間" },
+    { value: "elf", label: "エルフ" },
+    { value: "dwarf", label: "ドワーフ" },
+    { value: "halfling", label: "ディグリング" },
+    { value: "therianthropy", label: "獣人" },
+    { value: "dragonfolk", label: "竜人" },
+    { value: "treefolk", label: "ツリーフォーク" },
+    { value: "other", label: "希少人種" }
+  ],
+
+  // 武器選択肢データ
+  weaponOptions: [
+    { value: "", label: "なし" },
+    { value: "combat_small", label: "小型白兵武器" },
+    { value: "combat_medium", label: "中型白兵武器" },
+    { value: "combat_large", label: "大型白兵武器" },
+    { value: "shooting", label: "射撃武器" },
+    { value: "catalyst", label: "魔術触媒" }
+  ],
+
+  // 防具選択肢データ
+  armorOptions: [
+    { value: "", label: "なし" },
+    { value: "light_armor", label: "軽装防具" },
+    { value: "heavy_armor", label: "重装防具" }
+  ],
+
+  // 弱点獲得時期の初期選択肢
+  weaknessAcquisitionOptions: [
+    { value: '--', text: '--', disabled: false },
+    { value: '作成時', text: '作成時', disabled: false }
+  ],
+
+  // 特技グループ選択肢
+  specialSkillGroupOptions: [
+    { value: "", label: "種類を選択" },
+    { value: "tactics", label: "戦術" },
+    { value: "magic", label: "魔術" },
+    { value: "features", label: "特徴" }
+  ],
+
   // 種族ラベルマップ
   speciesLabelMap: {
     "human": "人間",
@@ -143,11 +187,82 @@ window.AioniaGameData = {
     "catalyst": ""
   },
 
+  // 重量データ
+  equipmentWeights: {
+    weapon: {
+      "": 0,
+      "combat_small": 1,
+      "combat_medium": 3,
+      "combat_large": 5,
+      "shooting": 2,
+      "catalyst": 1
+    },
+    armor: {
+      "": 0,
+      "light_armor": 2,
+      "heavy_armor": 5
+    }
+  },
+
+  // キャラクターの初期データ構造
+  defaultCharacterData: {
+    name: '',
+    playerName: '',
+    species: '',
+    rareSpecies: '',
+    occupation: '',
+    age: null,
+    gender: '',
+    height: '',
+    weight: '',
+    origin: '',
+    faith: '',
+    otherItems: '',
+    currentScar: 0,
+    initialScar: 0,
+    linkCurrentToInitialScar: true,
+    memo: '',
+    weaknesses: null // 実際の配列は初期化時に生成される
+  },
+
+  // 経験点計算の設定値
+  experiencePointValues: {
+    skillBase: 10,        // 基本技能1つあたり
+    expertSkill: 5,       // 専門技能1つあたり
+    specialSkill: 5,      // 特技1つあたり
+    weakness: 10,         // 弱点1つあたり（作成時のみ）
+    basePoints: 100,      // 基本経験点
+    maxInitialBonus: 20   // 初期ボーナスの上限
+  },
+
+  // プレースホルダーテキスト
+  placeholderTexts: {
+    expertSkill: "専門技能",
+    expertSkillDisabled: "専門技能 (技能選択で有効)",
+    weaponName: "装備名",
+    armorName: "装備名",
+    specialSkillNote: "追記事項",
+    characterMemo: "キャラクター背景、設定、その他メモを記入"
+  },
+
   // 設定値
   config: {
     initialSpecialSkillCount: 8,
     maxSpecialSkills: 20,
     maxWeaknesses: 10
+  },
+
+  // UIメッセージ
+  uiMessages: {
+    outputButton: {
+      default: 'ココフォリア駒出力',
+      success: 'コピー完了！',
+      successFallback: 'コピー完了！ (fallback)',
+      failed: 'コピー失敗 (fallback)',
+      error: 'コピーエラー (fallback)'
+    },
+    weaknessDropdownHelp: '（冒険の記録を追加すると選択肢が増えます）',
+    fileLoadError: 'ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。'
   },
 
   // ヘルプテキスト
