@@ -286,8 +286,10 @@
         }
 
         .info-item > label, 
-        #init_disadvantages .box_contents > div > label,
-        .equipment > label { 
+        .equipment > label,
+        #scar_weakness_section .info-item > label, 
+        #scar_weakness_section .weakness-table-header th 
+         { 
             display: block;
             margin-bottom: 6px;
             margin-right: 0; 
@@ -336,27 +338,72 @@
         }
         .info-item {
             flex: 1 1 auto; 
-            min-width: 150px; 
         }
         .info-item-full {
             flex-basis: 100%;
         }
-        .info-item-triple { 
-             flex-basis: calc(33.333% - 10px); 
+        .info-item-custom-triple { 
+            flex: 1 1 calc(33.333% - 10px); 
+            min-width: 95px; 
         }
-        .info-item-double { 
-            flex-basis: calc(50% - 7.5px); 
+        .info-item-custom-double { 
+            flex: 1 1 calc(50% - 7.5px); 
+            min-width: 80px; 
         }
         .items_textarea { 
             min-height: 100px;
             resize: vertical;
         }
 
+        /* 弱点テーブル用スタイル */
+        .weakness-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px; 
+        }
+        .weakness-table th, .weakness-table td {
+            padding: 8px;
+            border-bottom: 1px solid #3a3a3a;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .weakness-table th {
+            color: #aaa;
+            font-size: 0.9em;
+            border-bottom: 1px solid #4a4a4a; 
+        }
+        .weakness-table td input[type="text"], .weakness-table td select {
+            font-size: 0.9em; 
+            padding: 7px 10px;
+        }
+        .weakness-table th.col-number { 
+            width: 30px; 
+            padding-left: 4px; 
+            padding-right: 4px;
+            color: transparent; 
+            user-select: none; 
+        }
+        .weakness-table td.col-number { 
+            text-align: center;
+        }
+        .weakness-table th.col-weakness { 
+        }
+        .weakness-table th.col-acquired, .weakness-table td.col-acquired { 
+            width: 150px; 
+        }
+        .weakness-table td.col-acquired select {
+            min-width: 120px; 
+        }
+        .weakness-table td.col-acquired option[disabled] { /* プルダウンのヘルプテキスト用 */
+            color: #777;
+            font-style: italic;
+        }
+
 
         /* グリッドレイアウト */
         #status_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
         #character_info_wrapper { grid-area: charinfo; }
-        #init_experiments_wrapper { grid-area: initexp; }
+        #scar_weakness_wrapper { grid-area: scarweakness; } 
         #skills_wrapper { grid-area: skills; }
         #special_skills_wrapper { grid-area: specialskills; }
         #items_wrapper { grid-area: items; grid-column: 1 / -1; } 
@@ -364,11 +411,11 @@
         #session_history_wrapper { grid-area: history; grid-column: 1 / -1; }
         #status_grid {
             grid-template-areas:
-                "charinfo initexp"
+                "charinfo scarweakness" 
                 "skills specialskills"
                 "items items" 
                 "memo memo"
-                "history history";
+                "history history"; 
         }
 
         #character_memo .box_contents { max-width: 100%; }
@@ -377,28 +424,42 @@
         @media (max-width: 768px) {
             #status_grid {
                 grid-template-columns: 1fr;
-                grid-template-areas: "charinfo" "initexp" "skills" "specialskills" "items" "memo" "history";
+                grid-template-areas: "charinfo" "scarweakness" "skills" "specialskills" "items" "memo" "history"; 
                 gap: 20px;
             }
 
-            #session_history_wrapper .history_item_inputs {
+            #session_history_wrapper .history_item_inputs { 
                 display: flex;
                 flex-direction: row; 
-                flex-wrap: nowrap;   
+                flex-wrap: nowrap;    
                 gap: 10px;
             }
-            #session_history_wrapper .history_item_inputs > div {
+            #session_history_wrapper .history_item_inputs > div { 
                 margin-bottom: 0; 
             }
-
+            .weakness-table th.col-acquired, .weakness-table td.col-acquired {
+                width: 35%; 
+                min-width: 110px; 
+            }
+            .weakness-table td.col-acquired select {
+                width: 100%; 
+            }
             
             #help-vue { width: calc(100% - 40px); max-width: none; 
             }
             .info-row { flex-direction: column; gap: 12px; }  
-            .info-item, .info-item-triple, .info-item-double { flex-basis: auto; min-width: 0;}
+            .info-item, .info-item-custom-triple, .info-item-custom-double { 
+                flex-basis: auto !important; 
+                min-width: 0 !important; 
+                width: 100%; 
+            }
         }
          @media (max-width: 480px) {
             .tool-title { font-size: 1.8em; }
+            .weakness-table th.col-acquired, .weakness-table td.col-acquired {
+                width: 40%; 
+                min-width: 100px; 
+            }
         }
 
 
@@ -553,32 +614,80 @@
                             <div class="info-item info-item-full"> <label for="player_name">プレイヤー名</label> <input type="text" id="player_name" v-model="character.playerName"/> </div>
                         </div>
                         <div class="info-row">
-                            <div class="info-item info-item-triple"> <label for="occupation">職業</label> <input type="text" id="occupation" v-model="character.occupation"/> </div>
-                            <div class="info-item info-item-triple"> <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age" min="0"/> </div>
-                            <div class="info-item info-item-triple"> <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender"/> </div>
+                            <div class="info-item" :class="{'info-item-full': character.species !== 'other', 'info-item-custom-double': character.species === 'other'}">
+                                <label for="species">種族</label>
+                                <select id="species" v-model="character.species" @change="handleSpeciesChange">
+                                    <option value="" disabled>選択してください</option> <option value="human">人間</option> <option value="elf">エルフ</option> <option value="dwarf">ドワーフ</option> <option value="halfling">ディグリング</option> <option value="therianthropy">獣人</option> <option value="dragonfolk">竜人</option> <option value="treefolk">ツリーフォーク</option> <option value="other">希少人種</option>
+                                </select>
+                            </div>
+                            <div class="info-item info-item-custom-double" v-if="character.species === 'other'">
+                                <label for="rare_species">種族名（希少人種）</label>
+                                <input type="text" id="rare_species" v-model="character.rareSpecies"/>
+                            </div>
                         </div>
                         <div class="info-row">
-                            <div class="info-item info-item-double"> <label for="height">身長</label> <input type="text" id="height" v-model="character.height"/> </div>
-                            <div class="info-item info-item-double"> <label for="weight_char">体重</label> <input type="text" id="weight_char" v-model="character.weight"/> </div>
+                            <div class="info-item info-item-custom-double"> <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender"/> </div>
+                            <div class="info-item info-item-custom-double"> <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age" min="0"/> </div>
                         </div>
                         <div class="info-row">
-                            <div class="info-item info-item-double"> <label for="species">種族</label> <select id="species" v-model="character.species" @change="handleSpeciesChange"> <option value="" disabled>選択してください</option> <option value="human">人間</option> <option value="elf">エルフ</option> <option value="dwarf">ドワーフ</option> <option value="halfling">ディグリング</option> <option value="therianthropy">獣人</option> <option value="dragonfolk">竜人</option> <option value="treefolk">ツリーフォーク</option> <option value="other">希少人種</option> </select> </div>
-                            <div class="info-item info-item-double" v-show="character.species === 'other'"> <label for="rare_species">種族名（希少人種）</label> <input type="text" id="rare_species" v-model="character.rareSpecies"/> </div>
+                            <div class="info-item info-item-custom-triple"> <label for="origin">出身地</label> <input type="text" id="origin" v-model="character.origin"/> </div>
+                            <div class="info-item info-item-custom-triple"> <label for="occupation">職業</label> <input type="text" id="occupation" v-model="character.occupation"/> </div>
+                            <div class="info-item info-item-custom-triple"> <label for="faith">信仰</label> <input type="text" id="faith" v-model="character.faith"/> </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-item info-item-custom-double"> <label for="height">身長</label> <input type="text" id="height" v-model="character.height"/> </div>
+                            <div class="info-item info-item-custom-double"> <label for="weight_char">体重</label> <input type="text" id="weight_char" v-model="character.weight"/> </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="init_experiments_wrapper">
-                <div id="init_experiments">
-                    <div class="box_title">初期状態</div>
-                    <div id="init_disadvantages" class="box_contents">
-                        <div style="margin-bottom: 12px;"> <label for="init_scar">初期傷痕</label> <input type="number" id="init_scar" v-model.number="character.initScar" min="0" max="20"/> </div>
-                        <div style="margin-bottom: 12px;"> <label for="init_weakness_1">弱点1</label> <input type="text" id="init_weakness_1" v-model="character.initWeakness1"/> </div>
-                        <div> <label for="init_weakness_2">弱点2</label> <input type="text" id="init_weakness_2" v-model="character.initWeakness2"/> </div>
+            <div id="scar_weakness_wrapper">
+                <div id="scar_weakness_section">
+                    <div class="box_title">傷痕と弱点</div>
+                    <div class="box_contents">
+                        <div style="margin-bottom: 25px;">
+                            <div class="box_title" style="font-size: 1em; background-color: #2e2e2e; border-bottom: 1px solid #4a4a4a; margin: -18px -18px 15px -18px; padding: 10px 18px; border-top-left-radius: 0; border-top-right-radius: 0;">傷痕</div>
+                            <div class="info-row">
+                                <div class="info-item info-item-custom-double">
+                                    <label for="current_scar">現在の傷痕</label>
+                                    <input type="number" id="current_scar" v-model.number="character.currentScar" min="0">
+                                </div>
+                                <div class="info-item info-item-custom-double">
+                                    <label for="initial_scar">初期傷痕</label>
+                                    <input type="number" id="initial_scar" v-model.number="character.initialScar" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="box_title" style="font-size: 1em; background-color: #2e2e2e; border-bottom: 1px solid #4a4a4a; margin: 0px -18px 10px -18px; padding: 10px 18px; border-top-left-radius: 0; border-top-right-radius: 0;">弱点</div>
+                            <table class="weakness-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-number"></th>
+                                        <th class="col-weakness">弱点</th>
+                                        <th class="col-acquired">獲得</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(weakness, index) in character.weaknesses" :key="index">
+                                        <td class="col-number">{{ index + 1 }}</td>
+                                        <td>
+                                            <input type="text" v-model="weakness.text">
+                                        </td>
+                                        <td class="col-acquired">
+                                            <select v-model="weakness.acquired">
+                                                <option v-for="option in sessionNamesForWeaknessDropdown" :key="option.value" :value="option.value" :disabled="option.disabled">{{ option.text }}</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
+
 
             <div id="skills_wrapper">
                 <div id="skills">
@@ -663,18 +772,12 @@
                 </div>
             </div>
 
-            <div id="session_history_wrapper">
-                <div id="session_history">
-                    <div class="box_title">セッション履歴</div>
-                    <div class="box_contents">
+            <div id="session_history_wrapper"> <div id="adventure_log_section"> <div class="box_title">冒険の記録</div> <div class="box_contents">
                         <div class="history_labels_header item_new_layout" style="padding-top: 0; padding-bottom: 0; border-bottom: 1px solid #4a4a4a; margin-bottom: 8px;">
                              <div style="width: 30px; height: 0px; flex-shrink: 0;"></div> <div style="flex-grow: 1;">
                                 <div class="history_item_inputs">
-                                    <div style="flex: 2 1 200px;"> <label>セッション名</label> </div>
-                                    <div style="flex: 1 1 100px;"> <label>最終傷痕</label> </div>
-                                    <div style="flex: 1 1 100px;"> <label>経験点</label> </div>
-                                    <div style="flex: 2 1 200px;"> <label>後遺症</label> </div>
-                                </div>
+                                    <div style="flex: 2 1 200px;"> <label>シナリオ名</label> </div> <div style="flex: 1 1 100px;"> <label>経験点</label> </div>
+                                    <div style="flex: 2 1 200px;"> <label>メモ</label> </div> </div>
                             </div>
                         </div>
 
@@ -687,11 +790,8 @@
                                 </div>
                                 <div style="flex-grow: 1;">
                                     <div class="history_item_inputs">
-                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.sessionName"/> </div>
-                                        <div style="flex: 1 1 100px;"> <input type="number" v-model.number="history.lastScar" min="0"/> </div>
-                                        <div style="flex: 1 1 100px;"> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
-                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.gotAftereffects"/> </div>
-                                    </div>
+                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.sessionName"/> </div> <div style="flex: 1 1 100px;"> <input type="number" v-model.number="history.gotExperiments" min="0"/> </div>
+                                        <div style="flex: 2 1 200px;"> <input type="text" v-model="history.memo"/> </div> </div>
                                 </div>
                             </li>
                         </ul>
@@ -704,7 +804,7 @@
         </div> <div class="copyright-footer"> 
             <p>本サイトは<a href="https://www.aioniatrpg.com/" target="_blank" rel="noopener noreferrer">「イチ（フシギ製作所）」様が権利を有する「慈悲なきアイオニア」</a>の二次創作物です(Ver 1.2対応)。
             <br>
-               本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。</p>
+                本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。</p>
         </div>
 
         <div id="footer">
@@ -730,10 +830,13 @@
                     character: {
                         name: '', playerName: '', species: '', rareSpecies: '',
                         occupation: '', age: null, gender: '', height: '', weight: '', 
+                        origin: '', faith: '', 
                         otherItems: '', 
-                        initScar: 0, initWeakness1: '', initWeakness2: '', memo: '',
+                        currentScar: 0,
+                        initialScar: 0,
+                        memo: '',
+                        weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' })),
                     },
-                    // Master list of all available skills in this application's internal format
                     skills: [ 
                         { id: 'motion', name: '運動', checked: false, canHaveExperts: true, experts: [{ value: '' }] },
                         { id: 'avoidance', name: '回避', checked: false, canHaveExperts: false, experts: [] },
@@ -752,8 +855,8 @@
                     equipments: { 
                         weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' },
                     },
-                    histories: [
-                        { sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' }
+                    histories: [ // v-modelはsessionNameのまま
+                        { sessionName: '', gotExperiments: null, memo: '' }
                     ],
                     showHelp: false,
                     helpText: `
@@ -779,12 +882,15 @@
             },
             computed: {
                 maxExperimentPoints() {
-                    let scarExp = Number(this.character.initScar) || 0;
-                    let weaknessExp = 0;
-                    if (this.character.initWeakness1) weaknessExp += 10;
-                    if (this.character.initWeakness2) weaknessExp += 10;
-                    let historyExp = this.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
-                    return 100 + scarExp + weaknessExp + historyExp;
+                    const initialScarExp = Number(this.character.initialScar) || 0;
+                    const creationWeaknessExp = this.character.weaknesses.reduce((sum, weakness) => {
+                        return sum + (weakness.text && weakness.text.trim() !== '' && weakness.acquired === '作成時' ? 10 : 0);
+                    }, 0);
+                    
+                    const combinedInitialBonus = Math.min(initialScarExp + creationWeaknessExp, 20);
+
+                    const historyExp = this.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
+                    return 100 + combinedInitialBonus + historyExp;
                 },
                 currentExperiencePoints() {
                     let skillExp = this.skills.reduce((sum, s) => sum + (s.checked ? 10 : 0), 0);
@@ -808,11 +914,25 @@
                 },
                 experienceStatusClass() {
                     return this.currentExperiencePoints > this.maxExperimentPoints ? 'experience-over' : 'experience-ok';
+                },
+                sessionNamesForWeaknessDropdown() {
+                    const defaultOptions = [
+                        { value: '--', text: '--', disabled: false },
+                        { value: '作成時', text: '作成時', disabled: false }
+                    ];
+                    const sessionOptions = this.histories
+                        .map(h => h.sessionName) // v-modelはsessionNameのまま
+                        .filter(name => name && name.trim() !== '') 
+                        .map(name => ({ value: name, text: name, disabled: false }));
+                    
+                    const helpOption = { value: 'help-text', text: '（冒険の記録を追加すると選択肢が増えます）', disabled: true };
+
+                    return defaultOptions.concat(sessionOptions).concat(helpOption);
                 }
             },
             methods: {
                 hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
-                hasHistoryContent(h) { return !!(h.sessionName || h.lastScar !== null || h.gotExperiments !== null || h.gotAftereffects); },
+                hasHistoryContent(h) { return !!(h.sessionName || h.gotExperiments !== null || h.memo); }, // v-modelはsessionNameのまま
 
                 addSpecialSkillItem() {
                     if (this.specialSkills.length < 20) {
@@ -827,7 +947,12 @@
                     }
                 },
                 expertPlaceholder(skill) { return skill.checked ? "専門技能" : "専門技能 (技能選択で有効)"; },
-                handleSpeciesChange() { if (this.character.species !== 'other') { this.character.rareSpecies = ''; } },
+                handleSpeciesChange() { 
+                    if (this.character.species !== 'other') { 
+                        this.character.rareSpecies = ''; 
+                    }
+                    this.$forceUpdate();
+                },
                 addExpert(skill) { if (skill.canHaveExperts) { skill.experts.push({ value: '' }); } },
                 removeExpert(skill, expertIndex) {
                     if (skill.experts.length > 1) {
@@ -846,24 +971,24 @@
                 updateSpecialSkillNoteVisibility(index) {
                      if (this.specialSkills[index]) { const skillName = this.specialSkills[index].name; this.specialSkills[index].showNote = this.specialSkillsRequiringNote.includes(skillName); }
                 },
-                addHistoryItem() { this.histories.push({ sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' }); },
+                addHistoryItem() { this.histories.push({ sessionName: '', gotExperiments: null, memo: '' }); }, // v-modelはsessionNameのまま
                 removeHistoryItem(index) {
                     if (this.histories.length > 1) {
                         this.histories.splice(index, 1);
                     } else if (this.histories.length === 1 && this.hasHistoryContent(this.histories[index])) {
-                         this.histories[index] = { sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' };
+                         this.histories[index] = { sessionName: '', gotExperiments: null, memo: '' }; // v-modelはsessionNameのまま
                     }
                 },
                 saveData() {
                      const dataToSave = {
-                         character: this.character,
+                         character: this.character, 
                          skills: this.skills.map(s => ({ 
                              id: s.id, checked: s.checked, canHaveExperts: s.canHaveExperts,
                              experts: s.canHaveExperts ? s.experts.filter(e => e.value && e.value.trim() !== '').map(e => ({value: e.value})) : []
                          })),
                          specialSkills: this.specialSkills.filter(ss => ss.group && ss.name), 
                          equipments: this.equipments, 
-                         histories: this.histories.filter(h => h.sessionName || h.lastScar !== null || h.gotExperiments !== null || h.gotAftereffects)
+                         histories: this.histories.filter(h => h.sessionName || h.gotExperiments !== null || h.memo) // v-modelはsessionNameのまま
                      };
                     const jsonData = JSON.stringify(dataToSave, null, 2);
                     const blob = new Blob([jsonData], { type: 'application/json' });
@@ -885,7 +1010,7 @@
                             const fileContent = e.target.result;
                             try {
                                 const rawJsonData = JSON.parse(fileContent);
-                                this.parseLoadedData(rawJsonData); // Pass raw JSON to be adapted and parsed
+                                this.parseLoadedData(rawJsonData);
                             } catch (error) {
                                 console.error("Failed to parse JSON file:", error);
                                 this.showCustomAlert("ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。");
@@ -896,142 +1021,130 @@
                     event.target.value = null; 
                 },
                 convertExternalJsonToInternalFormat(externalData) {
-                    // This function converts JSON from the external tool to this app's internal format.
                     const internalData = {
                         character: {
                             name: externalData.name || '',
-                            playerName: externalData.player || '', // Key mapping
+                            playerName: externalData.player || '',
                             species: externalData.species || '',
                             rareSpecies: externalData.rare_species || '',
-                            occupation: externalData.occupation || '', // Assuming it might exist
-                            age: externalData.age ? parseInt(externalData.age) : null, // Assuming it might exist
-                            gender: externalData.gender || '', // Assuming it might exist
-                            height: externalData.height || '', // Assuming it might exist
-                            weight: externalData.weight || '', // Assuming it might exist
-                            otherItems: externalData.otherItems || '', // Assuming it might exist
-                            initScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
-                            initWeakness1: externalData.init_weakness1 || '',
-                            initWeakness2: externalData.init_weakness2 || '',
-                            memo: externalData.character_memo || ''
+                            occupation: externalData.occupation || '',
+                            age: externalData.age ? parseInt(externalData.age) : null,
+                            gender: externalData.gender || '',
+                            height: externalData.height || '',
+                            weight: externalData.weight || '',
+                            origin: externalData.origin || '', 
+                            faith: externalData.faith || '',   
+                            otherItems: externalData.otherItems || '',
+                            initialScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
+                            currentScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0, 
+                            memo: externalData.character_memo || '',
+                            weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' }))
                         },
-                        skills: [], // To be populated based on this.skills definition
-                        specialSkills: [],
-                        equipments: { 
-                            weapon1: { group: '', name: '' }, 
-                            weapon2: { group: '', name: '' }, 
-                            armor: { group: '', name: '' } 
-                        },
+                        skills: [], specialSkills: [],
+                        equipments: { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' } },
                         histories: []
                     };
 
-                    // Convert skills
-                    // The external `skills` array is positional and corresponds to `this.externalSkillOrder`
+                    if (externalData.init_weakness1) {
+                        internalData.character.weaknesses[0] = { text: externalData.init_weakness1, acquired: '作成時' };
+                    }
+                    if (externalData.init_weakness2) {
+                        internalData.character.weaknesses[1] = { text: externalData.init_weakness2, acquired: '作成時' };
+                    }
+
                     if (externalData.skills && Array.isArray(externalData.skills)) {
                         this.externalSkillOrder.forEach((skillId, index) => {
                             const appSkillDefinition = this.skills.find(s => s.id === skillId);
                             if (appSkillDefinition && externalData.skills[index]) {
                                 const externalSkill = externalData.skills[index];
                                 const newSkill = {
-                                    id: appSkillDefinition.id,
-                                    name: appSkillDefinition.name, // Keep name from internal definition
-                                    checked: !!externalSkill.selected,
-                                    canHaveExperts: appSkillDefinition.canHaveExperts,
+                                    id: appSkillDefinition.id, name: appSkillDefinition.name,
+                                    checked: !!externalSkill.selected, canHaveExperts: appSkillDefinition.canHaveExperts,
                                     experts: []
                                 };
                                 if (newSkill.checked && newSkill.canHaveExperts) {
                                     if (externalSkill.expert_skills && externalSkill.expert_skills.length > 0) {
                                         newSkill.experts = externalSkill.expert_skills.map(es => ({ value: es || '' })).filter(e => e.value);
                                     }
-                                    // If checked and can have experts, but no expert_skills, ensure one empty slot
-                                    if (newSkill.experts.length === 0) {
-                                        newSkill.experts.push({ value: '' });
-                                    }
+                                    if (newSkill.experts.length === 0) newSkill.experts.push({ value: '' });
+                                } else if (newSkill.canHaveExperts) {
+                                     newSkill.experts.push({ value: '' });
                                 }
                                 internalData.skills.push(newSkill);
-                            } else if (appSkillDefinition) { // If external skill data is missing for this position, add default
-                                internalData.skills.push(JSON.parse(JSON.stringify(appSkillDefinition))); // Add a copy of the default
+                            } else if (appSkillDefinition) {
+                                internalData.skills.push(JSON.parse(JSON.stringify(appSkillDefinition)));
                             }
                         });
-                    } else { // If no skills in external data, use this app's defaults
+                    } else {
                         internalData.skills = JSON.parse(JSON.stringify(this.skills));
                     }
 
-
-                    // Convert special skills
                     if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
                         internalData.specialSkills = externalData.special_skills
-                            .filter(ss => ss.group && ss.name) // Filter out empty ones from external tool
+                            .filter(ss => ss.group && ss.name)
                             .map(ss => ({
-                                group: ss.group || '',
-                                name: ss.name || '',
-                                note: ss.note || '',
-                                showNote: false // Will be set by updateSpecialSkillNoteVisibility later
+                                group: ss.group || '', name: ss.name || '',
+                                note: ss.note || '', showNote: false
                             }));
                     }
 
-                    // Convert equipments
                     if (externalData.equipments) {
                         internalData.equipments.weapon1 = { ... (externalData.equipments.weapon1 || { group: '', name: '' }) };
                         internalData.equipments.weapon2 = { ... (externalData.equipments.weapon2 || { group: '', name: '' }) };
                         internalData.equipments.armor = { ... (externalData.equipments.armor || { group: '', name: '' }) };
                     }
                     
-                    // Convert histories
                     if (externalData.histories && Array.isArray(externalData.histories)) {
                         internalData.histories = externalData.histories.map(h => ({
-                            sessionName: h.name || '', // Key mapping
-                            lastScar: h.scar ? parseInt(h.scar) : null,
+                            sessionName: h.name || '', // v-modelはsessionNameのまま
                             gotExperiments: h.experiments ? parseInt(h.experiments) : null,
-                            gotAftereffects: h.aftereffects || ''
-                            // stress is not directly mapped
+                            memo: h.stress || h.memo || '' 
                         }));
                     }
-
                     return internalData;
                 },
 
                 parseLoadedData(rawJsonData) {
                     let dataToParse = rawJsonData;
-                    // Check if the rawJsonData is from the external tool
-                    // A simple check could be the presence of 'player' key vs 'playerName'
-                    // or the structure of the 'skills' array (external tool uses 'selected' and 'expert_skills')
                     if (rawJsonData && typeof rawJsonData.player !== 'undefined' && typeof rawJsonData.character_memo !== 'undefined') {
-                         console.log("External JSON format detected, converting...");
+                        console.log("External JSON format detected, converting...");
                         dataToParse = this.convertExternalJsonToInternalFormat(rawJsonData);
                     } else if (rawJsonData && rawJsonData.character && typeof rawJsonData.character.playerName !== 'undefined') {
                         console.log("Internal JSON format detected.");
-                        // It's already in the internal format (or close enough)
                     } else {
                         console.warn("Unknown JSON format, attempting to parse as is.");
-                        // If format is unknown, try to proceed, but it might lead to errors or missing data.
-                        // For robustness, ensure top-level keys exist.
                         dataToParse = {
-                            character: {},
-                            skills: [],
-                            specialSkills: [],
-                            equipments: {},
-                            histories: [],
-                            ...rawJsonData // Spread raw data, allowing defaults to be overridden
+                            character: {}, skills: [], specialSkills: [], equipments: {}, histories: [],
+                            ...rawJsonData
                         };
                     }
 
-
-                    // Reset character data with defaults, then apply loaded data
                     const defaultCharacter = { 
                         name: '', playerName: '', species: '', rareSpecies: '', 
                         occupation: '', age: null, gender: '', height: '', weight: '', 
+                        origin: '', faith: '', 
                         otherItems: '',
-                        initScar: 0, initWeakness1: '', initWeakness2: '', memo: ''
+                        currentScar: 0, initialScar: 0, memo: '',
+                        weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' }))
                     };
-                    // Ensure dataToParse.character exists before spreading
                     this.character = { ...defaultCharacter, ...(dataToParse.character || {}) };
 
+                    if (this.character.weaknesses && Array.isArray(this.character.weaknesses)) {
+                        const numMissingWeaknesses = 10 - this.character.weaknesses.length;
+                        if (numMissingWeaknesses > 0) {
+                            for (let i = 0; i < numMissingWeaknesses; i++) {
+                                this.character.weaknesses.push({ text: '', acquired: '--' });
+                            }
+                        } else if (this.character.weaknesses.length > 10) {
+                            this.character.weaknesses = this.character.weaknesses.slice(0, 10);
+                        }
+                    } else {
+                        this.character.weaknesses = Array(10).fill(null).map(() => ({ text: '', acquired: '--' }));
+                    }
 
-                    // Process skills: Iterate through the app's master skill list
-                    // dataToParse.skills should now be in the internal format (array of objects with id, checked, experts)
+
                     if (dataToParse.skills && Array.isArray(dataToParse.skills)) {
                         const loadedSkillsById = new Map(dataToParse.skills.map(s => [s.id, s]));
-                        
                         this.skills.forEach(appSkill => {
                             const loadedSkillData = loadedSkillsById.get(appSkill.id);
                             if (loadedSkillData) {
@@ -1039,7 +1152,7 @@
                                 if (appSkill.canHaveExperts) {
                                     if (appSkill.checked && loadedSkillData.experts && loadedSkillData.experts.length > 0) {
                                         appSkill.experts = loadedSkillData.experts.map(e => ({value: e.value || '' })).filter(e => e.value);
-                                        if (appSkill.experts.length === 0) appSkill.experts = [{value: ''}];
+                                         if (appSkill.experts.length === 0 && appSkill.checked) appSkill.experts = [{value: ''}];
                                     } else if (appSkill.checked) {
                                         appSkill.experts = [{ value: '' }];
                                     } else { 
@@ -1048,7 +1161,7 @@
                                 } else {
                                     appSkill.experts = [];
                                 }
-                            } else { // Skill from app's list not found in loaded file, reset it
+                            } else { 
                                 appSkill.checked = false;
                                 appSkill.experts = appSkill.canHaveExperts ? [{ value: '' }] : [];
                             }
@@ -1060,7 +1173,6 @@
                         });
                     }
                     
-                    // Process special skills
                     let loadedSSCount = 0;
                     if (dataToParse.specialSkills && Array.isArray(dataToParse.specialSkills)) {
                         loadedSSCount = dataToParse.specialSkills.length;
@@ -1083,7 +1195,6 @@
                         }
                     }
 
-                    // Process equipment
                     if (dataToParse.equipments) {
                         this.equipments.weapon1 = { group: '', name: '', ...(dataToParse.equipments.weapon1 || {}) };
                         this.equipments.weapon2 = { group: '', name: '', ...(dataToParse.equipments.weapon2 || {}) };
@@ -1092,21 +1203,18 @@
                         this.equipments = { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' }};
                     }
 
-                    // Process histories
                     if (dataToParse.histories && dataToParse.histories.length > 0) {
                         this.histories = dataToParse.histories.map(h => ({ 
-                            sessionName: h.sessionName || '', 
-                            lastScar: (h.lastScar === null || h.lastScar === undefined || h.lastScar === '') ? null : Number(h.lastScar),
+                            sessionName: h.sessionName || '', // v-modelはsessionNameのまま
                             gotExperiments: (h.gotExperiments === null || h.gotExperiments === undefined || h.gotExperiments === '') ? null : Number(h.gotExperiments),
-                            gotAftereffects: h.gotAftereffects || ''
+                            memo: h.memo || ''
                         })); 
                     } else {
-                        this.histories = [{ sessionName: '', lastScar: null, gotExperiments: null, gotAftereffects: '' }];
+                        this.histories = [{ sessionName: '', gotExperiments: null, memo: '' }]; // v-modelはsessionNameのまま
                     }
                 },
                 outputToCocofolia() {
-                    const lastHistory = this.histories.length > 0 ? this.histories[this.histories.length - 1] : {};
-                    const scar = lastHistory.lastScar !== null && lastHistory.lastScar !== undefined ? Number(lastHistory.lastScar) : Number(this.character.initScar) || 0;
+                    const scar = Number(this.character.currentScar) || 0; 
                     const stress = 0; 
 
                     let memo = `名前：${this.character.name || '名無し'}`;
@@ -1114,18 +1222,48 @@
                     
                     const speciesText = this.speciesLabelMap[this.character.species] || this.character.species;
                     memo += `種族：${this.character.species === 'other' ? `${speciesText}（${this.character.rareSpecies || '未設定'}）` : speciesText}\n`;
-                    if (this.character.occupation) memo += `職業：${this.character.occupation}\n`;
-                    if (this.character.age !== null) memo += `年齢：${this.character.age}\n`;
                     if (this.character.gender) memo += `性別：${this.character.gender}\n`;
+                    if (this.character.age !== null) memo += `年齢：${this.character.age}\n`;
+                    if (this.character.origin) memo += `出身地：${this.character.origin}\n`;
+                    if (this.character.occupation) memo += `職業：${this.character.occupation}\n`;
+                    if (this.character.faith) memo += `信仰：${this.character.faith}\n`;
                     if (this.character.height) memo += `身長：${this.character.height}\n`;
                     if (this.character.weight) memo += `体重：${this.character.weight}\n`;
 
 
-                    let weaknesses = [];
-                    if (this.character.initWeakness1) weaknesses.push(this.character.initWeakness1);
-                    if (this.character.initWeakness2) weaknesses.push(this.character.initWeakness2);
-                    this.histories.forEach(h => { if (h.gotAftereffects) weaknesses.push(h.gotAftereffects); });
-                    if (weaknesses.length > 0) memo += "\n【弱点・後遺症】\n" + weaknesses.join("\n") + "\n";
+                    let cocofoliaWeaknesses = [];
+                    this.character.weaknesses.forEach(w => {
+                        if (w.text && w.text.trim() !== '') {
+                            let acquiredText = '';
+                            if (w.acquired && w.acquired !== '--' && w.acquired !== 'help-text') { // help-textは表示しない
+                                acquiredText = ` (${w.acquired})`;
+                            }
+                            cocofoliaWeaknesses.push(`${w.text}${acquiredText}`);
+                        }
+                    });
+                    if (cocofoliaWeaknesses.length > 0) {
+                        memo += "\n【弱点】\n" + cocofoliaWeaknesses.join("\n") + "\n";
+                    }
+                    
+                    let skillsMemoText = "\n【技能】\n";
+                    let hasSkills = false;
+                    this.skills.forEach(skill => {
+                        if (skill.checked) {
+                            hasSkills = true;
+                            skillsMemoText += `・${skill.name}`;
+                            if (skill.canHaveExperts && skill.experts.some(e => e.value && e.value.trim() !== '')) {
+                                const expertTexts = skill.experts.filter(e => e.value && e.value.trim() !== '').map(e => e.value);
+                                if (expertTexts.length > 0) {
+                                    skillsMemoText += ` (${expertTexts.join('/')})`;
+                                }
+                            }
+                            skillsMemoText += "\n";
+                        }
+                    });
+                    if (hasSkills) {
+                         memo += skillsMemoText;
+                    }
+
 
                     let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2\n:ダメージ=0\n`;
                     this.skills.forEach(skill => {
@@ -1172,8 +1310,34 @@
                         memo += "\n【その他所持品】\n" + this.character.otherItems + "\n";
                     }
 
+                    if (this.character.memo) {
+                        let charMemo = this.character.memo;
+                        let truncatedCharMemo = "";
+                        const maxLength = 200;
 
-                    if (this.character.memo) memo += "\n【キャラクターメモ】\n" + this.character.memo;
+                        if (charMemo.length <= maxLength) {
+                            truncatedCharMemo = charMemo;
+                        } else {
+                            let sub = charMemo.substring(0, maxLength);
+                            let lastBreak = -1;
+                            const breakChars = ['\n', '。', '．']; 
+
+                            for (const char of breakChars) {
+                                let idx = sub.lastIndexOf(char);
+                                if (idx > lastBreak && idx > maxLength / 2) { 
+                                    lastBreak = idx;
+                                }
+                            }
+                            
+                            if (lastBreak !== -1) {
+                                truncatedCharMemo = charMemo.substring(0, lastBreak + 1) + (charMemo.length > lastBreak + 1 ? "…" : "");
+                            } else {
+                                truncatedCharMemo = charMemo.substring(0, maxLength) + "…";
+                            }
+                        }
+                        memo += "\n【キャラクターメモ】\n" + truncatedCharMemo.trim() + "\n";
+                    }
+
 
                     const cocofoliaCharacter = {
                         kind: "character",
