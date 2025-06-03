@@ -107,7 +107,7 @@ const app = createApp({
             return defaultOptions.concat(sessionOptions).concat(helpOption);
         }
     },
-    watch: { // **ここから変更点**
+    watch: {
         'character.initialScar'(newInitialScar) {
             if (this.character.linkCurrentToInitialScar) {
                 this.character.currentScar = newInitialScar;
@@ -117,15 +117,12 @@ const app = createApp({
             if (isLinked) {
                 this.character.currentScar = this.character.initialScar;
             }
-        } // **ここまで変更点**
+        }
     },
     methods: {
-        // **ここから変更点**
         handleCurrentScarInput(event) {
             const enteredValue = parseInt(event.target.value, 10);
-            // isNaNチェックを追加して、不正な入力（数値でない場合など）を考慮
             if (isNaN(enteredValue)) {
-                // 不正な入力の場合、現在の傷痕を初期傷痕に戻す（連動がオンの場合）
                 if (this.character.linkCurrentToInitialScar) {
                     this.$nextTick(() => {
                         this.character.currentScar = this.character.initialScar;
@@ -135,22 +132,13 @@ const app = createApp({
             }
 
             if (this.character.linkCurrentToInitialScar) {
-                // 連動がオンの時
                 if (enteredValue !== this.character.initialScar) {
-                    // 入力された値が初期傷痕と異なる場合、連動を解除
                     this.character.linkCurrentToInitialScar = false;
-                    // そして、入力された値を現在の傷痕に設定する
-                    // ただし、v-modelで既にcurrentScarは更新されているはずなので、
-                    // ここで再度設定する必要はないかもしれないが、明示的に行う
                     this.character.currentScar = enteredValue;
                 }
-                // 入力された値が初期傷痕と同じ場合は、何もしない（連動は維持される）
             } else {
-                // 連動がオフの時は、v-modelによって currentScar は既に入力値で更新されている
-                // 何もする必要はない
             }
         },
-        // **ここまで変更点**
         hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
@@ -256,7 +244,7 @@ const app = createApp({
                     otherItems: externalData.otherItems || '',
                     initialScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
                     currentScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
-                    linkCurrentToInitialScar: typeof externalData.linkCurrentToInitialScar === 'boolean' ? externalData.linkCurrentToInitialScar : true, // **変更点**
+                    linkCurrentToInitialScar: typeof externalData.linkCurrentToInitialScar === 'boolean' ? externalData.linkCurrentToInitialScar : true,
                     memo: externalData.character_memo || '',
                     weaknesses: Array(10).fill(null).map(() => ({ text: '', acquired: '--' }))
                 },
@@ -628,7 +616,6 @@ const app = createApp({
         }
     },
     mounted() {
-        // 初期ロード時に連動がオンなら現在の傷痕を初期傷痕に設定
         if (this.character.linkCurrentToInitialScar) {
             this.character.currentScar = this.character.initialScar;
         }
