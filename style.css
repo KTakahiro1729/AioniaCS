@@ -558,6 +558,148 @@ input[type="checkbox"] {
     resize: vertical;
 }
 
+/* Flexboxレイアウト系 */
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.flex-gap-8 {
+    display: flex;
+    gap: 8px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.flex-2 {
+    flex: 2;
+}
+
+/* マージン・パディング調整 */
+.mb-25 {
+    margin-bottom: 25px;
+}
+
+.mb-15 {
+    margin-bottom: 15px;
+}
+
+.mb-12 {
+    margin-bottom: 12px;
+}
+
+.mb-5 {
+    margin-bottom: 5px;
+}
+
+.mt-6 {
+    margin-top: 6px;
+}
+
+.mr-8 {
+    margin-right: 8px;
+}
+
+.mr-4 {
+    margin-right: 4px;
+}
+
+/* セクション構造 */
+.scar-section {
+    margin-bottom: 25px;
+}
+
+.weakness-section {
+    /* 弱点セクション用のスタイル（必要に応じて追加） */
+}
+
+/* 連動チェックボックス関連 */
+.link-checkbox-container {
+    display: flex;
+    align-items: center;
+}
+
+.link-checkbox-main-label {
+    margin-right: 8px;
+}
+
+.link-checkbox {
+    margin-right: 4px;
+    margin-bottom: 2px;
+    accent-color: #c09a69;
+    transform: scale(1.1);
+    width: auto;
+}
+
+.link-checkbox-label {
+    font-size: 0.9em;
+    color: #a0a0a0;
+    font-weight: normal;
+    user-select: none;
+    margin-bottom: 0;
+}
+
+/* 装備品セクション */
+.equipment-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.equipment-section {
+    flex: 1 1 300px;
+    min-width: 280px;
+}
+
+/* リストリセット系 */
+.reset-list {
+    padding-left: 0;
+    list-style-type: none;
+    margin: 0;
+}
+
+.reset-list-with-margin {
+    padding-left: 0;
+    list-style-type: none;
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.reset-list-bottom-margin {
+    padding-left: 0;
+    list-style-type: none;
+    margin-bottom: 10px;
+}
+
+/* 履歴セクション用Flexレイアウト */
+.flex-history-name {
+    flex: 2 1 200px;
+}
+
+.flex-history-exp {
+    flex: 1 1 100px;
+}
+
+.flex-history-memo {
+    flex: 2 1 200px;
+}
+
+/* ユーティリティ */
+.block-with-margin {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.hidden {
+    display: none;
+}
+
 @media (max-width: 768px) {
     #status_grid {
         grid-template-columns: 1fr;
@@ -602,6 +744,11 @@ input[type="checkbox"] {
         flex-basis: auto !important;
         min-width: 0 !important;
         width: 100%;
+    }
+
+    /* モバイル用の装備品レイアウト調整 */
+    .equipment-section {
+        min-width: 100%;
     }
 }
 
