@@ -78,15 +78,15 @@ class DataManager {
         species: externalData.species || '',
         rareSpecies: externalData.rare_species || '',
         occupation: externalData.occupation || '',
-        age: externalData.age ? parseInt(externalData.age) : null,
+        age: externalData.age ? parseInt(externalData.age, 10) : null,
         gender: externalData.gender || '',
         height: externalData.height || '',
         weight: externalData.weight || '',
         origin: externalData.origin || '',
         faith: externalData.faith || '',
         otherItems: externalData.otherItems || '',
-        initialScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
-        currentScar: externalData.init_scar ? parseInt(externalData.init_scar) : 0,
+        initialScar: externalData.init_scar ? parseInt(externalData.init_scar, 10) : 0,
+        currentScar: externalData.init_scar ? parseInt(externalData.init_scar, 10) : 0,
         linkCurrentToInitialScar: typeof externalData.linkCurrentToInitialScar === 'boolean'
           ? externalData.linkCurrentToInitialScar
           : true,
@@ -249,7 +249,7 @@ class DataManager {
     if (externalData.history && Array.isArray(externalData.history)) {
       internalData.histories = externalData.history.map(h => ({
         sessionName: h.name || '',
-        gotExperiments: h.experiments ? parseInt(h.experiments) : null,
+        gotExperiments: h.experiments ? parseInt(h.experiments, 10) : null,
         memo: h.stress || h.memo || ''
       }));
     }
