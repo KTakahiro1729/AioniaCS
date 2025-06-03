@@ -609,7 +609,6 @@ input[type="checkbox"] {
 .history_item_inputs>div {
     display: flex;
     flex-direction: column;
-    flex-grow: 0;
 }
 
 .history_item_inputs>div>label {
@@ -631,15 +630,16 @@ input[type="checkbox"] {
 }
 
 .flex-history-name {
-    flex: 2 1 200px;
+    flex: 1 1 150px;
+    max-width: 150px;
 }
 
 .flex-history-exp {
-    flex: 1 1 100px;
+    flex: 0 1 80px;
 }
 
 .flex-history-memo {
-    flex: 2 1 200px;
+    flex: 3 2 220px;
 }
 
 /* ==========================================================================
