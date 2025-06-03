@@ -1,0 +1,635 @@
+
+        /* 基本スタイル */
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            background-color: #1a1a1a;
+            color: #d1d1d1;
+            line-height: 1.7;
+            padding-bottom: 72px; /* 固定フッターの高さ分 */
+        }
+
+        #app {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .tool-title {
+            font-family: 'Cinzel Decorative', cursive;
+            text-align: center;
+            margin: 25px 0px 40px;
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #c09a69;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+
+        /* Vueのトランジション用 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.4s ease-in-out;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+
+        /* 経験点・荷重表示のスタイル */
+        .status-display-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0; 
+        }
+        .status-display {
+            padding: 7px 14px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.9em;
+            display: inline-block;
+            border-width: 2px;
+            border-style: solid;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3) inset;
+            white-space: nowrap; 
+        }
+        .experience-ok {
+            border-color: #5a8b5a;
+            color: #9aeaa4;
+            background-color: #2f3d2f;
+        }
+        .experience-over {
+            border-color: #8B0000;
+            color: #ffacac;
+            background-color: #4d2626;
+        }
+        .weight-display {
+            border-color: #647687;
+            color: #b0c4de;
+            background-color: #2a3038;
+        }
+
+        /* ヘルプテキストのスタイル */
+        #help-vue {
+            position: fixed;
+            bottom: 92px; /* フッターの高さ72px + 余白20px */
+            left: 20px;
+            background-color: #282828;
+            border: 1px solid #444;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 1000;
+            max-width: 90%;
+            width: 420px; 
+            font-size: 0.9em; 
+            color: #c5c5c5;
+        }
+        #help-vue h4 {
+            font-family: 'Noto Serif JP', serif;
+            color: #c09a69;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        #help-vue ul {
+            padding-left: 20px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        #help-vue li {
+            margin-bottom: 5px;
+        }
+        #help-vue p {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+
+        /* ボックス共通スタイル */
+        .box_title {
+            font-family: 'Noto Serif JP', serif; 
+            background-color: #333333;
+            padding: 12px 18px;
+            font-weight: 700;
+            border-bottom: 1px solid #555;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            color: #c09a69;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1em;
+        }
+        .box_contents {
+            padding: 18px;
+            border: 1px solid #444;
+            border-top: none;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            /* margin-bottom: 25px; */
+            background-color: #242424;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            overflow-x: hidden; 
+        }
+
+        /* サブボックスタイトル（傷痕・弱点用） */
+        .sub-box-title {
+            font-size: 1em;
+            background-color: #2e2e2e;
+            border-bottom: 1px solid #4a4a4a;
+            padding: 10px 18px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            /* 親のbox_contentsのpaddingを相殺するためのマージン */
+            margin-left: -18px;
+            margin-right: -18px;
+        }
+        .sub-box-title-scar {
+            margin-top: -18px; /* box_contentsのpadding-topを相殺 */
+            margin-bottom: 15px;
+        }
+        .sub-box-title-weakness {
+            margin-top: 0px;
+            margin-bottom: 10px;
+        }
+
+
+        /* リストスタイル */
+        #special_skills_list, #histories {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0; 
+            margin-bottom: 0;
+        }
+        #skills_list.box_contents {
+            padding: 18px;
+            list-style-type: none;
+            margin-top: 0; 
+            margin-bottom: 0;
+        } 
+
+        #skills_list > li {
+            margin-bottom: 5px;
+            padding: 10px;
+            border: 1px solid #383838;
+            border-radius: 3px;
+            background-color: #2c2c2c;
+        }
+        #skills_list > li .skill_header {
+             display: flex; 
+             align-items: center; 
+        }
+         #skills_list > li .experts_section {
+             margin-top: 0; 
+        }
+
+
+        #special_skills_list > li, #histories > li {
+             margin-bottom: 0;
+             padding: 0;
+             border: none;
+             background-color: transparent;
+        }
+        #histories > li {
+            margin-top: 5px;
+        }
+        .special_skill_note_input {
+             margin-top : 3px;
+        }
+        .item_new_layout {
+            display: flex;
+            align-items: flex-start; 
+            gap: 10px; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #3a3a3a;
+        }
+        .item_new_layout:last-of-type {
+            border-bottom: none;
+            padding-bottom: 8px;
+        }
+        
+        .delete-button-wrapper {
+            width: 30px; 
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .item_new_layout .delete-button-wrapper {
+             margin-top: 6px; 
+        }
+
+        .expert_list_item_new_layout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .expert_list_item_new_layout:last-child {
+            margin-bottom: 0;
+        }
+
+        
+        .history_item_inputs {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 10px;
+        }
+        .history_item_inputs > div {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 0;
+        }
+        .history_item_inputs > div > label {
+            font-size: 0.85em;
+            margin-bottom: 4px;
+            color: #aaa;
+            display: block;
+        }
+        /* 冒険の記録ヘッダーのカスタムスタイル */
+        .history-labels-header-custom {
+            padding-top: 0;
+            padding-bottom: 0;
+            border-bottom: 1px solid #4a4a4a;
+            margin-bottom: 5px;
+        }
+        .history-labels-header-custom .delete-button-wrapper { /* ヘッダーの削除ボタン分のスペース調整 */
+             height: 0px; /* 中身がないので高さを0に */
+        }
+
+
+        .list_item_button_small {
+            cursor: pointer;
+            padding: 0;
+            border-radius: 3px; 
+            user-select: none;
+            font-size: 1.2em; 
+            font-weight: bold;
+            border: 1px solid #555; 
+            width: 30px; 
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+            line-height: 1;
+            background-color: #3a3a3a; 
+            color: #c09a69; 
+            flex-shrink: 0;
+        }
+        .list_item_button_small:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+            background-color: #2a2a2a;
+            color: #666;
+            border-color: #444;
+        }
+
+        .list_item_add_small:hover:not(:disabled) {
+            background-color: #4a4a4a;
+            border-color: #c09a69;
+        }
+        .list_item_delete_small {
+            color: #8c5353; 
+            border-color: #5c3939; 
+        }
+        .list_item_delete_small:hover:not(:disabled) {
+            background-color: #4a3a3a; 
+            border-color: #8c5353; 
+            color: #a86f6f; 
+        }
+        
+        .add_button_container_left {
+            margin-top: 5px;
+        }
+
+        /* フォーム要素 */
+        label { 
+            margin-right: 10px;
+            font-weight: 700; 
+            font-size: 0.95em; 
+            color: #b0b0b0;
+        }
+
+        .info-item > label, 
+        .equipment > label,
+        #scar_weakness_section .info-item > label, 
+        #scar_weakness_section .weakness-table-header th 
+         { 
+            display: block;
+            margin-bottom: 6px;
+            margin-right: 0; 
+            font-weight: 700;
+            font-size: 0.95em;
+            color: #b0b0b0;
+        }
+
+
+        input[type="text"], input[type="number"], select, textarea {
+            padding: 9px 12px;
+            border-radius: 3px;
+            border: 1px solid #555;
+            box-sizing: border-box;
+            width: 100%;
+            font-size: 0.95em; 
+            background-color: #2c2c2c; 
+            color: #d1d1d1; 
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+        textarea {
+            font-size: 1.2em;
+            line-height: 1.6; 
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            border-color: #c09a69; 
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(192, 154, 105, 0.25); 
+        }
+        select { appearance: auto; }
+        input[type="checkbox"] { 
+            width: auto; 
+            margin-right: 8px;
+            transform: scale(1.2);
+            accent-color: #c09a69; 
+        }
+        .greyed-out {
+            background-color: #383838 !important; 
+            color: #888888 !important;       
+            /* cursor: default; */ /* 入力は可能なのでカーソルは変えない */
+        }
+        .info-row { 
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 15px; 
+            margin-bottom: 7px;
+        }
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        .info-item {
+            flex: 1 1 auto; 
+        }
+        .info-item-full {
+            flex-basis: 100%;
+        }
+        .info-item-custom-quadruple { 
+            flex: 1 1 calc(25% - 12.5px);
+            min-width: 65px; 
+        }
+        .info-item-custom-triple { 
+            flex: 1 1 calc(33.333% - 10px); 
+            min-width: 90px; 
+        }
+        .info-item-custom-double { 
+            flex: 1 1 calc(50% - 7.5px); 
+            min-width: 80px; 
+        }
+        .items_textarea { 
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* 弱点テーブル用スタイル */
+        .weakness-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px; 
+        }
+        .weakness-table th, .weakness-table td {
+            padding: 8px;
+            border-bottom: 1px solid #3a3a3a;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .weakness-table th {
+            color: #aaa;
+            font-size: 0.9em;
+            border-bottom: 1px solid #4a4a4a; 
+        }
+        .weakness-table td input[type="text"], .weakness-table td select {
+            font-size: 0.9em; 
+            padding: 7px 10px;
+        }
+        .weakness-table th.col-number { 
+            width: 30px; 
+            padding-left: 4px; 
+            padding-right: 4px;
+            color: transparent; 
+            user-select: none; 
+        }
+        .weakness-table td.col-number { 
+            text-align: center;
+        }
+        .weakness-table th.col-acquired, .weakness-table td.col-acquired { 
+            width: 150px; 
+        }
+        .weakness-table td.col-acquired select {
+            min-width: 120px; 
+        }
+        .weakness-table td.col-acquired option[disabled] { /* プルダウンのヘルプテキスト用 */
+            color: #777;
+            font-style: italic;
+        }
+
+
+        /* グリッドレイアウト */
+        #status_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 10px; }
+        #character_info_wrapper { grid-area: charinfo; }
+        #scar_weakness_wrapper { grid-area: scarweakness; } 
+        #skills_wrapper { grid-area: skills; }
+        #special_skills_wrapper { grid-area: specialskills; }
+        #items_wrapper { grid-area: items; grid-column: 1 / -1; } 
+        #character_memo_wrapper { grid-area: memo; grid-column: 1 / -1; }
+        #session_history_wrapper { grid-area: history; grid-column: 1 / -1; }
+        #status_grid {
+            grid-template-areas:
+                "charinfo scarweakness" 
+                "skills specialskills"
+                "items items" 
+                "memo memo"
+                "history history"; 
+        }
+
+        #character_memo .box_contents { max-width: 100%; }
+        #character_text { width: 100%; min-height: 180px; resize: vertical; }
+
+        @media (max-width: 768px) {
+            #status_grid {
+                grid-template-columns: 1fr;
+                grid-template-areas: "charinfo" "scarweakness" "skills" "specialskills" "items" "memo" "history"; 
+                gap: 20px;
+            }
+
+            #session_history_wrapper .history_item_inputs { 
+                display: flex;
+                flex-direction: row; 
+                flex-wrap: nowrap;  
+                gap: 10px;
+            }
+            #session_history_wrapper .history_item_inputs > div { 
+                margin-bottom: 0; 
+            }
+            .weakness-table th.col-acquired, .weakness-table td.col-acquired {
+                width: 35%; 
+                min-width: 110px; 
+            }
+            .weakness-table td.col-acquired select {
+                width: 100%; 
+            }
+            
+            #help-vue { width: calc(100% - 40px); max-width: none; 
+            }
+            .info-row { flex-direction: column; gap: 12px; } 
+            .info-item, .info-item-custom-triple, .info-item-custom-double { 
+                flex-basis: auto !important; 
+                min-width: 0 !important; 
+                width: 100%; 
+            }
+        }
+         @media (max-width: 480px) {
+            .tool-title { font-size: 1.8em; }
+            .weakness-table th.col-acquired, .weakness-table td.col-acquired {
+                width: 40%; 
+                min-width: 100px; 
+            }
+        }
+
+
+        /* フッター */
+        #footer {
+            display: flex;  align-items: center;
+            padding: 15px 25px; 
+            border-top: 1px solid #555; 
+            background-color: #1f1f1f; 
+            box-sizing: border-box; 
+            position: fixed; 
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            box-shadow: 0 -3px 8px rgba(0,0,0,0.5); 
+            flex-wrap: nowrap; 
+            overflow-x: auto;  
+            gap: 15px; 
+            -webkit-overflow-scrolling: touch; 
+            scrollbar-width: thin; 
+            scrollbar-color: #555 #1f1f1f; 
+        }
+        /* Webkit系ブラウザのスクロールバー */
+        #footer::-webkit-scrollbar {
+            height: 8px;
+        }
+        #footer::-webkit-scrollbar-track {
+            background: #1f1f1f;
+            border-radius: 4px;
+        }
+        #footer::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        #footer::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        .footer-help-icon { 
+            cursor: help; 
+            height: 48px;
+            padding: 0px 14px; 
+            border-radius: 3px;  
+            font-size: 1.1em; 
+            font-weight: bold;
+            border: 1px solid #555; 
+            background-color: #3a3a3a; 
+            color: #c09a69; 
+            min-height: 42px; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3); 
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; 
+            flex-shrink: 0; 
+        }
+        .footer-help-icon:hover { 
+            border-color: #c09a69; 
+        }
+
+        .footer-button { 
+            cursor: pointer; 
+            padding: 10px 18px; 
+            border-radius: 3px; 
+            font-size: 0.95em; font-weight: 700; text-align: center; 
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            border: 1px solid; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            min-height: 42px; 
+            box-sizing: border-box;
+            white-space: nowrap; 
+            flex-shrink: 0; 
+        }
+        
+        #save_button, #load_button_vue_wrapper, #output_button {
+            background-color: #3a434d;
+            color: #b0c4de;
+            border-color: #647687;
+        }
+
+        #save_button, #load_button_vue_wrapper { /* サイズ統一のため修正 */
+            height: 48px; 
+            width: 110px;
+        }
+
+        #output_button {
+            height: 48px; 
+            width: 175px;
+        }
+        #load_button_vue_wrapper > label {
+            margin: 0px;
+        }
+        #save_button:hover, #load_button_vue_wrapper:hover, #output_button:hover {
+            background-color: #454f5a;
+            border-color: #8298ad;
+            color: #c8d4e2; 
+        }
+        #load_button_vue_wrapper { 
+            padding: 0; 
+        }
+        #load_button_vue_wrapper > label { 
+            color: inherit; 
+            font-weight: 700; 
+            padding: 10px 18px; 
+            display: block; 
+            height: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+            /* ボタン内のテキストを中央揃えにするために追加 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .copyright-footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8em;
+            color: #777;
+            background-color: #161616; 
+            border-top: 1px solid #333;
+            margin-top: 25px; 
+            box-sizing: border-box; 
+        }
+        .copyright-footer p { 
+            margin: 0.2em 0;  
+        }
+        .copyright-footer a {
+            color: #999;
+            text-decoration: underline;
+        }
+        .copyright-footer a:hover {
+            color: #bbb;
+        }
+
+    
