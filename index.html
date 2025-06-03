@@ -383,9 +383,13 @@
         .info-item-full {
             flex-basis: 100%;
         }
+        .info-item-custom-quadruple { 
+            flex: 1 1 calc(25% - 12.5px);
+            min-width: 65px; 
+        }
         .info-item-custom-triple { 
             flex: 1 1 calc(33.333% - 10px); 
-            min-width: 95px; 
+            min-width: 90px; 
         }
         .info-item-custom-double { 
             flex: 1 1 calc(50% - 7.5px); 
@@ -669,17 +673,16 @@
                             </div>
                         </div>
                         <div class="info-row">
-                            <div class="info-item info-item-custom-double"> <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender"/> </div>
-                            <div class="info-item info-item-custom-double"> <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age" min="0"/> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender"/> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age" min="0"/> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="height">身長</label> <input type="text" id="height" v-model="character.height"/> </div>
+                            <div class="info-item info-item-custom-quadruple"> <label for="weight_char">体重</label> <input type="text" id="weight_char" v-model="character.weight"/> </div>
+
                         </div>
                         <div class="info-row">
                             <div class="info-item info-item-custom-triple"> <label for="origin">出身地</label> <input type="text" id="origin" v-model="character.origin"/> </div>
                             <div class="info-item info-item-custom-triple"> <label for="occupation">職業</label> <input type="text" id="occupation" v-model="character.occupation"/> </div>
                             <div class="info-item info-item-custom-triple"> <label for="faith">信仰</label> <input type="text" id="faith" v-model="character.faith"/> </div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-item info-item-custom-double"> <label for="height">身長</label> <input type="text" id="height" v-model="character.height"/> </div>
-                            <div class="info-item info-item-custom-double"> <label for="weight_char">体重</label> <input type="text" id="weight_char" v-model="character.weight"/> </div>
                         </div>
                     </div>
                 </div>
