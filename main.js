@@ -1,5 +1,17 @@
 const { createApp, watch, nextTick } = Vue;
 
+const BoxSection = {
+    props: {
+        title: String
+    },
+    template: `
+        <div>
+            <div class="box-title"><slot name="title">{{ title }}</slot></div>
+            <div class="box-content"><slot></slot></div>
+        </div>
+    `
+};
+
 const app = createApp({
     data() {
         return {
@@ -300,5 +312,7 @@ const app = createApp({
         }
     }
 });
+
+app.component('box-section', BoxSection);
 
 app.mount('#app');

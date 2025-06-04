@@ -20,8 +20,7 @@
         <div class="tool-title">Aionia TRPG Character Sheet</div>
         <div class="main-grid">
             <div id="character_info" class="character-info">
-                <div class="box-title">基本情報</div>
-                <div class="box-content">
+                <box-section title="基本情報">
                     <div class="info-row">
                         <div class="info-item info-item--full">
                             <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name" />
@@ -78,12 +77,11 @@
                             <label for="faith">信仰</label> <input type="text" id="faith" v-model="character.faith" />
                         </div>
                     </div>
-                </div>
+                </box-section>
             </div>
 
             <div id="scar_weakness_section" class="scar-weakness">
-                <div class="box-title">傷痕と弱点</div>
-                <div class="box-content">
+                <box-section title="傷痕と弱点">
                     <div class="scar-section">
                         <div class="box-title sub-box-title sub-box-title--scar">傷痕</div>
                         <div class="info-row">
@@ -132,13 +130,13 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </box-section>
             </div>
 
 
             <div id="skills" class="skills">
-                <div class="box-title">技能</div>
-                <ul class="skills-list box-content list-reset">
+                <box-section title="技能">
+                <ul class="skills-list list-reset">
                     <li v-for="(skill) in skills" :key="skill.id">
                         <div class="skill-header">
                             <input type="checkbox" :id="skill.id" v-model="skill.checked" />
@@ -164,11 +162,11 @@
                         </div>
                     </li>
                 </ul>
+                </box-section>
             </div>
 
             <div id="special_skills" class="special-skills">
-                <div class="box-title">特技</div>
-                <div class="box-content">
+                <box-section title="特技">
                     <ul class="list-reset">
                         <li v-for="(specialSkill, index) in specialSkills" :key="index" class="list-item mb-5">
                             <div class="delete-button-wrapper">
@@ -204,12 +202,11 @@
                         <button type="button" class="list-button list-button--add"
                             @click="addSpecialSkillItem()">＋</button>
                     </div>
-                </div>
+                </box-section>
             </div>
 
             <div id="items_section" class="items">
-                <div class="box-title">所持品</div>
-                <div class="box-content">
+                <box-section title="所持品">
                     <div class="mb-15">
                         <div class="equipment-container">
                             <div class="equipment-section">
@@ -259,20 +256,18 @@
                         <label for="other_items" class="block-label">その他所持品</label>
                         <textarea id="other_items" class="items-textarea" v-model="character.otherItems"></textarea>
                     </div>
-                </div>
+                </box-section>
             </div>
 
             <div id="character_memo" class="character-memo">
-                <div class="box-title">キャラクターメモ</div>
-                <div class="box-content">
+                <box-section title="キャラクターメモ">
                     <textarea id="character_text" :placeholder="gameData.placeholderTexts.characterMemo"
                         v-model="character.memo" class="character-memo-textarea"></textarea>
-                </div>
+                </box-section>
             </div>
 
             <div id="adventure_log_section" class="session-history">
-                <div class="box-title">冒険の記録</div>
-                <div class="box-content">
+                <box-section title="冒険の記録">
                     <div class="list-item history-labels-header">
                         <div class="delete-button-wrapper"></div>
                         <div class="flex-grow">
@@ -306,7 +301,7 @@
                     <div class="add-button-container-left">
                         <button type="button" class="list-button list-button--add" @click="addHistoryItem()">＋</button>
                     </div>
-                </div>
+                </box-section>
             </div>
         </div>
         <div class="copyright-footer">
