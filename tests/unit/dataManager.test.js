@@ -32,11 +32,12 @@ describe('DataManager', () => {
   let mockSpecialSkills;
   let mockEquipments;
   let mockHistories;
+  let currentFileReaderInstance;
+
 
   beforeEach(() => {
     dm = new DataManager(gameData);
 
-    // Reset JSZip mocks for each test
     JSZip.mockClear();
     mockZipFile.mockClear();
     mockZipFolder.mockClear();
@@ -51,28 +52,53 @@ describe('DataManager', () => {
     mockEquipments = { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' } };
     mockHistories = [{ sessionName: '', gotExperiments: null, memo: '' }];
 
-    // Mock URL.createObjectURL and anchor element for download simulation
     global.URL.createObjectURL = jest.fn().mockReturnValue('blob:http://localhost/mock-url');
     global.URL.revokeObjectURL = jest.fn();
     document.body.appendChild = jest.fn();
     document.body.removeChild = jest.fn();
     const mockAnchor = { click: jest.fn(), href: '', download: '' };
     document.createElement = jest.fn().mockReturnValue(mockAnchor);
+
+    // Global FileReader mock
+    global.FileReader = jest.fn().mockImplementation(() => {
+      const readerInstance = {
+        onload: null, // This will be set by DataManager
+        onerror: null, // This will be set by DataManager
+        result: null,
+        readAsText: jest.fn(function(file) { // 'this' refers to readerInstance
+          this.result = JSON.stringify({ character: { name: "Loaded Char via readAsText" } });
+          process.nextTick(() => { // Simulate async
+            if (file && file.name === "error.json" && this.onerror) {
+              this.onerror(new Error("Mock JSON Read Error"));
+            } else if (this.onload) {
+              this.onload({ target: { result: this.result } });
+            }
+          });
+        }),
+        readAsArrayBuffer: jest.fn(function(file) { // 'this' refers to readerInstance
+          this.result = new ArrayBuffer(8); // Represents some zip content
+          process.nextTick(() => { // Simulate async
+            if (file && file.name === "error.zip" && this.onerror) {
+              this.onerror(new Error("Mock ZIP Read Error"));
+            } else if (this.onload) {
+              this.onload({ target: { result: this.result } });
+            }
+          });
+        })
+      };
+      currentFileReaderInstance = readerInstance; // So tests can assert calls on its methods
+      return readerInstance;
+    });
   });
 
   afterEach(() => {
-    // Clean up mocks
     jest.restoreAllMocks();
   });
 
-
   test('convertExternalJsonToInternalFormat converts minimal data', () => {
     const external = {
-      name: 'foo',
-      player: 'bar',
-      init_weakness1: 'fear',
-      weapon1_type: 'sword',
-      weapon1_name: 'blade',
+      name: 'foo', player: 'bar', init_weakness1: 'fear',
+      weapon1_type: 'sword', weapon1_name: 'blade',
       history: [{ name: 'sess1', experiments: '2', stress: 'note' }]
     };
     const internal = dm.convertExternalJsonToInternalFormat(external);
@@ -81,19 +107,17 @@ describe('DataManager', () => {
     expect(internal.character.weaknesses[0]).toEqual({ text: 'fear', acquired: '作成時' });
     expect(internal.equipments.weapon1).toEqual({ group: 'sword', name: 'blade' });
     expect(internal.histories[0]).toEqual({ sessionName: 'sess1', gotExperiments: 2, memo: 'note' });
-    expect(internal.character.images).toEqual([]); // Ensure images array is initialized
+    expect(internal.character.images).toEqual([]);
   });
 
   test('_normalizeLoadedData fills defaults', () => {
-    const result = dm._normalizeLoadedData({}); // Pass empty object
+    const result = dm._normalizeLoadedData({});
     expect(result.character.weaknesses).toHaveLength(gameData.config.maxWeaknesses);
-    result.character.weaknesses.forEach(w => {
-      expect(w).toEqual({ text: '', acquired: '--' });
-    });
+    result.character.weaknesses.forEach(w => expect(w).toEqual({ text: '', acquired: '--' }));
     expect(result.skills).toHaveLength(gameData.baseSkills.length);
     expect(result.histories).toEqual([{ sessionName: '', gotExperiments: null, memo: '' }]);
     expect(result.character.linkCurrentToInitialScar).toBe(true);
-    expect(result.character.images).toEqual([]); // Ensure images array is initialized
+    expect(result.character.images).toEqual([]);
   });
 
   test('_normalizeHistoryData returns default when empty', () => {
@@ -104,34 +128,34 @@ describe('DataManager', () => {
     it('should save as JSON if no images are present', async () => {
       mockCharacter.images = [];
       await dm.saveData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories);
-
       expect(JSZip).not.toHaveBeenCalled();
-      expect(document.createElement).toHaveBeenCalledWith('a');
       const mockAnchor = document.createElement.mock.results[0].value;
-      expect(mockAnchor.download).toBe('TestChar_AioniaSheet.json');
+      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.json$/);
       expect(mockAnchor.click).toHaveBeenCalled();
     });
 
     it('should save as ZIP if images are present', async () => {
       mockCharacter.images = ['data:image/png;base64,mockimgdata1', 'data:image/jpeg;base64,mockimgdata2'];
       await dm.saveData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories);
-
       expect(JSZip).toHaveBeenCalledTimes(1);
-      expect(mockZipFile).toHaveBeenCalledWith("character_data.json", expect.any(String));
-      expect(mockZipFolder).toHaveBeenCalledWith("images");
+      expect(mockZipFolder).toHaveBeenCalledWith("images"); // Ensure folder('images') was called
 
-      // Check that character.images was deleted from the JSON data
+      // Verify all calls to zip.file() and imageFolder.file() which share mockZipFile
+      expect(mockZipFile.mock.calls.length).toBe(3);
+      expect(mockZipFile.mock.calls).toEqual([
+          ["character_data.json", expect.any(String)], // Call for character_data.json (no options)
+          ["image_0.png", "mockimgdata1", { base64: true }], // Path is relative to the folder in the call
+          ["image_1.jpeg", "mockimgdata2", { base64: true }]  // Path is relative to the folder in the call
+      ]);
+
+      // Check that character.images was deleted from the JSON data within the zip
       const jsonDataCall = mockZipFile.mock.calls.find(call => call[0] === "character_data.json");
-      const jsonData = JSON.parse(jsonDataCall[1]);
-      expect(jsonData.character.images).toBeUndefined();
+      const jsonDataInZip = JSON.parse(jsonDataCall[1]);
+      expect(jsonDataInZip.character.images).toBeUndefined();
 
-      expect(mockZipFile).toHaveBeenCalledWith("images/image_0.png", "mockimgdata1", { base64: true });
-      expect(mockZipFile).toHaveBeenCalledWith("images/image_1.jpeg", "mockimgdata2", { base64: true });
       expect(mockZipGenerateAsync).toHaveBeenCalledWith({ type: "blob" });
-
-      expect(document.createElement).toHaveBeenCalledWith('a');
       const mockAnchor = document.createElement.mock.results[0].value;
-      expect(mockAnchor.download).toBe('TestChar_AioniaSheet.zip');
+      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
       expect(mockAnchor.click).toHaveBeenCalled();
     });
   });
@@ -143,105 +167,85 @@ describe('DataManager', () => {
     beforeEach(() => {
       onSuccessMock = jest.fn();
       onErrorMock = jest.fn();
-      global.FileReader = jest.fn(() => ({
-        readAsText: jest.fn(function() { if(this.onload) this.onload({ target: { result: '{}' }}); }),
-        readAsArrayBuffer: jest.fn(function() { if(this.onload) this.onload({ target: { result: new ArrayBuffer(0) }}); }),
-        onload: null,
-        onerror: null,
-      }));
     });
 
-    it('should process JSON file correctly', () => {
-        const mockFile = new File(['{"character":{"name":"Test"}}'], 'test.json', { type: 'application/json' });
-        const mockEvent = { target: { files: [mockFile], value: '' } };
+    it('should process JSON file correctly', async () => {
+      const mockFile = new File(['{"character":{"name":"TestOriginal"}}'], 'test.json', { type: 'application/json' });
+      const mockEvent = { target: { files: [mockFile], value: '' } };
 
-        // Re-assign readAsText for this specific test to control its behavior
-        FileReader.prototype.readAsText = jest.fn(function() {
-            this.onload({ target: { result: '{"character":{"name":"Loaded Char"}}' }});
-        });
-
-
+      await new Promise(resolve => {
+        onSuccessMock.mockImplementation(resolve);
+        onErrorMock.mockImplementation(resolve); // Also resolve on error for test to finish
         dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
+      });
 
-        expect(FileReader.prototype.readAsText).toHaveBeenCalledWith(mockFile);
-        expect(onSuccessMock).toHaveBeenCalled();
-        expect(onSuccessMock.mock.calls[0][0].character.name).toBe('Loaded Char');
+      expect(currentFileReaderInstance.readAsText).toHaveBeenCalledWith(mockFile);
+      expect(onSuccessMock).toHaveBeenCalled();
+      expect(onSuccessMock.mock.calls[0][0].character.name).toBe('Loaded Char via readAsText');
     });
-
 
     it('should process ZIP file correctly', async () => {
-      const mockJsonData = { character: { name: 'Zippy', playerName: 'PlayerZippy', images: [] }, skills: [], specialSkills:[], equipments:{}, histories:[] };
-      const mockJsonString = JSON.stringify(mockJsonData);
-      const mockImageBase64 = "mockimagedatafromzip";
+      const mockJsonDataInZip = { character: { name: 'Zippy', playerName: 'PlayerZippy' }}; // images will be added
+      const mockJsonStringInZip = JSON.stringify(mockJsonDataInZip);
+      const mockImageBase64Data = "mockimagedatafromzip";
       const mockImageFileName = "image_0.png";
 
       const mockZipInstance = {
-        file: jest.fn((filename) => {
+        file: jest.fn().mockImplementation((filename) => {
           if (filename === "character_data.json") {
-            return { async: jest.fn().mockResolvedValue(mockJsonString) };
-          }
-          // For image files under images/ folder
-          if (filename.startsWith("images/")) {
-             return { async: jest.fn().mockResolvedValue(mockImageBase64) };
+            return { async: jest.fn().mockResolvedValue(mockJsonStringInZip) };
           }
           return null;
         }),
-        folder: jest.fn((folderName) => {
+        folder: jest.fn().mockImplementation((folderName) => {
           if (folderName === "images") {
-            // Simulate forEach on the folder object
             const imageFileEntry = {
-                name: `images/${mockImageFileName}`, // JSZip provides full path here
-                dir: false,
-                async: jest.fn().mockResolvedValue(mockImageBase64)
+                name: `images/${mockImageFileName}`, dir: false,
+                async: jest.fn().mockResolvedValue(mockImageBase64Data)
             };
-            return {
-                forEach: (callback) => {
-                    // relativePath for forEach is relative to the folder
-                    callback(mockImageFileName, imageFileEntry);
-                }
-            };
+            return { forEach: (callback) => { callback(mockImageFileName, imageFileEntry); }};
           }
-          return null;
+          return { forEach: jest.fn() };
         }),
       };
       JSZip.loadAsync.mockResolvedValue(mockZipInstance);
 
-      // Mock file reader for array buffer
-      FileReader.prototype.readAsArrayBuffer = jest.fn(function() {
-        this.onload({ target: { result: new ArrayBuffer(8) } }); // Mock ArrayBuffer content
-      });
-
-      const mockZipFileObj = new File(['zipcontent'], 'test.zip', { type: 'application/zip' });
+      const mockZipFileObj = new File(['zip_content_array_buffer'], 'test.zip', { type: 'application/zip' });
       const mockEvent = { target: { files: [mockZipFileObj], value: '' } };
 
-      await dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
+      await new Promise(resolve => {
+        onSuccessMock.mockImplementation(resolve);
+        onErrorMock.mockImplementation(resolve);
+        dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
+      });
 
-      expect(FileReader.prototype.readAsArrayBuffer).toHaveBeenCalledWith(mockZipFileObj);
+      expect(currentFileReaderInstance.readAsArrayBuffer).toHaveBeenCalledWith(mockZipFileObj);
       expect(JSZip.loadAsync).toHaveBeenCalled();
       expect(onSuccessMock).toHaveBeenCalled();
 
       const resultData = onSuccessMock.mock.calls[0][0];
       expect(resultData.character.name).toBe('Zippy');
       expect(resultData.character.images).toHaveLength(1);
-      expect(resultData.character.images[0]).toBe(`data:image/png;base64,${mockImageBase64}`);
+      expect(resultData.character.images[0]).toBe(`data:image/png;base64,${mockImageBase64Data}`);
     });
 
     it('should call onError if ZIP loading fails (e.g. character_data.json missing)', async () => {
         const mockZipInstance = {
-            file: jest.fn().mockReturnValue(null), // Simulate character_data.json not found
+            file: jest.fn().mockReturnValue(null),
             folder: jest.fn().mockReturnValue({ forEach: jest.fn() })
         };
         JSZip.loadAsync.mockResolvedValue(mockZipInstance);
 
-        FileReader.prototype.readAsArrayBuffer = jest.fn(function() {
-            this.onload({ target: { result: new ArrayBuffer(8) } });
-        });
-
-        const mockZipFileObj = new File(['zipcontent'], 'test.zip', { type: 'application/zip' });
+        const mockZipFileObj = new File(['zip_content'], 'test.zip', { type: 'application/zip' });
         const mockEvent = { target: { files: [mockZipFileObj], value: '' } };
 
-        await dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
+        await new Promise(resolve => {
+            onSuccessMock.mockImplementation(resolve);
+            onErrorMock.mockImplementation(resolve);
+            dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
+        });
 
+        expect(currentFileReaderInstance.readAsArrayBuffer).toHaveBeenCalledWith(mockZipFileObj);
         expect(onErrorMock).toHaveBeenCalledWith(expect.stringContaining("ZIPファイルに character_data.json が見つかりません。"));
     });
   });
