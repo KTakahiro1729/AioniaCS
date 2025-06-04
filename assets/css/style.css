@@ -448,7 +448,6 @@ textarea.greyed-out {
 
 .flex-weakness-text {
     flex: 1;
-    padding-right: 10px;
 }
 
 .flex-weakness-acquired {
@@ -913,7 +912,7 @@ textarea.greyed-out {
    レスポンシブデザイン
    ========================================================================== */
 
-@media (width <= 768px) {
+@media (width <=768px) {
     .main-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
@@ -968,7 +967,7 @@ textarea.greyed-out {
     }
 }
 
-@media (width <= 480px) {
+@media (width <=480px) {
     .tool-title {
         font-size: 1.8em;
     }
