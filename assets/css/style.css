@@ -9,14 +9,12 @@
     --color-background-dark: #1a1a1a;
     --color-panel-dark: #3a3a3a;
     --color-panel-medium: #333;
-    --color-background-panel: #242424;
     --color-border: #555;
     --color-border-light: #444;
     --color-text-light: #d1d1d1;
     --color-input-bg: #2c2c2c;
     --color-input-disabled-bg: #383838;
     --color-input-disabled-text: #888;
-    --color-sub-box-title-bg: #2e2e2e;
     --color-border-darker: #4a4a4a;
     --color-button-disabled-bg: #2a2a2a;
     --color-button-disabled-text: #666;
@@ -25,19 +23,20 @@
     --color-delete-border: #5c3939;
     --color-delete-hover-bg: #4a3a3a;
     --color-delete-hover-text: #a86f6f;
-    --color-footer-bg: #1f1f1f;
     --color-footer-button-bg: #3a434d;
     --color-footer-button-text: #b0c4de;
     --color-footer-button-border: #647687;
     --color-footer-button-hover-bg: #454f5a;
     --color-footer-button-hover-border: #8298ad;
     --color-footer-button-hover-text: #c8d4e2;
-    --color-help-panel-bg: #282828;
     --color-help-panel-text: #c5c5c5;
     --color-footer-text-muted: #777;
     --color-link: #999;
     --color-link-hover: #bbb;
-    --color-footer-copyright-bg: #161616;
+
+    /* Typography */
+    --color-label-text: #b0b0b0; /* Used for form labels */
+    --color-muted-text: #a0a0a0; /* Used for subdued text */
 }
 
 body {
@@ -68,7 +67,7 @@ body {
     font-size: 2.2em;
     font-weight: 700;
     color: var(--color-accent);
-    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%); /* Changed to rgba for clarity */
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%); 
 }
 
 /* Vueトランジション */
@@ -150,15 +149,15 @@ body {
     border-top: none;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
-    background-color: var(--color-background-panel);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 40%); /* Changed to rgba for clarity */
+    background-color: var(--color-panel-dark);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
     overflow-x: hidden;
 }
 
 /* サブボックス */
 .sub-box-title {
     font-size: 1em;
-    background-color: var(--color-sub-box-title-bg);
+    background-color: var(--color-panel-medium);
     border-bottom: 1px solid var(--color-border-darker);
     padding: 10px 18px;
     margin-left: -18px;
@@ -184,7 +183,7 @@ label {
     margin-right: 10px;
     font-weight: 700;
     font-size: 0.95em;
-    color: #b0b0b0;
+    color: var(--color-label-text);
 }
 
 .info-item>label,
@@ -222,7 +221,7 @@ select:focus,
 textarea:focus {
     border-color: var(--color-accent);
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgb(192 154 105 / 25%); /* Changed to rgba for clarity */
+    box-shadow: 0 0 0 0.2rem rgb(192 154 105 / 25%);
 }
 
 select {
@@ -377,7 +376,7 @@ textarea.greyed-out {
 
 .link-checkbox-label {
     font-size: 0.9em;
-    color: #a0a0a0;
+    color: var(--color-muted-text);
     font-weight: normal;
     user-select: none;
     margin-bottom: 0;
@@ -431,7 +430,7 @@ textarea.greyed-out {
 }
 
 .weakness-labels-header {
-    color: #aaa;
+    color: var(--color-muted-text);
     border-bottom: 1px solid var(--color-border-darker);
     margin-bottom: 5px;
 }
@@ -448,7 +447,6 @@ textarea.greyed-out {
 
 .flex-weakness-text {
     flex: 1;
-    padding-right: 10px;
 }
 
 .flex-weakness-acquired {
@@ -622,7 +620,7 @@ textarea.greyed-out {
 .history-item-inputs>div>label {
     font-size: 0.85em;
     margin-bottom: 4px;
-    color: #aaa;
+    color: var(--color-muted-text);
     display: block;
 }
 
@@ -659,20 +657,20 @@ textarea.greyed-out {
     align-items: center;
     padding: 15px 25px;
     border-top: 1px solid var(--color-border);
-    background-color: var(--color-footer-bg);
+    background-color: var(--color-background-dark);
     box-sizing: border-box;
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
     z-index: 100;
-    box-shadow: 0 -3px 8px rgb(0 0 0 / 50%); /* Changed to rgba for clarity */
+    box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 15px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: var(--color-border) var(--color-footer-bg);
+    scrollbar-color: var(--color-border) var(--color-background-dark);
 }
 
 .main-footer::-webkit-scrollbar {
@@ -680,7 +678,7 @@ textarea.greyed-out {
 }
 
 .main-footer::-webkit-scrollbar-track {
-    background: var(--color-footer-bg);
+    background: var(--color-background-dark);
     border-radius: 4px;
 }
 
@@ -709,7 +707,7 @@ textarea.greyed-out {
     display: inline-block;
     border-width: 2px;
     border-style: solid;
-    box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset; /* Changed to rgba for clarity */
+    box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset;
     white-space: nowrap;
 }
 
@@ -741,7 +739,7 @@ textarea.greyed-out {
     background-color: var(--color-panel-dark);
     color: var(--color-accent);
     min-height: 42px;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 30%); /* Changed to rgba for clarity */
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
 }
 
 .footer-help-icon:hover {
@@ -753,7 +751,7 @@ textarea.greyed-out {
     font-size: 0.95em;
     font-weight: 700;
     text-align: center;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 30%); /* Changed to rgba for clarity */
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
     min-height: 42px;
     box-sizing: border-box;
     white-space: nowrap;
@@ -812,11 +810,11 @@ textarea.greyed-out {
 
     /* フッター高さ + 余白 */
     left: 20px;
-    background-color: var(--color-help-panel-bg);
+    background-color: var(--color-panel-dark);
     border: 1px solid var(--color-border-light);
     padding: 20px;
     border-radius: 4px;
-    box-shadow: 0 5px 15px rgb(0 0 0 / 50%); /* Changed to rgba for clarity */
+    box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
     z-index: 1000;
     max-width: 90%;
     width: 420px;
@@ -856,7 +854,7 @@ textarea.greyed-out {
     padding: 15px;
     font-size: 0.8em;
     color: var(--color-footer-text-muted);
-    background-color: var(--color-footer-copyright-bg);
+    background-color: var(--color-background-dark);
     border-top: 1px solid var(--color-panel-medium);
     margin-top: 25px;
     box-sizing: border-box;
@@ -888,7 +886,7 @@ textarea.greyed-out {
     padding: 20px;
     border: 1px solid var(--color-border);
     border-radius: 5px;
-    box-shadow: 0 0 10px rgb(0 0 0 / 50%); /* Changed to rgba for clarity */
+    box-shadow: 0 0 10px rgb(0 0 0 / 50%);
     z-index: 2000;
     white-space: pre-wrap;
     display: none;
@@ -913,7 +911,7 @@ textarea.greyed-out {
    レスポンシブデザイン
    ========================================================================== */
 
-@media (width <= 768px) {
+@media (width <=768px) {
     .main-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
@@ -968,7 +966,7 @@ textarea.greyed-out {
     }
 }
 
-@media (width <= 480px) {
+@media (width <=480px) {
     .tool-title {
         font-size: 1.8em;
     }
