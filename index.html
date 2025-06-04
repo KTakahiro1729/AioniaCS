@@ -22,20 +22,20 @@
             <div id="character_info" class="character-info">
                 <div class="box-title">基本情報</div>
                 <div class="box-content">
-                    <div class="info-row">
+                    <div class="info-row grid">
                         <div class="info-item info-item--full">
                             <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name" />
                         </div>
                     </div>
-                    <div class="info-row">
+                    <div class="info-row grid">
                         <div class="info-item info-item--full">
                             <label for="player_name">プレイヤー名</label> <input type="text" id="player_name"
                                 v-model="character.playerName" />
                         </div>
                     </div>
-                    <div class="info-row">
+                    <div class="info-row grid">
                         <div class="info-item"
-                            :class="{'info-item--full': character.species !== 'other', 'info-item--double': character.species === 'other'}">
+                            :class="{'info-item--full': character.species !== 'other', 'col-2': character.species === 'other'}">
                             <label for="species">種族</label>
                             <select id="species" v-model="character.species" @change="handleSpeciesChange">
                                 <option v-for="option in gameData.speciesOptions" :key="option.value"
@@ -44,37 +44,37 @@
                                 </option>
                             </select>
                         </div>
-                        <div class="info-item info-item--double" v-if="character.species === 'other'">
+                        <div class="info-item col-2" v-if="character.species === 'other'">
                             <label for="rare_species">種族名（希少人種）</label>
                             <input type="text" id="rare_species" v-model="character.rareSpecies" />
                         </div>
                     </div>
-                    <div class="info-row">
-                        <div class="info-item info-item--quadruple">
+                    <div class="info-row grid">
+                        <div class="info-item col-4">
                             <label for="gender">性別</label> <input type="text" id="gender" v-model="character.gender" />
                         </div>
-                        <div class="info-item info-item--quadruple">
+                        <div class="info-item col-4">
                             <label for="age">年齢</label> <input type="number" id="age" v-model.number="character.age"
                                 min="0" />
                         </div>
-                        <div class="info-item info-item--quadruple">
+                        <div class="info-item col-4">
                             <label for="height">身長</label> <input type="text" id="height" v-model="character.height" />
                         </div>
-                        <div class="info-item info-item--quadruple">
+                        <div class="info-item col-4">
                             <label for="weight_char">体重</label>
                             <input type="text" id="weight_char" v-model="character.weight" />
                         </div>
 
                     </div>
-                    <div class="info-row">
-                        <div class="info-item info-item--triple">
+                    <div class="info-row grid">
+                        <div class="info-item col-3">
                             <label for="origin">出身地</label> <input type="text" id="origin" v-model="character.origin" />
                         </div>
-                        <div class="info-item info-item--triple">
+                        <div class="info-item col-3">
                             <label for="occupation">職業</label> <input type="text" id="occupation"
                                 v-model="character.occupation" />
                         </div>
-                        <div class="info-item info-item--triple">
+                        <div class="info-item col-3">
                             <label for="faith">信仰</label> <input type="text" id="faith" v-model="character.faith" />
                         </div>
                     </div>
@@ -86,8 +86,8 @@
                 <div class="box-content">
                     <div class="scar-section">
                         <div class="box-title sub-box-title sub-box-title--scar">傷痕</div>
-                        <div class="info-row">
-                            <div class="info-item info-item--double">
+                        <div class="info-row grid">
+                            <div class="info-item col-2">
                                 <div class="link-checkbox-container">
                                     <label for="current_scar" class="link-checkbox-main-label">現在値</label>
                                     <input type="checkbox" id="link_current_to_initial_scar_checkbox"
@@ -99,7 +99,7 @@
                                     @input="handleCurrentScarInput"
                                     :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0" class="mt-6">
                             </div>
-                            <div class="info-item info-item--double">
+                            <div class="info-item col-2">
                                 <label for="initial_scar">初期値</label>
                                 <input type="number" id="initial_scar" v-model.number="character.initialScar" min="0">
                             </div>

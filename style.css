@@ -278,37 +278,30 @@ textarea.greyed-out {
    ========================================================================== */
 
 .info-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
     margin-bottom: 7px;
 }
+
+/* Grid system */
+.grid {
+    display: grid;
+    gap: var(--gap, 15px);
+    grid-template-columns: repeat(auto-fit, minmax(var(--col-width, 150px), 1fr));
+}
+
+.col-2 { grid-column: span 2; }
+.col-3 { grid-column: span 3; }
+.col-4 { grid-column: span 4; }
 
 .info-row:last-child {
     margin-bottom: 0;
 }
 
 .info-item {
-    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .info-item--full {
-    flex-basis: 100%;
-}
-
-.info-item--quadruple {
-    flex: 1 1 calc(25% - 12.5px);
-    min-width: 65px;
-}
-
-.info-item--triple {
-    flex: 1 1 calc(33.333% - 10px);
-    min-width: 90px;
-}
-
-.info-item--double {
-    flex: 1 1 calc(50% - 7.5px);
-    min-width: 80px;
+    grid-column: 1 / -1;
 }
 
 /* ==========================================================================
@@ -939,17 +932,9 @@ textarea.greyed-out {
         max-width: none;
     }
 
-    .info-row {
-        flex-direction: column;
+    .grid {
+        grid-template-columns: 1fr;
         gap: 12px;
-    }
-
-    .info-item,
-    .info-item--triple,
-    .info-item--double {
-        flex-basis: auto;
-        min-width: 0;
-        width: 100%;
     }
 
     .equipment-section {
