@@ -107,30 +107,25 @@
                     </div>
                     <div class="weakness-section">
                         <div class="box-title sub-box-title sub-box-title--weakness">弱点</div>
-                        <table class="weakness-table">
-                            <thead>
-                                <tr>
-                                    <th class="col-number"></th>
-                                    <th class="col-weakness">弱点</th>
-                                    <th class="col-acquired">獲得</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(weakness, index) in character.weaknesses" :key="index">
-                                    <td class="col-number">{{ index + 1 }}</td>
-                                    <td>
-                                        <input type="text" v-model="weakness.text">
-                                    </td>
-                                    <td class="col-acquired">
-                                        <select v-model="weakness.acquired">
-                                            <option v-for="option in sessionNamesForWeaknessDropdown"
-                                                :key="option.value" :value="option.value" :disabled="option.disabled">{{
-                                                option.text }}</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <ul class="weakness-list list-reset">
+                            <li class="list-item weakness-labels-header">
+                                <div class="flex-weakness-number"></div>
+                                <div class="flex-weakness-text"><label>弱点</label></div>
+                                <div class="flex-weakness-acquired"><label>獲得</label></div>
+                            </li>
+                            <li v-for="(weakness, index) in character.weaknesses" :key="index" class="list-item">
+                                <div class="flex-weakness-number">{{ index + 1 }}</div>
+                                <div class="flex-weakness-text"><input type="text" v-model="weakness.text" /></div>
+                                <div class="flex-weakness-acquired">
+                                    <select v-model="weakness.acquired">
+                                        <option v-for="option in sessionNamesForWeaknessDropdown"
+                                            :key="option.value" :value="option.value" :disabled="option.disabled">
+                                            {{ option.text }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>

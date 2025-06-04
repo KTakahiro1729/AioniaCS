@@ -383,57 +383,45 @@ textarea.greyed-out {
 }
 
 /* ==========================================================================
-   弱点テーブル
+   弱点リスト
    ========================================================================== */
 
-.weakness-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 5px;
-}
-
-.weakness-table th,
-.weakness-table td {
-    padding: 5px;
+.weakness-list .list-item {
     border-bottom: 1px solid #3a3a3a;
-    text-align: left;
-    vertical-align: middle;
+    padding: 5px 0;
+    font-size: 0.9em;
 }
 
-.weakness-table th {
+.weakness-labels-header {
     color: #aaa;
-    font-size: 0.9em;
     border-bottom: 1px solid #4a4a4a;
+    margin-bottom: 5px;
 }
 
-.weakness-table td input[type="text"],
-.weakness-table td select {
-    font-size: 0.9em;
-    padding: 7px 10px;
-}
-
-.weakness-table th.col-number {
-    width: 30px;
-    padding-left: 4px;
-    padding-right: 4px;
+.weakness-labels-header .flex-weakness-number {
     color: transparent;
     user-select: none;
 }
 
-.weakness-table td.col-number {
+.flex-weakness-number {
+    width: 30px;
     text-align: center;
 }
 
-.weakness-table th.col-acquired,
-.weakness-table td.col-acquired {
+.flex-weakness-text {
+    flex: 1;
+    padding-right: 10px;
+}
+
+.flex-weakness-acquired {
     width: 150px;
 }
 
-.weakness-table td.col-acquired select {
+.flex-weakness-acquired select {
     min-width: 120px;
 }
 
-.weakness-table td.col-acquired option[disabled] {
+.flex-weakness-acquired option[disabled] {
     color: #777;
     font-style: italic;
 }
@@ -924,13 +912,12 @@ textarea.greyed-out {
         margin-bottom: 0;
     }
 
-    .weakness-table th.col-acquired,
-    .weakness-table td.col-acquired {
+    .flex-weakness-acquired {
         width: 35%;
         min-width: 110px;
     }
 
-    .weakness-table td.col-acquired select {
+    .flex-weakness-acquired select {
         width: 100%;
     }
 
@@ -962,8 +949,7 @@ textarea.greyed-out {
         font-size: 1.8em;
     }
 
-    .weakness-table th.col-acquired,
-    .weakness-table td.col-acquired {
+    .flex-weakness-acquired {
         width: 40%;
         min-width: 100px;
     }
