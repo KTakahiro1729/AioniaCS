@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>慈悲なきアイオニア　非公式キャラクターシート</title>
+    <script async defer src="https://apis.google.com/js/api.js" onload="vueGapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="vueGisLoaded()"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -320,7 +322,13 @@
                 <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
                     maxExperiencePoints }} </div>
                 <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
+                <div id="drive_status_message" class="status-display">{{ driveStatusMessage }}</div>
             </div>
+            <div id="google_sign_in_button" class="button-base footer-button" v-if="!isSignedIn && isGapiLoaded && isGisLoaded" @click="handleSignInClick">Sign In with Google</div>
+            <div id="google_sign_out_button" class="button-base footer-button" v-if="isSignedIn" @click="handleSignOutClick">Sign Out</div>
+            <div class="button-base footer-button footer-button--save-drive" @click="handleSaveToDriveClick" :disabled="!isSignedIn || !driveFolderId">Save to Drive</div>
+            <div class="button-base footer-button footer-button--load-drive" @click="handleLoadFromDriveClick" :disabled="!isSignedIn">Load from Drive</div>
+            <div class="button-base footer-button" @click="promptForDriveFolder" :disabled="!isSignedIn">Choose Drive Folder</div>
             <div class="button-base footer-button footer-button--save" @click="saveData"> データ保存 </div>
             <div class="button-base footer-button footer-button--load">
                 <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" class="hidden" />

@@ -4,6 +4,15 @@
 class DataManager {
   constructor(gameData) {
     this.gameData = gameData;
+    this.googleDriveManager = null;
+  }
+
+  /**
+   * Sets the GoogleDriveManager instance.
+   * @param {GoogleDriveManager} driveManager - The GoogleDriveManager instance.
+   */
+  setGoogleDriveManager(driveManager) {
+    this.googleDriveManager = driveManager;
   }
 
   /**
@@ -35,7 +44,7 @@ class DataManager {
     const a = document.createElement('a');
     a.href = url;
 
-    const filename = character.name || 'Aionia_Character';
+    const filename = (character.name || 'Aionia_Character').replace(/[\\/:*?"<>|]/g, '_'); // Sanitize filename
     a.download = `${filename}_AioniaSheet.json`;
 
     document.body.appendChild(a);
@@ -65,6 +74,85 @@ class DataManager {
     };
     reader.readAsText(file);
     event.target.value = null;
+  }
+
+
+  /**
+   * Saves character data to Google Drive.
+   * @param {object} character - The character data.
+   * @param {Array} skills - The skills data.
+   * @param {Array} specialSkills - The special skills data.
+   * @param {object} equipments - The equipment data.
+   * @param {Array} histories - The histories data.
+   * @param {string} targetFolderId - The ID of the folder to save to.
+   * @param {string|null} currentFileId - The ID of the file if it exists (for updating).
+   * @param {string} fileName - The desired name for the file.
+   * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
+   */
+  async saveDataToDrive(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId, fileName) {
+    if (!this.googleDriveManager) {
+      console.error("GoogleDriveManager not set in DataManager.");
+      throw new Error("GoogleDriveManager not configured. Please sign in or initialize the Drive manager.");
+    }
+
+    const dataToSave = {
+      character: character,
+      skills: skills.map(s => ({
+        id: s.id,
+        checked: s.checked,
+        canHaveExperts: s.canHaveExperts,
+        experts: s.canHaveExperts
+          ? s.experts.filter(e => e.value && e.value.trim() !== '').map(e => ({ value: e.value }))
+          : []
+      })),
+      specialSkills: specialSkills.filter(ss => ss.group && ss.name),
+      equipments: equipments,
+      histories: histories.filter(h =>
+        h.sessionName ||
+        (h.gotExperiments !== null && h.gotExperiments !== '') ||
+        h.memo
+      )
+    };
+
+    const jsonData = JSON.stringify(dataToSave, null, 2);
+    const sanitizedFileName = (fileName || character.name || 'Aionia_Character_Sheet').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+
+    try {
+      const result = await this.googleDriveManager.saveFile(targetFolderId, sanitizedFileName, jsonData, currentFileId);
+      return result;
+    } catch (error) {
+      console.error("Error saving data to Google Drive:", error);
+      throw error; // Re-throw to be caught by the caller UI
+    }
+  }
+
+  /**
+   * Loads data from a file in Google Drive.
+   * @param {string} fileId - The ID of the file to load.
+   * @returns {Promise<object|null>} Parsed character data or null on error.
+   */
+  async loadDataFromDrive(fileId) {
+    if (!this.googleDriveManager) {
+      console.error("GoogleDriveManager not set in DataManager.");
+      throw new Error("GoogleDriveManager not configured. Please sign in or initialize the Drive manager.");
+    }
+
+    try {
+      const fileContent = await this.googleDriveManager.loadFileContent(fileId);
+      if (fileContent) {
+        const rawJsonData = JSON.parse(fileContent);
+        const parsedData = this.parseLoadedData(rawJsonData);
+        return parsedData;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error loading data from Google Drive:", error);
+      // Check if it's a parsing error from JSON.parse or from parseLoadedData
+      if (error instanceof SyntaxError) {
+          throw new Error(this.gameData.uiMessages.fileLoadError);
+      }
+      throw error; // Re-throw other errors
+    }
   }
 
   /**
