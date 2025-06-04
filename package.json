@@ -9,8 +9,8 @@
     "lint:css": "stylelint \"**/*.css\" --config ./config/.stylelintrc.json",
     "lint:html": "htmlhint \"**/*.html\" --config ./config/.htmlhintrc",
     "test": "jest",
-    "e2e": "playwright test --config ./config/playwright.config.js",
-    "pree2e": "playwright install"
+    "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 playwright test --config ./config/playwright.config.js",
+    "install-browsers": "playwright install"
   },
   "keywords": [],
   "author": "",

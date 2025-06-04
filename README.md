@@ -36,3 +36,11 @@
    ```bash
    npm run lint
    ```
+4. E2E テストの実行
+   ```bash
+   npm run e2e
+   ```
+   初回はブラウザのインストールが必要です:
+   ```bash
+   npm run install-browsers
+   ```
