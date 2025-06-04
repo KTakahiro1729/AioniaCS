@@ -208,45 +208,32 @@
                     <div class="mb-15">
                         <div class="equipment-container">
                             <div class="equipment-section">
-                                <div class="equipment-item mb-12">
-                                    <label for="weapon1">武器1</label>
-                                    <div class="flex-group">
-                                        <select id="weapon1" v-model="equipments.weapon1.group" class="flex-item-1">
-                                            <option v-for="option in gameData.weaponOptions" :key="option.value"
-                                                :value="option.value">
-                                                {{ option.label }}
-                                            </option>
-                                        </select>
-                                        <input type="text" id="weapon1_name" v-model="equipments.weapon1.name"
-                                            :placeholder="gameData.placeholderTexts.weaponName" class="flex-item-2" />
-                                    </div>
-                                </div>
-                                <div class="equipment-item mb-12">
-                                    <label for="weapon2">武器2</label>
-                                    <div class="flex-group">
-                                        <select id="weapon2" v-model="equipments.weapon2.group" class="flex-item-1">
-                                            <option v-for="option in gameData.weaponOptions" :key="option.value"
-                                                :value="option.value">
-                                                {{ option.label }}
-                                            </option>
-                                        </select>
-                                        <input type="text" id="weapon2_name" v-model="equipments.weapon2.name"
-                                            :placeholder="gameData.placeholderTexts.weaponName" class="flex-item-2" />
-                                    </div>
-                                </div>
-                                <div class="equipment-item">
-                                    <label for="armor">防具</label>
-                                    <div class="flex-group">
-                                        <select id="armor" v-model="equipments.armor.group" class="flex-item-1">
-                                            <option v-for="option in gameData.armorOptions" :key="option.value"
-                                                :value="option.value">
-                                                {{ option.label }}
-                                            </option>
-                                        </select>
-                                        <input type="text" id="armor_name" v-model="equipments.armor.name"
-                                            :placeholder="gameData.placeholderTexts.armorName" class="flex-item-2" />
-                                    </div>
-                                </div>
+                                <equipment-item
+                                    id="weapon1"
+                                    label="武器1"
+                                    v-model:modelGroup="equipments.weapon1.group"
+                                    v-model:modelName="equipments.weapon1.name"
+                                    :options="gameData.weaponOptions"
+                                    :placeholder="gameData.placeholderTexts.weaponName"
+                                    class="mb-12">
+                                </equipment-item>
+                                <equipment-item
+                                    id="weapon2"
+                                    label="武器2"
+                                    v-model:modelGroup="equipments.weapon2.group"
+                                    v-model:modelName="equipments.weapon2.name"
+                                    :options="gameData.weaponOptions"
+                                    :placeholder="gameData.placeholderTexts.weaponName"
+                                    class="mb-12">
+                                </equipment-item>
+                                <equipment-item
+                                    id="armor"
+                                    label="防具"
+                                    v-model:modelGroup="equipments.armor.group"
+                                    v-model:modelName="equipments.armor.name"
+                                    :options="gameData.armorOptions"
+                                    :placeholder="gameData.placeholderTexts.armorName">
+                                </equipment-item>
                             </div>
                         </div>
                     </div>

@@ -301,4 +301,27 @@ const app = createApp({
     }
 });
 
+app.component('equipment-item', {
+    props: ['id', 'label', 'modelGroup', 'modelName', 'options', 'placeholder'],
+    emits: ['update:modelGroup', 'update:modelName'],
+    template: `
+        <div class="equipment-item">
+            <label :for="id">{{ label }}</label>
+            <div class="flex-group">
+                <select :id="id" class="flex-item-1"
+                        :value="modelGroup"
+                        @input="$emit('update:modelGroup', $event.target.value)">
+                    <option v-for="option in options" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                    </option>
+                </select>
+                <input type="text" :id="id + '_name'" class="flex-item-2"
+                       :value="modelName"
+                       @input="$emit('update:modelName', $event.target.value)"
+                       :placeholder="placeholder" />
+            </div>
+        </div>
+    `
+});
+
 app.mount('#app');
