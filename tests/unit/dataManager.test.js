@@ -1,10 +1,10 @@
 // Set up global window object and load utilities
 global.window = {};
-require('../utils.js');
-require('../gameData.js');
+require('../../src/utils.js');
+require('../../src/gameData.js');
 global.deepClone = window.deepClone;
 global.createWeaknessArray = window.createWeaknessArray;
-require('../dataManager.js');
+require('../../src/dataManager.js');
 
 const DataManager = window.DataManager;
 const gameData = window.AioniaGameData;

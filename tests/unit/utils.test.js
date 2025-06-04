@@ -1,4 +1,4 @@
-require('../utils.js');
+require('../../src/utils.js');
 
 describe('deepClone', () => {
   test('returns a deep copy of objects', () => {
