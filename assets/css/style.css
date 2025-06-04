@@ -1117,3 +1117,22 @@ textarea.greyed-out {
     border-color: var(--color-delete-disabled);
     cursor: not-allowed;
 }
+
+/* ==========================================================================
+   Keyboard Handling Adjustments
+   ========================================================================== */
+
+body.keyboard-visible {
+    padding-bottom: 0 !important; /* Override existing padding */
+}
+
+body.keyboard-visible .main-footer {
+    position: relative !important; /* Ensure it scrolls with content */
+    bottom: auto !important; /* Reset bottom positioning */
+    box-shadow: none !important; /* Remove shadow when not fixed at bottom */
+}
+
+body.keyboard-visible .help-panel {
+    bottom: 20px !important; /* Adjust help panel position */
+    /* Consider if it should be position: absolute if footer is relative */
+}
