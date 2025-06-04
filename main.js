@@ -227,11 +227,15 @@ const app = createApp({
             }
         },
 
-        setOutputButtonSuccess() {
-            this.outputButtonText = this.gameData.uiMessages.outputButton.success;
+        flashOutputButtonMessage(key) {
+            this.outputButtonText = this.gameData.uiMessages.outputButton[key];
             setTimeout(() => {
                 this.outputButtonText = this.gameData.uiMessages.outputButton.default;
             }, 3000);
+        },
+
+        setOutputButtonSuccess() {
+            this.flashOutputButtonMessage('success');
         },
 
         fallbackCopyTextToClipboard(text) {
@@ -248,21 +252,12 @@ const app = createApp({
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    this.outputButtonText = this.gameData.uiMessages.outputButton.successFallback;
-                    setTimeout(() => {
-                        this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-                    }, 3000);
+                    this.flashOutputButtonMessage('successFallback');
                 } else {
-                    this.outputButtonText = this.gameData.uiMessages.outputButton.failed;
-                    setTimeout(() => {
-                        this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-                    }, 3000);
+                    this.flashOutputButtonMessage('failed');
                 }
             } catch (err) {
-                this.outputButtonText = this.gameData.uiMessages.outputButton.error;
-                setTimeout(() => {
-                    this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-                }, 3000);
+                this.flashOutputButtonMessage('error');
             }
 
             document.body.removeChild(textArea);
