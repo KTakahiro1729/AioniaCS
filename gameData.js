@@ -121,6 +121,30 @@ window.AioniaGameData = {
     { value: "other", label: "希少人種" }
   ],
 
+  // 基本情報入力フィールド
+  basicInfoRows: [
+    [
+      { id: 'name', label: 'キャラクター名', type: 'text', binding: 'name', widthClass: 'info-item--full' }
+    ],
+    [
+      { id: 'player_name', label: 'プレイヤー名', type: 'text', binding: 'playerName', widthClass: 'info-item--full' }
+    ],
+    [
+      { id: 'species', label: '種族', type: 'select', binding: 'species', widthClass: '' }
+    ],
+    [
+      { id: 'gender', label: '性別', type: 'text', binding: 'gender', widthClass: 'info-item--quadruple' },
+      { id: 'age', label: '年齢', type: 'number', binding: 'age', widthClass: 'info-item--quadruple' },
+      { id: 'height', label: '身長', type: 'text', binding: 'height', widthClass: 'info-item--quadruple' },
+      { id: 'weight_char', label: '体重', type: 'text', binding: 'weight', widthClass: 'info-item--quadruple' }
+    ],
+    [
+      { id: 'origin', label: '出身地', type: 'text', binding: 'origin', widthClass: 'info-item--triple' },
+      { id: 'occupation', label: '職業', type: 'text', binding: 'occupation', widthClass: 'info-item--triple' },
+      { id: 'faith', label: '信仰', type: 'text', binding: 'faith', widthClass: 'info-item--triple' }
+    ]
+  ],
+
   // 武器選択肢データ
   weaponOptions: [
     { value: "", label: "なし" },
