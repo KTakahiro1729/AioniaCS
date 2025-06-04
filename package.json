@@ -9,7 +9,8 @@
     "lint:css": "stylelint \"**/*.css\"",
     "lint:html": "htmlhint \"**/*.html\"",
     "test": "jest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "pree2e": "playwright install"
   },
   "keywords": [],
   "author": "",
