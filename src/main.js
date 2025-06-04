@@ -337,7 +337,7 @@ const app = createApp({
                 this.character.images.splice(this.currentImageIndex, 1);
                 // Adjust currentImageIndex
                 if (this.character.images.length === 0) {
-                    this.currentImageIndex = 0; // Or -1 if you prefer no image selected
+                    this.currentImageIndex = -1;
                 } else if (this.currentImageIndex >= this.character.images.length) {
                     // If the last image was removed, adjust index to the new last image
                     this.currentImageIndex = this.character.images.length - 1;
