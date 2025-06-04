@@ -6,6 +6,7 @@
 
 :root {
     --color-accent: #c09a69;
+    --color-accent-middle: #726452;
     --color-background: #222;
 
     --color-panel-header: #333;
@@ -13,7 +14,7 @@
     --color-panel-body: #252525;
     --color-panel-specialskill: #222;
 
-    --color-border: #444;
+    --color-border-normal: #444;
 
     --color-input-bg: #1d1d1d;
     --color-input-disabled-bg: var(--color-panel-body);
@@ -21,23 +22,12 @@
     --color-text-normal: #ddd;
     --color-text-muted: #bbb;
     --color-text-input-disabled: #888;
+    --color-link: #ccc;
+    --color-link-hover: var(--color-accent);
 
     --color-delete-text: #8c5353;
     --color-delete-border: #5c3939;
-    --color-delete-hover-bg: #4a3a3a;
     --color-delete-hover-text: #a86f6f;
-
-    --color-delete-disabled: #444;
-    --color-delete-bg-disabled: rgb(0 0 0 / 0);
-
-    --color-footer-button-bg: #2d3238;
-    --color-footer-button-text: #b0c4de;
-    --color-footer-button-border: #647687;
-    --color-footer-button-bg-hover: #454f5a;
-    --color-footer-button-text-hover: #c8d4e2;
-
-    --color-link: #ccc;
-    --color-link-hover: var(--color-accent);
 
 }
 
@@ -141,7 +131,7 @@ body {
 .box-title {
     background-color: var(--color-panel-header);
     padding: 12px 18px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     text-transform: uppercase;
@@ -151,7 +141,7 @@ body {
 
 .box-content {
     padding: 18px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     border-top: none;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
@@ -164,7 +154,7 @@ body {
 .sub-box-title {
     font-size: 1em;
     background-color: var(--color-panel-sub-header);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border-normal);
     padding: 10px 18px;
     margin-left: -18px;
     margin-right: -18px;
@@ -178,7 +168,7 @@ body {
 .sub-box-title--weakness {
     margin-top: 0;
     margin-bottom: 10px;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border-normal);
 }
 
 /* ==========================================================================
@@ -207,7 +197,7 @@ select,
 textarea {
     padding: 9px 12px;
     border-radius: 3px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     box-sizing: border-box;
     width: 100%;
     font-size: 0.95em;
@@ -232,13 +222,16 @@ textarea:focus {
 
 select {
     appearance: auto;
+    padding: 10px;
+
 }
 
 select:disabled {
     background-color: var(--color-input-disabled-bg);
     color: var(--color-text-input-disabled);
-    /* cursor: not-allowed; */
 }
+
+
 
 /* チェックボックス */
 input[type="checkbox"] {
@@ -298,10 +291,6 @@ textarea.greyed-out {
     margin-bottom: 12px;
 }
 
-.mb-5 {
-    margin-bottom: 5px;
-}
-
 .mt-6 {
     margin-top: 6px;
 }
@@ -332,7 +321,7 @@ textarea.greyed-out {
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 .info-row:last-child {
@@ -347,9 +336,9 @@ textarea.greyed-out {
     flex-basis: 100%;
 }
 
-.info-item--quadruple {
-    flex: 1 1 calc(25% - 12.5px);
-    min-width: 65px;
+.info-item--double {
+    flex: 1 1 calc(50% - 7.5px);
+    min-width: 80px;
 }
 
 .info-item--triple {
@@ -357,10 +346,13 @@ textarea.greyed-out {
     min-width: 90px;
 }
 
-.info-item--double {
-    flex: 1 1 calc(50% - 7.5px);
-    min-width: 80px;
+.info-item--quadruple {
+    flex: 1 1 calc(25% - 12.5px);
+    min-width: 65px;
 }
+
+
+
 
 /* ==========================================================================
    専用コンポーネント
@@ -438,10 +430,14 @@ textarea.greyed-out {
    ========================================================================== */
 
 .weakness-list .list-item {
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border-normal);
     padding: 5px 0;
     font-size: 0.9em;
     align-items: center;
+}
+
+.weakness-list .list-item:last-child {
+    padding-bottom: 0;
 }
 
 .weakness-labels-header {
@@ -478,6 +474,8 @@ textarea.greyed-out {
     font-style: italic;
 }
 
+
+
 /* ==========================================================================
    リストコンポーネント
    ========================================================================== */
@@ -502,7 +500,7 @@ textarea.greyed-out {
 .skills-list>li {
     margin-bottom: 8px;
     padding: 10px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     border-radius: 3px;
     background-color: var(--color-panel-specialskill);
 }
@@ -525,12 +523,10 @@ textarea.greyed-out {
     display: flex;
     align-items: flex-start;
     gap: 5px;
-    padding: 2px 0;
 }
 
 .list-item:last-of-type {
     border-bottom: none;
-    padding-bottom: 8px;
 }
 
 .list-item .delete-button-wrapper {
@@ -541,6 +537,10 @@ textarea.greyed-out {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 8px;
+}
+
+.special-skill-item {
     margin-bottom: 8px;
 }
 
@@ -555,12 +555,22 @@ textarea.greyed-out {
 .button-base {
     cursor: pointer;
     border-radius: 3px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-accent-middle);
+    background-color: var(--color-panel-header);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: text-shadow 1s ease, color 0.5s ease, border-color 0.5s ease;
     flex-shrink: 0;
+    background-color: rgb(0 0 0 / 0);
+    color: var(--color-accent);
+}
+
+.button-base:hover {
+    border-color: var(--color-accent);
+    background-color: var(--color-background);
+    text-shadow: 0 0 6px var(--color-accent);
+    box-shadow: inset 0 0 3px var(--color-accent), 0 0 6px var(--color-accent);
 }
 
 .delete-button-wrapper {
@@ -587,10 +597,9 @@ textarea.greyed-out {
 
 .list-button:disabled {
     cursor: default;
-    background-color: var(--color-delete-bg-disabled);
-    color: var(--color-delete-disabled);
-    border-color: var(--color-delete-disabled);
-    );
+    background-color: var(rgb(0 0 0 / 0));
+    color: var(--color-border-normal);
+    border-color: var(--color-border-normal);
 }
 
 .list-button--add:hover:not(:disabled) {
@@ -603,9 +612,10 @@ textarea.greyed-out {
 }
 
 .list-button--delete:hover:not(:disabled) {
-    background-color: var(--color-delete-hover-bg);
     border-color: var(--color-delete-text);
     color: var(--color-delete-hover-text);
+    text-shadow: 0 0 6px var(--color-delete-hover-text);
+    box-shadow: inset 0 0 3px var(--color-delete-text), 0 0 6px var(--color-delete-text);
 }
 
 .add-button-container-left {
@@ -638,7 +648,7 @@ textarea.greyed-out {
 .history-labels-header {
     padding-top: 0;
     padding-bottom: 0;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border-normal);
     margin-bottom: 5px;
 }
 
@@ -667,7 +677,7 @@ textarea.greyed-out {
     display: flex;
     align-items: center;
     padding: 15px 25px;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border-normal);
     background-color: var(--color-background);
     box-sizing: border-box;
     position: fixed;
@@ -681,7 +691,7 @@ textarea.greyed-out {
     gap: 15px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: var(--color-border) var(--color-background);
+    scrollbar-color: var(--color-border-normal) var(--color-background);
 }
 
 .main-footer::-webkit-scrollbar {
@@ -694,7 +704,7 @@ textarea.greyed-out {
 }
 
 .main-footer::-webkit-scrollbar-thumb {
-    background: var(--color-border);
+    background: var(--color-border-normal);
     border-radius: 4px;
 }
 
@@ -762,13 +772,7 @@ textarea.greyed-out {
     white-space: nowrap;
 }
 
-.footer-button--save,
-.footer-button--load,
-.footer-button--output {
-    background-color: var(--color-footer-button-bg);
-    color: var(--color-footer-button-text);
-    border-color: var(--color-footer-button-border);
-}
+
 
 .footer-button--save,
 .footer-button--load {
@@ -781,12 +785,6 @@ textarea.greyed-out {
     width: 175px;
 }
 
-.footer-button--save:hover,
-.footer-button--load:hover,
-.footer-button--output:hover {
-    background-color: var(--color-footer-button-bg-hover);
-    color: var(--color-footer-button-text-hover);
-}
 
 .footer-button--load {
     padding: 0;
@@ -815,7 +813,7 @@ textarea.greyed-out {
     /* フッター高さ + 余白 */
     left: 20px;
     background-color: var(--color-panel-body);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     padding: 20px;
     border-radius: 4px;
     box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
@@ -888,7 +886,7 @@ textarea.greyed-out {
     background-color: var(--color-panel-header);
     color: #fff;
     padding: 20px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     border-radius: 5px;
     box-shadow: 0 0 10px rgb(0 0 0 / 50%);
     z-index: 2000;
@@ -953,7 +951,7 @@ textarea.greyed-out {
 
     .info-row {
         flex-direction: column;
-        /* gap: 1002px; */
+        gap: 8px;
     }
 
     .info-item,
@@ -990,7 +988,7 @@ textarea.greyed-out {
     align-items: center;
     margin-bottom: 15px;
     padding: 0;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     border-radius: 3px;
     background-color: var(--color-input-bg);
 }
@@ -1001,9 +999,9 @@ textarea.greyed-out {
     justify-content: center;
     margin-bottom: 0;
     width: 100%;
-    height: 300px;
+    height: 350px;
     background-color: var(--color-background);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-normal);
     border-radius: 2px;
 }
 
@@ -1108,17 +1106,6 @@ textarea.greyed-out {
     min-width: 130px;
     text-align: center;
     box-sizing: border-box;
-}
-
-.image-controls .button-upload {
-    background-color: var(--color-footer-button-bg);
-    color: var(--color-footer-button-text);
-    border-color: var(--color-footer-button-border);
-}
-
-.image-controls .button-upload:hover:not(:disabled) {
-    background-color: var(--color-footer-button-bg-hover);
-    color: var(--color-footer-button-text-hover);
 }
 
 .image-controls .button-remove {

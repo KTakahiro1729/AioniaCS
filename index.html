@@ -51,12 +51,10 @@
                         </div>
                     </div>
                     <div class="info-row">
-                        <div class="info-item info-item--full">
+                        <div class="info-item info-item--double">
                             <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name" />
                         </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-item info-item--full">
+                        <div class="info-item info-item--double">
                             <label for="player_name">プレイヤー名</label> <input type="text" id="player_name"
                                 v-model="character.playerName" />
                         </div>
@@ -193,7 +191,8 @@
                 <div class="box-title">特技</div>
                 <div class="box-content">
                     <ul class="list-reset">
-                        <li v-for="(specialSkill, index) in specialSkills" :key="index" class="list-item mb-5">
+                        <li v-for="(specialSkill, index) in specialSkills" :key="index"
+                            class="list-item special-skill-item">
                             <div class="delete-button-wrapper">
                                 <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeSpecialSkill(index)"
@@ -355,7 +354,8 @@
                     class="hidden" />
                 <label for="load_input_vue">データ読込</label>
             </div>
-            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText
+            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{
+                outputButtonText
                 }} </div>
             <transition name="fade">
                 <div class="help-panel" v-if="showHelp" v-html="helpText"></div>
