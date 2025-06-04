@@ -9,18 +9,23 @@
     "lint:css": "stylelint \"**/*.css\"",
     "lint:html": "htmlhint \"**/*.html\"",
     "test": "jest",
-    "e2e": "echo \"No e2e tests yet\""
+    "e2e": "playwright test",
+    "pree2e": "playwright install"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "eslint": "^9.28.0",
     "eslint-plugin-vue": "^10.1.0",
     "htmlhint": "^1.4.0",
+    "jest": "^29.7.0",
     "stylelint": "^16.20.0",
-    "stylelint-config-standard": "^38.0.0",
-    "jest": "^29.7.0"
+    "stylelint-config-standard": "^38.0.0"
+  },
+  "jest": {
+    "testPathIgnorePatterns": ["<rootDir>/e2e/"]
   }
 }
