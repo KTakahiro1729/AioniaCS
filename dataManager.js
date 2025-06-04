@@ -310,37 +310,22 @@ class DataManager {
   }
 
   _normalizeSpecialSkillsData(specialSkillsData) {
-    let loadedSSCount = 0;
-    if (specialSkillsData && Array.isArray(specialSkillsData)) {
-      loadedSSCount = specialSkillsData.length;
-    }
+    const converted = Array.isArray(specialSkillsData)
+      ? specialSkillsData.map(ss => ({
+          group: ss.group || '',
+          name: ss.name || '',
+          note: ss.note || '',
+          showNote: this.gameData.specialSkillsRequiringNote.includes(ss.name || '')
+        }))
+      : [];
 
+    const loadedSSCount = converted.length;
     const targetLength = Math.min(
       Math.max(this.gameData.config.initialSpecialSkillCount, loadedSSCount),
       this.gameData.config.maxSpecialSkills
     );
 
-    const normalizedSpecialSkills = [];
-    for (let i = 0; i < targetLength; i++) {
-      if (specialSkillsData && i < specialSkillsData.length) {
-        const loadedSS = specialSkillsData[i];
-        normalizedSpecialSkills.push({
-          group: loadedSS.group || '',
-          name: loadedSS.name || '',
-          note: loadedSS.note || '',
-          showNote: this.gameData.specialSkillsRequiringNote.includes(loadedSS.name || '')
-        });
-      } else {
-        normalizedSpecialSkills.push({
-          group: '',
-          name: '',
-          note: '',
-          showNote: false
-        });
-      }
-    }
-
-    return normalizedSpecialSkills;
+    return normalizeList(converted, targetLength, { group: '', name: '', note: '', showNote: false });
   }
 
   _normalizeEquipmentData(equipmentData) {
@@ -360,17 +345,19 @@ class DataManager {
   }
 
   _normalizeHistoryData(historyData) {
-    if (historyData && historyData.length > 0) {
-      return historyData.map(h => ({
-        sessionName: h.sessionName || '',
-        gotExperiments: (h.gotExperiments === null || h.gotExperiments === undefined || h.gotExperiments === '')
-          ? null
-          : Number(h.gotExperiments),
-        memo: h.memo || ''
-      }));
-    }
+    const converted = Array.isArray(historyData)
+      ? historyData.map(h => ({
+          sessionName: h.sessionName || '',
+          gotExperiments: (h.gotExperiments === null || h.gotExperiments === undefined || h.gotExperiments === '')
+            ? null
+            : Number(h.gotExperiments),
+          memo: h.memo || ''
+        }))
+      : [];
 
-    return [{ sessionName: '', gotExperiments: null, memo: '' }];
+    const targetLength = Math.max(converted.length, 1);
+
+    return normalizeList(converted, targetLength, { sessionName: '', gotExperiments: null, memo: '' });
   }
 }
 
