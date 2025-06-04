@@ -2,9 +2,9 @@ const { createApp, watch, nextTick } = Vue;
 
 // Base character data copied from gameData with weaknesses initialized
 const baseChar = deepClone(window.AioniaGameData.defaultCharacterData);
-baseChar.weaknesses = Array(window.AioniaGameData.config.maxWeaknesses)
-    .fill(null)
-    .map(() => ({ text: '', acquired: '--' }));
+baseChar.weaknesses = createWeaknessArray(
+    window.AioniaGameData.config.maxWeaknesses
+);
 
 const app = createApp({
     data() {
