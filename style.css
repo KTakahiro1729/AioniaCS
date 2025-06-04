@@ -3,11 +3,22 @@
    ========================================================================== */
 
 /* リセットとベーススタイル */
+
+:root {
+    --color-accent: #c09a69;
+    --color-background-dark: #1a1a1a;
+    --color-panel-dark: #3a3a3a;
+    --color-panel-medium: #333333;
+    --color-background-panel: #242424;
+    --color-border: #555;
+    --color-border-light: #444;
+    --color-text-light: #d1d1d1;
+}
 body {
     font-family: 'Noto Sans JP', sans-serif;
     margin: 0;
-    background-color: #1a1a1a;
-    color: #d1d1d1;
+    background-color: var(--color-background-dark);
+    color: var(--color-text-light);
     line-height: 1.7;
     padding-bottom: 72px;
     /* 固定フッター分の余白 */
@@ -29,7 +40,7 @@ body {
     margin: 25px 0 40px;
     font-size: 2.2em;
     font-weight: 700;
-    color: #c09a69;
+    color: var(--color-accent);
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
 }
 
@@ -94,13 +105,13 @@ body {
 
 .box-title {
     font-family: 'Noto Serif JP', serif;
-    background-color: #333333;
+    background-color: var(--color-panel-medium);
     padding: 12px 18px;
     font-weight: 700;
-    border-bottom: 1px solid #555;
+    border-bottom: 1px solid var(--color-border);
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    color: #c09a69;
+    color: var(--color-accent);
     text-transform: uppercase;
     letter-spacing: 1px;
     font-size: 1.1em;
@@ -108,11 +119,11 @@ body {
 
 .box-content {
     padding: 18px;
-    border: 1px solid #444;
+    border: 1px solid var(--color-border-light);
     border-top: none;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
-    background-color: #242424;
+    background-color: var(--color-background-panel);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     overflow-x: hidden;
 }
@@ -164,12 +175,12 @@ select,
 textarea {
     padding: 9px 12px;
     border-radius: 3px;
-    border: 1px solid #555;
+    border: 1px solid var(--color-border);
     box-sizing: border-box;
     width: 100%;
     font-size: 0.95em;
     background-color: #2c2c2c;
-    color: #d1d1d1;
+    color: var(--color-text-light);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -182,7 +193,7 @@ input[type="text"]:focus,
 input[type="number"]:focus,
 select:focus,
 textarea:focus {
-    border-color: #c09a69;
+    border-color: var(--color-accent);
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(192, 154, 105, 0.25);
 }
@@ -196,7 +207,7 @@ input[type="checkbox"] {
     width: auto;
     margin-right: 8px;
     transform: scale(1.2);
-    accent-color: #c09a69;
+    accent-color: var(--color-accent);
 }
 
 /* 特殊状態 */
@@ -332,7 +343,7 @@ textarea.greyed-out {
 .link-checkbox {
     margin-right: 4px;
     margin-bottom: 2px;
-    accent-color: #c09a69;
+    accent-color: var(--color-accent);
     transform: scale(1.1);
     width: auto;
 }
@@ -387,7 +398,7 @@ textarea.greyed-out {
    ========================================================================== */
 
 .weakness-list .list-item {
-    border-bottom: 1px solid #3a3a3a;
+    border-bottom: 1px solid var(--color-panel-dark);
     padding: 5px 0;
     font-size: 0.9em;
 }
@@ -520,7 +531,7 @@ textarea.greyed-out {
     user-select: none;
     font-size: 1.2em;
     font-weight: bold;
-    border: 1px solid #555;
+    border: 1px solid var(--color-border);
     width: 30px;
     height: 30px;
     display: inline-flex;
@@ -528,8 +539,8 @@ textarea.greyed-out {
     justify-content: center;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     line-height: 1;
-    background-color: #3a3a3a;
-    color: #c09a69;
+    background-color: var(--color-panel-dark);
+    color: var(--color-accent);
     flex-shrink: 0;
 }
 
@@ -538,12 +549,12 @@ textarea.greyed-out {
     opacity: 0.4;
     background-color: #2a2a2a;
     color: #666;
-    border-color: #444;
+    border-color: var(--color-border-light);
 }
 
 .list-button--add:hover:not(:disabled) {
     background-color: #4a4a4a;
-    border-color: #c09a69;
+    border-color: var(--color-accent);
 }
 
 .list-button--delete {
@@ -616,7 +627,7 @@ textarea.greyed-out {
     display: flex;
     align-items: center;
     padding: 15px 25px;
-    border-top: 1px solid #555;
+    border-top: 1px solid var(--color-border);
     background-color: #1f1f1f;
     box-sizing: border-box;
     position: fixed;
@@ -630,7 +641,7 @@ textarea.greyed-out {
     gap: 15px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: #555 #1f1f1f;
+    scrollbar-color: var(--color-border) #1f1f1f;
 }
 
 .main-footer::-webkit-scrollbar {
@@ -643,7 +654,7 @@ textarea.greyed-out {
 }
 
 .main-footer::-webkit-scrollbar-thumb {
-    background: #555;
+    background: var(--color-border);
     border-radius: 4px;
 }
 
@@ -697,9 +708,9 @@ textarea.greyed-out {
     border-radius: 3px;
     font-size: 1.1em;
     font-weight: bold;
-    border: 1px solid #555;
-    background-color: #3a3a3a;
-    color: #c09a69;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-panel-dark);
+    color: var(--color-accent);
     min-height: 42px;
     display: inline-flex;
     align-items: center;
@@ -710,7 +721,7 @@ textarea.greyed-out {
 }
 
 .footer-help-icon:hover {
-    border-color: #c09a69;
+    border-color: var(--color-accent);
 }
 
 .footer-button {
@@ -789,7 +800,7 @@ textarea.greyed-out {
     /* フッター高さ + 余白 */
     left: 20px;
     background-color: #282828;
-    border: 1px solid #444;
+    border: 1px solid var(--color-border-light);
     padding: 20px;
     border-radius: 4px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
@@ -802,7 +813,7 @@ textarea.greyed-out {
 
 .help-panel h4 {
     font-family: 'Noto Serif JP', serif;
-    color: #c09a69;
+    color: var(--color-accent);
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 1.1em;
@@ -833,7 +844,7 @@ textarea.greyed-out {
     font-size: 0.8em;
     color: #777;
     background-color: #161616;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--color-panel-medium);
     margin-top: 25px;
     box-sizing: border-box;
 }
@@ -859,10 +870,10 @@ textarea.greyed-out {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background-color: #333;
+    background-color: var(--color-panel-medium);
     color: #fff;
     padding: 20px;
-    border: 1px solid #555;
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     z-index: 2000;
@@ -877,8 +888,8 @@ textarea.greyed-out {
 
 .custom-alert-modal button {
     padding: 8px 15px;
-    background-color: #c09a69;
-    color: #1a1a1a;
+    background-color: var(--color-accent);
+    color: var(--color-background-dark);
     border: none;
     border-radius: 3px;
     cursor: pointer;
