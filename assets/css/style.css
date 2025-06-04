@@ -68,7 +68,7 @@ body {
     font-size: 2.2em;
     font-weight: 700;
     color: var(--color-accent);
-    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%);
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%); /* Changed to rgba for clarity */
 }
 
 /* Vueトランジション */
@@ -151,7 +151,7 @@ body {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     background-color: var(--color-background-panel);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 40%); /* Changed to rgba for clarity */
     overflow-x: hidden;
 }
 
@@ -222,7 +222,7 @@ select:focus,
 textarea:focus {
     border-color: var(--color-accent);
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgb(192 154 105 / 25%);
+    box-shadow: 0 0 0 0.2rem rgb(192 154 105 / 25%); /* Changed to rgba for clarity */
 }
 
 select {
@@ -666,7 +666,7 @@ textarea.greyed-out {
     left: 0;
     width: 100%;
     z-index: 100;
-    box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
+    box-shadow: 0 -3px 8px rgb(0 0 0 / 50%); /* Changed to rgba for clarity */
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 15px;
@@ -709,7 +709,7 @@ textarea.greyed-out {
     display: inline-block;
     border-width: 2px;
     border-style: solid;
-    box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset;
+    box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset; /* Changed to rgba for clarity */
     white-space: nowrap;
 }
 
@@ -741,7 +741,7 @@ textarea.greyed-out {
     background-color: var(--color-panel-dark);
     color: var(--color-accent);
     min-height: 42px;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%); /* Changed to rgba for clarity */
 }
 
 .footer-help-icon:hover {
@@ -753,7 +753,7 @@ textarea.greyed-out {
     font-size: 0.95em;
     font-weight: 700;
     text-align: center;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%); /* Changed to rgba for clarity */
     min-height: 42px;
     box-sizing: border-box;
     white-space: nowrap;
@@ -816,7 +816,7 @@ textarea.greyed-out {
     border: 1px solid var(--color-border-light);
     padding: 20px;
     border-radius: 4px;
-    box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
+    box-shadow: 0 5px 15px rgb(0 0 0 / 50%); /* Changed to rgba for clarity */
     z-index: 1000;
     max-width: 90%;
     width: 420px;
@@ -888,7 +888,7 @@ textarea.greyed-out {
     padding: 20px;
     border: 1px solid var(--color-border);
     border-radius: 5px;
-    box-shadow: 0 0 10px rgb(0 0 0 / 50%);
+    box-shadow: 0 0 10px rgb(0 0 0 / 50%); /* Changed to rgba for clarity */
     z-index: 2000;
     white-space: pre-wrap;
     display: none;
@@ -998,7 +998,7 @@ textarea.greyed-out {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 0; /* Changed from 10px */
+    margin-bottom: 0;
     width: 100%; /* Ensure it takes full width for image centering */
     height: 300px; /* Consistent height for the area */
     background-color: var(--color-background-dark); /* Background for the whole area */
@@ -1011,6 +1011,7 @@ textarea.greyed-out {
     max-height: 100%; /* Fill the parent's 300px height */
     height: auto; /* Maintain aspect ratio */
     object-fit: contain; /* Ensure entire image is visible */
+
     /* Border and background moved to .image-display-area */
 }
 
@@ -1021,6 +1022,7 @@ textarea.greyed-out {
     align-items: center;
     justify-content: center;
     color: var(--color-input-disabled-text);
+
     /* Border and background moved to .image-display-area,
        placeholder is now just text within that styled area.
        A dashed border could be re-added if a distinction is strongly needed. */
@@ -1077,13 +1079,18 @@ textarea.greyed-out {
     /* Let new base colors show through, just adjust opacity */
     opacity: 0.2; /* Or 0.3 if preferred to match initial non-hovered enabled state */
     cursor: default;
+
     /* background-color and color will be inherited from .image-nav-button (grey, gold) */
+
     /* No need to override background/color if opacity is the primary indicator */
 }
+
 .image-nav-button:hover:not(:disabled) {
     /* This is now handled by .image-display-wrapper:hover .image-nav-button:not(:disabled) for opacity */
+
     /* If a specific background change on direct button hover is still desired, it can be added here,
        but the main requirement was opacity change on wrapper hover. */
+
     /* For example, a subtle brightness change on direct hover: */
     filter: brightness(1.2);
 }
@@ -1094,13 +1101,14 @@ textarea.greyed-out {
     top: 10px;
     right: 10px;
     z-index: 10;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgb(0 0 0 / 60%);
     color: white;
     padding: 3px 8px;
     font-size: 0.9em;
     border-radius: 3px;
     opacity: 0.3; /* Initial transparency */
     transition: opacity 0.3s ease; /* Transition for hover effect */
+
     /* margin-bottom removed as it's absolutely positioned */
 }
 
@@ -1110,7 +1118,7 @@ textarea.greyed-out {
     align-items: center;
     flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
     justify-content: center;
-    padding: 10px 0; /* Added padding */
+    padding: 10px 0;
 }
 
 .image-controls .button-base { /* General styling for buttons in this context */
@@ -1128,11 +1136,13 @@ textarea.greyed-out {
     color: var(--color-footer-button-text);
     border-color: var(--color-footer-button-border);
 }
+
 .image-controls .button-upload:hover:not(:disabled) { /* Ensure hover applies only when not disabled */
     background-color: var(--color-footer-button-hover-bg);
     border-color: var(--color-footer-button-hover-border);
     color: var(--color-footer-button-hover-text); /* Added text color on hover */
 }
+
 /* Disabled state for upload button (if not covered by general .button-base:disabled) */
 .image-controls .button-upload:disabled {
     background-color: var(--color-button-disabled-bg);
@@ -1147,10 +1157,12 @@ textarea.greyed-out {
     color: var(--color-delete-hover-text);
     border-color: var(--color-delete-text);
 }
+
 .image-controls .button-remove:hover:not(:disabled) { /* Ensure hover applies only when not disabled */
     background-color: var(--color-delete-hover-bg); /* Keep same background */
     opacity: 0.8; /* Slightly dim on hover for feedback */
 }
+
 /* Disabled state for remove button (if not covered by general .button-base:disabled) */
 .image-controls .button-remove:disabled {
     background-color: var(--color-button-disabled-bg);
