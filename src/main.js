@@ -300,7 +300,7 @@ const app = createApp({
             modal.querySelector('p').textContent = message;
             modal.style.display = 'block';
         },
-        handleGapiLoaded() {
+        async handleGapiLoaded() {
             if (this.isGapiInitialized || !this.googleDriveManager) return;
             this.isGapiInitialized = true;
 
