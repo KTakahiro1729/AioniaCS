@@ -2,10 +2,10 @@
   "name": "aioniacs",
   "version": "1.0.0",
   "description": "慈悲なきアイオニアのための非公式キャラクターシート作成ツールです",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
-    "lint:js": "eslint .",
+    "lint:js": "eslint src/ tests/ --ext .js",
     "lint:css": "stylelint \"**/*.css\"",
     "lint:html": "htmlhint \"**/*.html\"",
     "test": "jest",
@@ -26,6 +26,6 @@
     "stylelint-config-standard": "^38.0.0"
   },
   "jest": {
-    "testPathIgnorePatterns": ["<rootDir>/e2e/"]
+    "testPathIgnorePatterns": ["<rootDir>/tests/e2e/"], "roots": ["<rootDir>/tests/unit"]
   }
 }
