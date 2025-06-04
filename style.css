@@ -955,6 +955,18 @@ textarea.greyed-out {
     .equipment-section {
         min-width: 100%;
     }
+    .main-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .footer-help-icon,
+    .status-display-container,
+    .footer-button {
+        width: 100%;
+    }
+
 }
 
 @media (max-width: 480px) {
@@ -967,4 +979,15 @@ textarea.greyed-out {
         width: 40%;
         min-width: 100px;
     }
+    .footer-help-icon,
+    .status-display-container,
+    .footer-button {
+        flex: 1 1 100%;
+    }
+
+    .footer-button {
+        font-size: 0.9em;
+        padding: 8px 12px;
+    }
+
 }
