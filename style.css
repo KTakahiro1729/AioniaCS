@@ -158,10 +158,7 @@ label {
 }
 
 /* 入力フィールド */
-input[type="text"],
-input[type="number"],
-select,
-textarea {
+.form-element {
     padding: 9px 12px;
     border-radius: 3px;
     border: 1px solid #555;
@@ -173,21 +170,18 @@ textarea {
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
-textarea {
-    font-size: 1.2em;
-    line-height: 1.6;
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-select:focus,
-textarea:focus {
+.form-element:focus {
     border-color: #c09a69;
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(192, 154, 105, 0.25);
 }
 
-select {
+.form-element--textarea {
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+
+.form-element--select {
     appearance: auto;
 }
 
@@ -406,8 +400,8 @@ textarea.greyed-out {
     border-bottom: 1px solid #4a4a4a;
 }
 
-.weakness-table td input[type="text"],
-.weakness-table td select {
+.weakness-table td input.form-element,
+.weakness-table td select.form-element--select {
     font-size: 0.9em;
     padding: 7px 10px;
 }
@@ -429,7 +423,7 @@ textarea.greyed-out {
     width: 150px;
 }
 
-.weakness-table td.col-acquired select {
+.weakness-table td.col-acquired select.form-element--select {
     min-width: 120px;
 }
 
