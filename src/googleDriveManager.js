@@ -20,20 +20,33 @@ class GoogleDriveManager {
     /**
      * Called when the Google API script (api.js) is loaded.
      * Initializes the GAPI client.
+     * @returns {Promise<void>}
      */
-    onGapiLoad(callback) {
-        gapi.load('client:picker', () => {
-            // Picker API is loaded, now initialize the client
-            gapi.client.init({
-                apiKey: this.apiKey,
-                discoveryDocs: this.discoveryDocs,
-                // scope: this.scope, // Scope is handled by GIS token client
-            }).then(() => {
-                this.pickerApiLoaded = true;
-                if (callback) callback();
-            }).catch(error => {
-                console.error("Error initializing GAPI client:", error);
-                if (callback) callback(error);
+    onGapiLoad() {
+        return new Promise((resolve, reject) => {
+            if (typeof gapi === 'undefined' || !gapi.load) {
+                const err = new Error("GAPI core script not available for gapi.load.");
+                console.error("GDM: " + err.message);
+                return reject(err);
+            }
+            gapi.load('client:picker', () => {
+                if (typeof gapi.client === 'undefined' || !gapi.client.init) {
+                     const err = new Error("GAPI client script not available for gapi.client.init.");
+                     console.error("GDM: " + err.message);
+                     return reject(err);
+                }
+                gapi.client.init({
+                    apiKey: this.apiKey,
+                    discoveryDocs: this.discoveryDocs,
+                    // scope: this.scope, // Scope is handled by GIS token client for Drive data access
+                }).then(() => {
+                    this.pickerApiLoaded = true;
+                    console.log("GDM: GAPI client and Picker initialized.");
+                    resolve();
+                }).catch(error => {
+                    console.error("GDM: Error initializing GAPI client:", error);
+                    reject(error);
+                });
             });
         });
     }
@@ -41,14 +54,28 @@ class GoogleDriveManager {
     /**
      * Called when the Google Identity Services (GIS) script is loaded.
      * Initializes the token client.
+     * @returns {Promise<void>}
      */
-    onGisLoad(callback) {
-        this.tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: this.clientId,
-            scope: this.scope,
-            callback: '', // Callback will be set dynamically per request
+    onGisLoad() {
+        return new Promise((resolve, reject) => {
+            if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2 || !google.accounts.oauth2.initTokenClient) {
+                const err = new Error("GIS library not fully available to initialize token client (google.accounts.oauth2.initTokenClient is undefined).");
+                console.error("GDM: " + err.message);
+                return reject(err);
+            }
+            try {
+                this.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: this.clientId,
+                    scope: this.scope,
+                    callback: '', // Callback will be set dynamically per request for actual token requests
+                });
+                console.log("GDM: GIS Token Client initialized.");
+                resolve();
+            } catch (error) {
+                console.error("GDM: Error initializing GIS Token Client:", error);
+                reject(error);
+            }
         });
-        if (callback) callback();
     }
 
     /**

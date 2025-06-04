@@ -5,8 +5,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>慈悲なきアイオニア　非公式キャラクターシート</title>
-    <script async defer src="https://apis.google.com/js/api.js" onload="vueGapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="vueGisLoaded()"></script>
+    <script>
+      window.gapiScriptLoaded = false;
+      window.gisScriptLoaded = false;
+
+      function vueGapiLoadedPlaceholder() {
+        console.log("vueGapiLoadedPlaceholder called: Google API script has loaded.");
+        window.gapiScriptLoaded = true;
+        // If Vue app's handler is already defined by main.js, call it.
+        if (window.vueApp && window.vueApp.handleGapiLoaded) {
+          window.vueApp.handleGapiLoaded();
+        }
+      }
+
+      function vueGisLoadedPlaceholder() {
+        console.log("vueGisLoadedPlaceholder called: Google GIS script has loaded.");
+        window.gisScriptLoaded = true;
+        // If Vue app's handler is already defined by main.js, call it.
+        if (window.vueApp && window.vueApp.handleGisLoaded) {
+          window.vueApp.handleGisLoaded();
+        }
+      }
+    </script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="vueGapiLoadedPlaceholder()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="vueGisLoadedPlaceholder()"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -345,6 +367,8 @@
     <script src="src/gameData.js"></script>
     <script src="src/utils.js"></script>
     <script src="src/dataManager.js"></script>
+    <!-- googleDriveManager.js MUST be before main.js -->
+    <script src="src/googleDriveManager.js"></script>
     <script src="src/main.js"></script>
 </body>
 

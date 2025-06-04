@@ -1,25 +1,5 @@
-// Define global functions for Google API script callbacks BEFORE Vue app creation
-// These need to be truly global.
-window.vueGapiLoaded = function() {
-    if (window.vueApp && window.vueApp.googleDriveManager && typeof window.vueApp.handleGapiLoaded === 'function') {
-        window.vueApp.handleGapiLoaded();
-    } else {
-        console.warn("vueGapiLoaded called but vueApp or googleDriveManager not ready.");
-        // Optionally, set a flag that vueGapiLoaded was called, so mounted() can pick it up.
-        window.gapiScriptLoadedPreVue = true;
-    }
-};
-
-window.vueGisLoaded = function() {
-    if (window.vueApp && window.vueApp.googleDriveManager && typeof window.vueApp.handleGisLoaded === 'function') {
-        window.vueApp.handleGisLoaded();
-    } else {
-        console.warn("vueGisLoaded called but vueApp or googleDriveManager not ready.");
-        window.gisScriptLoadedPreVue = true;
-    }
-};
-
 const { createApp } = Vue;
+// Global flags like window.gapiScriptLoaded are set by placeholder functions in index.html
 
 // Base character data copied from gameData with weaknesses initialized
 const baseChar = deepClone(window.AioniaGameData.defaultCharacterData);
@@ -65,6 +45,8 @@ const app = createApp({
             // IMPORTANT: Replace with your actual API Key and Client ID
             apiKey: 'AIzaSyD481puTNfH73S2yJtepddwJheGy7rEc9U',
             clientId: '913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com',
+            isGapiInitialized: false, // To prevent multiple GAPI initializations
+            isGisInitialized: false,  // To prevent multiple GIS initializations
         };
     },
     computed: {
@@ -319,41 +301,35 @@ const app = createApp({
             modal.style.display = 'block';
         },
         handleGapiLoaded() {
-            console.log("GAPI script loaded, now initializing client via GoogleDriveManager.");
-            this.isGapiLoaded = true; // Set status
-            if (this.googleDriveManager && typeof this.googleDriveManager.onGapiLoad === 'function') {
-                this.googleDriveManager.onGapiLoad((err) => {
-                    if (err) {
-                        this.driveStatusMessage = 'Failed to initialize Google API client.';
-                        console.error('GAPI client init error:', err);
-                    } else {
-                        this.driveStatusMessage = 'Google API client initialized.';
-                        console.log('Google API client initialized successfully.');
-                        // Potentially trigger GIS load or check sign-in status here if needed
-                    }
-                });
-            } else {
-                console.error("handleGapiLoaded: googleDriveManager or onGapiLoad not available.");
-                this.driveStatusMessage = "Error: GAPI load handler missing.";
+            if (this.isGapiInitialized || !this.googleDriveManager) return;
+            this.isGapiInitialized = true;
+
+            this.isGapiLoaded = true; // Still useful for UI, indicates script is loaded
+            this.driveStatusMessage = 'Initializing Google API Client...';
+            console.log("Vue app: handleGapiLoaded triggered.");
+            try {
+                await this.googleDriveManager.onGapiLoad();
+                this.driveStatusMessage = 'Google API client initialized.';
+                console.log('Google API client initialized successfully in Vue.');
+            } catch (err) {
+                this.driveStatusMessage = 'Failed to initialize Google API client (Vue).';
+                console.error('GAPI client init error in Vue app:', err);
             }
         },
-        handleGisLoaded() {
-            console.log("GIS script loaded, now initializing token client via GoogleDriveManager.");
-            this.isGisLoaded = true; // Set status
-            if (this.googleDriveManager && typeof this.googleDriveManager.onGisLoad === 'function') {
-                this.googleDriveManager.onGisLoad((err) => {
-                    if (err) {
-                        this.driveStatusMessage = 'Failed to initialize Google Sign-In.';
-                        console.error('GIS client init error:', err);
-                    } else {
-                        this.driveStatusMessage = 'Google Sign-In initialized.';
-                        console.log('Google Sign-In initialized successfully.');
-                        // Update UI, maybe auto-sign-in or enable sign-in button
-                    }
-                });
-            } else {
-                console.error("handleGisLoaded: googleDriveManager or onGisLoad not available.");
-                this.driveStatusMessage = "Error: GIS load handler missing.";
+        async handleGisLoaded() {
+            if (this.isGisInitialized || !this.googleDriveManager) return;
+            this.isGisInitialized = true;
+
+            this.isGisLoaded = true; // Still useful for UI
+            this.driveStatusMessage = 'Initializing Google Sign-In...';
+            console.log("Vue app: handleGisLoaded triggered.");
+            try {
+                await this.googleDriveManager.onGisLoad();
+                this.driveStatusMessage = 'Google Sign-In initialized.';
+                console.log('Google Sign-In initialized successfully in Vue.');
+            } catch (err) {
+                this.driveStatusMessage = 'Failed to initialize Google Sign-In (Vue).';
+                console.error('GIS client init error in Vue app:', err);
             }
         },
         async handleSignInClick() {
@@ -552,15 +528,18 @@ const app = createApp({
             this.googleDriveManager = new window.GoogleDriveManager(this.apiKey, this.clientId);
             this.dataManager.setGoogleDriveManager(this.googleDriveManager);
 
-            // If scripts loaded before Vue mounted and set up callbacks
-            if(window.gapiScriptLoadedPreVue) {
-                console.log("GAPI script was loaded before Vue mounted. Triggering handler.");
+            // Check global flags set by placeholder functions in index.html
+            if (window.gapiScriptLoaded) {
+                console.log("main.js mounted: GAPI script was already loaded by placeholder, calling handler.");
                 this.handleGapiLoaded();
             }
-            if(window.gisScriptLoadedPreVue) {
-                console.log("GIS script was loaded before Vue mounted. Triggering handler.");
+            // else the placeholder vueGapiLoadedPlaceholder in index.html will call it when gapi script loads.
+
+            if (window.gisScriptLoaded) {
+                console.log("main.js mounted: GIS script was already loaded by placeholder, calling handler.");
                 this.handleGisLoaded();
             }
+            // else the placeholder vueGisLoadedPlaceholder in index.html will call it when gis script loads.
 
         } else {
             console.error("GoogleDriveManager class not found. Ensure googleDriveManager.js is loaded.");
