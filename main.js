@@ -310,7 +310,7 @@ app.component('equipment-item', {
             <div class="flex-group">
                 <select :id="id" class="flex-item-1"
                         :value="modelGroup"
-                        @input="$emit('update:modelGroup', $event.target.value)">
+                        @change="$emit('update:modelGroup', $event.target.value)">
                     <option v-for="option in options" :key="option.value" :value="option.value">
                         {{ option.label }}
                     </option>
