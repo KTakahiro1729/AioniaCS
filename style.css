@@ -525,27 +525,28 @@ textarea.greyed-out {
     flex-shrink: 0;
 }
 
-.list-button {
+.btn {
     cursor: pointer;
-    padding: 0;
     border-radius: 3px;
-    user-select: none;
-    font-size: 1.2em;
-    font-weight: bold;
     border: 1px solid #555;
-    width: 30px;
-    height: 30px;
+    font-weight: 700;
+    line-height: 1;
+    color: #c09a69;
+    background-color: #3a3a3a;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
-    line-height: 1;
-    background-color: #3a3a3a;
-    color: #c09a69;
-    flex-shrink: 0;
+    user-select: none;
+    box-sizing: border-box;
 }
 
-.list-button:disabled {
+.btn:hover:not(:disabled) {
+    background-color: #4a4a4a;
+    border-color: #c09a69;
+}
+
+.btn:disabled {
     cursor: not-allowed;
     opacity: 0.4;
     background-color: #2a2a2a;
@@ -553,20 +554,64 @@ textarea.greyed-out {
     border-color: #444;
 }
 
-.list-button--add:hover:not(:disabled) {
-    background-color: #4a4a4a;
-    border-color: #c09a69;
+.btn--sm {
+    padding: 0;
+    font-size: 1.2em;
+    width: 30px;
+    height: 30px;
 }
 
-.list-button--delete {
+.btn--md {
+    padding: 10px 18px;
+    font-size: 0.95em;
+    height: 48px;
+    width: 110px;
+}
+
+.btn--lg {
+    padding: 10px 18px;
+    font-size: 0.95em;
+    height: 48px;
+    width: 175px;
+}
+
+.btn--primary {
+    background-color: #3a434d;
+    color: #b0c4de;
+    border-color: #647687;
+}
+
+.btn--primary:hover:not(:disabled) {
+    background-color: #454f5a;
+    border-color: #8298ad;
+    color: #c8d4e2;
+}
+
+.btn--danger {
     color: #8c5353;
     border-color: #5c3939;
 }
 
-.list-button--delete:hover:not(:disabled) {
+.btn--danger:hover:not(:disabled) {
     background-color: #4a3a3a;
     border-color: #8c5353;
     color: #a86f6f;
+}
+
+.btn--file {
+    padding: 0;
+}
+
+.btn--file>label {
+    color: inherit;
+    font-weight: 700;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
 }
 
 .add-button-container-left {
@@ -725,71 +770,6 @@ textarea.greyed-out {
     border-color: #c09a69;
 }
 
-.footer-button {
-    cursor: pointer;
-    padding: 10px 18px;
-    border-radius: 3px;
-    font-size: 0.95em;
-    font-weight: 700;
-    text-align: center;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    border: 1px solid;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    box-sizing: border-box;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.footer-button--save,
-.footer-button--load,
-.footer-button--output {
-    background-color: #3a434d;
-    color: #b0c4de;
-    border-color: #647687;
-}
-
-.footer-button--save,
-.footer-button--load {
-    height: 48px;
-    width: 110px;
-}
-
-.footer-button--output {
-    height: 48px;
-    width: 175px;
-}
-
-.footer-button--load>label {
-    margin: 0;
-}
-
-.footer-button--save:hover,
-.footer-button--load:hover,
-.footer-button--output:hover {
-    background-color: #454f5a;
-    border-color: #8298ad;
-    color: #c8d4e2;
-}
-
-.footer-button--load {
-    padding: 0;
-}
-
-.footer-button--load>label {
-    color: inherit;
-    font-weight: 700;
-    padding: 10px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    box-sizing: border-box;
-    cursor: pointer;
-}
 
 /* ==========================================================================
    ヘルプ表示
