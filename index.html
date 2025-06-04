@@ -144,7 +144,7 @@
                                 <li v-for="(expert, expIndex) in skill.experts" :key="expIndex"
                                     class="expert-list-item">
                                     <div class="delete-button-wrapper">
-                                        <button type="button" class="list-button list-button--delete"
+                                        <button type="button" class="button-base list-button list-button--delete"
                                             @click="removeExpert(skill, expIndex)" :disabled="skill.experts.length
                                             <= 1 && expert.value===''">－</button>
                                     </div>
@@ -153,7 +153,7 @@
                                 </li>
                             </ul>
                             <div class="add-button-container-left">
-                                <button type="button" class="list-button list-button--add"
+                                <button type="button" class="button-base list-button list-button--add"
                                     @click="addExpert(skill)">＋</button>
                             </div>
                         </div>
@@ -167,7 +167,7 @@
                     <ul class="list-reset">
                         <li v-for="(specialSkill, index) in specialSkills" :key="index" class="list-item mb-5">
                             <div class="delete-button-wrapper">
-                                <button type="button" class="list-button list-button--delete"
+                                <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeSpecialSkill(index)"
                                     :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)">
                                     －</button>
@@ -196,7 +196,7 @@
                         </li>
                     </ul>
                     <div class="add-button-container-left" v-if="specialSkills.length < 20">
-                        <button type="button" class="list-button list-button--add"
+                        <button type="button" class="button-base list-button list-button--add"
                             @click="addSpecialSkillItem()">＋</button>
                     </div>
                 </div>
@@ -282,7 +282,7 @@
                     <ul id="histories" class="list-reset">
                         <li v-for="(history, index) in histories" :key="index" class="list-item">
                             <div class="delete-button-wrapper">
-                                <button type="button" class="list-button list-button--delete"
+                                <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeHistoryItem(index)"
                                     :disabled="histories.length <= 1 && !hasHistoryContent(history)">－</button>
                             </div>
@@ -299,7 +299,7 @@
                         </li>
                     </ul>
                     <div class="add-button-container-left">
-                        <button type="button" class="list-button list-button--add" @click="addHistoryItem()">＋</button>
+                        <button type="button" class="button-base list-button list-button--add" @click="addHistoryItem()">＋</button>
                     </div>
                 </div>
             </div>
@@ -314,19 +314,19 @@
         </div>
 
         <div class="main-footer">
-            <div class="footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？
+            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？
             </div>
             <div class="status-display-container">
                 <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
                     maxExperiencePoints }} </div>
                 <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
             </div>
-            <div class="footer-button footer-button--save" @click="saveData"> データ保存 </div>
-            <div class="footer-button footer-button--load">
+            <div class="button-base footer-button footer-button--save" @click="saveData"> データ保存 </div>
+            <div class="button-base footer-button footer-button--load">
                 <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" class="hidden" />
                 <label for="load_input_vue">データ読込</label>
             </div>
-            <div class="footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText }} </div>
+            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText }} </div>
             <transition name="fade">
                 <div class="help-panel" v-if="showHelp" v-html="helpText"></div>
             </transition>
@@ -335,6 +335,7 @@
     </div>
     <script src="cocofoliaExporter.js"></script>
     <script src="gameData.js"></script>
+    <script src="utils.js"></script>
     <script src="dataManager.js"></script>
     <script src="main.js"></script>
 </body>
