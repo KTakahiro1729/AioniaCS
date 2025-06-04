@@ -203,11 +203,11 @@ class DataManager {
 
           internalData.skills.push(newSkill);
         } else if (appSkillDefinition) {
-          internalData.skills.push(JSON.parse(JSON.stringify(appSkillDefinition)));
+          internalData.skills.push(deepClone(appSkillDefinition));
         }
       });
     } else {
-      internalData.skills = JSON.parse(JSON.stringify(this.gameData.baseSkills));
+      internalData.skills = deepClone(this.gameData.baseSkills);
     }
   }
 
@@ -280,7 +280,7 @@ class DataManager {
   }
 
   _normalizeSkillsData(skillsData) {
-    const baseSkills = JSON.parse(JSON.stringify(this.gameData.baseSkills));
+    const baseSkills = deepClone(this.gameData.baseSkills);
 
     if (skillsData && Array.isArray(skillsData)) {
       const loadedSkillsById = new Map(skillsData.map(s => [s.id, s]));
