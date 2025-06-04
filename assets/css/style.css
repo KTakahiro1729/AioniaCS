@@ -6,46 +6,46 @@
 
 :root {
     --color-accent: #c09a69;
-    --color-background-dark: #1a1a1a;
-    --color-panel-dark: #3a3a3a;
-    --color-panel-medium: #333;
-    --color-border: #555;
-    --color-border-light: #444;
-    --color-text-light: #d1d1d1;
-    --color-input-bg: #2c2c2c;
-    --color-input-disabled-bg: #383838;
-    --color-input-disabled-text: #888;
-    --color-border-darker: #4a4a4a;
-    --color-button-disabled-bg: #2a2a2a;
-    --color-button-disabled-text: #666;
-    --color-button-hover: #4a4a4a;
+    --color-background: #222;
+
+    --color-panel-header: #333;
+    --color-panel-sub-header: #2e2e2e;
+    --color-panel-body: #252525;
+    --color-panel-specialskill: #222;
+
+    --color-border: #444;
+
+    --color-input-bg: #1d1d1d;
+    --color-input-disabled-bg: var(--color-panel-body);
+
+    --color-text-normal: #ddd;
+    --color-text-muted: #bbb;
+    --color-text-input-disabled: #888;
+
     --color-delete-text: #8c5353;
     --color-delete-border: #5c3939;
     --color-delete-hover-bg: #4a3a3a;
     --color-delete-hover-text: #a86f6f;
-    --color-footer-button-bg: #3a434d;
+
+    --color-delete-disabled: #444;
+    --color-delete-bg-disabled: rgb(0 0 0 / 0);
+
+    --color-footer-button-bg: #2d3238;
     --color-footer-button-text: #b0c4de;
     --color-footer-button-border: #647687;
-    --color-footer-button-hover-bg: #454f5a;
-    --color-footer-button-hover-border: #8298ad;
-    --color-footer-button-hover-text: #c8d4e2;
-    --color-help-panel-text: #c5c5c5;
-    --color-footer-text-muted: #777;
-    --color-link: #999;
-    --color-link-hover: #bbb;
+    --color-footer-button-bg-hover: #454f5a;
+    --color-footer-button-text-hover: #c8d4e2;
 
-    /* Typography */
-    --color-label-text: #b0b0b0;
-    /* Used for form labels */
-    --color-muted-text: #a0a0a0;
-    /* Used for subdued text */
+    --color-link: #ccc;
+    --color-link-hover: var(--color-accent);
+
 }
 
 body {
     font-family: 'Noto Sans JP', sans-serif;
     margin: 0;
-    background-color: var(--color-background-dark);
-    color: var(--color-text-light);
+    background-color: var(--color-background);
+    color: var(--color-text-normal);
     line-height: 1.7;
     padding-bottom: 72px;
 
@@ -131,15 +131,19 @@ body {
    ボックス共通コンポーネント
    ========================================================================== */
 
-.box-title {
+.box-title,
+.sub-box-title {
     font-family: 'Noto Serif JP', serif;
-    background-color: var(--color-panel-medium);
-    padding: 12px 18px;
+    color: var(--color-accent);
     font-weight: 700;
-    border-bottom: 1px solid var(--color-border);
+}
+
+.box-title {
+    background-color: var(--color-panel-header);
+    padding: 12px 18px;
+    border: 1px solid var(--color-border);
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    color: var(--color-accent);
     text-transform: uppercase;
     letter-spacing: 1px;
     font-size: 1.1em;
@@ -147,11 +151,11 @@ body {
 
 .box-content {
     padding: 18px;
-    border: 1px solid var(--color-border-light);
+    border: 1px solid var(--color-border);
     border-top: none;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
-    background-color: var(--color-panel-dark);
+    background-color: var(--color-panel-body);
     box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
     overflow-x: hidden;
 }
@@ -159,8 +163,8 @@ body {
 /* サブボックス */
 .sub-box-title {
     font-size: 1em;
-    background-color: var(--color-panel-medium);
-    border-bottom: 1px solid var(--color-border-darker);
+    background-color: var(--color-panel-sub-header);
+    border-bottom: 1px solid var(--color-border);
     padding: 10px 18px;
     margin-left: -18px;
     margin-right: -18px;
@@ -174,6 +178,7 @@ body {
 .sub-box-title--weakness {
     margin-top: 0;
     margin-bottom: 10px;
+    border-top: 1px solid var(--color-border);
 }
 
 /* ==========================================================================
@@ -184,7 +189,7 @@ body {
 label {
     font-weight: 700;
     font-size: 0.95em;
-    color: var(--color-label-text);
+    color: var(--color-text-normal);
 }
 
 .info-item>label,
@@ -207,7 +212,7 @@ textarea {
     width: 100%;
     font-size: 0.95em;
     background-color: var(--color-input-bg);
-    color: var(--color-text-light);
+    color: var(--color-text-normal);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -229,20 +234,28 @@ select {
     appearance: auto;
 }
 
+select:disabled {
+    background-color: var(--color-input-disabled-bg);
+    color: var(--color-text-input-disabled);
+    /* cursor: not-allowed; */
+}
+
 /* チェックボックス */
 input[type="checkbox"] {
     width: auto;
     margin-right: 8px;
     transform: scale(1.2);
     accent-color: var(--color-accent);
+    cursor: pointer;
 }
+
 
 /* 特殊状態 */
 input.greyed-out,
 select.greyed-out,
 textarea.greyed-out {
     background-color: var(--color-input-disabled-bg);
-    color: var(--color-input-disabled-text);
+    color: var(--color-text-input-disabled);
 }
 
 /* ==========================================================================
@@ -261,7 +274,7 @@ textarea.greyed-out {
 
 .flex-group {
     display: flex;
-    gap: 8px;
+    gap: 5px;
 }
 
 .flex-item-1 {
@@ -377,7 +390,7 @@ textarea.greyed-out {
 
 .link-checkbox-label {
     font-size: 0.9em;
-    color: var(--color-muted-text);
+    color: var(--color-text-muted);
     font-weight: normal;
     user-select: none;
     margin-bottom: 0;
@@ -425,15 +438,14 @@ textarea.greyed-out {
    ========================================================================== */
 
 .weakness-list .list-item {
-    border-bottom: 1px solid var(--color-panel-darker);
+    border-bottom: 1px solid var(--color-border);
     padding: 5px 0;
     font-size: 0.9em;
+    align-items: center;
 }
 
 .weakness-labels-header {
-    color: var(--color-muted-text);
-    border-bottom: 1px solid var(--color-border-darker);
-    margin-bottom: 5px;
+    color: var(--color-text-muted);
 }
 
 .weakness-labels-header .flex-weakness-number {
@@ -442,7 +454,10 @@ textarea.greyed-out {
 }
 
 .flex-weakness-number {
-    width: 30px;
+    font-family: 'Noto Serif JP', serif;
+    color: var(--color-accent);
+    font-weight: 700;
+    width: 20px;
     text-align: center;
 }
 
@@ -459,7 +474,7 @@ textarea.greyed-out {
 }
 
 .flex-weakness-acquired option[disabled] {
-    color: var(--color-footer-text-muted);
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
@@ -487,9 +502,9 @@ textarea.greyed-out {
 .skills-list>li {
     margin-bottom: 8px;
     padding: 10px;
-    border: 1px solid var(--color-input-disabled-bg);
+    border: 1px solid var(--color-border);
     border-radius: 3px;
-    background-color: var(--color-input-bg);
+    background-color: var(--color-panel-specialskill);
 }
 
 .skills-list>li .skill-header {
@@ -509,7 +524,7 @@ textarea.greyed-out {
 .list-item {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 5px;
     padding: 2px 0;
 }
 
@@ -527,10 +542,6 @@ textarea.greyed-out {
     align-items: center;
     gap: 10px;
     margin-bottom: 8px;
-}
-
-.expert-list-item:last-child {
-    margin-bottom: 0;
 }
 
 .special-skill-note-input {
@@ -570,20 +581,19 @@ textarea.greyed-out {
     height: 30px;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     line-height: 1;
-    background-color: var(--color-panel-dark);
+    background-color: var(--color-panel-body);
     color: var(--color-accent);
 }
 
 .list-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.4;
-    background-color: var(--color-button-disabled-bg);
-    color: var(--color-button-disabled-text);
-    border-color: var(--color-border-light);
+    cursor: default;
+    background-color: var(--color-delete-bg-disabled);
+    color: var(--color-delete-disabled);
+    border-color: var(--color-delete-disabled);
+    );
 }
 
 .list-button--add:hover:not(:disabled) {
-    background-color: var(--color-button-hover);
     border-color: var(--color-accent);
 }
 
@@ -610,7 +620,7 @@ textarea.greyed-out {
     display: flex;
     flex-wrap: wrap;
     align-items: end;
-    gap: 8px;
+    gap: 5px;
 }
 
 .history-item-inputs>div {
@@ -621,14 +631,14 @@ textarea.greyed-out {
 .history-item-inputs>div>label {
     font-size: 0.85em;
     margin-bottom: 4px;
-    color: var(--color-muted-text);
+    color: var(--color-text-normal);
     display: block;
 }
 
 .history-labels-header {
     padding-top: 0;
     padding-bottom: 0;
-    border-bottom: 1px solid var(--color-border-darker);
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: 5px;
 }
 
@@ -658,7 +668,7 @@ textarea.greyed-out {
     align-items: center;
     padding: 15px 25px;
     border-top: 1px solid var(--color-border);
-    background-color: var(--color-background-dark);
+    background-color: var(--color-background);
     box-sizing: border-box;
     position: fixed;
     bottom: 0;
@@ -671,7 +681,7 @@ textarea.greyed-out {
     gap: 15px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: var(--color-border) var(--color-background-dark);
+    scrollbar-color: var(--color-border) var(--color-background);
 }
 
 .main-footer::-webkit-scrollbar {
@@ -679,7 +689,7 @@ textarea.greyed-out {
 }
 
 .main-footer::-webkit-scrollbar-track {
-    background: var(--color-background-dark);
+    background: var(--color-background);
     border-radius: 4px;
 }
 
@@ -689,7 +699,7 @@ textarea.greyed-out {
 }
 
 .main-footer::-webkit-scrollbar-thumb:hover {
-    background: var(--color-footer-text-muted);
+    background: var(--color-text-muted);
 }
 
 /* ステータス表示 */
@@ -731,7 +741,7 @@ textarea.greyed-out {
     padding: 0 14px;
     font-size: 1.1em;
     font-weight: bold;
-    background-color: var(--color-panel-dark);
+    background-color: var(--color-panel-body);
     color: var(--color-accent);
     min-height: 42px;
     box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
@@ -774,9 +784,8 @@ textarea.greyed-out {
 .footer-button--save:hover,
 .footer-button--load:hover,
 .footer-button--output:hover {
-    background-color: var(--color-footer-button-hover-bg);
-    border-color: var(--color-footer-button-hover-border);
-    color: var(--color-footer-button-hover-text);
+    background-color: var(--color-footer-button-bg-hover);
+    color: var(--color-footer-button-text-hover);
 }
 
 .footer-button--load {
@@ -805,8 +814,8 @@ textarea.greyed-out {
 
     /* フッター高さ + 余白 */
     left: 20px;
-    background-color: var(--color-panel-dark);
-    border: 1px solid var(--color-border-light);
+    background-color: var(--color-panel-body);
+    border: 1px solid var(--color-border);
     padding: 20px;
     border-radius: 4px;
     box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
@@ -814,7 +823,7 @@ textarea.greyed-out {
     max-width: 90%;
     width: 420px;
     font-size: 0.9em;
-    color: var(--color-help-panel-text);
+    color: var(--color-text-normal);
 }
 
 .help-panel h4 {
@@ -848,9 +857,9 @@ textarea.greyed-out {
     text-align: center;
     padding: 15px;
     font-size: 0.8em;
-    color: var(--color-footer-text-muted);
-    background-color: var(--color-background-dark);
-    border-top: 1px solid var(--color-panel-medium);
+    color: var(--color-text-muted);
+    background-color: var(--color-background);
+    border-top: 1px solid var(--color-panel-header);
     margin-top: 25px;
     box-sizing: border-box;
 }
@@ -876,7 +885,7 @@ textarea.greyed-out {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background-color: var(--color-panel-medium);
+    background-color: var(--color-panel-header);
     color: #fff;
     padding: 20px;
     border: 1px solid var(--color-border);
@@ -896,7 +905,7 @@ textarea.greyed-out {
 .custom-alert-modal button {
     padding: 8px 15px;
     background-color: var(--color-accent);
-    color: var(--color-background-dark);
+    color: var(--color-background);
     border: none;
     border-radius: 3px;
     cursor: pointer;
@@ -981,7 +990,7 @@ textarea.greyed-out {
     align-items: center;
     margin-bottom: 15px;
     padding: 0;
-    border: 1px solid var(--color-border-light);
+    border: 1px solid var(--color-border);
     border-radius: 3px;
     background-color: var(--color-input-bg);
 }
@@ -993,7 +1002,7 @@ textarea.greyed-out {
     margin-bottom: 0;
     width: 100%;
     height: 300px;
-    background-color: var(--color-background-dark);
+    background-color: var(--color-background);
     border: 1px solid var(--color-border);
     border-radius: 2px;
 }
@@ -1011,7 +1020,7 @@ textarea.greyed-out {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-input-disabled-text);
+    color: var(--color-text-input-disabled);
 }
 
 .image-display-wrapper {
@@ -1038,8 +1047,8 @@ textarea.greyed-out {
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
-    background-color: grey;
-    color: gold;
+    background-color: var(--color-panel-header);
+    color: var(--color-accent);
     border: none;
     padding: 6px 10px;
     font-size: 1.2em;
@@ -1065,9 +1074,7 @@ textarea.greyed-out {
     cursor: default;
 }
 
-.image-nav-button:hover:not(:disabled) {
-    filter: brightness(1.2);
-}
+
 
 
 .image-count-display {
@@ -1110,18 +1117,9 @@ textarea.greyed-out {
 }
 
 .image-controls .button-upload:hover:not(:disabled) {
-    background-color: var(--color-footer-button-hover-bg);
-    border-color: var(--color-footer-button-hover-border);
-    color: var(--color-footer-button-hover-text);
+    background-color: var(--color-footer-button-bg-hover);
+    color: var(--color-footer-button-text-hover);
 }
-
-.image-controls .button-upload:disabled {
-    background-color: var(--color-button-disabled-bg);
-    color: var(--color-button-disabled-text);
-    border-color: var(--color-border-light);
-    cursor: not-allowed;
-}
-
 
 .image-controls .button-remove {
     background-color: var(--color-delete-hover-bg);
@@ -1129,15 +1127,8 @@ textarea.greyed-out {
     border-color: var(--color-delete-text);
 }
 
-.image-controls .button-remove:hover:not(:disabled) {
-    background-color: var(--color-delete-hover-bg);
-    opacity: 0.8;
-}
-
 .image-controls .button-remove:disabled {
-    background-color: var(--color-button-disabled-bg);
-    color: var(--color-button-disabled-text);
-    border-color: var(--color-border-light);
-    opacity: 0.5;
+    color: var(--color-delete-disabled);
+    border-color: var(--color-delete-disabled);
     cursor: not-allowed;
 }
