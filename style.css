@@ -123,18 +123,28 @@ body {
     background-color: #2e2e2e;
     border-bottom: 1px solid #4a4a4a;
     padding: 10px 18px;
-    margin-left: -18px;
-    margin-right: -18px;
+    margin: 0;
 }
 
 .sub-box-title--scar {
-    margin-top: -18px;
+    margin-top: 0;
     margin-bottom: 15px;
 }
 
 .sub-box-title--weakness {
     margin-top: 0;
     margin-bottom: 10px;
+}
+
+/* Wrapper for sections that contain a sub-box */
+.box-content--flush {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sub-box-content {
+    padding: 0 18px;
 }
 
 /* ==========================================================================
