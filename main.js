@@ -1,10 +1,10 @@
 const { createApp } = Vue;
 
 // Base character data copied from gameData with weaknesses initialized
-const baseChar = JSON.parse(JSON.stringify(window.AioniaGameData.defaultCharacterData));
-baseChar.weaknesses = Array(window.AioniaGameData.config.maxWeaknesses)
-    .fill(null)
-    .map(() => ({ text: '', acquired: '--' }));
+const baseChar = deepClone(window.AioniaGameData.defaultCharacterData);
+baseChar.weaknesses = createWeaknessArray(
+    window.AioniaGameData.config.maxWeaknesses
+);
 
 const app = createApp({
     data() {
@@ -13,7 +13,7 @@ const app = createApp({
             gameData: window.AioniaGameData,
             dataManager: null,
             character: baseChar,
-            skills: JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills)),
+            skills: deepClone(window.AioniaGameData.baseSkills),
             externalSkillOrder: window.AioniaGameData.externalSkillOrder,
             initialSpecialSkillCount: window.AioniaGameData.config.initialSpecialSkillCount,
             specialSkills: Array(window.AioniaGameData.config.initialSpecialSkillCount).fill(null).map(() => ({ group: '', name: '', note: '', showNote: false })),

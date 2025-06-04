@@ -91,9 +91,9 @@ class DataManager {
           ? externalData.linkCurrentToInitialScar
           : true,
         memo: externalData.character_memo || '',
-        weaknesses: Array(this.gameData.config.maxWeaknesses)
-          .fill(null)
-          .map(() => ({ text: '', acquired: '--' }))
+        weaknesses: createWeaknessArray(
+          this.gameData.config.maxWeaknesses
+        )
       },
       skills: [],
       specialSkills: [],
@@ -203,11 +203,11 @@ class DataManager {
 
           internalData.skills.push(newSkill);
         } else if (appSkillDefinition) {
-          internalData.skills.push(JSON.parse(JSON.stringify(appSkillDefinition)));
+          internalData.skills.push(deepClone(appSkillDefinition));
         }
       });
     } else {
-      internalData.skills = JSON.parse(JSON.stringify(this.gameData.baseSkills));
+      internalData.skills = deepClone(this.gameData.baseSkills);
     }
   }
 
@@ -259,9 +259,9 @@ class DataManager {
     // キャラクターデータの正規化
     const defaultCharacter = {
       ...this.gameData.defaultCharacterData,
-      weaknesses: Array(this.gameData.config.maxWeaknesses)
-        .fill(null)
-        .map(() => ({ text: '', acquired: '--' }))
+      weaknesses: createWeaknessArray(
+        this.gameData.config.maxWeaknesses
+      )
     };
 
     const normalizedData = {
@@ -280,7 +280,7 @@ class DataManager {
   }
 
   _normalizeSkillsData(skillsData) {
-    const baseSkills = JSON.parse(JSON.stringify(this.gameData.baseSkills));
+    const baseSkills = deepClone(this.gameData.baseSkills);
 
     if (skillsData && Array.isArray(skillsData)) {
       const loadedSkillsById = new Map(skillsData.map(s => [s.id, s]));
