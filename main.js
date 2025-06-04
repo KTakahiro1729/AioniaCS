@@ -113,16 +113,19 @@ const app = createApp({
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
         addSpecialSkillItem() {
-            if (this.specialSkills.length < this.gameData.config.maxSpecialSkills) {
-                this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
-            }
+            window.Utils.addItem(
+                this.specialSkills,
+                { group: '', name: '', note: '', showNote: false },
+                this.gameData.config.maxSpecialSkills
+            );
         },
         removeSpecialSkill(index) {
-            if (this.specialSkills.length > 1) {
-                this.specialSkills.splice(index, 1);
-            } else if (this.specialSkills.length === 1 && this.hasSpecialSkillContent(this.specialSkills[index])) {
-                this.specialSkills[index] = { group: '', name: '', note: '', showNote: false };
-            }
+            window.Utils.removeItem(
+                this.specialSkills,
+                index,
+                { group: '', name: '', note: '', showNote: false },
+                this.hasSpecialSkillContent
+            );
         },
         expertPlaceholder(skill) {
             return skill.checked ? this.gameData.placeholderTexts.expertSkill : this.gameData.placeholderTexts.expertSkillDisabled;
@@ -159,13 +162,19 @@ const app = createApp({
                 this.specialSkills[index].showNote = this.gameData.specialSkillsRequiringNote.includes(skillName);
             }
         },
-        addHistoryItem() { this.histories.push({ sessionName: '', gotExperiments: null, memo: '' }); },
+        addHistoryItem() {
+            window.Utils.addItem(
+                this.histories,
+                { sessionName: '', gotExperiments: null, memo: '' }
+            );
+        },
         removeHistoryItem(index) {
-            if (this.histories.length > 1) {
-                this.histories.splice(index, 1);
-            } else if (this.histories.length === 1 && this.hasHistoryContent(this.histories[index])) {
-                this.histories[index] = { sessionName: '', gotExperiments: null, memo: '' };
-            }
+            window.Utils.removeItem(
+                this.histories,
+                index,
+                { sessionName: '', gotExperiments: null, memo: '' },
+                this.hasHistoryContent
+            );
         },
         saveData() {
             this.dataManager.saveData(
@@ -209,86 +218,11 @@ const app = createApp({
             const cocofoliaCharacter = this.cocofoliaExporter.generateCocofoliaData(exportData);
 
             const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
-            this.copyToClipboard(textToCopy);
-        },
-
-        async copyToClipboard(text) {
-            if (!navigator.clipboard) {
-                this.fallbackCopyTextToClipboard(text);
-                return;
-            }
-
-            try {
-                await navigator.clipboard.writeText(text);
-                this.setOutputButtonSuccess();
-            } catch (err) {
-                console.error('Failed to copy: ', err);
-                this.fallbackCopyTextToClipboard(text);
-            }
-        },
-
-        setOutputButtonSuccess() {
-            this.outputButtonText = this.gameData.uiMessages.outputButton.success;
-            setTimeout(() => {
-                this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-            }, 3000);
-        },
-
-        fallbackCopyTextToClipboard(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.top = "0";
-            textArea.style.left = "0";
-            textArea.style.position = "fixed";
-            textArea.style.opacity = "0";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    this.outputButtonText = this.gameData.uiMessages.outputButton.successFallback;
-                    setTimeout(() => {
-                        this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-                    }, 3000);
-                } else {
-                    this.outputButtonText = this.gameData.uiMessages.outputButton.failed;
-                    setTimeout(() => {
-                        this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-                    }, 3000);
-                }
-            } catch (err) {
-                this.outputButtonText = this.gameData.uiMessages.outputButton.error;
-                setTimeout(() => {
-                    this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-                }, 3000);
-            }
-
-            document.body.removeChild(textArea);
+            window.Utils.copyToClipboard(textToCopy, this, this.gameData.uiMessages.outputButton);
         },
 
         showCustomAlert(message) {
-            const alertModalId = 'custom-alert-modal';
-            let modal = document.getElementById(alertModalId);
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = alertModalId;
-                modal.classList.add('custom-alert-modal'); // CSSクラスを追加
-
-                const messageP = document.createElement('p');
-                messageP.classList.add('custom-alert-message'); // CSSクラスを追加
-                modal.appendChild(messageP);
-
-                const closeButton = document.createElement('button');
-                closeButton.textContent = 'OK';
-                closeButton.classList.add('custom-alert-button'); // CSSクラスを追加
-                closeButton.onclick = () => modal.remove();
-                modal.appendChild(closeButton);
-                document.body.appendChild(modal);
-            }
-            modal.querySelector('p').textContent = message;
-            modal.style.display = 'block';
+            window.Utils.showCustomAlert(message);
         }
     },
     mounted() {
