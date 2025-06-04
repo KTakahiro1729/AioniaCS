@@ -269,26 +269,7 @@ const app = createApp({
         },
 
         showCustomAlert(message) {
-            const alertModalId = 'custom-alert-modal';
-            let modal = document.getElementById(alertModalId);
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = alertModalId;
-                modal.classList.add('custom-alert-modal'); // CSSクラスを追加
-
-                const messageP = document.createElement('p');
-                messageP.classList.add('custom-alert-message'); // CSSクラスを追加
-                modal.appendChild(messageP);
-
-                const closeButton = document.createElement('button');
-                closeButton.textContent = 'OK';
-                closeButton.classList.add('custom-alert-button'); // CSSクラスを追加
-                closeButton.onclick = () => modal.remove();
-                modal.appendChild(closeButton);
-                document.body.appendChild(modal);
-            }
-            modal.querySelector('p').textContent = message;
-            modal.style.display = 'block';
+            window.showCustomAlert(message);
         }
     },
     mounted() {
