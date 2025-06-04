@@ -26,22 +26,28 @@
                     <div class="character-image-container">
                         <div class="image-display-area">
                             <div class="image-display-wrapper" v-if="character.images && character.images.length > 0">
-                                <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" alt="Character Image" />
+                                <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display"
+                                    alt="Character Image" />
                                 <!-- If currentImageSrc is null but images exist, it implies a broken/missing image, img tag won't render. -->
-                                <button @click="previousImage" class="button-base image-nav-button prev-image-button" :disabled="character.images.length <= 1">&lt;</button>
-                                <button @click="nextImage" class="button-base image-nav-button next-image-button" :disabled="character.images.length <= 1">&gt;</button>
+                                <button @click="previousImage" class="button-base image-nav-button prev-image-button"
+                                    :disabled="character.images.length <= 1">&lt;</button>
+                                <button @click="nextImage" class="button-base image-nav-button next-image-button"
+                                    :disabled="character.images.length <= 1">&gt;</button>
                                 <div class="image-count-display"> <!-- Removed v-if, parent wrapper handles this -->
                                     {{ currentImageIndex + 1 }} / {{ character.images.length }}
                                 </div>
                             </div>
-                            <div class="character-image-placeholder" v-else> <!-- Shown when character.images is empty -->
+                            <div class="character-image-placeholder" v-else>
+                                <!-- Shown when character.images is empty -->
                                 No Image
                             </div>
                         </div>
                         <div class="image-controls">
-                            <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none;">
+                            <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*"
+                                style="display: none;">
                             <label for="character_image_upload" class="button-base button-upload">画像を追加</label>
-                            <button v-if="currentImageSrc" @click="removeCurrentImage" class="button-base button-remove">画像を削除</button>
+                            <button v-if="currentImageSrc" @click="removeCurrentImage"
+                                class="button-base button-remove">画像を削除</button>
                         </div>
                     </div>
                     <div class="info-row">
@@ -140,8 +146,8 @@
                                 <div class="flex-weakness-text"><input type="text" v-model="weakness.text" /></div>
                                 <div class="flex-weakness-acquired">
                                     <select v-model="weakness.acquired">
-                                        <option v-for="option in sessionNamesForWeaknessDropdown"
-                                            :key="option.value" :value="option.value" :disabled="option.disabled">
+                                        <option v-for="option in sessionNamesForWeaknessDropdown" :key="option.value"
+                                            :value="option.value" :disabled="option.disabled">
                                             {{ option.text }}
                                         </option>
                                     </select>
@@ -321,7 +327,8 @@
                         </li>
                     </ul>
                     <div class="add-button-container-left">
-                        <button type="button" class="button-base list-button list-button--add" @click="addHistoryItem()">＋</button>
+                        <button type="button" class="button-base list-button list-button--add"
+                            @click="addHistoryItem()">＋</button>
                     </div>
                 </div>
             </div>
@@ -336,19 +343,20 @@
         </div>
 
         <div class="main-footer">
-            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？
+            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false"
+                title="ヘルプ表示">？
             </div>
-            <div class="status-display-container">
-                <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
-                    maxExperiencePoints }} </div>
-                <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
-            </div>
+            <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
+                maxExperiencePoints }} </div>
+            <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
             <div class="button-base footer-button footer-button--save" @click="saveData"> データ保存 </div>
             <div class="button-base footer-button footer-button--load">
-                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
+                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip"
+                    class="hidden" />
                 <label for="load_input_vue">データ読込</label>
             </div>
-            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText }} </div>
+            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText
+                }} </div>
             <transition name="fade">
                 <div class="help-panel" v-if="showHelp" v-html="helpText"></div>
             </transition>

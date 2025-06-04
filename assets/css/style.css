@@ -318,8 +318,8 @@ textarea.greyed-out {
 .info-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 7px;
+    gap: 5px;
+    margin-bottom: 5px;
 }
 
 .info-row:last-child {
@@ -425,7 +425,7 @@ textarea.greyed-out {
    ========================================================================== */
 
 .weakness-list .list-item {
-    border-bottom: 1px solid var(--color-panel-dark);
+    border-bottom: 1px solid var(--color-panel-darker);
     padding: 5px 0;
     font-size: 0.9em;
 }
@@ -610,7 +610,7 @@ textarea.greyed-out {
     display: flex;
     flex-wrap: wrap;
     align-items: end;
-    gap: 10px;
+    gap: 8px;
 }
 
 .history-item-inputs>div {
@@ -693,12 +693,6 @@ textarea.greyed-out {
 }
 
 /* ステータス表示 */
-.status-display-container {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-shrink: 0;
-}
 
 .status-display {
     padding: 7px 14px;
@@ -928,7 +922,6 @@ textarea.greyed-out {
 
     .session-history .history-item-inputs {
         flex-flow: row nowrap;
-        gap: 10px;
     }
 
     .session-history .history-item-inputs>div {
@@ -951,7 +944,7 @@ textarea.greyed-out {
 
     .info-row {
         flex-direction: column;
-        gap: 12px;
+        /* gap: 1002px; */
     }
 
     .info-item,
