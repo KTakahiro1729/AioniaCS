@@ -1,4 +1,4 @@
-const { createApp, watch, nextTick } = Vue;
+const { createApp } = Vue;
 
 // Base character data copied from gameData with weaknesses initialized
 const baseChar = JSON.parse(JSON.stringify(window.AioniaGameData.defaultCharacterData));
@@ -252,7 +252,7 @@ const app = createApp({
                 } else {
                     this.flashOutputButtonMessage('failed');
                 }
-            } catch (err) {
+            } catch {
                 this.flashOutputButtonMessage('error');
             }
 

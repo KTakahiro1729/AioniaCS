@@ -1,3 +1,5 @@
+const vue = require('eslint-plugin-vue');
+
 module.exports = [
   {
     files: ['**/*.js'],
@@ -9,6 +11,12 @@ module.exports = [
       ecmaVersion: 'latest',
       sourceType: 'script'
     },
-    rules: {}
+    plugins: {
+      vue
+    },
+    rules: {
+      semi: ['error', 'always'],
+      'no-unused-vars': ['error', { args: 'none' }]
+    }
   }
 ];

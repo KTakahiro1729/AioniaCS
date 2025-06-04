@@ -8,12 +8,13 @@
     --color-accent: #c09a69;
     --color-background-dark: #1a1a1a;
     --color-panel-dark: #3a3a3a;
-    --color-panel-medium: #333333;
+    --color-panel-medium: #333;
     --color-background-panel: #242424;
     --color-border: #555;
     --color-border-light: #444;
     --color-text-light: #d1d1d1;
 }
+
 body {
     font-family: 'Noto Sans JP', sans-serif;
     margin: 0;
@@ -21,6 +22,7 @@ body {
     color: var(--color-text-light);
     line-height: 1.7;
     padding-bottom: 72px;
+
     /* 固定フッター分の余白 */
 }
 
@@ -41,7 +43,7 @@ body {
     font-size: 2.2em;
     font-weight: 700;
     color: var(--color-accent);
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%);
 }
 
 /* Vueトランジション */
@@ -124,7 +126,7 @@ body {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     background-color: var(--color-background-panel);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
     overflow-x: hidden;
 }
 
@@ -195,7 +197,7 @@ select:focus,
 textarea:focus {
     border-color: var(--color-accent);
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(192, 154, 105, 0.25);
+    box-shadow: 0 0 0 0.2rem rgb(192 154 105 / 25%);
 }
 
 select {
@@ -215,7 +217,7 @@ input.greyed-out,
 select.greyed-out,
 textarea.greyed-out {
     background-color: #383838;
-    color: #888888;
+    color: #888;
 }
 
 /* ==========================================================================
@@ -569,7 +571,7 @@ textarea.greyed-out {
 }
 
 .add-button-container-left {
-    margin-top: 0px;
+    margin-top: 0;
 }
 
 /* ==========================================================================
@@ -603,7 +605,7 @@ textarea.greyed-out {
 }
 
 .history-labels-header .delete-button-wrapper {
-    height: 0px;
+    height: 0;
 }
 
 .flex-history-name {
@@ -635,7 +637,7 @@ textarea.greyed-out {
     left: 0;
     width: 100%;
     z-index: 100;
-    box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 15px;
@@ -678,7 +680,7 @@ textarea.greyed-out {
     display: inline-block;
     border-width: 2px;
     border-style: solid;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3) inset;
+    box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset;
     white-space: nowrap;
 }
 
@@ -715,7 +717,7 @@ textarea.greyed-out {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     flex-shrink: 0;
 }
@@ -733,7 +735,7 @@ textarea.greyed-out {
     text-align: center;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     border: 1px solid;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -762,9 +764,6 @@ textarea.greyed-out {
     width: 175px;
 }
 
-.footer-button--load>label {
-    margin: 0;
-}
 
 .footer-button--save:hover,
 .footer-button--load:hover,
@@ -797,13 +796,14 @@ textarea.greyed-out {
 .help-panel {
     position: fixed;
     bottom: 92px;
+
     /* フッター高さ + 余白 */
     left: 20px;
     background-color: #282828;
     border: 1px solid var(--color-border-light);
     padding: 20px;
     border-radius: 4px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
     z-index: 1000;
     max-width: 90%;
     width: 420px;
@@ -875,15 +875,16 @@ textarea.greyed-out {
     padding: 20px;
     border: 1px solid var(--color-border);
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgb(0 0 0 / 50%);
     z-index: 2000;
     white-space: pre-wrap;
     display: none;
+
     /* 初期状態では非表示 */
 }
 
 .custom-alert-modal p {
-    margin: 0 0 15px 0;
+    margin: 0 0 15px;
 }
 
 .custom-alert-modal button {
@@ -899,7 +900,7 @@ textarea.greyed-out {
    レスポンシブデザイン
    ========================================================================== */
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
     .main-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
@@ -914,8 +915,7 @@ textarea.greyed-out {
     }
 
     .session-history .history-item-inputs {
-        flex-direction: row;
-        flex-wrap: nowrap;
+        flex-flow: row nowrap;
         gap: 10px;
     }
 
@@ -955,7 +955,7 @@ textarea.greyed-out {
     }
 }
 
-@media (max-width: 480px) {
+@media (width <= 480px) {
     .tool-title {
         font-size: 1.8em;
     }
