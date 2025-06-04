@@ -1,0 +1,19 @@
+{
+  "name": "aioniacs",
+  "version": "1.0.0",
+  "description": "慈悲なきアイオニアのための非公式キャラクターシート作成ツールです",
+  "main": "main.js",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "jest",
+    "e2e": "echo \"No e2e tests yet\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "eslint": "^9.28.0",
+    "jest": "^29.7.0"
+  }
+}
