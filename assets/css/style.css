@@ -35,8 +35,10 @@
     --color-link-hover: #bbb;
 
     /* Typography */
-    --color-label-text: #b0b0b0; /* Used for form labels */
-    --color-muted-text: #a0a0a0; /* Used for subdued text */
+    --color-label-text: #b0b0b0;
+    /* Used for form labels */
+    --color-muted-text: #a0a0a0;
+    /* Used for subdued text */
 }
 
 body {
@@ -67,7 +69,7 @@ body {
     font-size: 2.2em;
     font-weight: 700;
     color: var(--color-accent);
-    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%); 
+    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%);
 }
 
 /* Vueトランジション */
@@ -180,7 +182,6 @@ body {
 
 /* ラベル */
 label {
-    margin-right: 10px;
     font-weight: 700;
     font-size: 0.95em;
     color: var(--color-label-text);
@@ -985,11 +986,14 @@ textarea.greyed-out {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 15px; /* Increased margin a bit for better separation */
-    padding: 0; /* Changed padding to 0 */
+    margin-bottom: 15px;
+    /* Increased margin a bit for better separation */
+    padding: 0;
+    /* Changed padding to 0 */
     border: 1px solid var(--color-border-light);
     border-radius: 3px;
-    background-color: var(--color-input-bg); /* Similar to input backgrounds */
+    background-color: var(--color-input-bg);
+    /* Similar to input backgrounds */
 }
 
 .image-display-area {
@@ -997,25 +1001,34 @@ textarea.greyed-out {
     align-items: center;
     justify-content: center;
     margin-bottom: 0;
-    width: 100%; /* Ensure it takes full width for image centering */
-    height: 300px; /* Consistent height for the area */
-    background-color: var(--color-background-dark); /* Background for the whole area */
-    border: 1px solid var(--color-border); /* Border for the whole area */
-    border-radius: 2px; /* Consistent rounding */
+    width: 100%;
+    /* Ensure it takes full width for image centering */
+    height: 300px;
+    /* Consistent height for the area */
+    background-color: var(--color-background-dark);
+    /* Background for the whole area */
+    border: 1px solid var(--color-border);
+    /* Border for the whole area */
+    border-radius: 2px;
+    /* Consistent rounding */
 }
 
 .character-image-container img.character-image-display {
     max-width: 100%;
-    max-height: 100%; /* Fill the parent's 300px height */
-    height: auto; /* Maintain aspect ratio */
-    object-fit: contain; /* Ensure entire image is visible */
+    max-height: 100%;
+    /* Fill the parent's 300px height */
+    height: auto;
+    /* Maintain aspect ratio */
+    object-fit: contain;
+    /* Ensure entire image is visible */
 
     /* Border and background moved to .image-display-area */
 }
 
 .character-image-placeholder {
     width: 100%;
-    height: 100%; /* Fill the parent's 300px height */
+    height: 100%;
+    /* Fill the parent's 300px height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1029,15 +1042,18 @@ textarea.greyed-out {
 .image-display-wrapper {
     position: relative;
     width: 100%;
-    height: 100%; /* Takes height from .image-display-area */
-    display: flex; /* To center the image if it's smaller than the area */
+    height: 100%;
+    /* Takes height from .image-display-area */
+    display: flex;
+    /* To center the image if it's smaller than the area */
     align-items: center;
     justify-content: center;
 }
 
 /* Ensure image itself doesn't prevent wrapper from shrinking if needed, although object-fit:contain helps */
 .image-display-wrapper .character-image-display {
-    display: block; /* remove extra space below if it were inline */
+    display: block;
+    /* remove extra space below if it were inline */
 }
 
 .image-display-wrapper:hover .image-nav-button:not(:disabled),
@@ -1051,9 +1067,12 @@ textarea.greyed-out {
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
-    background-color: grey; /* New background color */
-    color: gold; /* New text/arrow color */
-    border: none; /* Explicitly no border */
+    background-color: grey;
+    /* New background color */
+    color: gold;
+    /* New text/arrow color */
+    border: none;
+    /* Explicitly no border */
     padding: 6px 10px;
     font-size: 1.2em;
     line-height: 1;
@@ -1061,8 +1080,10 @@ textarea.greyed-out {
     height: auto;
     font-weight: bold;
     border-radius: 4px;
-    opacity: 0.3; /* Initial transparency */
-    transition: opacity 0.3s ease; /* Transition for hover effect */
+    opacity: 0.3;
+    /* Initial transparency */
+    transition: opacity 0.3s ease;
+    /* Transition for hover effect */
 }
 
 .image-nav-button.prev-image-button {
@@ -1075,7 +1096,8 @@ textarea.greyed-out {
 
 .image-nav-button:disabled {
     /* Let new base colors show through, just adjust opacity */
-    opacity: 0.2; /* Or 0.3 if preferred to match initial non-hovered enabled state */
+    opacity: 0.2;
+    /* Or 0.3 if preferred to match initial non-hovered enabled state */
     cursor: default;
 
     /* background-color and color will be inherited from .image-nav-button (grey, gold) */
@@ -1104,8 +1126,10 @@ textarea.greyed-out {
     padding: 3px 8px;
     font-size: 0.9em;
     border-radius: 3px;
-    opacity: 0.3; /* Initial transparency */
-    transition: opacity 0.3s ease; /* Transition for hover effect */
+    opacity: 0.3;
+    /* Initial transparency */
+    transition: opacity 0.3s ease;
+    /* Transition for hover effect */
 
     /* margin-bottom removed as it's absolutely positioned */
 }
@@ -1114,31 +1138,43 @@ textarea.greyed-out {
     display: flex;
     gap: 10px;
     align-items: center;
-    flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
+    flex-wrap: wrap;
+    /* Allow controls to wrap on smaller screens */
     justify-content: center;
     padding: 10px 0;
 }
 
-.image-controls .button-base { /* General styling for buttons in this context */
-    padding: 8px 15px; /* Adjusted padding for better touch target & visual balance */
+.image-controls .button-base {
+    /* General styling for buttons in this context */
+    padding: 8px 15px;
+    /* Adjusted padding for better touch target & visual balance */
     font-size: 0.9em;
-    font-weight: 600; /* Slightly bolder for action buttons */
-    min-height: 36px; /* Ensure a decent minimum height */
-    min-width: 130px; /* Standardized minimum width */
-    text-align: center; /* Center text within the button */
-    box-sizing: border-box; /* Ensure padding/border are included in width */
+    font-weight: 600;
+    /* Slightly bolder for action buttons */
+    min-height: 36px;
+    /* Ensure a decent minimum height */
+    min-width: 130px;
+    /* Standardized minimum width */
+    text-align: center;
+    /* Center text within the button */
+    box-sizing: border-box;
+    /* Ensure padding/border are included in width */
 }
 
-.image-controls .button-upload { /* Specific for upload label if needed */
-    background-color: var(--color-footer-button-bg); /* Using footer button colors */
+.image-controls .button-upload {
+    /* Specific for upload label if needed */
+    background-color: var(--color-footer-button-bg);
+    /* Using footer button colors */
     color: var(--color-footer-button-text);
     border-color: var(--color-footer-button-border);
 }
 
-.image-controls .button-upload:hover:not(:disabled) { /* Ensure hover applies only when not disabled */
+.image-controls .button-upload:hover:not(:disabled) {
+    /* Ensure hover applies only when not disabled */
     background-color: var(--color-footer-button-hover-bg);
     border-color: var(--color-footer-button-hover-border);
-    color: var(--color-footer-button-hover-text); /* Added text color on hover */
+    color: var(--color-footer-button-hover-text);
+    /* Added text color on hover */
 }
 
 /* Disabled state for upload button (if not covered by general .button-base:disabled) */
@@ -1150,15 +1186,19 @@ textarea.greyed-out {
 }
 
 
-.image-controls .button-remove { /* Specific for remove button */
+.image-controls .button-remove {
+    /* Specific for remove button */
     background-color: var(--color-delete-hover-bg);
     color: var(--color-delete-hover-text);
     border-color: var(--color-delete-text);
 }
 
-.image-controls .button-remove:hover:not(:disabled) { /* Ensure hover applies only when not disabled */
-    background-color: var(--color-delete-hover-bg); /* Keep same background */
-    opacity: 0.8; /* Slightly dim on hover for feedback */
+.image-controls .button-remove:hover:not(:disabled) {
+    /* Ensure hover applies only when not disabled */
+    background-color: var(--color-delete-hover-bg);
+    /* Keep same background */
+    opacity: 0.8;
+    /* Slightly dim on hover for feedback */
 }
 
 /* Disabled state for remove button (if not covered by general .button-base:disabled) */
@@ -1166,6 +1206,7 @@ textarea.greyed-out {
     background-color: var(--color-button-disabled-bg);
     color: var(--color-button-disabled-text);
     border-color: var(--color-border-light);
-    opacity: 0.5; /* General opacity for disabled state */
+    opacity: 0.5;
+    /* General opacity for disabled state */
     cursor: not-allowed;
 }
