@@ -3,6 +3,17 @@
    ========================================================================== */
 
 /* リセットとベーススタイル */
+
+:root {
+    --space-xs: 4px;
+    --space-sm: 5px;
+    --space-md: 6px;
+    --space-lg: 8px;
+    --space-xl: 12px;
+    --space-xxl: 15px;
+    --space-xxxl: 25px;
+}
+
 body {
     font-family: 'Noto Sans JP', sans-serif;
     margin: 0;
@@ -234,34 +245,30 @@ textarea.greyed-out {
     flex: 2;
 }
 
-/* マージン */
-.mb-25 {
-    margin-bottom: 25px;
-}
+/* Spacing utilities */
+.mb-xs { margin-bottom: var(--space-xs); }
+.mb-sm { margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+.mb-xl { margin-bottom: var(--space-xl); }
+.mb-xxl { margin-bottom: var(--space-xxl); }
+.mb-xxxl { margin-bottom: var(--space-xxxl); }
 
-.mb-15 {
-    margin-bottom: 15px;
-}
+.mt-xs { margin-top: var(--space-xs); }
+.mt-sm { margin-top: var(--space-sm); }
+.mt-md { margin-top: var(--space-md); }
+.mt-lg { margin-top: var(--space-lg); }
+.mt-xl { margin-top: var(--space-xl); }
+.mt-xxl { margin-top: var(--space-xxl); }
+.mt-xxxl { margin-top: var(--space-xxxl); }
 
-.mb-12 {
-    margin-bottom: 12px;
-}
-
-.mb-5 {
-    margin-bottom: 5px;
-}
-
-.mt-6 {
-    margin-top: 6px;
-}
-
-.mr-8 {
-    margin-right: 8px;
-}
-
-.mr-4 {
-    margin-right: 4px;
-}
+.mr-xs { margin-right: var(--space-xs); }
+.mr-sm { margin-right: var(--space-sm); }
+.mr-md { margin-right: var(--space-md); }
+.mr-lg { margin-right: var(--space-lg); }
+.mr-xl { margin-right: var(--space-xl); }
+.mr-xxl { margin-right: var(--space-xxl); }
+.mr-xxxl { margin-right: var(--space-xxxl); }
 
 /* 表示制御 */
 .block-label {
