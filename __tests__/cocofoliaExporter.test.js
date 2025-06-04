@@ -52,7 +52,7 @@ describe('CocofoliaExporter', () => {
 
   test('generateCocofoliaData returns object with memo and commands', () => {
     const data = {
-      character: { name: 'Alice', currentScar: 0, memo: '', weaknesses: [], otherItems: '' },
+      character: { name: 'ミーアナック', currentScar: 0, memo: '', weaknesses: [], otherItems: '' },
       skills: [],
       specialSkills: [],
       equipments: { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' } },
