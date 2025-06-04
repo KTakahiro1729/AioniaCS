@@ -98,9 +98,9 @@ class DataManager {
       skills: [],
       specialSkills: [],
       equipments: {
-        weapon1: { group: '', name: '' },
-        weapon2: { group: '', name: '' },
-        armor: { group: '', name: '' }
+        weapon1: createEquipment(),
+        weapon2: createEquipment(),
+        armor: createEquipment()
       },
       histories: []
     };
@@ -215,43 +215,44 @@ class DataManager {
     if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
       internalData.specialSkills = externalData.special_skills
         .filter(ss => ss.group && ss.name)
-        .map(ss => ({
-          group: ss.group || '',
-          name: ss.name || '',
-          note: ss.note || '',
-          showNote: this.gameData.specialSkillsRequiringNote.includes(ss.name || '')
-        }));
+        .map(ss => {
+          const newSS = createSpecialSkill();
+          newSS.group = ss.group || '';
+          newSS.name = ss.name || '';
+          newSS.note = ss.note || '';
+          newSS.showNote = this.gameData.specialSkillsRequiringNote.includes(ss.name || '');
+          return newSS;
+        });
     }
   }
 
   _convertEquipmentData(externalData, internalData) {
     if (externalData.weapon1_type || externalData.weapon1_name) {
-      internalData.equipments.weapon1 = {
-        group: externalData.weapon1_type || '',
-        name: externalData.weapon1_name || ''
-      };
+      internalData.equipments.weapon1 = createEquipment();
+      internalData.equipments.weapon1.group = externalData.weapon1_type || '';
+      internalData.equipments.weapon1.name = externalData.weapon1_name || '';
     }
     if (externalData.weapon2_type || externalData.weapon2_name) {
-      internalData.equipments.weapon2 = {
-        group: externalData.weapon2_type || '',
-        name: externalData.weapon2_name || ''
-      };
+      internalData.equipments.weapon2 = createEquipment();
+      internalData.equipments.weapon2.group = externalData.weapon2_type || '';
+      internalData.equipments.weapon2.name = externalData.weapon2_name || '';
     }
     if (externalData.armor_type || externalData.armor_name) {
-      internalData.equipments.armor = {
-        group: externalData.armor_type || '',
-        name: externalData.armor_name || ''
-      };
+      internalData.equipments.armor = createEquipment();
+      internalData.equipments.armor.group = externalData.armor_type || '';
+      internalData.equipments.armor.name = externalData.armor_name || '';
     }
   }
 
   _convertHistoryData(externalData, internalData) {
     if (externalData.history && Array.isArray(externalData.history)) {
-      internalData.histories = externalData.history.map(h => ({
-        sessionName: h.name || '',
-        gotExperiments: h.experiments ? parseInt(h.experiments) : null,
-        memo: h.stress || h.memo || ''
-      }));
+      internalData.histories = externalData.history.map(h => {
+        const item = createHistoryItem();
+        item.sessionName = h.name || '';
+        item.gotExperiments = h.experiments ? parseInt(h.experiments) : null;
+        item.memo = h.stress || h.memo || '';
+        return item;
+      });
     }
   }
 
@@ -324,19 +325,14 @@ class DataManager {
     for (let i = 0; i < targetLength; i++) {
       if (specialSkillsData && i < specialSkillsData.length) {
         const loadedSS = specialSkillsData[i];
-        normalizedSpecialSkills.push({
-          group: loadedSS.group || '',
-          name: loadedSS.name || '',
-          note: loadedSS.note || '',
-          showNote: this.gameData.specialSkillsRequiringNote.includes(loadedSS.name || '')
-        });
+        const ss = createSpecialSkill();
+        ss.group = loadedSS.group || '';
+        ss.name = loadedSS.name || '';
+        ss.note = loadedSS.note || '';
+        ss.showNote = this.gameData.specialSkillsRequiringNote.includes(loadedSS.name || '');
+        normalizedSpecialSkills.push(ss);
       } else {
-        normalizedSpecialSkills.push({
-          group: '',
-          name: '',
-          note: '',
-          showNote: false
-        });
+        normalizedSpecialSkills.push(createSpecialSkill());
       }
     }
 
@@ -346,31 +342,33 @@ class DataManager {
   _normalizeEquipmentData(equipmentData) {
     if (equipmentData) {
       return {
-        weapon1: { group: '', name: '', ...(equipmentData.weapon1 || {}) },
-        weapon2: { group: '', name: '', ...(equipmentData.weapon2 || {}) },
-        armor: { group: '', name: '', ...(equipmentData.armor || {}) }
+        weapon1: { ...createEquipment(), ...(equipmentData.weapon1 || {}) },
+        weapon2: { ...createEquipment(), ...(equipmentData.weapon2 || {}) },
+        armor: { ...createEquipment(), ...(equipmentData.armor || {}) }
       };
     }
 
     return {
-      weapon1: { group: '', name: '' },
-      weapon2: { group: '', name: '' },
-      armor: { group: '', name: '' }
+      weapon1: createEquipment(),
+      weapon2: createEquipment(),
+      armor: createEquipment()
     };
   }
 
   _normalizeHistoryData(historyData) {
     if (historyData && historyData.length > 0) {
-      return historyData.map(h => ({
-        sessionName: h.sessionName || '',
-        gotExperiments: (h.gotExperiments === null || h.gotExperiments === undefined || h.gotExperiments === '')
+      return historyData.map(h => {
+        const item = createHistoryItem();
+        item.sessionName = h.sessionName || '';
+        item.gotExperiments = (h.gotExperiments === null || h.gotExperiments === undefined || h.gotExperiments === '')
           ? null
-          : Number(h.gotExperiments),
-        memo: h.memo || ''
-      }));
+          : Number(h.gotExperiments);
+        item.memo = h.memo || '';
+        return item;
+      });
     }
 
-    return [{ sessionName: '', gotExperiments: null, memo: '' }];
+    return [createHistoryItem()];
   }
 }
 

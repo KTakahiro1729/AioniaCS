@@ -20,14 +20,14 @@ const app = createApp({
             skills: JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills)),
             externalSkillOrder: window.AioniaGameData.externalSkillOrder,
             initialSpecialSkillCount: window.AioniaGameData.config.initialSpecialSkillCount,
-            specialSkills: Array(window.AioniaGameData.config.initialSpecialSkillCount).fill(null).map(() => ({ group: '', name: '', note: '', showNote: false })),
+            specialSkills: Array(window.AioniaGameData.config.initialSpecialSkillCount).fill(null).map(() => createSpecialSkill()),
             equipments: {
-                weapon1: { group: '', name: '' },
-                weapon2: { group: '', name: '' },
-                armor: { group: '', name: '' },
+                weapon1: createEquipment(),
+                weapon2: createEquipment(),
+                armor: createEquipment(),
             },
             histories: [
-                { sessionName: '', gotExperiments: null, memo: '' }
+                createHistoryItem()
             ],
             showHelp: false,
             helpText: window.AioniaGameData.helpText,
@@ -114,14 +114,14 @@ const app = createApp({
 
         addSpecialSkillItem() {
             if (this.specialSkills.length < this.gameData.config.maxSpecialSkills) {
-                this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
+                this.specialSkills.push(createSpecialSkill());
             }
         },
         removeSpecialSkill(index) {
             if (this.specialSkills.length > 1) {
                 this.specialSkills.splice(index, 1);
             } else if (this.specialSkills.length === 1 && this.hasSpecialSkillContent(this.specialSkills[index])) {
-                this.specialSkills[index] = { group: '', name: '', note: '', showNote: false };
+                this.specialSkills[index] = createSpecialSkill();
             }
         },
         expertPlaceholder(skill) {
@@ -132,7 +132,7 @@ const app = createApp({
                 this.character.rareSpecies = '';
             }
         },
-        addExpert(skill) { if (skill.canHaveExperts) { skill.experts.push({ value: '' }); } },
+        addExpert(skill) { if (skill.canHaveExperts) { skill.experts.push(createExpert()); } },
         removeExpert(skill, expertIndex) {
             if (skill.experts.length > 1) {
                 skill.experts.splice(expertIndex, 1);
@@ -159,12 +159,12 @@ const app = createApp({
                 this.specialSkills[index].showNote = this.gameData.specialSkillsRequiringNote.includes(skillName);
             }
         },
-        addHistoryItem() { this.histories.push({ sessionName: '', gotExperiments: null, memo: '' }); },
+        addHistoryItem() { this.histories.push(createHistoryItem()); },
         removeHistoryItem(index) {
             if (this.histories.length > 1) {
                 this.histories.splice(index, 1);
             } else if (this.histories.length === 1 && this.hasHistoryContent(this.histories[index])) {
-                this.histories[index] = { sessionName: '', gotExperiments: null, memo: '' };
+                this.histories[index] = createHistoryItem();
             }
         },
         saveData() {

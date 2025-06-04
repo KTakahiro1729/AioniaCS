@@ -1,4 +1,26 @@
 // Aionia RPG ゲームデータ
+
+// オブジェクト生成用ユーティリティ
+function createSpecialSkill() {
+  return { group: '', name: '', note: '', showNote: false };
+}
+
+function createHistoryItem() {
+  return { sessionName: '', gotExperiments: null, memo: '' };
+}
+
+function createEquipment() {
+  return { group: '', name: '' };
+}
+
+function createExpert() {
+  return { value: '' };
+}
+
+window.createSpecialSkill = createSpecialSkill;
+window.createHistoryItem = createHistoryItem;
+window.createEquipment = createEquipment;
+window.createExpert = createExpert;
 window.AioniaGameData = {
   // 特技データ
   specialSkillData: {
