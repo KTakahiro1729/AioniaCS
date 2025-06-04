@@ -13,6 +13,31 @@
     --color-border: #555;
     --color-border-light: #444;
     --color-text-light: #d1d1d1;
+    --color-input-bg: #2c2c2c;
+    --color-input-disabled-bg: #383838;
+    --color-input-disabled-text: #888888;
+    --color-sub-box-title-bg: #2e2e2e;
+    --color-border-darker: #4a4a4a;
+    --color-button-disabled-bg: #2a2a2a;
+    --color-button-disabled-text: #666;
+    --color-button-hover: #4a4a4a;
+    --color-delete-text: #8c5353;
+    --color-delete-border: #5c3939;
+    --color-delete-hover-bg: #4a3a3a;
+    --color-delete-hover-text: #a86f6f;
+    --color-footer-bg: #1f1f1f;
+    --color-footer-button-bg: #3a434d;
+    --color-footer-button-text: #b0c4de;
+    --color-footer-button-border: #647687;
+    --color-footer-button-hover-bg: #454f5a;
+    --color-footer-button-hover-border: #8298ad;
+    --color-footer-button-hover-text: #c8d4e2;
+    --color-help-panel-bg: #282828;
+    --color-help-panel-text: #c5c5c5;
+    --color-footer-text-muted: #777;
+    --color-link: #999;
+    --color-link-hover: #bbb;
+    --color-footer-copyright-bg: #161616;
 }
 body {
     font-family: 'Noto Sans JP', sans-serif;
@@ -131,8 +156,8 @@ body {
 /* サブボックス */
 .sub-box-title {
     font-size: 1em;
-    background-color: #2e2e2e;
-    border-bottom: 1px solid #4a4a4a;
+    background-color: var(--color-sub-box-title-bg);
+    border-bottom: 1px solid var(--color-border-darker);
     padding: 10px 18px;
     margin-left: -18px;
     margin-right: -18px;
@@ -179,7 +204,7 @@ textarea {
     box-sizing: border-box;
     width: 100%;
     font-size: 0.95em;
-    background-color: #2c2c2c;
+    background-color: var(--color-input-bg);
     color: var(--color-text-light);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
@@ -214,8 +239,8 @@ input[type="checkbox"] {
 input.greyed-out,
 select.greyed-out,
 textarea.greyed-out {
-    background-color: #383838;
-    color: #888888;
+    background-color: var(--color-input-disabled-bg);
+    color: var(--color-input-disabled-text);
 }
 
 /* ==========================================================================
@@ -405,7 +430,7 @@ textarea.greyed-out {
 
 .weakness-labels-header {
     color: #aaa;
-    border-bottom: 1px solid #4a4a4a;
+    border-bottom: 1px solid var(--color-border-darker);
     margin-bottom: 5px;
 }
 
@@ -433,7 +458,7 @@ textarea.greyed-out {
 }
 
 .flex-weakness-acquired option[disabled] {
-    color: #777;
+    color: var(--color-footer-text-muted);
     font-style: italic;
 }
 
@@ -461,9 +486,9 @@ textarea.greyed-out {
 .skills-list>li {
     margin-bottom: 8px;
     padding: 10px;
-    border: 1px solid #383838;
+    border: 1px solid var(--color-input-disabled-bg);
     border-radius: 3px;
-    background-color: #2c2c2c;
+    background-color: var(--color-input-bg);
 }
 
 .skills-list>li .skill-header {
@@ -515,6 +540,17 @@ textarea.greyed-out {
    ボタンコンポーネント
    ========================================================================== */
 
+.button-base {
+    cursor: pointer;
+    border-radius: 3px;
+    border: 1px solid var(--color-border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
+}
+
 .delete-button-wrapper {
     width: 30px;
     height: 30px;
@@ -525,47 +561,40 @@ textarea.greyed-out {
 }
 
 .list-button {
-    cursor: pointer;
     padding: 0;
-    border-radius: 3px;
     user-select: none;
     font-size: 1.2em;
     font-weight: bold;
-    border: 1px solid var(--color-border);
     width: 30px;
     height: 30px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     line-height: 1;
     background-color: var(--color-panel-dark);
     color: var(--color-accent);
-    flex-shrink: 0;
 }
 
 .list-button:disabled {
     cursor: not-allowed;
     opacity: 0.4;
-    background-color: #2a2a2a;
-    color: #666;
+    background-color: var(--color-button-disabled-bg);
+    color: var(--color-button-disabled-text);
     border-color: var(--color-border-light);
 }
 
 .list-button--add:hover:not(:disabled) {
-    background-color: #4a4a4a;
+    background-color: var(--color-button-hover);
     border-color: var(--color-accent);
 }
 
 .list-button--delete {
-    color: #8c5353;
-    border-color: #5c3939;
+    color: var(--color-delete-text);
+    border-color: var(--color-delete-border);
 }
 
 .list-button--delete:hover:not(:disabled) {
-    background-color: #4a3a3a;
-    border-color: #8c5353;
-    color: #a86f6f;
+    background-color: var(--color-delete-hover-bg);
+    border-color: var(--color-delete-text);
+    color: var(--color-delete-hover-text);
 }
 
 .add-button-container-left {
@@ -598,7 +627,7 @@ textarea.greyed-out {
 .history-labels-header {
     padding-top: 0;
     padding-bottom: 0;
-    border-bottom: 1px solid #4a4a4a;
+    border-bottom: 1px solid var(--color-border-darker);
     margin-bottom: 5px;
 }
 
@@ -628,7 +657,7 @@ textarea.greyed-out {
     align-items: center;
     padding: 15px 25px;
     border-top: 1px solid var(--color-border);
-    background-color: #1f1f1f;
+    background-color: var(--color-footer-bg);
     box-sizing: border-box;
     position: fixed;
     bottom: 0;
@@ -641,7 +670,7 @@ textarea.greyed-out {
     gap: 15px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: var(--color-border) #1f1f1f;
+    scrollbar-color: var(--color-border) var(--color-footer-bg);
 }
 
 .main-footer::-webkit-scrollbar {
@@ -649,7 +678,7 @@ textarea.greyed-out {
 }
 
 .main-footer::-webkit-scrollbar-track {
-    background: #1f1f1f;
+    background: var(--color-footer-bg);
     border-radius: 4px;
 }
 
@@ -659,7 +688,7 @@ textarea.greyed-out {
 }
 
 .main-footer::-webkit-scrollbar-thumb:hover {
-    background: #777;
+    background: var(--color-footer-text-muted);
 }
 
 /* ステータス表示 */
@@ -705,19 +734,12 @@ textarea.greyed-out {
     cursor: help;
     height: 48px;
     padding: 0 14px;
-    border-radius: 3px;
     font-size: 1.1em;
     font-weight: bold;
-    border: 1px solid var(--color-border);
     background-color: var(--color-panel-dark);
     color: var(--color-accent);
     min-height: 42px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    flex-shrink: 0;
 }
 
 .footer-help-icon:hover {
@@ -725,30 +747,22 @@ textarea.greyed-out {
 }
 
 .footer-button {
-    cursor: pointer;
     padding: 10px 18px;
-    border-radius: 3px;
     font-size: 0.95em;
     font-weight: 700;
     text-align: center;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    border: 1px solid;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     min-height: 42px;
     box-sizing: border-box;
     white-space: nowrap;
-    flex-shrink: 0;
 }
 
 .footer-button--save,
 .footer-button--load,
 .footer-button--output {
-    background-color: #3a434d;
-    color: #b0c4de;
-    border-color: #647687;
+    background-color: var(--color-footer-button-bg);
+    color: var(--color-footer-button-text);
+    border-color: var(--color-footer-button-border);
 }
 
 .footer-button--save,
@@ -769,9 +783,9 @@ textarea.greyed-out {
 .footer-button--save:hover,
 .footer-button--load:hover,
 .footer-button--output:hover {
-    background-color: #454f5a;
-    border-color: #8298ad;
-    color: #c8d4e2;
+    background-color: var(--color-footer-button-hover-bg);
+    border-color: var(--color-footer-button-hover-border);
+    color: var(--color-footer-button-hover-text);
 }
 
 .footer-button--load {
@@ -799,7 +813,7 @@ textarea.greyed-out {
     bottom: 92px;
     /* フッター高さ + 余白 */
     left: 20px;
-    background-color: #282828;
+    background-color: var(--color-help-panel-bg);
     border: 1px solid var(--color-border-light);
     padding: 20px;
     border-radius: 4px;
@@ -808,7 +822,7 @@ textarea.greyed-out {
     max-width: 90%;
     width: 420px;
     font-size: 0.9em;
-    color: #c5c5c5;
+    color: var(--color-help-panel-text);
 }
 
 .help-panel h4 {
@@ -842,8 +856,8 @@ textarea.greyed-out {
     text-align: center;
     padding: 15px;
     font-size: 0.8em;
-    color: #777;
-    background-color: #161616;
+    color: var(--color-footer-text-muted);
+    background-color: var(--color-footer-copyright-bg);
     border-top: 1px solid var(--color-panel-medium);
     margin-top: 25px;
     box-sizing: border-box;
@@ -854,12 +868,12 @@ textarea.greyed-out {
 }
 
 .copyright-footer a {
-    color: #999;
+    color: var(--color-link);
     text-decoration: underline;
 }
 
 .copyright-footer a:hover {
-    color: #bbb;
+    color: var(--color-link-hover);
 }
 
 /* ==========================================================================
