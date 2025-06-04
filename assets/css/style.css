@@ -978,3 +978,131 @@ textarea.greyed-out {
         min-width: 100px;
     }
 }
+
+/* ==========================================================================
+   キャラクター画像表示
+   ========================================================================== */
+
+.character-image-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px; /* Increased margin a bit for better separation */
+    padding: 10px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 3px;
+    background-color: var(--color-input-bg); /* Similar to input backgrounds */
+}
+
+.image-display-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    width: 100%; /* Ensure it takes full width for image centering */
+}
+
+.character-image-container img.character-image-display {
+    max-width: 100%;
+    max-height: 300px; /* Max height for the image */
+    height: auto; /* Maintain aspect ratio */
+    object-fit: contain; /* Ensure entire image is visible */
+    border: 1px solid var(--color-border);
+    border-radius: 2px;
+    background-color: var(--color-background-dark); /* Dark background for transparent images */
+}
+
+.character-image-placeholder {
+    width: 100%;
+    height: 150px; /* Placeholder height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-input-disabled-text);
+    border: 1px dashed var(--color-border);
+    border-radius: 2px;
+    background-color: var(--color-background-dark);
+}
+
+.image-nav-button {
+    padding: 4px 8px; /* Reduced padding */
+    font-size: 1.2em; /* Reduced font size */
+    line-height: 1;
+    margin: 0 8px; /* Slightly reduced margin */
+    background-color: var(--color-panel-dark);
+    color: var(--color-accent);
+    border: 1px solid var(--color-border);
+    min-width: 28px; /* Adjusted min-width */
+    height: 28px; /* Explicit height to make it more square-like */
+    font-weight: bold;
+}
+.image-nav-button:disabled {
+    background-color: var(--color-button-disabled-bg);
+    color: var(--color-button-disabled-text);
+    border-color: var(--color-border-light);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+.image-nav-button:hover:not(:disabled) {
+    background-color: var(--color-button-hover);
+    border-color: var(--color-accent);
+}
+
+
+.image-count-display {
+    font-size: 0.9em;
+    color: var(--color-text-light);
+    margin-bottom: 10px;
+}
+
+.image-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
+    justify-content: center;
+}
+
+.image-controls .button-base { /* General styling for buttons in this context */
+    padding: 8px 15px; /* Adjusted padding for better touch target & visual balance */
+    font-size: 0.9em;
+    font-weight: 600; /* Slightly bolder for action buttons */
+    min-height: 36px; /* Ensure a decent minimum height */
+}
+
+.image-controls .button-upload { /* Specific for upload label if needed */
+    background-color: var(--color-footer-button-bg); /* Using footer button colors */
+    color: var(--color-footer-button-text);
+    border-color: var(--color-footer-button-border);
+}
+.image-controls .button-upload:hover:not(:disabled) { /* Ensure hover applies only when not disabled */
+    background-color: var(--color-footer-button-hover-bg);
+    border-color: var(--color-footer-button-hover-border);
+    color: var(--color-footer-button-hover-text); /* Added text color on hover */
+}
+/* Disabled state for upload button (if not covered by general .button-base:disabled) */
+.image-controls .button-upload:disabled {
+    background-color: var(--color-button-disabled-bg);
+    color: var(--color-button-disabled-text);
+    border-color: var(--color-border-light);
+    cursor: not-allowed;
+}
+
+
+.image-controls .button-remove { /* Specific for remove button */
+    background-color: var(--color-delete-hover-bg);
+    color: var(--color-delete-hover-text);
+    border-color: var(--color-delete-text);
+}
+.image-controls .button-remove:hover:not(:disabled) { /* Ensure hover applies only when not disabled */
+    background-color: var(--color-delete-hover-bg); /* Keep same background */
+    opacity: 0.8; /* Slightly dim on hover for feedback */
+}
+/* Disabled state for remove button (if not covered by general .button-base:disabled) */
+.image-controls .button-remove:disabled {
+    background-color: var(--color-button-disabled-bg);
+    color: var(--color-button-disabled-text);
+    border-color: var(--color-border-light);
+    opacity: 0.5; /* General opacity for disabled state */
+    cursor: not-allowed;
+}

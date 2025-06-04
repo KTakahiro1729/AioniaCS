@@ -25,10 +25,10 @@
                 <div class="box-content">
                     <div class="character-image-container">
                         <div class="image-display-area">
-                            <button v-if="character.images && character.images.length > 1" @click="previousImage" :disabled="currentImageIndex === 0" class="button-base image-nav-button">&lt;</button>
+                            <button v-if="character.images && character.images.length > 1" @click="previousImage" :disabled="character.images.length <= 1" class="button-base image-nav-button">&lt;</button>
                             <img v-if="currentImageSrc" :src="currentImageSrc" alt="Character Image" class="character-image-display">
                             <div v-else class="character-image-placeholder">No Image</div>
-                            <button v-if="character.images && character.images.length > 1" @click="nextImage" :disabled="currentImageIndex >= character.images.length - 1" class="button-base image-nav-button">&gt;</button>
+                            <button v-if="character.images && character.images.length > 1" @click="nextImage" :disabled="character.images.length <= 1" class="button-base image-nav-button">&gt;</button>
                         </div>
                         <div v-if="character.images && character.images.length > 0" class="image-count-display">
                             {{ currentImageIndex + 1 }} / {{ character.images.length }}
@@ -340,7 +340,7 @@
             </div>
             <div class="button-base footer-button footer-button--save" @click="saveData"> データ保存 </div>
             <div class="button-base footer-button footer-button--load">
-                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" class="hidden" />
+                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
                 <label for="load_input_vue">データ読込</label>
             </div>
             <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText }} </div>
