@@ -1,4 +1,4 @@
-const { createApp, watch, nextTick } = Vue;
+const { createApp } = Vue;
 
 // Base character data copied from gameData with weaknesses initialized
 const baseChar = deepClone(window.AioniaGameData.defaultCharacterData);
@@ -253,6 +253,7 @@ const app = createApp({
                     this.flashOutputButtonMessage('failed');
                 }
             } catch (err) {
+                console.error(err);
                 this.flashOutputButtonMessage('error');
             }
 

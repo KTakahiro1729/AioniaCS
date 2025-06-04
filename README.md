@@ -19,3 +19,20 @@
 
 本リポジトリは **MIT License** の下で公開しています。
 公式とは関係のない非公式ツールです。
+
+## Development
+
+開発者向けには以下のコマンドを利用できます。
+
+1. 依存関係のインストール
+   ```bash
+   npm install
+   ```
+2. テストの実行
+   ```bash
+   npm test
+   ```
+3. Lint の実行（任意）
+   ```bash
+   npm run lint
+   ```

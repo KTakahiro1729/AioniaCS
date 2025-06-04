@@ -4,6 +4,7 @@
       try {
         return structuredClone(obj);
       } catch (e) {
+        console.error(e);
         // fallback below
       }
     }
