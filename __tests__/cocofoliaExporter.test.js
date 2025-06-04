@@ -11,21 +11,21 @@ describe('CocofoliaExporter', () => {
 
   test('buildCharacterBasicInfo returns expected lines', () => {
     const character = {
-      name: 'Alice',
-      playerName: 'Bob',
-      species: 'human',
+      name: 'ミーアナック',
+      playerName: 'あろすてりっく',
+      species: 'therianthropy',
       rareSpecies: '',
-      gender: '女性',
-      age: 20,
-      origin: '東京',
-      occupation: '学生',
+      gender: '男性',
+      age: 30,
+      origin: 'ラウステン王国',
+      occupation: '商人',
       faith: '',
-      height: '160cm',
+      height: '120cm',
       weight: '50kg'
     };
-    const lines = exporter.buildCharacterBasicInfo(character, { human: '人間' });
-    expect(lines[0]).toBe('名前：Alice（Bob）');
-    expect(lines[1]).toBe('種族：人間');
+    const lines = exporter.buildCharacterBasicInfo(character, { therianthropy: '獣人' });
+    expect(lines[0]).toBe('名前：ミーアナック（あろすてりっく）');
+    expect(lines[1]).toBe('種族：獣人');
   });
 
   test('truncateCharacterMemo cuts string at punctuation', () => {
@@ -52,12 +52,12 @@ describe('CocofoliaExporter', () => {
 
   test('generateCocofoliaData returns object with memo and commands', () => {
     const data = {
-      character: { name: 'Alice', currentScar: 0, memo: '' , weaknesses: [], otherItems: '' },
+      character: { name: 'Alice', currentScar: 0, memo: '', weaknesses: [], otherItems: '' },
       skills: [],
       specialSkills: [],
       equipments: { weapon1: { group: '', name: '' }, weapon2: { group: '', name: '' }, armor: { group: '', name: '' } },
       currentWeight: 0,
-      speciesLabelMap: { human: '人間' },
+      speciesLabelMap: { therianthropy: '獣人' },
       equipmentGroupLabelMap: {},
       specialSkillData: {},
       specialSkillsRequiringNote: [],
@@ -65,7 +65,7 @@ describe('CocofoliaExporter', () => {
     };
     const result = exporter.generateCocofoliaData(data);
     expect(result.kind).toBe('character');
-    expect(result.data.memo).toContain('名前：Alice');
+    expect(result.data.memo).toContain('名前：ミーアナック');
     expect(result.data.commands).toContain('ダメージチェック');
   });
 });
