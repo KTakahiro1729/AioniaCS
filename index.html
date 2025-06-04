@@ -25,18 +25,23 @@
                 <div class="box-content">
                     <div class="character-image-container">
                         <div class="image-display-area">
-                            <button v-if="character.images && character.images.length > 1" @click="previousImage" :disabled="character.images.length <= 1" class="button-base image-nav-button">&lt;</button>
-                            <img v-if="currentImageSrc" :src="currentImageSrc" alt="Character Image" class="character-image-display">
-                            <div v-else class="character-image-placeholder">No Image</div>
-                            <button v-if="character.images && character.images.length > 1" @click="nextImage" :disabled="character.images.length <= 1" class="button-base image-nav-button">&gt;</button>
-                        </div>
-                        <div v-if="character.images && character.images.length > 0" class="image-count-display">
-                            {{ currentImageIndex + 1 }} / {{ character.images.length }}
+                            <div class="image-display-wrapper" v-if="character.images && character.images.length > 0">
+                                <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" alt="Character Image" />
+                                <!-- If currentImageSrc is null but images exist, it implies a broken/missing image, img tag won't render. -->
+                                <button @click="previousImage" class="button-base image-nav-button prev-image-button" :disabled="character.images.length <= 1">&lt;</button>
+                                <button @click="nextImage" class="button-base image-nav-button next-image-button" :disabled="character.images.length <= 1">&gt;</button>
+                                <div class="image-count-display"> <!-- Removed v-if, parent wrapper handles this -->
+                                    {{ currentImageIndex + 1 }} / {{ character.images.length }}
+                                </div>
+                            </div>
+                            <div class="character-image-placeholder" v-else> <!-- Shown when character.images is empty -->
+                                No Image
+                            </div>
                         </div>
                         <div class="image-controls">
                             <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none;">
-                            <label for="character_image_upload" class="button-base button-upload">Upload Image</label>
-                            <button v-if="currentImageSrc" @click="removeCurrentImage" class="button-base button-remove">Remove Current Image</button>
+                            <label for="character_image_upload" class="button-base button-upload">画像を追加</label>
+                            <button v-if="currentImageSrc" @click="removeCurrentImage" class="button-base button-remove">画像を削除</button>
                         </div>
                     </div>
                     <div class="info-row">

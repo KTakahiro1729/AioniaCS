@@ -988,7 +988,7 @@ textarea.greyed-out {
     flex-direction: column;
     align-items: center;
     margin-bottom: 15px; /* Increased margin a bit for better separation */
-    padding: 10px;
+    padding: 0; /* Changed padding to 0 */
     border: 1px solid var(--color-border-light);
     border-radius: 3px;
     background-color: var(--color-input-bg); /* Similar to input backgrounds */
@@ -1000,59 +1000,97 @@ textarea.greyed-out {
     justify-content: center;
     margin-bottom: 10px;
     width: 100%; /* Ensure it takes full width for image centering */
+    height: 300px; /* Consistent height for the area */
+    background-color: var(--color-background-dark); /* Background for the whole area */
+    border: 1px solid var(--color-border); /* Border for the whole area */
+    border-radius: 2px; /* Consistent rounding */
 }
 
 .character-image-container img.character-image-display {
     max-width: 100%;
-    max-height: 300px; /* Max height for the image */
+    max-height: 100%; /* Fill the parent's 300px height */
     height: auto; /* Maintain aspect ratio */
     object-fit: contain; /* Ensure entire image is visible */
-    border: 1px solid var(--color-border);
-    border-radius: 2px;
-    background-color: var(--color-background-dark); /* Dark background for transparent images */
+    /* Border and background moved to .image-display-area */
 }
 
 .character-image-placeholder {
     width: 100%;
-    height: 150px; /* Placeholder height */
+    height: 100%; /* Fill the parent's 300px height */
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--color-input-disabled-text);
-    border: 1px dashed var(--color-border);
-    border-radius: 2px;
-    background-color: var(--color-background-dark);
+    /* Border and background moved to .image-display-area,
+       placeholder is now just text within that styled area.
+       A dashed border could be re-added if a distinction is strongly needed. */
 }
 
-.image-nav-button {
-    padding: 4px 8px; /* Reduced padding */
-    font-size: 1.2em; /* Reduced font size */
-    line-height: 1;
-    margin: 0 8px; /* Slightly reduced margin */
-    background-color: var(--color-panel-dark);
-    color: var(--color-accent);
-    border: 1px solid var(--color-border);
-    min-width: 28px; /* Adjusted min-width */
-    height: 28px; /* Explicit height to make it more square-like */
-    font-weight: bold;
+.image-display-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%; /* Takes height from .image-display-area */
+    display: flex; /* To center the image if it's smaller than the area */
+    align-items: center;
+    justify-content: center;
 }
+
+/* Ensure image itself doesn't prevent wrapper from shrinking if needed, although object-fit:contain helps */
+.image-display-wrapper .character-image-display {
+    display: block; /* remove extra space below if it were inline */
+}
+
+
+.image-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    /* border-radius: 50%; remove if not wanting round buttons */
+    /* padding: 8px; Re-evaluating based on previous compact style */
+    padding: 6px 10px; /* Slightly more padding for touch, but keep compact */
+    font-size: 1.2em; /* Keep from previous refined style */
+    line-height: 1;
+    /* margin will be controlled by left/right positioning */
+    min-width: auto; /* Reset min-width as size is now more icon-like */
+    height: auto; /* Reset height, padding will define size */
+    font-weight: bold;
+    border-radius: 4px; /* Slight rounding for overlay buttons */
+}
+
+.image-nav-button.prev-image-button {
+    left: 10px;
+}
+
+.image-nav-button.next-image-button {
+    right: 10px;
+}
+
 .image-nav-button:disabled {
-    background-color: var(--color-button-disabled-bg);
-    color: var(--color-button-disabled-text);
-    border-color: var(--color-border-light);
+    background-color: rgba(0, 0, 0, 0.1); /* More subtle disabled state for overlays */
+    color: rgba(255, 255, 255, 0.3);
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.7; /* Keep it somewhat visible but clearly inactive */
 }
 .image-nav-button:hover:not(:disabled) {
-    background-color: var(--color-button-hover);
-    border-color: var(--color-accent);
+    background-color: rgba(0, 0, 0, 0.6); /* Darker on hover */
 }
 
 
 .image-count-display {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 3px 8px;
     font-size: 0.9em;
-    color: var(--color-text-light);
-    margin-bottom: 10px;
+    border-radius: 3px;
+    /* margin-bottom removed as it's absolutely positioned */
 }
 
 .image-controls {
@@ -1068,6 +1106,9 @@ textarea.greyed-out {
     font-size: 0.9em;
     font-weight: 600; /* Slightly bolder for action buttons */
     min-height: 36px; /* Ensure a decent minimum height */
+    min-width: 130px; /* Standardized minimum width */
+    text-align: center; /* Center text within the button */
+    box-sizing: border-box; /* Ensure padding/border are included in width */
 }
 
 .image-controls .button-upload { /* Specific for upload label if needed */

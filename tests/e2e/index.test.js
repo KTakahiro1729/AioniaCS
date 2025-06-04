@@ -35,7 +35,8 @@ test.describe('Character Sheet E2E Tests', () => {
         page.waitForEvent('download'),
         page.locator('div.footer-button--save:has-text("データ保存")').click(),
       ]);
-      expect(jsonDownload.suggestedFilename()).toBe('JsonSaveChar_AioniaSheet.json');
+      // expect(jsonDownload.suggestedFilename()).toBe('JsonSaveChar_AioniaSheet.json');
+      expect(jsonDownload.suggestedFilename()).toMatch(/^JsonSaveChar_\d{14}\.json$/);
 
       // 2. Upload image
       const imageUploadInput = page.locator('#character_image_upload');
@@ -58,7 +59,8 @@ test.describe('Character Sheet E2E Tests', () => {
       const imageCountDisplay = page.locator('.image-count-display');
       const nextButton = page.locator('.image-nav-button:has-text(">")');
       const prevButton = page.locator('.image-nav-button:has-text("<")');
-      const removeButton = page.locator('.button-remove:has-text("Remove Current Image")');
+      // const removeButton = page.locator('.button-remove:has-text("Remove Current Image")');
+      const removeButton = page.locator('.button-remove:has-text("画像を削除")');
 
       // Upload 3 images (using sample & sample2, then sample again for a third distinct one in array)
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
@@ -126,7 +128,8 @@ test.describe('Character Sheet E2E Tests', () => {
         page.waitForEvent('download'),
         page.locator('div.footer-button--save:has-text("データ保存")').click(),
       ]);
-      expect(zipDownload.suggestedFilename()).toBe('ZipSaveChar_AioniaSheet.zip');
+      // expect(zipDownload.suggestedFilename()).toBe('ZipSaveChar_AioniaSheet.zip');
+      expect(zipDownload.suggestedFilename()).toMatch(/^ZipSaveChar_\d{14}\.zip$/);
     });
 
     // Skipping this test as it requires a pre-made ZIP file with specific internal structure,
