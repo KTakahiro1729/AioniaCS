@@ -53,8 +53,8 @@ if (typeof window.ImageManager === 'undefined') {
 
 
 describe('ImageManager', () => {
-  describe('loadImage', ()_original_whitespace_removed_0_=> {
-    it('should resolve with a base64 data URL for a valid file', async ()_original_whitespace_removed_1_=> {
+  describe('loadImage', () => {
+    it('should resolve with a base64 data URL for a valid file', async () => {
       const mockFile = { name: 'sample.png', type: 'image/png' };
       // Use the actual ImageManager.loadImage if available and properly set up,
       // otherwise the mock defined above will be used.
@@ -63,11 +63,11 @@ describe('ImageManager', () => {
       expect(imageData).toContain('mock_base64_data_for_sample.png');
     });
 
-    it('should reject if no file is provided', async ()_original_whitespace_removed_2_=> {
+    it('should reject if no file is provided', async () => {
       await expect(window.ImageManager.loadImage(null)).rejects.toThrow("No file provided.");
     });
 
-    it('should reject if FileReader encounters an error', async ()_original_whitespace_removed_3_=> {
+    it('should reject if FileReader encounters an error', async () => {
       const mockErrorFile = { name: 'error.png', type: 'image/png' };
       await expect(window.ImageManager.loadImage(mockErrorFile)).rejects.toThrow("Simulated FileReader error");
     });
