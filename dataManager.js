@@ -91,9 +91,7 @@ class DataManager {
           ? externalData.linkCurrentToInitialScar
           : true,
         memo: externalData.character_memo || '',
-        weaknesses: Array(this.gameData.config.maxWeaknesses)
-          .fill(null)
-          .map(() => ({ text: '', acquired: '--' }))
+        weaknesses: createWeaknessArray(this.gameData.config.maxWeaknesses)
       },
       skills: [],
       specialSkills: [],
@@ -259,9 +257,7 @@ class DataManager {
     // キャラクターデータの正規化
     const defaultCharacter = {
       ...this.gameData.defaultCharacterData,
-      weaknesses: Array(this.gameData.config.maxWeaknesses)
-        .fill(null)
-        .map(() => ({ text: '', acquired: '--' }))
+      weaknesses: createWeaknessArray(this.gameData.config.maxWeaknesses)
     };
 
     const normalizedData = {
