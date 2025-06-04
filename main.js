@@ -36,7 +36,7 @@ const app = createApp({
         };
     },
     computed: {
-        maxExperimentPoints() {
+        maxExperiencePoints() {
             const initialScarExp = Number(this.character.initialScar) || 0;
             const creationWeaknessExp = this.character.weaknesses.reduce((sum, weakness) => {
                 return sum + (weakness.text && weakness.text.trim() !== '' && weakness.acquired === '作成時' ? this.gameData.experiencePointValues.weakness : 0);
@@ -66,7 +66,7 @@ const app = createApp({
             return weight;
         },
         experienceStatusClass() {
-            return this.currentExperiencePoints > this.maxExperimentPoints ? 'status-display--experience-over' : 'status-display--experience-ok';
+            return this.currentExperiencePoints > this.maxExperiencePoints ? 'status-display--experience-over' : 'status-display--experience-ok';
         },
         sessionNamesForWeaknessDropdown() {
             const defaultOptions = [...this.gameData.weaknessAcquisitionOptions];
