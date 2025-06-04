@@ -206,6 +206,7 @@ window.AioniaGameData = {
 
   // キャラクターの初期データ構造
   defaultCharacterData: {
+    images: [],
     name: '',
     playerName: '',
     species: '',

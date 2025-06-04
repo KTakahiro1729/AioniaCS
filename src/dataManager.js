@@ -9,9 +9,17 @@ class DataManager {
   /**
    * キャラクターデータを保存
    */
-  saveData(character, skills, specialSkills, equipments, histories) {
+  async saveData(character, skills, specialSkills, equipments, histories) {
+    const characterDataForJson = { ...character };
+    let imagesToSave = null;
+
+    if (characterDataForJson.images && characterDataForJson.images.length > 0) {
+      imagesToSave = [...characterDataForJson.images]; // Store images separately
+      delete characterDataForJson.images; // Remove images from JSON part
+    }
+
     const dataToSave = {
-      character: character,
+      character: characterDataForJson,
       skills: skills.map(s => ({
         id: s.id,
         checked: s.checked,
@@ -30,18 +38,53 @@ class DataManager {
     };
 
     const jsonData = JSON.stringify(dataToSave, null, 2);
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const charName = character.name || 'Aionia_Character';
 
-    const filename = character.name || 'Aionia_Character';
-    a.download = `${filename}_AioniaSheet.json`;
+    if (imagesToSave) {
+      // Save as ZIP
+      try {
+        const zip = new JSZip();
+        zip.file("character_data.json", jsonData);
+        const imageFolder = zip.folder("images");
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+        imagesToSave.forEach((imageDataUrl, index) => {
+          const base64Data = imageDataUrl.substring(imageDataUrl.indexOf(',') + 1);
+          // Simple extension, could be improved by parsing imageDataUrl
+          const extension = imageDataUrl.substring(imageDataUrl.indexOf('/') + 1, imageDataUrl.indexOf(';'));
+          imageFolder.file(`image_${index}.${extension || 'png'}`, base64Data, { base64: true });
+        });
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${charName}_AioniaSheet.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Error saving ZIP file:", error);
+        // Consider showing an error to the user via main.js's alert
+        if (this.gameData && this.gameData.uiMessages && this.gameData.uiMessages.fileLoadError) {
+             // This is a bit of a hack, ideally main.js would expose an alert function
+            alert("ZIPファイルの保存に失敗しました: " + error.message);
+        } else {
+            alert("ZIPファイルの保存に失敗しました: " + error.message);
+        }
+      }
+    } else {
+      // Save as JSON (original behavior)
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${charName}_AioniaSheet.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   }
 
   /**
@@ -51,19 +94,78 @@ class DataManager {
     const file = event.target.files[0];
     if (!file) return;
 
+    const fileName = file.name;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const fileContent = e.target.result;
-      try {
-        const rawJsonData = JSON.parse(fileContent);
-        const parsedData = this.parseLoadedData(rawJsonData);
-        onSuccess(parsedData);
-      } catch (error) {
-        console.error("Failed to parse JSON file:", error);
-        onError(this.gameData.uiMessages.fileLoadError);
-      }
-    };
-    reader.readAsText(file);
+
+    if (fileName.endsWith('.zip')) {
+      reader.onload = async (e) => {
+        try {
+          const zip = await JSZip.loadAsync(e.target.result);
+          const jsonDataFile = zip.file("character_data.json");
+
+          if (!jsonDataFile) {
+            throw new Error("ZIPファイルに character_data.json が見つかりません。");
+          }
+
+          const jsonContent = await jsonDataFile.async("string");
+          const rawJsonData = JSON.parse(jsonContent);
+
+          const loadedImages = [];
+          const imageFolder = zip.folder("images");
+          if (imageFolder) {
+            // JSZip's forEach is a bit different, let's get all files and iterate
+            const imagePromises = [];
+            imageFolder.forEach((relativePath, fileEntry) => {
+              if (!fileEntry.dir) { // Ensure it's a file
+                const promise = fileEntry.async("base64").then(base64Data => {
+                  const extension = relativePath.substring(relativePath.lastIndexOf('.') + 1) || 'png';
+                  const mimeType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+                  loadedImages.push(`data:${mimeType};base64,${base64Data}`);
+                }).catch(imgError => {
+                  console.error(`Error loading image ${relativePath} from zip:`, imgError);
+                  // Optionally skip this image or handle error
+                });
+                imagePromises.push(promise);
+              }
+            });
+            await Promise.all(imagePromises); // Wait for all images to be processed
+          }
+
+          // Ensure character object exists before assigning images
+          if (!rawJsonData.character) {
+            rawJsonData.character = {};
+          }
+          rawJsonData.character.images = loadedImages.sort((a,b) => {
+            // Try to sort images by their original index in the filename if possible
+            const numA = parseInt(a.match(/image_(\d+)/)?.[1] || '0');
+            const numB = parseInt(b.match(/image_(\d+)/)?.[1] || '0');
+            return numA - numB;
+          });
+
+
+          const parsedData = this.parseLoadedData(rawJsonData);
+          onSuccess(parsedData);
+
+        } catch (error) {
+          console.error("Failed to parse ZIP file:", error);
+          onError(this.gameData.uiMessages.fileLoadError + " (ZIP: " + error.message + ")");
+        }
+      };
+      reader.readAsArrayBuffer(file); // Read ZIP as ArrayBuffer
+    } else { // Assume JSON or other text file
+      reader.onload = (e) => {
+        const fileContent = e.target.result;
+        try {
+          const rawJsonData = JSON.parse(fileContent);
+          const parsedData = this.parseLoadedData(rawJsonData);
+          onSuccess(parsedData);
+        } catch (error) {
+          console.error("Failed to parse JSON file:", error);
+          onError(this.gameData.uiMessages.fileLoadError);
+        }
+      };
+      reader.readAsText(file);
+    }
     event.target.value = null;
   }
 
@@ -91,6 +193,7 @@ class DataManager {
           ? externalData.linkCurrentToInitialScar
           : true,
         memo: externalData.character_memo || '',
+        images: [], // Initialize images for external format
         weaknesses: createWeaknessArray(
           this.gameData.config.maxWeaknesses
         )
@@ -146,32 +249,38 @@ class DataManager {
       dataToParse = this.convertExternalJsonToInternalFormat(rawJsonData);
     } else if (this._isInternalFormat(rawJsonData)) {
       console.log("Internal JSON format (this tool) detected.");
+      // If it's internal format but images are somehow missing in character, ensure it's there
+      if (dataToParse.character && typeof dataToParse.character.images === 'undefined') {
+        dataToParse.character.images = [];
+      }
     } else {
       console.warn("Unknown JSON format, attempting to parse as is. Data integrity not guaranteed.");
       dataToParse = {
-        character: {},
+        character: { images: [] }, // Ensure images array exists
         skills: [],
         specialSkills: [],
         equipments: {},
         histories: [],
         ...rawJsonData
       };
+       if (dataToParse.character && typeof dataToParse.character.images === 'undefined') {
+        dataToParse.character.images = [];
+      }
     }
-
     return this._normalizeLoadedData(dataToParse);
   }
 
   // プライベートメソッド
   _isExternalFormat(data) {
     return data &&
-      typeof data.player !== 'undefined' &&
-      typeof data.character_memo !== 'undefined';
+      typeof data.player !== 'undefined' && // bright-trpg tool has 'player'
+      typeof data.character_memo !== 'undefined'; // and 'character_memo'
   }
 
   _isInternalFormat(data) {
     return data &&
-      data.character &&
-      typeof data.character.playerName !== 'undefined';
+      data.character && // This tool has a nested 'character' object
+      typeof data.character.playerName !== 'undefined'; // and 'playerName' inside 'character'
   }
 
   _convertSkillsData(externalData, internalData) {
@@ -203,10 +312,12 @@ class DataManager {
 
           internalData.skills.push(newSkill);
         } else if (appSkillDefinition) {
+          // If external data is missing a skill, use default from app definition
           internalData.skills.push(deepClone(appSkillDefinition));
         }
       });
     } else {
+      // No skills in external data, use default app skills
       internalData.skills = deepClone(this.gameData.baseSkills);
     }
   }
@@ -214,7 +325,7 @@ class DataManager {
   _convertSpecialSkillsData(externalData, internalData) {
     if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
       internalData.specialSkills = externalData.special_skills
-        .filter(ss => ss.group && ss.name)
+        .filter(ss => ss.group && ss.name) // Ensure basic validity
         .map(ss => ({
           group: ss.group || '',
           name: ss.name || '',
@@ -222,9 +333,16 @@ class DataManager {
           showNote: this.gameData.specialSkillsRequiringNote.includes(ss.name || '')
         }));
     }
+    // If no special skills, it will remain an empty array from initialization
   }
 
   _convertEquipmentData(externalData, internalData) {
+    // Initialize with defaults, then override if data exists
+    internalData.equipments = {
+        weapon1: { group: '', name: '' },
+        weapon2: { group: '', name: '' },
+        armor: { group: '', name: '' }
+    };
     if (externalData.weapon1_type || externalData.weapon1_name) {
       internalData.equipments.weapon1 = {
         group: externalData.weapon1_type || '',
@@ -250,28 +368,40 @@ class DataManager {
       internalData.histories = externalData.history.map(h => ({
         sessionName: h.name || '',
         gotExperiments: h.experiments ? parseInt(h.experiments, 10) : null,
-        memo: h.stress || h.memo || ''
+        // Use 'memo' if present (from this tool's older format), otherwise 'stress' (from bright-trpg)
+        memo: h.memo || h.stress || ''
       }));
     }
+    // If no history, it will remain an empty array from initialization
   }
+
 
   _normalizeLoadedData(dataToParse) {
     // キャラクターデータの正規化
     const defaultCharacter = {
-      ...this.gameData.defaultCharacterData,
+      ...this.gameData.defaultCharacterData, // This now includes images: []
       weaknesses: createWeaknessArray(
         this.gameData.config.maxWeaknesses
       )
     };
 
+    // Ensure character.images exists if it's somehow missing from dataToParse.character
+    // but character itself exists.
+    const characterData = { ...defaultCharacter, ...(dataToParse.character || {}) };
+    if (typeof characterData.images === 'undefined') {
+        characterData.images = [];
+    }
+
+
     const normalizedData = {
-      character: { ...defaultCharacter, ...(dataToParse.character || {}) },
+      character: characterData,
       skills: this._normalizeSkillsData(dataToParse.skills),
       specialSkills: this._normalizeSpecialSkillsData(dataToParse.specialSkills),
       equipments: this._normalizeEquipmentData(dataToParse.equipments),
       histories: this._normalizeHistoryData(dataToParse.histories)
     };
 
+    // Ensure linkCurrentToInitialScar has a default if missing
     if (typeof normalizedData.character.linkCurrentToInitialScar === 'undefined') {
       normalizedData.character.linkCurrentToInitialScar = true;
     }
@@ -290,22 +420,29 @@ class DataManager {
         if (loadedSkillData) {
           appSkill.checked = !!loadedSkillData.checked;
           if (appSkill.canHaveExperts) {
-            if (loadedSkillData.experts && loadedSkillData.experts.length > 0) {
-              appSkill.experts = loadedSkillData.experts.map(e => ({ value: e.value || '' }));
-              if (appSkill.experts.every(e => e.value === '')) {
+            // Ensure experts is an array, even if empty or null from loaded data
+            appSkill.experts = (loadedSkillData.experts && loadedSkillData.experts.length > 0)
+              ? loadedSkillData.experts.map(e => ({ value: e.value || '' }))
+              : [{ value: '' }]; // Default to one empty expert if checked
+            // If all experts are empty strings, reduce to one
+            if (appSkill.experts.length > 1 && appSkill.experts.every(e => e.value === '')) {
                 appSkill.experts = [{ value: '' }];
-              }
-            } else {
-              appSkill.experts = [{ value: '' }];
             }
           } else {
-            appSkill.experts = [];
+            appSkill.experts = []; // No experts if skill cannot have them
           }
+        } else {
+            // Skill not in loaded data, use default (experts already set by deepClone)
+             if (appSkill.canHaveExperts) {
+                appSkill.experts = [{ value: '' }];
+            } else {
+                appSkill.experts = [];
+            }
         }
         return appSkill;
       });
     }
-
+    // No skillsData, return baseSkills (already deepCloned with default expert structures)
     return baseSkills;
   }
 
@@ -315,6 +452,7 @@ class DataManager {
       loadedSSCount = specialSkillsData.length;
     }
 
+    // Determine the target length for the special skills array
     const targetLength = Math.min(
       Math.max(this.gameData.config.initialSpecialSkillCount, loadedSSCount),
       this.gameData.config.maxSpecialSkills
@@ -331,6 +469,7 @@ class DataManager {
           showNote: this.gameData.specialSkillsRequiringNote.includes(loadedSS.name || '')
         });
       } else {
+        // Fill with empty special skill objects if loaded data is shorter
         normalizedSpecialSkills.push({
           group: '',
           name: '',
@@ -339,24 +478,29 @@ class DataManager {
         });
       }
     }
-
+    // If specialSkillsData was empty or null, this loop results in an array of empty skills
+    // up to initialSpecialSkillCount (or max if initial is > max, though unlikely)
     return normalizedSpecialSkills;
   }
 
   _normalizeEquipmentData(equipmentData) {
-    if (equipmentData) {
-      return {
-        weapon1: { group: '', name: '', ...(equipmentData.weapon1 || {}) },
-        weapon2: { group: '', name: '', ...(equipmentData.weapon2 || {}) },
-        armor: { group: '', name: '', ...(equipmentData.armor || {}) }
-      };
-    }
-
-    return {
+    // Start with default empty equipment structure
+    const defaultEquipments = {
       weapon1: { group: '', name: '' },
       weapon2: { group: '', name: '' },
       armor: { group: '', name: '' }
     };
+
+    if (equipmentData) {
+      // Merge loaded data into defaults, ensuring all keys exist
+      return {
+        weapon1: { ...defaultEquipments.weapon1, ...(equipmentData.weapon1 || {}) },
+        weapon2: { ...defaultEquipments.weapon2, ...(equipmentData.weapon2 || {}) },
+        armor: { ...defaultEquipments.armor, ...(equipmentData.armor || {}) }
+      };
+    }
+    // No equipmentData, return defaults
+    return defaultEquipments;
   }
 
   _normalizeHistoryData(historyData) {
@@ -364,12 +508,12 @@ class DataManager {
       return historyData.map(h => ({
         sessionName: h.sessionName || '',
         gotExperiments: (h.gotExperiments === null || h.gotExperiments === undefined || h.gotExperiments === '')
-          ? null
-          : Number(h.gotExperiments),
+          ? null // Keep null as null
+          : Number(h.gotExperiments), // Convert valid numbers
         memo: h.memo || ''
       }));
     }
-
+    // No historyData or empty array, return a single default history item
     return [{ sessionName: '', gotExperiments: null, memo: '' }];
   }
 }
