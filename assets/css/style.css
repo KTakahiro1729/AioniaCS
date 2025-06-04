@@ -998,7 +998,7 @@ textarea.greyed-out {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px;
+    margin-bottom: 0; /* Changed from 10px */
     width: 100%; /* Ensure it takes full width for image centering */
     height: 300px; /* Consistent height for the area */
     background-color: var(--color-background-dark); /* Background for the whole area */
@@ -1040,25 +1040,29 @@ textarea.greyed-out {
     display: block; /* remove extra space below if it were inline */
 }
 
+.image-display-wrapper:hover .image-nav-button:not(:disabled),
+.image-display-wrapper:hover .image-count-display {
+    opacity: 1;
+}
+
 
 .image-nav-button {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
-    background-color: rgba(0, 0, 0, 0.3);
-    color: white;
-    border: none;
-    /* border-radius: 50%; remove if not wanting round buttons */
-    /* padding: 8px; Re-evaluating based on previous compact style */
-    padding: 6px 10px; /* Slightly more padding for touch, but keep compact */
-    font-size: 1.2em; /* Keep from previous refined style */
+    background-color: grey; /* New background color */
+    color: gold; /* New text/arrow color */
+    border: none; /* Explicitly no border */
+    padding: 6px 10px;
+    font-size: 1.2em;
     line-height: 1;
-    /* margin will be controlled by left/right positioning */
-    min-width: auto; /* Reset min-width as size is now more icon-like */
-    height: auto; /* Reset height, padding will define size */
+    min-width: auto;
+    height: auto;
     font-weight: bold;
-    border-radius: 4px; /* Slight rounding for overlay buttons */
+    border-radius: 4px;
+    opacity: 0.3; /* Initial transparency */
+    transition: opacity 0.3s ease; /* Transition for hover effect */
 }
 
 .image-nav-button.prev-image-button {
@@ -1070,13 +1074,18 @@ textarea.greyed-out {
 }
 
 .image-nav-button:disabled {
-    background-color: rgba(0, 0, 0, 0.1); /* More subtle disabled state for overlays */
-    color: rgba(255, 255, 255, 0.3);
-    cursor: not-allowed;
-    opacity: 0.7; /* Keep it somewhat visible but clearly inactive */
+    /* Let new base colors show through, just adjust opacity */
+    opacity: 0.2; /* Or 0.3 if preferred to match initial non-hovered enabled state */
+    cursor: default;
+    /* background-color and color will be inherited from .image-nav-button (grey, gold) */
+    /* No need to override background/color if opacity is the primary indicator */
 }
 .image-nav-button:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.6); /* Darker on hover */
+    /* This is now handled by .image-display-wrapper:hover .image-nav-button:not(:disabled) for opacity */
+    /* If a specific background change on direct button hover is still desired, it can be added here,
+       but the main requirement was opacity change on wrapper hover. */
+    /* For example, a subtle brightness change on direct hover: */
+    filter: brightness(1.2);
 }
 
 
@@ -1090,6 +1099,8 @@ textarea.greyed-out {
     padding: 3px 8px;
     font-size: 0.9em;
     border-radius: 3px;
+    opacity: 0.3; /* Initial transparency */
+    transition: opacity 0.3s ease; /* Transition for hover effect */
     /* margin-bottom removed as it's absolutely positioned */
 }
 
@@ -1099,6 +1110,7 @@ textarea.greyed-out {
     align-items: center;
     flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
     justify-content: center;
+    padding: 10px 0; /* Added padding */
 }
 
 .image-controls .button-base { /* General styling for buttons in this context */
