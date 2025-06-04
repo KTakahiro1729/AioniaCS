@@ -252,7 +252,7 @@ const app = createApp({
                 } else {
                     this.flashOutputButtonMessage('failed');
                 }
-            } catch {
+            } catch (err) { // eslint-disable-line no-unused-vars
                 this.flashOutputButtonMessage('error');
             }
 
