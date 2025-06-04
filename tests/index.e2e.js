@@ -4,7 +4,15 @@ const fs = require('fs');
 
 test('character sheet save/load and cocofolia output', async ({ page, context }) => {
   const fileUrl = 'file://' + path.resolve(__dirname, '../index.html');
+  // serve local Vue bundle to avoid external network request
+  await page.route('https://unpkg.com/vue@3/dist/vue.global.js', (route) => {
+    route.fulfill({ path: path.resolve(__dirname, '../vue.global.js') });
+  });
   await page.goto(fileUrl);
+
+  // wait for the select element to be present and force selection to avoid visibility issues
+  await page.waitForSelector('#species');
+  await page.selectOption('#species', 'human', { force: true });
 
   // intercept clipboard writes
   await page.addInitScript(() => {
