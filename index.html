@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>慈悲なきアイオニア　非公式キャラクターシート</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +23,27 @@
             <div id="character_info" class="character-info">
                 <div class="box-title">基本情報</div>
                 <div class="box-content">
+                    <div class="character-image-container">
+                        <div class="image-display-area">
+                            <div class="image-display-wrapper" v-if="character.images && character.images.length > 0">
+                                <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" alt="Character Image" />
+                                <!-- If currentImageSrc is null but images exist, it implies a broken/missing image, img tag won't render. -->
+                                <button @click="previousImage" class="button-base image-nav-button prev-image-button" :disabled="character.images.length <= 1">&lt;</button>
+                                <button @click="nextImage" class="button-base image-nav-button next-image-button" :disabled="character.images.length <= 1">&gt;</button>
+                                <div class="image-count-display"> <!-- Removed v-if, parent wrapper handles this -->
+                                    {{ currentImageIndex + 1 }} / {{ character.images.length }}
+                                </div>
+                            </div>
+                            <div class="character-image-placeholder" v-else> <!-- Shown when character.images is empty -->
+                                No Image
+                            </div>
+                        </div>
+                        <div class="image-controls">
+                            <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none;">
+                            <label for="character_image_upload" class="button-base button-upload">画像を追加</label>
+                            <button v-if="currentImageSrc" @click="removeCurrentImage" class="button-base button-remove">画像を削除</button>
+                        </div>
+                    </div>
                     <div class="info-row">
                         <div class="info-item info-item--full">
                             <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name" />
@@ -323,7 +345,7 @@
             </div>
             <div class="button-base footer-button footer-button--save" @click="saveData"> データ保存 </div>
             <div class="button-base footer-button footer-button--load">
-                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" class="hidden" />
+                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
                 <label for="load_input_vue">データ読込</label>
             </div>
             <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText }} </div>
@@ -335,7 +357,9 @@
     </div>
     <script src="src/cocofoliaExporter.js"></script>
     <script src="src/gameData.js"></script>
+    <script src="src/imageManager.js"></script>
     <script src="src/utils.js"></script>
+    <!-- dataManager.js needs JSZip, so ensure it's loaded before -->
     <script src="src/dataManager.js"></script>
     <script src="src/main.js"></script>
 </body>

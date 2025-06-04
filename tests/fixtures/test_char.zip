@@ -1,0 +1,4 @@
+This is a placeholder for a ZIP file.
+In a real test environment, this would be a valid ZIP file containing:
+- character_data.json (with some character data)
+- images/sample_in_zip.png (a sample image file)
