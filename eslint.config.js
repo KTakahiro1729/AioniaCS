@@ -2,7 +2,7 @@ const vue = require('eslint-plugin-vue');
 
 module.exports = [
   {
-    files: ['**/*.js'],
+    files: ['src/**/*.js', 'tests/**/*.js', './*.js'], // Updated line
     languageOptions: {
       globals: {
         Vue: 'readonly',

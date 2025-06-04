@@ -1,5 +1,5 @@
 const { defineConfig } = require('@playwright/test');
 module.exports = defineConfig({
-  testDir: './e2e',
+  testDir: './tests/e2e',
   use: { headless: true }
 });
