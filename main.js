@@ -1,22 +1,18 @@
 const { createApp, watch, nextTick } = Vue;
 
+// Base character data copied from gameData with weaknesses initialized
+const baseChar = JSON.parse(JSON.stringify(window.AioniaGameData.defaultCharacterData));
+baseChar.weaknesses = Array(window.AioniaGameData.config.maxWeaknesses)
+    .fill(null)
+    .map(() => ({ text: '', acquired: '--' }));
+
 const app = createApp({
     data() {
         return {
             // gameData.jsへの参照を追加
             gameData: window.AioniaGameData,
             dataManager: null,
-            character: {
-                name: '', playerName: '', species: '', rareSpecies: '',
-                occupation: '', age: null, gender: '', height: '', weight: '',
-                origin: '', faith: '',
-                otherItems: '',
-                currentScar: 0,
-                initialScar: 0,
-                linkCurrentToInitialScar: true,
-                memo: '',
-                weaknesses: Array(window.AioniaGameData.config.maxWeaknesses).fill(null).map(() => ({ text: '', acquired: '--' })),
-            },
+            character: baseChar,
             skills: JSON.parse(JSON.stringify(window.AioniaGameData.baseSkills)),
             externalSkillOrder: window.AioniaGameData.externalSkillOrder,
             initialSpecialSkillCount: window.AioniaGameData.config.initialSpecialSkillCount,
