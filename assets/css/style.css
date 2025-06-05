@@ -23,7 +23,6 @@
     --color-delete-text: #8c5353;
     --color-delete-border: #5c3939;
     --color-delete-hover-text: #a86f6f;
-
 }
 
 body {
@@ -556,7 +555,7 @@ textarea.greyed-out {
     justify-content: center;
     transition: text-shadow 1s ease, color 0.5s ease, border-color 0.5s ease;
     flex-shrink: 0;
-    background-color: rgb(0 0 0 / 0%);
+    background-color: transparent;
     color: var(--color-accent);
 }
 
@@ -590,7 +589,7 @@ textarea.greyed-out {
 
 .list-button:disabled {
     cursor: default;
-    background-color: rgb(0 0 0 / 0%);
+    background-color: transparent;
     color: var(--color-border-normal);
     border-color: var(--color-border-normal);
 }
@@ -870,6 +869,7 @@ textarea.greyed-out {
 /* ==========================================================================
    カスタムアラートモーダル
    ========================================================================== */
+
 .custom-alert-modal {
     position: fixed;
     left: 50%;
@@ -1110,4 +1110,24 @@ textarea.greyed-out {
     color: var(--color-delete-disabled);
     border-color: var(--color-delete-disabled);
     cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Keyboard Handling Adjustments
+   ========================================================================== */
+
+body.keyboard-visible {
+    padding-bottom: 0 !important; /* Override existing padding */
+}
+
+body.keyboard-visible .main-footer {
+    position: relative !important; /* Ensure it scrolls with content */
+    bottom: auto !important; /* Reset bottom positioning */
+    box-shadow: none !important; /* Remove shadow when not fixed at bottom */
+}
+
+body.keyboard-visible .help-panel {
+    bottom: 20px !important; /* Adjust help panel position */
+
+    /* Consider if it should be position: absolute if footer is relative */
 }
