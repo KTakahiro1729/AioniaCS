@@ -20,9 +20,8 @@
     --color-text-input-disabled: #888;
     --color-link: #ccc;
     --color-link-hover: var(--color-accent);
-    --color-delete-text: #8c5353;
-    --color-delete-border: #5c3939;
-    --color-delete-hover-text: #a86f6f;
+    --color-delete-text: #c05a5a;
+    --color-delete-border: #7f5454;
 }
 
 body {
@@ -537,7 +536,7 @@ textarea.greyed-out {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: text-shadow 1s ease, color 0.5s ease, border-color 0.5s ease;
+    transition: text-shadow 0.5s ease, color 0.5s ease, border-color 0.5s ease;
     flex-shrink: 0;
     background-color: transparent;
     color: var(--color-accent);
@@ -547,6 +546,16 @@ textarea.greyed-out {
     border-color: var(--color-accent);
     background-color: var(--color-background);
     box-shadow: inset 0 0 3px var(--color-accent), 0 0 6px var(--color-accent);
+    text-shadow: 0 0 2px var(--color-accent);
+}
+
+.button-base:disabled {
+    cursor: default;
+    background-color: transparent;
+    color: var(--color-border-normal);
+    border-color: var(--color-border-normal);
+    box-shadow: none;
+    text-shadow: none;
 }
 
 .delete-button-wrapper {
@@ -571,13 +580,6 @@ textarea.greyed-out {
     color: var(--color-accent);
 }
 
-.list-button:disabled {
-    cursor: default;
-    background-color: transparent;
-    color: var(--color-border-normal);
-    border-color: var(--color-border-normal);
-}
-
 .list-button--add:hover:not(:disabled) {
     border-color: var(--color-accent);
 }
@@ -589,8 +591,8 @@ textarea.greyed-out {
 
 .list-button--delete:hover:not(:disabled) {
     border-color: var(--color-delete-text);
-    color: var(--color-delete-hover-text);
     box-shadow: inset 0 0 3px var(--color-delete-text), 0 0 6px var(--color-delete-text);
+    text-shadow: 0 0 2px var(--color-delete-text);
 }
 
 .add-button-container-left {
@@ -736,9 +738,11 @@ textarea.greyed-out {
     border-color: var(--color-accent);
 }
 
-.footer-button {
+.footer-button,
+.imagefile-button {
     padding: 10px 18px;
     font-size: 0.95em;
+    height: 48px;
     font-weight: 700;
     text-align: center;
     box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
@@ -746,20 +750,6 @@ textarea.greyed-out {
     box-sizing: border-box;
     white-space: nowrap;
 }
-
-
-
-.footer-button--save,
-.footer-button--load {
-    height: 48px;
-    width: 110px;
-}
-
-.footer-button--output {
-    height: 48px;
-    width: 175px;
-}
-
 
 .footer-button--load {
     padding: 0;
@@ -1021,19 +1011,20 @@ textarea.greyed-out {
     display: block;
 }
 
-.image-display-wrapper:hover .image-nav-button:not(:disabled),
-.image-display-wrapper:hover .image-count-display {
+.image-display-wrapper:hover .button-imagenav:not(:disabled) {
     opacity: 1;
 }
 
+.image-display-wrapper:hover .image-count-display {
+    opacity: 0.7;
+}
 
-.image-nav-button {
+.button-imagenav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
     background-color: var(--color-panel-header);
-    color: var(--color-accent);
     border: none;
     padding: 6px 10px;
     font-size: 1.2em;
@@ -1042,38 +1033,43 @@ textarea.greyed-out {
     height: auto;
     font-weight: bold;
     border-radius: 4px;
-    opacity: 0.3;
+    opacity: 0.6;
     transition: opacity 0.3s ease;
 }
 
-.image-nav-button.prev-image-button {
+.button-imagenav:hover {
+    background-color: var(--color-panel-sub-header);
+}
+
+.button-imagenav.button-imagenav--prev {
     left: 10px;
 }
 
-.image-nav-button.next-image-button {
+.button-imagenav.button-imagenav--next {
     right: 10px;
 }
 
-.image-nav-button:disabled {
-    opacity: 0.2;
+.button-imagenav:disabled {
     cursor: default;
 }
-
-
-
 
 .image-count-display {
     position: absolute;
     top: 10px;
     right: 10px;
     z-index: 10;
-    background-color: rgb(0 0 0 / 60%);
+    background-color: var(--color-panel-header);
     color: white;
     padding: 3px 8px;
     font-size: 0.9em;
     border-radius: 3px;
     opacity: 0.3;
     transition: opacity 0.3s ease;
+    cursor: default;
+}
+
+.image-display-wrapper:hover .image-count-display:hover {
+    opacity: 1;
 }
 
 .image-controls {
@@ -1085,44 +1081,45 @@ textarea.greyed-out {
     padding: 10px 0;
 }
 
-.image-controls .button-base {
-    padding: 8px 15px;
-    font-size: 0.9em;
-    font-weight: 600;
-    min-height: 36px;
-    min-width: 130px;
-    text-align: center;
-    box-sizing: border-box;
+.imagefile-button--add:hover:not(:disabled) {
+    border-color: var(--color-accent);
 }
 
-.image-controls .button-remove {
-    background-color: var(--color-delete-hover-bg);
-    color: var(--color-delete-hover-text);
+
+
+.imagefile-button--delete {
+    color: var(--color-delete-text);
+    border-color: var(--color-delete-border);
+}
+
+.imagefile-button--delete:hover:not(:disabled) {
     border-color: var(--color-delete-text);
+    box-shadow: inset 0 0 3px var(--color-delete-text), 0 0 6px var(--color-delete-text);
+    text-shadow: 0 0 2px var(--color-delete-text);
 }
 
-.image-controls .button-remove:disabled {
-    color: var(--color-delete-disabled);
-    border-color: var(--color-delete-disabled);
-    cursor: not-allowed;
-}
 
 /* ==========================================================================
    Keyboard Handling Adjustments
    ========================================================================== */
 
 body.keyboard-visible {
-    padding-bottom: 0 !important; /* Override existing padding */
+    padding-bottom: 0 !important;
+    /* Override existing padding */
 }
 
 body.keyboard-visible .main-footer {
-    position: relative !important; /* Ensure it scrolls with content */
-    bottom: auto !important; /* Reset bottom positioning */
-    box-shadow: none !important; /* Remove shadow when not fixed at bottom */
+    position: relative !important;
+    /* Ensure it scrolls with content */
+    bottom: auto !important;
+    /* Reset bottom positioning */
+    box-shadow: none !important;
+    /* Remove shadow when not fixed at bottom */
 }
 
 body.keyboard-visible .help-panel {
-    bottom: 20px !important; /* Adjust help panel position */
+    bottom: 20px !important;
+    /* Adjust help panel position */
 
     /* Consider if it should be position: absolute if footer is relative */
 }

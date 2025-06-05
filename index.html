@@ -29,9 +29,9 @@
                                 <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display"
                                     alt="Character Image" />
                                 <!-- If currentImageSrc is null but images exist, it implies a broken/missing image, img tag won't render. -->
-                                <button @click="previousImage" class="button-base image-nav-button prev-image-button"
+                                <button @click="previousImage" class="button-base button-imagenav button-imagenav--prev"
                                     :disabled="character.images.length <= 1">&lt;</button>
-                                <button @click="nextImage" class="button-base image-nav-button next-image-button"
+                                <button @click="nextImage" class="button-base button-imagenav button-imagenav--next"
                                     :disabled="character.images.length <= 1">&gt;</button>
                                 <div class="image-count-display"> <!-- Removed v-if, parent wrapper handles this -->
                                     {{ currentImageIndex + 1 }} / {{ character.images.length }}
@@ -45,9 +45,10 @@
                         <div class="image-controls">
                             <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*"
                                 style="display: none;">
-                            <label for="character_image_upload" class="button-base button-upload">画像を追加</label>
-                            <button v-if="currentImageSrc" @click="removeCurrentImage"
-                                class="button-base button-remove">画像を削除</button>
+                            <label for="character_image_upload"
+                                class="button-base imagefile-button imagefile-button--upload">画像を追加</label>
+                            <button :disabled="!currentImageSrc" @click="removeCurrentImage"
+                                class="button-base imagefile-button imagefile-button--delete">削除</button>
                         </div>
                     </div>
                     <div class="info-row">
@@ -123,7 +124,8 @@
                                 </div>
                                 <input type="number" id="current_scar" v-model.number="character.currentScar"
                                     @input="handleCurrentScarInput"
-                                    :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0" class="scar-section__current-input">
+                                    :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0"
+                                    class="scar-section__current-input">
                             </div>
                             <div class="info-item info-item--double">
                                 <label for="initial_scar">初期値</label>
@@ -342,8 +344,8 @@
         </div>
 
         <div class="main-footer">
-            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" @click="toggleHelp"
-                title="ヘルプ表示">？
+            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false"
+                @click="toggleHelp" title="ヘルプ表示">？
             </div>
             <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
                 maxExperiencePoints }} </div>

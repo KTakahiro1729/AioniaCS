@@ -57,8 +57,8 @@ test.describe('Character Sheet E2E Tests', () => {
       const imageUploadInput = page.locator('#character_image_upload');
       const imageDisplay = page.locator('.character-image-display');
       const imageCountDisplay = page.locator('.image-count-display');
-      const nextButton = page.locator('.image-nav-button:has-text(">")');
-      const prevButton = page.locator('.image-nav-button:has-text("<")');
+      const nextButton = page.locator('.button-imagenav:has-text(">")');
+      const prevButton = page.locator('.button-imagenav:has-text("<")');
       // const removeButton = page.locator('.button-remove:has-text("Remove Current Image")');
       const removeButton = page.locator('.button-remove:has-text("画像を削除")');
 
