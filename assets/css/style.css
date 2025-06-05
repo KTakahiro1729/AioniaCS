@@ -793,8 +793,7 @@ textarea.greyed-out {
     border-radius: 4px;
     box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
     z-index: 1000;
-    max-width: 90%;
-    width: 420px;
+    width: min(420px, calc(100% - 40px));
     font-size: 0.9em;
     color: var(--color-text-normal);
 }
@@ -931,10 +930,6 @@ textarea.greyed-out {
         width: 100%;
     }
 
-    .help-panel {
-        width: calc(100% - 40px);
-        max-width: none;
-    }
 
     .info-row {
         flex-direction: column;
