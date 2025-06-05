@@ -40,6 +40,7 @@ body {
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    position: relative; /* For absolute positioning context if needed */
 }
 
 /* ==========================================================================
@@ -66,6 +67,99 @@ body {
 .fade-leave-to {
     opacity: 0;
 }
+
+/* ==========================================================================
+   トップ左コントロール (Google Drive Button)
+   ========================================================================== */
+.top-left-controls {
+    position: fixed; /* Changed to fixed for viewport-relative positioning */
+    top: 10px;
+    left: 10px;
+    z-index: 1050; /* Ensure it's above most content, but below modals if any */
+}
+
+.google-drive-button-container {
+    position: relative; /* For positioning the floating menu */
+}
+
+.icon-button { /* Style for the cloud icon button */
+    padding: 8px;
+    background-color: var(--color-panel-body);
+    border: 1px solid var(--color-border-normal);
+    border-radius: 50%; /* Make it circular */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; /* Fixed size for circle */
+    height: 40px; /* Fixed size for circle */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.icon-button:hover {
+    border-color: var(--color-accent);
+    background-color: var(--color-panel-header);
+}
+
+.icon-button img.icon-svg {
+    width: 24px; /* Adjust size of SVG inside the button */
+    height: 24px;
+    filter: invert(70%) sepia(20%) saturate(500%) hue-rotate(0deg) brightness(100%) contrast(90%); /* Lighten SVG to match text */
+}
+
+.icon-button:hover img.icon-svg {
+    filter: invert(90%) sepia(30%) saturate(700%) hue-rotate(0deg) brightness(110%) contrast(100%); /* Brighter on hover */
+}
+
+
+.floating-menu {
+    position: absolute;
+    top: calc(100% + 5px); /* Below the button with a small gap */
+    left: 0;
+    background-color: var(--color-panel-body);
+    border: 1px solid var(--color-border-normal);
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100; /* Above the button itself */
+    min-width: 200px; /* Ensure enough width for menu items */
+}
+
+.floating-menu .menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    text-align: left;
+    background-color: transparent; /* Use button-base for actual button styling */
+    color: var(--color-text-normal);
+    border: none; /* Remove border if it's a div/span */
+    border-radius: 3px;
+}
+
+.floating-menu .menu-item.button-base { /* If menu items are actual buttons */
+    width: calc(100% - 0px); /* Full width minus padding */
+    margin-bottom: 4px;
+    justify-content: flex-start; /* Align text to left for button-base */
+}
+
+
+.floating-menu .menu-item:last-child {
+    margin-bottom: 0;
+}
+
+.floating-menu .menu-item:hover:not(.status-message) {
+    background-color: var(--color-panel-header);
+    color: var(--color-accent);
+}
+
+.floating-menu .status-message {
+    font-size: 0.85em;
+    color: var(--color-text-muted);
+    padding: 8px 12px;
+    border-top: 1px solid var(--color-border-normal);
+    margin-top: 5px;
+}
+
 
 /* ==========================================================================
    メイングリッドレイアウト
@@ -279,7 +373,7 @@ textarea.greyed-out {
 }
 
 .hidden {
-    display: none;
+    display: none !important; /* Ensure this always hides, useful for file inputs */
 }
 
 /* ==========================================================================
@@ -537,15 +631,16 @@ textarea.greyed-out {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: text-shadow 1s ease, color 0.5s ease, border-color 0.5s ease;
+    transition: text-shadow 1s ease, color 0.5s ease, border-color 0.5s ease, background-color 0.2s ease, box-shadow 0.2s ease;
     flex-shrink: 0;
     background-color: transparent;
     color: var(--color-accent);
+    text-decoration: none; /* For label styled as button */
 }
 
 .button-base:hover {
     border-color: var(--color-accent);
-    background-color: var(--color-background);
+    background-color: var(--color-background); /* Changed from var(--color-background) to slightly different for better feedback */
     box-shadow: inset 0 0 3px var(--color-accent), 0 0 6px var(--color-accent);
 }
 
@@ -659,7 +754,7 @@ textarea.greyed-out {
     bottom: 0;
     left: 0;
     width: 100%;
-    z-index: 100;
+    z-index: 100; /* Base z-index for footer */
     box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -750,7 +845,7 @@ textarea.greyed-out {
 
 
 .footer-button--save,
-.footer-button--load {
+.footer-button--load { /* This now applies to the label for load */
     height: 48px;
     width: 110px;
 }
@@ -761,21 +856,103 @@ textarea.greyed-out {
 }
 
 
-.footer-button--load {
-    padding: 0;
+.footer-button--load { /* Specifically for the label */
+    padding: 0; /* Remove padding from label if it's just a wrapper */
+    display: flex; /* Ensure label fills the container for click */
+    align-items: center;
+    justify-content: center;
 }
 
 .footer-button--load>label {
     color: inherit;
     font-weight: 700;
-    padding: 10px 18px;
+    padding: 10px 18px; /* Apply padding to inner content if needed, or keep on main button */
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100%;
+    width: 100%;
     box-sizing: border-box;
     cursor: pointer;
 }
+
+/* ==========================================================================
+   フッタードロップダウン
+   ========================================================================== */
+
+.footer-button-container {
+    position: relative; /* For dropdown positioning */
+    display: flex; /* To align main button and arrow */
+    align-items: stretch; /* Make items same height */
+}
+
+/* Styling for the main button part of a dropdown combo */
+.footer-button-container > .footer-button {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    /* width auto or specific if needed, but ensure it doesn't fight with arrow */
+}
+.footer-button-container > .footer-button--load { /* label specific */
+     border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+
+.footer-button--dropdown-arrow {
+    padding: 0 8px; /* Smaller padding for the arrow part */
+    font-size: 0.8em; /* Smaller arrow */
+    height: 48px; /* Match main button height */
+    border-left: none; /* Remove left border to merge with main button */
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: -1px; /* Overlap slightly to ensure no gap */
+}
+
+.footer-dropdown-menu {
+    position: absolute;
+    bottom: calc(100% + 5px); /* Position above the footer button with a gap */
+    right: 0; /* Align to the right of the container */
+    background-color: var(--color-panel-body);
+    border: 1px solid var(--color-border-normal);
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+    z-index: 110; /* Above footer, but below modals */
+    min-width: 200px; /* Or width of the combined button */
+}
+
+.footer-dropdown-menu .menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px 15px; /* Consistent padding for items */
+    text-align: left;
+    background-color: transparent;
+    color: var(--color-text-normal);
+    border: none;
+    border-radius: 3px;
+    margin-bottom: 4px; /* Space between items */
+}
+.footer-dropdown-menu .menu-item.button-base { /* if menu items are actual buttons */
+     width: calc(100% - 0px); /* Full width minus padding */
+    margin-bottom: 4px;
+    justify-content: flex-start; /* Align text to left for button-base */
+}
+
+
+.footer-dropdown-menu .menu-item:last-child {
+    margin-bottom: 0;
+}
+
+.footer-dropdown-menu .menu-item:hover {
+    background-color: var(--color-panel-header);
+    color: var(--color-accent);
+}
+
+/* Ensure labels used as menu items are styled like buttons */
+.footer-dropdown-menu label.menu-item {
+    cursor: pointer;
+}
+
 
 /* ==========================================================================
    ヘルプ表示
@@ -934,6 +1111,8 @@ textarea.greyed-out {
     .help-panel {
         width: calc(100% - 40px);
         max-width: none;
+        left: 10px; /* Adjust for smaller screens */
+        bottom: 82px; /* Adjust for smaller screens */
     }
 
     .info-row {
@@ -952,6 +1131,42 @@ textarea.greyed-out {
     .equipment-section {
         min-width: 100%;
     }
+
+    .top-left-controls {
+        top: 5px;
+        left: 5px;
+    }
+    .icon-button {
+        width: 36px;
+        height: 36px;
+        padding: 6px;
+    }
+    .icon-button img.icon-svg {
+        width: 20px;
+        height: 20px;
+    }
+    .floating-menu {
+        min-width: 180px; /* Adjust for smaller screens */
+    }
+
+    .main-footer {
+        padding: 10px 15px; /* Reduce padding on smaller screens */
+        gap: 10px;
+    }
+    .footer-button-container > .footer-button,
+    .footer-button--dropdown-arrow {
+        height: 42px; /* Slightly smaller buttons */
+    }
+    .footer-button--save, .footer-button--load {
+        width: 90px; /* Adjust width */
+    }
+     .footer-button--output {
+        width: 140px;
+    }
+    .footer-dropdown-menu {
+        min-width: 180px;
+    }
+
 }
 
 @media (max-width: 480px) {
@@ -962,6 +1177,13 @@ textarea.greyed-out {
     .flex-weakness-acquired {
         width: 40%;
         min-width: 100px;
+    }
+
+    .floating-menu {
+        font-size: 0.9em; /* Slightly smaller text in menu */
+    }
+    .footer-dropdown-menu {
+        font-size: 0.9em;
     }
 }
 
@@ -1125,4 +1347,27 @@ body.keyboard-visible .help-panel {
     bottom: 20px !important; /* Adjust help panel position */
 
     /* Consider if it should be position: absolute if footer is relative */
+}
+
+/* Ensure Google Drive controls are not affected by keyboard visibility if fixed */
+body.keyboard-visible .top-left-controls {
+    position: fixed !important;
+}
+
+/* Google Drive specific controls container (already exists, this is just a comment) */
+.google-drive-controls-container {
+    /* Styles for the older, larger Drive buttons - can be reviewed/removed if no longer used */
+    /* display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 10px; background-color: var(--color-panel-sub-header); border-radius: 4px; */
+}
+.google-drive-buttons {
+    /* display: flex; flex-wrap: wrap; gap: 10px; */
+}
+.drive-button {
+    /* padding: 8px 12px; min-width: 120px; */
+}
+.drive-button--save, .drive-button--load {
+    /* width: auto; */ /* Let content decide, or set specific width */
+}
+.status-display--drive {
+    /* width: 100%; text-align: center; margin-bottom: 10px; font-size: 0.9em; color: var(--color-text-muted); padding: 5px; background-color: var(--color-input-bg); border-radius: 3px; */
 }

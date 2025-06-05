@@ -47,6 +47,14 @@ const app = createApp({
             clientId: '913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com',
             isGapiInitialized: false, // To prevent multiple GAPI initializations
             isGisInitialized: false,  // To prevent multiple GIS initializations
+            showDriveMenu: false, // Controls visibility of the Google Drive floating menu
+            showSaveDropdown: false, // Controls visibility of the Save dropdown menu
+            showLoadDropdown: false, // Controls visibility of the Load dropdown menu
+
+            // Bound event handlers for outside click
+            boundCloseDriveMenuHandler: null,
+            boundCloseSaveDropdownHandler: null,
+            boundCloseLoadDropdownHandler: null,
 
             // Image management
             currentImageIndex: 0, // Index of the currently displayed image
@@ -109,6 +117,27 @@ const app = createApp({
         }
     },
     watch: {
+        showDriveMenu(newValue) {
+            if (newValue) {
+                document.addEventListener('click', this.boundCloseDriveMenuHandler, true);
+            } else {
+                document.removeEventListener('click', this.boundCloseDriveMenuHandler, true);
+            }
+        },
+        showSaveDropdown(newValue) {
+            if (newValue) {
+                document.addEventListener('click', this.boundCloseSaveDropdownHandler, true);
+            } else {
+                document.removeEventListener('click', this.boundCloseSaveDropdownHandler, true);
+            }
+        },
+        showLoadDropdown(newValue) {
+            if (newValue) {
+                document.addEventListener('click', this.boundCloseLoadDropdownHandler, true);
+            } else {
+                document.removeEventListener('click', this.boundCloseLoadDropdownHandler, true);
+            }
+        },
         'character.initialScar'(newInitialScar) {
             if (this.character.linkCurrentToInitialScar) {
                 this.character.currentScar = newInitialScar;
@@ -121,6 +150,55 @@ const app = createApp({
         }
     },
     methods: {
+        // Menu and Dropdown Toggle Methods
+        toggleDriveMenu() { // Renamed for clarity from implicit toggle in HTML
+            this.showDriveMenu = !this.showDriveMenu;
+        },
+        toggleSaveDropdown() {
+            this.showSaveDropdown = !this.showSaveDropdown;
+            if (this.showSaveDropdown) { // When opening, ensure others are closed
+                this.showLoadDropdown = false;
+                this.showDriveMenu = false;
+            }
+        },
+        toggleLoadDropdown() {
+            this.showLoadDropdown = !this.showLoadDropdown;
+            if (this.showLoadDropdown) { // When opening, ensure others are closed
+                this.showLoadDropdown = false; // Close other dropdown
+            }
+        },
+        toggleLoadDropdown() {
+            this.showLoadDropdown = !this.showLoadDropdown;
+                this.showSaveDropdown = false;
+                this.showDriveMenu = false;
+            }
+        },
+
+        // Outside Click Handlers
+        closeDriveMenuHandler(event) {
+            // Check if the click is outside the menu and its toggle button
+            // Assumes toggle button has a ref or specific ID/class. For now, let's use a class 'icon-button'
+            const menuElement = this.$el.querySelector('.floating-menu'); // More robust: use refs
+            const toggleButton = this.$el.querySelector('.top-left-controls .icon-button');
+            if (menuElement && !menuElement.contains(event.target) && toggleButton && !toggleButton.contains(event.target)) {
+                this.showDriveMenu = false;
+            }
+        },
+        closeSaveDropdownHandler(event) {
+            const menuElement = this.$el.querySelector('.footer-button-container:nth-child(1) .footer-dropdown-menu'); // Nth child is fragile
+            const toggleButton = this.$el.querySelector('.footer-button-container:nth-child(1) .footer-button--dropdown-arrow');
+             if (menuElement && !menuElement.contains(event.target) && toggleButton && !toggleButton.contains(event.target)) {
+                this.showSaveDropdown = false;
+            }
+        },
+        closeLoadDropdownHandler(event) {
+            const menuElement = this.$el.querySelector('.footer-button-container:nth-child(2) .footer-dropdown-menu'); // Nth child is fragile
+            const toggleButton = this.$el.querySelector('.footer-button-container:nth-child(2) .footer-button--dropdown-arrow');
+            if (menuElement && !menuElement.contains(event.target) && toggleButton && !toggleButton.contains(event.target)) {
+                this.showLoadDropdown = false;
+            }
+        },
+
         handleCurrentScarInput(event) {
             const enteredValue = parseInt(event.target.value, 10);
             if (isNaN(enteredValue)) {
@@ -198,8 +276,9 @@ const app = createApp({
                 this.histories[index] = { sessionName: '', gotExperiments: null, memo: '' };
             }
         },
+        // saveData now specifically refers to local save
         saveData() {
-            this.dataManager.saveData(
+            this.dataManager.saveData( // This method in dataManager handles local file download
                 this.character,
                 this.skills,
                 this.specialSkills,
@@ -221,6 +300,9 @@ const app = createApp({
                     this.showCustomAlert(errorMessage);
                 }
             );
+            // Ensure dropdowns are closed after action
+            this.showSaveDropdown = false;
+            this.showLoadDropdown = false;
         },
 
         outputToCocofolia() {
@@ -320,74 +402,68 @@ const app = createApp({
         async handleGapiLoaded() {
             if (this.isGapiInitialized || !this.googleDriveManager) return;
             this.isGapiInitialized = true;
-
-            this.isGapiLoaded = true; // Still useful for UI, indicates script is loaded
-            this.driveStatusMessage = 'Initializing Google API Client...';
+            this.isGapiLoaded = true;
+            this.driveStatusMessage = 'Google API Client: Loading...';
             console.log("Vue app: handleGapiLoaded triggered.");
             try {
                 await this.googleDriveManager.onGapiLoad();
-                this.driveStatusMessage = 'Google API client initialized.';
+                this.driveStatusMessage = this.isSignedIn ? `Signed in. Folder: ${this.driveFolderName || 'Not selected'}` : 'Google API Client: Ready. Please sign in.';
                 console.log('Google API client initialized successfully in Vue.');
             } catch (err) {
-                this.driveStatusMessage = 'Failed to initialize Google API client (Vue).';
+                this.driveStatusMessage = 'Google API Client: Error initializing.';
                 console.error('GAPI client init error in Vue app:', err);
             }
         },
         async handleGisLoaded() {
             if (this.isGisInitialized || !this.googleDriveManager) return;
             this.isGisInitialized = true;
-
-            this.isGisLoaded = true; // Still useful for UI
-            this.driveStatusMessage = 'Initializing Google Sign-In...';
+            this.isGisLoaded = true;
+            this.driveStatusMessage = 'Google Sign-In: Loading...';
             console.log("Vue app: handleGisLoaded triggered.");
             try {
                 await this.googleDriveManager.onGisLoad();
-                this.driveStatusMessage = 'Google Sign-In initialized.';
+                this.driveStatusMessage = this.isSignedIn ? `Signed in. Folder: ${this.driveFolderName || 'Not selected'}` : 'Google Sign-In: Ready. Please sign in.';
                 console.log('Google Sign-In initialized successfully in Vue.');
             } catch (err) {
-                this.driveStatusMessage = 'Failed to initialize Google Sign-In (Vue).';
+                this.driveStatusMessage = 'Google Sign-In: Error initializing.';
                 console.error('GIS client init error in Vue app:', err);
             }
         },
         async handleSignInClick() {
+            this.showDriveMenu = false; // Close menu on action
             if (!this.googleDriveManager) {
-                this.driveStatusMessage = "Google Drive Manager not ready.";
+                this.driveStatusMessage = "Error: Drive Manager not available.";
                 return;
             }
-            this.driveStatusMessage = 'Signing in...';
+            this.driveStatusMessage = 'Signing in... Please wait.';
             try {
-                // Wrap callback-based signIn in a Promise-like structure if needed, or handle directly
                 this.googleDriveManager.handleSignIn((error, authResult) => {
                     if (error || !authResult || !authResult.signedIn) {
                         this.isSignedIn = false;
                         this.googleUser = null;
-                        this.driveStatusMessage = 'Sign-in failed: ' + (error ? error.message : 'Please try again or ensure pop-ups are enabled.');
+                        this.driveStatusMessage = 'Sign-in failed. ' + (error ? (error.message || error.details || 'Please try again.') : 'Ensure pop-ups are enabled.');
                         console.error("Sign-in error or not signed in:", error, authResult);
                     } else {
                         this.isSignedIn = true;
-                        // Note: GIS token client doesn't directly provide user profile info like gapi.auth2.
-                        // We'll rely on gapi.client calls being authorized.
-                        // If basic profile info is needed, it would require an additional call to People API or similar.
-                        // For now, just acknowledge sign-in.
-                        this.googleUser = { displayName: 'Signed In User' }; // Placeholder
-                        this.driveStatusMessage = 'Successfully signed in.';
+                        this.googleUser = { displayName: 'User' }; // Placeholder, actual name needs People API
+                        this.driveStatusMessage = `Signed in. Folder: ${this.driveFolderName || 'Not selected'}`;
                         console.log("Sign-in successful.");
-
                         if (!this.driveFolderId) {
-                            this.getOrPromptForDriveFolder(); // Intentionally not awaiting here for now
+                            this.getOrPromptForDriveFolder();
                         }
                     }
                 });
-            } catch (err) { // This catch might not be effective for callback errors
+            } catch (err) {
                 this.isSignedIn = false;
                 this.googleUser = null;
-                this.driveStatusMessage = 'Sign-in error: ' + err.message;
+                this.driveStatusMessage = 'Sign-in error: ' + (err.message || 'An unexpected error occurred.');
                 console.error("Exception during signIn:", err);
             }
         },
         handleSignOutClick() {
+            this.showDriveMenu = false; // Close menu on action
             if (!this.googleDriveManager) {
-                this.driveStatusMessage = "Google Drive Manager not ready.";
+                this.driveStatusMessage = "Error: Drive Manager not available.";
                 return;
             }
             this.driveStatusMessage = 'Signing out...';
@@ -396,79 +472,79 @@ const app = createApp({
                 this.googleUser = null;
                 this.currentDriveFileId = null;
                 this.currentDriveFileName = '';
-                // this.driveFolderId = null; // Optionally clear folder preference on sign-out
-                // this.driveFolderName = '';
-                this.driveStatusMessage = 'Successfully signed out.';
+                // Keep driveFolderId and driveFolderName from localStorage unless explicitly cleared
+                this.driveStatusMessage = 'Signed out.';
                 console.log("Sign-out complete.");
             });
         },
         async getOrPromptForDriveFolder() {
+            this.showDriveMenu = false; // Close menu on action
             if (!this.isSignedIn || !this.googleDriveManager) {
-                this.driveStatusMessage = "Please sign in first.";
+                this.driveStatusMessage = "Error: Please sign in first.";
                 return;
             }
-            this.driveStatusMessage = 'Setting up Drive folder...';
-            const appFolderName = 'AioniaCS_Data'; // Default app folder name
+            this.driveStatusMessage = 'Accessing Google Drive folder...';
+            const appFolderName = 'AioniaCS_Data';
 
             try {
                 const folderInfo = await this.googleDriveManager.getOrCreateAppFolder(appFolderName);
                 if (folderInfo && folderInfo.id) {
                     this.driveFolderId = folderInfo.id;
-                    this.driveFolderName = folderInfo.name; // This will be appFolderName
+                    this.driveFolderName = folderInfo.name;
                     localStorage.setItem('aioniaDriveFolderId', folderInfo.id);
                     localStorage.setItem('aioniaDriveFolderName', folderInfo.name);
-                    this.driveStatusMessage = `Using Drive folder: ${folderInfo.name}. You can change this with "Choose Drive Folder".`;
+                    this.driveStatusMessage = `Drive Folder: ${this.driveFolderName}`;
                 } else {
-                    this.driveStatusMessage = 'Could not auto-setup Drive folder. Please choose one manually.';
-                    // Fallback to manual prompt if getOrCreateAppFolder failed or returned nothing.
-                    await this.promptForDriveFolder();
+                    this.driveStatusMessage = 'Could not auto-setup Drive folder. Please choose one.';
+                    await this.promptForDriveFolder(false); // Pass false as it's not a direct user click
                 }
             } catch (error) {
                 console.error("Error in getOrPromptForDriveFolder:", error);
-                this.driveStatusMessage = `Error setting up folder: ${error.message}. Please choose manually.`;
-                await this.promptForDriveFolder(); // Fallback if there was an error
+                this.driveStatusMessage = `Folder setup error: ${error.message || 'Please choose manually.'}`;
+                await this.promptForDriveFolder(false);
             }
         },
-        async promptForDriveFolder() {
+        async promptForDriveFolder(isDirectClick = true) {
+            if(isDirectClick) this.showDriveMenu = false; // Close menu on action if directly clicked
             if (!this.isSignedIn || !this.googleDriveManager) {
-                this.driveStatusMessage = "Please sign in first to choose a folder.";
+                this.driveStatusMessage = "Error: Please sign in first.";
                 return;
             }
-            this.driveStatusMessage = 'Waiting for folder selection...';
+            this.driveStatusMessage = 'Opening Google Drive folder picker...';
             this.googleDriveManager.showFolderPicker((error, folder) => {
                 if (error) {
-                    this.driveStatusMessage = `Folder selection failed: ${error.message}`;
+                    this.driveStatusMessage = `Folder selection error: ${error.message || 'Cancelled or failed.'}`;
                     console.warn("Folder selection error:", error);
                 } else if (folder && folder.id) {
                     this.driveFolderId = folder.id;
                     this.driveFolderName = folder.name;
                     localStorage.setItem('aioniaDriveFolderId', folder.id);
                     localStorage.setItem('aioniaDriveFolderName', folder.name);
-                    this.driveStatusMessage = `Selected Drive folder: ${folder.name}`;
-                    this.currentDriveFileId = null; // Reset file context if folder changes
+                    this.driveStatusMessage = `Drive Folder: ${this.driveFolderName}`;
+                    this.currentDriveFileId = null;
                     this.currentDriveFileName = '';
                     console.log("Folder selected:", folder);
                 } else {
-                    // This case might occur if picker is closed without error but no folder.
-                    this.driveStatusMessage = 'Folder selection cancelled or no folder chosen.';
+                    this.driveStatusMessage = this.driveFolderId ? `Drive Folder: ${this.driveFolderName}` : 'Folder selection cancelled.';
                 }
             });
         },
         async handleSaveToDriveClick() {
+            this.showSaveDropdown = false; // Close dropdown
             if (!this.isSignedIn || !this.googleDriveManager) {
-                this.driveStatusMessage = "Please sign in to save to Drive.";
+                this.driveStatusMessage = "Error: Please sign in to save.";
                 return;
             }
             if (!this.driveFolderId) {
-                this.driveStatusMessage = "Target Drive folder not set. Prompting for folder selection...";
-                await this.promptForDriveFolder(); // Prompt and wait
-                if (!this.driveFolderId) { // Check again if folder was selected
-                    this.driveStatusMessage = "Cannot save: No Drive folder selected.";
+                this.driveStatusMessage = "Drive folder not set. Please choose a folder first.";
+                await this.promptForDriveFolder(false); // Prompt for folder
+                if (!this.driveFolderId) {
+                    this.driveStatusMessage = "Save cancelled: No Drive folder selected.";
                     return;
                 }
             }
 
-            this.driveStatusMessage = `Saving to ${this.driveFolderName}...`;
+            this.driveStatusMessage = `Saving to "${this.driveFolderName}"...`;
             const fileName = (this.character.name || 'Aionia_Character_Sheet').replace(/[\\/:*?"<>|]/g, '_') + '.json';
 
             try {
@@ -478,27 +554,27 @@ const app = createApp({
                 );
                 if (savedFile && savedFile.id) {
                     this.currentDriveFileId = savedFile.id;
-                    this.currentDriveFileName = savedFile.name;
-                    this.driveStatusMessage = `Data saved to ${savedFile.name} in ${this.driveFolderName}.`;
+                    this.currentDriveFileName = savedFile.name; // Store the actual name used by Drive
+                    this.driveStatusMessage = `Saved: ${this.currentDriveFileName} to "${this.driveFolderName}".`;
                     console.log("Save successful:", savedFile);
                 } else {
                     throw new Error("Save operation did not return expected file information.");
                 }
             } catch (error) {
                 console.error("Failed to save data to Drive:", error);
-                this.driveStatusMessage = `Failed to save: ${error.message || 'Unknown error'}`;
+                this.driveStatusMessage = `Save error: ${error.message || 'Unknown error'}`;
             }
         },
         async handleLoadFromDriveClick() {
+            this.showLoadDropdown = false; // Close dropdown
             if (!this.isSignedIn || !this.googleDriveManager) {
-                this.driveStatusMessage = "Please sign in to load from Drive.";
+                this.driveStatusMessage = "Error: Please sign in to load.";
                 return;
             }
-            this.driveStatusMessage = 'Waiting for file selection...';
-            // Pass current driveFolderId to picker if available, otherwise null (root).
+            this.driveStatusMessage = 'Opening Google Drive file picker...';
             this.googleDriveManager.showFilePicker(async (error, file) => {
                 if (error) {
-                    this.driveStatusMessage = `File selection failed: ${error.message}`;
+                    this.driveStatusMessage = `File selection error: ${error.message || 'Cancelled or failed.'}`;
                     console.warn("File selection error:", error);
                     return;
                 }
@@ -519,18 +595,16 @@ const app = createApp({
 
                         this.currentDriveFileId = file.id;
                         this.currentDriveFileName = file.name;
-                        this.driveStatusMessage = `Loaded ${file.name} from Drive.`;
+                    this.driveStatusMessage = `Loaded: ${this.currentDriveFileName} from Drive.`;
                         console.log("Load successful:", file);
-                        // If the loaded file is from a different folder than currently set,
-                        // it's a choice whether to update driveFolderId. For now, we don't.
                     } else {
                         throw new Error("Load operation did not return data.");
                     }
                 } catch (err) {
                     console.error("Failed to load data from Drive:", err);
-                    this.driveStatusMessage = `Failed to load ${file.name}: ${err.message || 'Unknown error'}`;
+                this.driveStatusMessage = `Load error for ${file.name || 'file'}: ${err.message || 'Unknown error'}`;
                 }
-            }, this.driveFolderId || null, ['application/json']);
+        }, this.driveFolderId || null, ['application/json']); // MIME type for JSON files
         },
 
         // Image Management Methods
@@ -594,43 +668,57 @@ const app = createApp({
     mounted() {
         this.cocofoliaExporter = new window.CocofoliaExporter();
         this.dataManager = new window.DataManager(this.gameData);
-        this.imageManagerInstance = window.ImageManager; // Initialize ImageManager
+        this.imageManagerInstance = window.ImageManager;
 
-        // Make Vue instance globally accessible for the script loader callbacks
-        window.vueApp = this;
+        // Bind outside click handlers
+        this.boundCloseDriveMenuHandler = this.closeDriveMenuHandler.bind(this);
+        this.boundCloseSaveDropdownHandler = this.closeSaveDropdownHandler.bind(this);
+        this.boundCloseLoadDropdownHandler = this.closeLoadDropdownHandler.bind(this);
 
-        // Initialize GoogleDriveManager
+        window.vueApp = this; // Make Vue instance globally accessible
+
+        // Initial Drive Status Message
+        this.driveStatusMessage = "Initializing Google services...";
+
         if (window.GoogleDriveManager) {
             this.googleDriveManager = new window.GoogleDriveManager(this.apiKey, this.clientId);
             this.dataManager.setGoogleDriveManager(this.googleDriveManager);
 
-            // Check global flags set by placeholder functions in index.html
             if (window.gapiScriptLoaded) {
-                console.log("main.js mounted: GAPI script was already loaded by placeholder, calling handler.");
+                console.log("main.js mounted: GAPI script pre-loaded.");
                 this.handleGapiLoaded();
             }
-            // else the placeholder vueGapiLoadedPlaceholder in index.html will call it when gapi script loads.
-
             if (window.gisScriptLoaded) {
-                console.log("main.js mounted: GIS script was already loaded by placeholder, calling handler.");
+                console.log("main.js mounted: GIS script pre-loaded.");
                 this.handleGisLoaded();
             }
-            // else the placeholder vueGisLoadedPlaceholder in index.html will call it when gis script loads.
-
         } else {
-            console.error("GoogleDriveManager class not found. Ensure googleDriveManager.js is loaded.");
+            console.error("GoogleDriveManager class not found.");
             this.driveStatusMessage = "Error: Google Drive component failed to load.";
         }
 
-        // Load Drive preferences
         const savedFolderId = localStorage.getItem('aioniaDriveFolderId');
         const savedFolderName = localStorage.getItem('aioniaDriveFolderName');
         if (savedFolderId) {
             this.driveFolderId = savedFolderId;
             this.driveFolderName = savedFolderName || 'Previously Selected Folder';
-            // Potentially update UI or status message
+            // Initial status message will be updated once APIs load and sign-in state is clearer
+            if (!this.isGapiInitialized || !this.isGisInitialized) {
+                 this.driveStatusMessage = `Folder "${this.driveFolderName}" loaded. Waiting for Google services...`;
+            } else if (!this.isSignedIn) {
+                this.driveStatusMessage = `Folder "${this.driveFolderName}" loaded. Please sign in.`;
+            } else {
+                 this.driveStatusMessage = `Signed in. Folder: ${this.driveFolderName}`;
+            }
+        } else {
+            if (!this.isGapiInitialized || !this.isGisInitialized) {
+                this.driveStatusMessage = "Waiting for Google services...";
+            } else if (!this.isSignedIn) {
+                this.driveStatusMessage = "Please sign in and choose a Drive folder.";
+            } else {
+                 this.driveStatusMessage = "Signed in. No Drive folder selected.";
+            }
         }
-
 
         if (this.character.linkCurrentToInitialScar) {
             this.character.currentScar = this.character.initialScar;
