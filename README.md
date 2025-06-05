@@ -36,3 +36,9 @@
    ```bash
    npm run lint
    ```
+
+## Customization
+
+Status display colors can be adjusted by editing the CSS variables defined in
+`assets/css/style.css`. Look for variables starting with
+`--color-status-` to tweak border, text, and background colors.
