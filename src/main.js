@@ -151,8 +151,12 @@ const app = createApp({
     },
     methods: {
         // Menu and Dropdown Toggle Methods
-        toggleDriveMenu() { // Renamed for clarity from implicit toggle in HTML
+        toggleDriveMenu() {
             this.showDriveMenu = !this.showDriveMenu;
+            if (this.showDriveMenu) { // When opening, ensure others are closed
+                this.showSaveDropdown = false;
+                this.showLoadDropdown = false;
+            }
         },
         toggleSaveDropdown() {
             this.showSaveDropdown = !this.showSaveDropdown;

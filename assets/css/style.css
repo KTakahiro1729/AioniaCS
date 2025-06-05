@@ -83,15 +83,15 @@ body {
 }
 
 .icon-button { /* Style for the cloud icon button */
-    padding: 8px;
+    padding: 16px; /* Doubled padding */
     background-color: var(--color-panel-body);
     border: 1px solid var(--color-border-normal);
     border-radius: 50%; /* Make it circular */
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px; /* Fixed size for circle */
-    height: 40px; /* Fixed size for circle */
+    width: 80px; /* Doubled width */
+    height: 80px; /* Doubled height */
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
@@ -101,8 +101,8 @@ body {
 }
 
 .icon-button img.icon-svg {
-    width: 24px; /* Adjust size of SVG inside the button */
-    height: 24px;
+    width: 48px; /* Doubled width */
+    height: 48px; /* Doubled height */
     filter: invert(70%) sepia(20%) saturate(500%) hue-rotate(0deg) brightness(100%) contrast(90%); /* Lighten SVG to match text */
 }
 
@@ -1137,13 +1137,13 @@ textarea.greyed-out {
         left: 5px;
     }
     .icon-button {
-        width: 36px;
-        height: 36px;
-        padding: 6px;
+        width: 72px; /* Doubled width for smaller screens */
+        height: 72px; /* Doubled height for smaller screens */
+        padding: 12px; /* Doubled padding for smaller screens */
     }
     .icon-button img.icon-svg {
-        width: 20px;
-        height: 20px;
+        width: 40px; /* Doubled width for smaller screens */
+        height: 40px; /* Doubled height for smaller screens */
     }
     .floating-menu {
         min-width: 180px; /* Adjust for smaller screens */

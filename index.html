@@ -48,34 +48,22 @@
                     class="button-base icon-button"
                     title="Google Driveにログイン"
                     v-if="isGapiInitialized && isGisInitialized"
-                    @click="showDriveMenu = !showDriveMenu"
+                    @click="toggleDriveMenu"
+                    ref="driveMenuToggleButton"
                 >
                     <img src="assets/medieval_cloud.svg" alt="Google Drive" class="icon-svg">
                 </button>
-                <div class="floating-menu" v-if="showDriveMenu">
-                    <button class="menu-item button-base" v-if="!isSignedIn" @click="handleSignInClick">Sign In with Google</button>
+                <div class="floating-menu" v-if="showDriveMenu" ref="driveMenu">
+                    <div class="menu-item status-message" id="floating_drive_status_message">{{ driveStatusMessage }}</div>
+                    <button class="menu-item button-base" v-if="canSignInToGoogle" @click="handleSignInClick">Sign In with Google</button>
                     <button class="menu-item button-base" v-if="isSignedIn" @click="handleSignOutClick">Sign Out</button>
-                    <button class="menu-item button-base" v-if="isSignedIn" @click="promptForDriveFolder">Choose Drive Folder</button>
-                    <div class="menu-item status-message">{{ driveStatusMessage }}</div>
+                    <button class="menu-item button-base" v-if="isSignedIn" @click="promptForDriveFolder" :disabled="!isSignedIn">Choose Drive Folder</button>
+                    <button class="menu-item button-base" v-if="isSignedIn" @click="handleSaveToDriveClick" :disabled="!canOperateDrive">Save to Drive</button>
+                    <button class="menu-item button-base" v-if="isSignedIn" @click="handleLoadFromDriveClick" :disabled="!isSignedIn">Load from Drive</button>
                 </div>
             </div>
         </div>
         <div class="tool-title">Aionia TRPG Character Sheet</div>
-        <div class="google-drive-controls-container">
-            <div id="drive_status_message" class="status-display status-display--drive">{{ driveStatusMessage }}</div>
-            <div class="google-drive-buttons">
-                <div id="google_sign_in_button" class="button-base drive-button" v-if="canSignInToGoogle"
-                    @click="handleSignInClick">Sign In with Google</div>
-                <div id="google_sign_out_button" class="button-base drive-button" v-if="isSignedIn"
-                    @click="handleSignOutClick">Sign Out</div>
-                <div class="button-base drive-button" @click="promptForDriveFolder" :disabled="!isSignedIn">Choose Drive
-                    Folder</div>
-                <div class="button-base drive-button drive-button--save" @click="handleSaveToDriveClick"
-                    :disabled="!canOperateDrive">Save to Drive</div>
-                <div class="button-base drive-button drive-button--load" @click="handleLoadFromDriveClick"
-                    :disabled="!isSignedIn">Load from Drive</div>
-            </div>
-        </div>
 
         <div class="main-grid">
             <div id="character_info" class="character-info">
@@ -408,8 +396,8 @@
 
             <div class="footer-button-container">
                 <button class="button-base footer-button footer-button--save" @click="saveData">データ保存</button>
-                <button class="button-base footer-button footer-button--dropdown-arrow" v-if="isSignedIn" @click="toggleSaveDropdown">▼</button>
-                <div class="footer-dropdown-menu" v-if="showSaveDropdown">
+                <button class="button-base footer-button footer-button--dropdown-arrow" v-if="isSignedIn" @click="toggleSaveDropdown" ref="saveDropdownToggleButton">▼</button>
+                <div class="footer-dropdown-menu" v-if="showSaveDropdown" ref="saveDropdownMenu">
                     <button class="menu-item button-base" @click="saveData">ローカルに保存</button>
                     <button class="menu-item button-base" @click="handleSaveToDriveClick" v-if="canOperateDrive">Google Driveに保存</button>
                 </div>
@@ -418,8 +406,8 @@
             <div class="footer-button-container">
                 <label for="load_input_vue" class="button-base footer-button footer-button--load">データ読込</label>
                 <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
-                <button class="button-base footer-button footer-button--dropdown-arrow" v-if="isSignedIn" @click="toggleLoadDropdown">▼</button>
-                <div class="footer-dropdown-menu" v-if="showLoadDropdown">
+                <button class="button-base footer-button footer-button--dropdown-arrow" v-if="isSignedIn" @click="toggleLoadDropdown" ref="loadDropdownToggleButton">▼</button>
+                <div class="footer-dropdown-menu" v-if="showLoadDropdown" ref="loadDropdownMenu">
                     <label for="load_input_vue_dropdown" class="menu-item button-base">ローカルから読込</label>
                     <input type="file" id="load_input_vue_dropdown" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
                     <button class="menu-item button-base" @click="handleLoadFromDriveClick" v-if="isSignedIn">Google Driveから読込</button>
