@@ -19,8 +19,7 @@ The goal is to keep CSS maintainable and descriptive, so class names should refl
 - Classes follow the BEM style: `block__element--modifier`.
 - Example: `.menu__item--active`.
 - Limit the use of ID selectors to cases like anchors or JavaScript hooks.
-
-Utility classes are exceptions. Layout helpers use the `u-` prefix (for example,
+- Utility classes are exceptions. Layout helpers use the `u-` prefix (for example,
 `u-flex-group`) to make them easy to spot.
 
 Inline styles are allowed only for one-off adjustments that do not warrant a new class.
