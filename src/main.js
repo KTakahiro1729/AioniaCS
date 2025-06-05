@@ -164,11 +164,6 @@ const app = createApp({
         toggleLoadDropdown() {
             this.showLoadDropdown = !this.showLoadDropdown;
             if (this.showLoadDropdown) { // When opening, ensure others are closed
-                this.showLoadDropdown = false; // Close other dropdown
-            }
-        },
-        toggleLoadDropdown() {
-            this.showLoadDropdown = !this.showLoadDropdown;
                 this.showSaveDropdown = false;
                 this.showDriveMenu = false;
             }
@@ -604,7 +599,10 @@ const app = createApp({
                     console.error("Failed to load data from Drive:", err);
                 this.driveStatusMessage = `Load error for ${file.name || 'file'}: ${err.message || 'Unknown error'}`;
                 }
-        }, this.driveFolderId || null, ['application/json']); // MIME type for JSON files
+            },
+            this.driveFolderId || null, // Second argument to showFilePicker
+            ['application/json']       // Third argument to showFilePicker
+        );
         },
 
         // Image Management Methods
