@@ -148,10 +148,10 @@ class GoogleDriveManager {
                     name: folderName,
                     mimeType: 'application/vnd.google-apps.folder'
                 },
-                fields: 'id'
+                fields: 'id, name'
             });
             console.log("Folder created successfully:", response.result);
-            return response.result.id;
+            return response.result;
         } catch (error) {
             console.error("Error creating folder:", error);
             return null;
@@ -177,7 +177,7 @@ class GoogleDriveManager {
             const files = response.result.files;
             if (files && files.length > 0) {
                 console.log("Folder found:", files[0]);
-                return files[0].id;
+                return files[0];
             } else {
                 console.log("Folder not found:", folderName);
                 return null;
@@ -249,46 +249,77 @@ class GoogleDriveManager {
             return null;
         }
 
-        const boundary = '-------314159265358979323846';
-        const delimiter = `\r\n--${boundary}\r\n`;
-        const closeDelim = `\r\n--${boundary}--`;
+        if (fileId) {
+            try {
+                const boundary = '-------314159265358979323846';
+                const delimiter = `\r\n--${boundary}\r\n`;
+                const closeDelim = `\r\n--${boundary}--`;
+                const contentType = 'application/json';
+                const metadata = { name: fileName, mimeType: contentType };
 
-        const contentType = 'application/json'; // Assuming content is JSON as per typical use case
+                const multipartRequestBody =
+                    delimiter +
+                    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                    JSON.stringify(metadata) +
+                    delimiter +
+                    `Content-Type: ${contentType}\r\n\r\n` +
+                    fileContent +
+                    closeDelim;
 
-        let metadata;
-        if (fileId) { // Update existing file
-            metadata = { name: fileName, mimeType: contentType };
-        } else { // Create new file
-            metadata = { name: fileName, parents: [folderId], mimeType: contentType };
+                const response = await gapi.client.request({
+                    path: `/upload/drive/v3/files/${fileId}`,
+                    method: 'PATCH',
+                    params: { uploadType: 'multipart' },
+                    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+                    body: multipartRequestBody
+                });
+                console.log("File updated successfully:", response.result);
+                return { id: response.result.id, name: response.result.name };
+
+            } catch (error) {
+                // 404エラーの場合、ファイルが存在しないと判断し、新規作成フローに進む
+                if (error.status === 404) {
+                    console.error("Error creating file: The parent folder was not found.", error);
+                    // UI側でハンドリングできるよう、具体的なエラーをスローする
+                    throw new Error("Parent folder not found. Please select a new folder.");
+                } else {
+                    // その他の作成エラー
+                    console.error("Error creating new file:", error);
+                    if (error.result && error.result.error) {
+                        console.error("Detailed error:", error.result.error.message);
+                    }
+                    return null;
+                }
+            }
         }
 
-        const multipartRequestBody =
-            delimiter +
-            'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-            JSON.stringify(metadata) +
-            delimiter +
-            `Content-Type: ${contentType}\r\n\r\n` +
-            fileContent +
-            closeDelim;
-
-        const path = fileId ? `/upload/drive/v3/files/${fileId}` : '/upload/drive/v3/files';
-        const method = fileId ? 'PATCH' : 'POST';
-
         try {
+            const boundary = '-------314159265358979323846';
+            const delimiter = `\r\n--${boundary}\r\n`;
+            const closeDelim = `\r\n--${boundary}--`;
+            const contentType = 'application/json';
+            const metadata = { name: fileName, parents: [folderId], mimeType: contentType };
+
+            const multipartRequestBody =
+                delimiter +
+                'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                JSON.stringify(metadata) +
+                delimiter +
+                `Content-Type: ${contentType}\r\n\r\n` +
+                fileContent +
+                closeDelim;
+
             const response = await gapi.client.request({
-                path: path,
-                method: method,
-                params: { uploadType: 'multipart' },
-                headers: {
-                    'Content-Type': `multipart/related; boundary=${boundary}`
-                },
+                path: '/upload/drive/v3/files',
+                method: 'POST',
+                params: { uploadType: 'multipart', fields: 'id,name' },
+                headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
                 body: multipartRequestBody
             });
-            console.log("File saved successfully:", response.result);
+            console.log("File created successfully:", response.result);
             return { id: response.result.id, name: response.result.name };
         } catch (error) {
-            console.error("Error saving file:", error);
-            // Log the full error response if available
+            console.error("Error creating new file:", error);
             if (error.result && error.result.error) {
                 console.error("Detailed error:", error.result.error.message);
             }
