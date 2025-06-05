@@ -115,7 +115,7 @@ test.describe('Character Sheet E2E Tests', () => {
       await removeButton.click();
       await expect(page.locator('.character-image-placeholder')).toBeVisible();
       await expect(imageCountDisplay).not.toBeVisible();
-      await expect(removeButton).not.toBeVisible();
+      await expect(removeButton).toBeDisabled();
     });
 
     test('saves as ZIP when images are present', async ({ page }) => {
