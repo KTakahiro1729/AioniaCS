@@ -2,15 +2,17 @@
   "name": "aioniacs",
   "version": "1.0.0",
   "description": "慈悲なきアイオニアのための非公式キャラクターシート作成ツールです",
-  "main": "src/main.js",
   "scripts": {
-    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
-    "lint:js": "eslint src/ tests/ --ext .js",
-    "lint:css": "stylelint \"**/*.css\"",
-    "lint:html": "htmlhint \"**/*.html\"",
+    "lint": "npm run lint:js && npm run lint:scss && npm run lint:html",
+    "lint:js": "eslint assets/src/ assets/js/ tests/ --ext .js",
+    "lint:scss": "stylelint '**/*.scss'",
+    "lint:html": "htmlhint _layouts/ _includes/ index.html _site/**/*.html",
     "test": "jest",
     "e2e": "playwright test",
-    "pree2e": "playwright install"
+    "pree2e": "playwright install",
+    "jekyll:build": "bundle exec jekyll build",
+    "jekyll:serve": "bundle exec jekyll serve --livereload",
+    "jekyll:clean": "bundle exec jekyll clean"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +25,9 @@
     "htmlhint": "^1.4.0",
     "jest": "^29.7.0",
     "stylelint": "^16.20.0",
-    "stylelint-config-standard": "^38.0.0"
+    "stylelint-config-standard": "^38.0.0",
+    "stylelint-config-standard-scss": "^13.0.0",
+    "jekyll": "^4.3.0"
   },
   "jest": {
     "testPathIgnorePatterns": [

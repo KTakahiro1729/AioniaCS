@@ -6,12 +6,41 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env: # Define environment variables for Playwright
+      PLAYWRIGHT_BASE_URL: http://localhost:4000
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run e2e
+          cache: 'npm'
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Setup Ruby and Bundler
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0' # Or a version compatible with Jekyll & project
+          bundler-cache: true # Automatically runs bundle install
+
+      - name: Lint files
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test # Ensure Jest config/tests are updated for new paths if they fail
+
+      - name: Build Jekyll site
+        run: npm run jekyll:build # Uses bundle exec jekyll build
+
+      - name: Serve Jekyll site and run E2E tests
+        run: |
+          npm install -g http-server # Install http-server globally in the CI environment
+          http-server _site -p 4000 --silent & # Serve _site on port 4000 in the background
+          SERVER_PID=$! # Get PID of the http-server
+          npm run e2e # Playwright tests will use PLAYWRIGHT_BASE_URL
+          kill $SERVER_PID # Kill the http-server after tests are done
