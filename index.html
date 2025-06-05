@@ -344,7 +344,8 @@
         </div>
 
         <div class="main-footer">
-            <div class="button-base footer-help-icon" ref="helpIcon" @mouseover="handleHelpIconMouseOver"
+            <div class="button-base footer-help-icon" ref="helpIcon"
+                :class="{ 'footer-help-icon--fixed': helpState === 'fixed' }" @mouseover="handleHelpIconMouseOver"
                 @mouseleave="handleHelpIconMouseLeave" @click="handleHelpIconClick" title="ヘルプ表示">？
             </div>
             <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
