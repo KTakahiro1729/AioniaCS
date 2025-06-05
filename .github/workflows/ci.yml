@@ -4,14 +4,68 @@ on:
   pull_request:
 
 jobs:
-  build:
+  # Lintジョブ (JavaScript, CSS, HTMLの静的解析)
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - run: npm run e2e
+          cache: 'npm' # NPMのキャッシュを有効化
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+  # Testジョブ (Jestによるユニットテスト)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm' # NPMのキャッシュを有効化
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  # E2Eジョブ (PlaywrightによるE2Eテスト)
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm' # NPMのキャッシュを有効化
+
+      # Playwrightのブラウザをキャッシュ
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install dependencies
+        run: npm ci
+
+      # キャッシュがない場合のみブラウザをインストール
+      - name: Install Playwright Browsers
+        # npx playwright install --with-deps を使うと依存関係もインストールしてくれます
+        run: npx playwright install --with-deps
+
+      - name: Run e2e tests
+        run: npm run e2e
