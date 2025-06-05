@@ -29,6 +29,37 @@
     --color-delete-border: #5c3939;
     --color-delete-hover-text: #a86f6f;
 
+    /* Newly added variables */
+    --color-white: #fff;
+    --color-transparent: transparent;
+    --color-black-alpha-30: rgb(0 0 0 / 30%);
+    --color-black-alpha-40: rgb(0 0 0 / 40%);
+    --color-black-alpha-50: rgb(0 0 0 / 50%);
+    --color-black-alpha-60: rgb(0 0 0 / 60%);
+    --color-black-alpha-70: rgb(0 0 0 / 70%);
+    --color-accent-alpha-25: rgb(192 154 105 / 25%); /* Matches --color-accent with alpha */
+
+    --shadow-text: 1px 1px 3px var(--color-black-alpha-70);
+    --shadow-box: 0 2px 8px var(--color-black-alpha-40);
+    --shadow-focus-accent: 0 0 0 0.2rem var(--color-accent-alpha-25);
+    --shadow-footer: 0 -3px 8px var(--color-black-alpha-50);
+    --shadow-status-inset: 0 0 5px var(--color-black-alpha-30) inset;
+    --shadow-button-footer: 0 1px 3px var(--color-black-alpha-30);
+    --shadow-panel-help: 0 5px 15px var(--color-black-alpha-50);
+    --shadow-modal-alert: 0 0 10px var(--color-black-alpha-50);
+
+    --color-status-ok-border: #5a8b5a;
+    --color-status-ok-text: #9aeaa4;
+    --color-status-ok-bg: #2f3d2f;
+    --color-status-over-border: #8B0000;
+    --color-status-over-text: #ffacac;
+    --color-status-over-bg: #4d2626;
+    --color-status-weight-border: #647687;
+    --color-status-weight-text: #b0c4de;
+    --color-status-weight-bg: #2a3038;
+
+    --color-delete-hover-bg: #493131; /* Darker shade of delete color */
+    --color-delete-disabled: var(--color-text-input-disabled); /* Consistent with other disabled text */
 }
 
 body {
@@ -56,10 +87,10 @@ body {
     font-family: 'Cinzel Decorative', cursive;
     text-align: center;
     margin: 25px 0 40px;
-    font-size: 2.2em;
+    font-size: 1.8em; /* Mobile First Base */
     font-weight: 700;
     color: var(--color-accent);
-    text-shadow: 1px 1px 3px rgb(0 0 0 / 70%);
+    text-shadow: var(--shadow-text);
 }
 
 /* Vueトランジション */
@@ -79,14 +110,16 @@ body {
 
 .main-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px 10px;
-    grid-template-areas:
-        "character-info scar-weakness"
-        "skills special-skills"
-        "items items"
-        "memo memo"
-        "history history";
+    grid-template-columns: 1fr; /* Mobile First Base */
+    gap: 20px; /* Mobile First Base */
+    grid-template-areas: /* Mobile First Base */
+        "character-info"
+        "scar-weakness"
+        "skills"
+        "special-skills"
+        "items"
+        "memo"
+        "history";
 }
 
 .character-info {
@@ -121,14 +154,14 @@ body {
    ボックス共通コンポーネント
    ========================================================================== */
 
-.box-title,
-.sub-box-title {
+.box__header,
+.sub-box__header {
     font-family: 'Noto Serif JP', serif;
     color: var(--color-accent);
     font-weight: 700;
 }
 
-.box-title {
+.box__header {
     background-color: var(--color-panel-header);
     padding: 12px 18px;
     border: 1px solid var(--color-border-normal);
@@ -139,34 +172,35 @@ body {
     font-size: 1.1em;
 }
 
-.box-content {
+.box__content {
     padding: 18px;
     border: 1px solid var(--color-border-normal);
     border-top: none;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     background-color: var(--color-panel-body);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+    box-shadow: var(--shadow-box);
     overflow-x: hidden;
 }
 
 /* サブボックス */
-.sub-box-title {
+.sub-box__header {
     font-size: 1em;
     background-color: var(--color-panel-sub-header);
     border-bottom: 1px solid var(--color-border-normal);
-    padding: 10px 18px;
-    margin-left: -18px;
-    margin-right: -18px;
+    /* Refactored padding and removed horizontal margins */
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
-.sub-box-title--scar {
-    margin-top: -18px;
+.sub-box__header--scar {
+    /* Removed margin-top: -18px; */
     margin-bottom: 15px;
 }
 
-.sub-box-title--weakness {
+.sub-box__header--weakness {
     margin-top: 0;
+    /* mb-10 is already a class, ensure consistency or use it if applicable */
     margin-bottom: 10px;
     border-top: 1px solid var(--color-border-normal);
 }
@@ -182,9 +216,9 @@ label {
     color: var(--color-text-normal);
 }
 
-.info-item>label,
-.equipment-item>label,
-.scar-weakness .info-item>label {
+.info-row__item>label,
+.equipment-section__item>label,
+.scar-weakness .info-row__item>label {
     display: block;
     margin-bottom: 6px;
     margin-right: 0;
@@ -217,7 +251,7 @@ select:focus,
 textarea:focus {
     border-color: var(--color-accent);
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgb(192 154 105 / 25%);
+    box-shadow: var(--shadow-focus-accent);
 }
 
 select {
@@ -226,12 +260,13 @@ select {
 
 }
 
-select:disabled {
+/* Combined disabled styles for input, select, and textarea */
+input:disabled,
+select:disabled,
+textarea:disabled {
     background-color: var(--color-input-disabled-bg);
     color: var(--color-text-input-disabled);
 }
-
-
 
 /* チェックボックス */
 input[type="checkbox"] {
@@ -244,18 +279,188 @@ input[type="checkbox"] {
 
 
 /* 特殊状態 */
+/* .greyed-out class might be used by JS to apply disabled attribute, styling is now handled by :disabled selector */
 input.greyed-out,
 select.greyed-out,
 textarea.greyed-out {
-    background-color: var(--color-input-disabled-bg);
-    color: var(--color-text-input-disabled);
+    /* Styles removed as they are now handled by input:disabled, select:disabled, textarea:disabled */
 }
 
 /* ==========================================================================
-   レイアウトユーティリティ
+   レイアウトユーティリティ (Spacing system based on 1 unit = 4px)
    ========================================================================== */
 
-/* Flexbox */
+/* Margins */
+.m-0 { margin: 0px; }
+.m-1 { margin: 4px; }
+.m-2 { margin: 8px; }
+.m-3 { margin: 12px; }
+.m-4 { margin: 16px; }
+.m-5 { margin: 20px; }
+.m-6 { margin: 24px; }
+.m-8 { margin: 32px; }
+.m-10 { margin: 40px; }
+.m-12 { margin: 48px; }
+.m-16 { margin: 64px; }
+
+.mt-0 { margin-top: 0px; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mt-5 { margin-top: 20px; }
+.mt-6 { margin-top: 24px; }
+.mt-8 { margin-top: 32px; }
+.mt-10 { margin-top: 40px; }
+.mt-12 { margin-top: 48px; }
+.mt-16 { margin-top: 64px; }
+
+.mr-0 { margin-right: 0px; }
+.mr-1 { margin-right: 4px; }
+.mr-2 { margin-right: 8px; }
+.mr-3 { margin-right: 12px; }
+.mr-4 { margin-right: 16px; }
+.mr-5 { margin-right: 20px; }
+.mr-6 { margin-right: 24px; }
+.mr-8 { margin-right: 32px; }
+.mr-10 { margin-right: 40px; }
+.mr-12 { margin-right: 48px; }
+.mr-16 { margin-right: 64px; }
+
+.mb-0 { margin-bottom: 0px; }
+.mb-1 { margin-bottom: 4px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-5 { margin-bottom: 20px; }
+.mb-6 { margin-bottom: 24px; }
+.mb-8 { margin-bottom: 32px; }
+.mb-10 { margin-bottom: 40px; }
+.mb-12 { margin-bottom: 48px; }
+.mb-16 { margin-bottom: 64px; }
+
+.ml-0 { margin-left: 0px; }
+.ml-1 { margin-left: 4px; }
+.ml-2 { margin-left: 8px; }
+.ml-3 { margin-left: 12px; }
+.ml-4 { margin-left: 16px; }
+.ml-5 { margin-left: 20px; }
+.ml-6 { margin-left: 24px; }
+.ml-8 { margin-left: 32px; }
+.ml-10 { margin-left: 40px; }
+.ml-12 { margin-left: 48px; }
+.ml-16 { margin-left: 64px; }
+
+.mx-0 { margin-left: 0px; margin-right: 0px; }
+.mx-1 { margin-left: 4px; margin-right: 4px; }
+.mx-2 { margin-left: 8px; margin-right: 8px; }
+.mx-3 { margin-left: 12px; margin-right: 12px; }
+.mx-4 { margin-left: 16px; margin-right: 16px; }
+.mx-5 { margin-left: 20px; margin-right: 20px; }
+.mx-6 { margin-left: 24px; margin-right: 24px; }
+.mx-8 { margin-left: 32px; margin-right: 32px; }
+.mx-10 { margin-left: 40px; margin-right: 40px; }
+.mx-12 { margin-left: 48px; margin-right: 48px; }
+.mx-16 { margin-left: 64px; margin-right: 64px; }
+
+.my-0 { margin-top: 0px; margin-bottom: 0px; }
+.my-1 { margin-top: 4px; margin-bottom: 4px; }
+.my-2 { margin-top: 8px; margin-bottom: 8px; }
+.my-3 { margin-top: 12px; margin-bottom: 12px; }
+.my-4 { margin-top: 16px; margin-bottom: 16px; }
+.my-5 { margin-top: 20px; margin-bottom: 20px; }
+.my-6 { margin-top: 24px; margin-bottom: 24px; }
+.my-8 { margin-top: 32px; margin-bottom: 32px; }
+.my-10 { margin-top: 40px; margin-bottom: 40px; }
+.my-12 { margin-top: 48px; margin-bottom: 48px; }
+.my-16 { margin-top: 64px; margin-bottom: 64px; }
+
+/* Paddings */
+.p-0 { padding: 0px; }
+.p-1 { padding: 4px; }
+.p-2 { padding: 8px; }
+.p-3 { padding: 12px; }
+.p-4 { padding: 16px; }
+.p-5 { padding: 20px; }
+.p-6 { padding: 24px; }
+.p-8 { padding: 32px; }
+.p-10 { padding: 40px; }
+.p-12 { padding: 48px; }
+.p-16 { padding: 64px; }
+
+.pt-0 { padding-top: 0px; }
+.pt-1 { padding-top: 4px; }
+.pt-2 { padding-top: 8px; }
+.pt-3 { padding-top: 12px; }
+.pt-4 { padding-top: 16px; }
+.pt-5 { padding-top: 20px; }
+.pt-6 { padding-top: 24px; }
+.pt-8 { padding-top: 32px; }
+.pt-10 { padding-top: 40px; }
+.pt-12 { padding-top: 48px; }
+.pt-16 { padding-top: 64px; }
+
+.pr-0 { padding-right: 0px; }
+.pr-1 { padding-right: 4px; }
+.pr-2 { padding-right: 8px; }
+.pr-3 { padding-right: 12px; }
+.pr-4 { padding-right: 16px; }
+.pr-5 { padding-right: 20px; }
+.pr-6 { padding-right: 24px; }
+.pr-8 { padding-right: 32px; }
+.pr-10 { padding-right: 40px; }
+.pr-12 { padding-right: 48px; }
+.pr-16 { padding-right: 64px; }
+
+.pb-0 { padding-bottom: 0px; }
+.pb-1 { padding-bottom: 4px; }
+.pb-2 { padding-bottom: 8px; }
+.pb-3 { padding-bottom: 12px; }
+.pb-4 { padding-bottom: 16px; }
+.pb-5 { padding-bottom: 20px; }
+.pb-6 { padding-bottom: 24px; }
+.pb-8 { padding-bottom: 32px; }
+.pb-10 { padding-bottom: 40px; }
+.pb-12 { padding-bottom: 48px; }
+.pb-16 { padding-bottom: 64px; }
+
+.pl-0 { padding-left: 0px; }
+.pl-1 { padding-left: 4px; }
+.pl-2 { padding-left: 8px; }
+.pl-3 { padding-left: 12px; }
+.pl-4 { padding-left: 16px; }
+.pl-5 { padding-left: 20px; }
+.pl-6 { padding-left: 24px; }
+.pl-8 { padding-left: 32px; }
+.pl-10 { padding-left: 40px; }
+.pl-12 { padding-left: 48px; }
+.pl-16 { padding-left: 64px; }
+
+.px-0 { padding-left: 0px; padding-right: 0px; }
+.px-1 { padding-left: 4px; padding-right: 4px; }
+.px-2 { padding-left: 8px; padding-right: 8px; }
+.px-3 { padding-left: 12px; padding-right: 12px; }
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.px-5 { padding-left: 20px; padding-right: 20px; }
+.px-6 { padding-left: 24px; padding-right: 24px; }
+.px-8 { padding-left: 32px; padding-right: 32px; }
+.px-10 { padding-left: 40px; padding-right: 40px; }
+.px-12 { padding-left: 48px; padding-right: 48px; }
+.px-16 { padding-left: 64px; padding-right: 64px; }
+
+.py-0 { padding-top: 0px; padding-bottom: 0px; }
+.py-1 { padding-top: 4px; padding-bottom: 4px; }
+.py-2 { padding-top: 8px; padding-bottom: 8px; }
+.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
+.py-5 { padding-top: 20px; padding-bottom: 20px; }
+.py-6 { padding-top: 24px; padding-bottom: 24px; }
+.py-8 { padding-top: 32px; padding-bottom: 32px; }
+.py-10 { padding-top: 40px; padding-bottom: 40px; }
+.py-12 { padding-top: 48px; padding-bottom: 48px; }
+.py-16 { padding-top: 64px; padding-bottom: 64px; }
+
+/* Flexbox (Existing - kept as is) */
 .flex-center {
     display: flex;
     align-items: center;
@@ -278,32 +483,7 @@ textarea.greyed-out {
     flex: 2;
 }
 
-/* マージン */
-.mb-25 {
-    margin-bottom: 25px;
-}
-
-.mb-15 {
-    margin-bottom: 15px;
-}
-
-.mb-12 {
-    margin-bottom: 12px;
-}
-
-.mt-6 {
-    margin-top: 6px;
-}
-
-.mr-8 {
-    margin-right: 8px;
-}
-
-.mr-4 {
-    margin-right: 4px;
-}
-
-/* 表示制御 */
+/* 表示制御 (Existing - kept as is) */
 .block-label {
     display: block;
     margin-bottom: 5px;
@@ -319,8 +499,9 @@ textarea.greyed-out {
 
 .info-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    /* flex-wrap: wrap; (Desktop will re-add this if necessary) */
+    flex-direction: column; /* Mobile First Base */
+    gap: 8px; /* Mobile First Base */
     margin-bottom: 8px;
 }
 
@@ -328,27 +509,28 @@ textarea.greyed-out {
     margin-bottom: 0;
 }
 
-.info-item {
-    flex: 1 1 auto;
+.info-row__item {
+    /* flex: 1 1 auto; (Desktop will re-add this) */
+    flex-basis: auto; /* Mobile First Base (applies to all items initially) */
+    min-width: 0; /* Mobile First Base */
+    width: 100%; /* Mobile First Base */
 }
 
-.info-item--full {
-    flex-basis: 100%;
+.info-row__item--full {
+    flex-basis: 100%; /* Remains consistent */
 }
 
-.info-item--double {
-    flex: 1 1 calc(50% - 7.5px);
-    min-width: 80px;
+/* Specific item modifiers for mobile - they all become full width by inheriting .info-row__item */
+.info-row__item--double {
+    /* Desktop styles will be different */
 }
 
-.info-item--triple {
-    flex: 1 1 calc(33.333% - 10px);
-    min-width: 90px;
+.info-row__item--triple {
+    /* Desktop styles will be different */
 }
 
-.info-item--quadruple {
-    flex: 1 1 calc(25% - 12.5px);
-    min-width: 65px;
+.info-row__item--quadruple {
+    /* Desktop styles will be different */
 }
 
 
@@ -363,16 +545,16 @@ textarea.greyed-out {
     margin-bottom: 25px;
 }
 
-.link-checkbox-container {
+.linked-checkbox__container {
     display: flex;
     align-items: center;
 }
 
-.link-checkbox-main-label {
+.linked-checkbox__label--main {
     margin-right: 8px;
 }
 
-.link-checkbox {
+.linked-checkbox__input {
     margin-right: 4px;
     margin-bottom: 2px;
     accent-color: var(--color-accent);
@@ -380,7 +562,7 @@ textarea.greyed-out {
     width: auto;
 }
 
-.link-checkbox-label {
+.linked-checkbox__label {
     font-size: 0.9em;
     color: var(--color-text-muted);
     font-weight: normal;
@@ -389,37 +571,37 @@ textarea.greyed-out {
 }
 
 /* 装備品セクション */
-.equipment-container {
+.equipment-section__container {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
 }
 
-.equipment-section {
-    flex: 1 1 300px;
-    min-width: 280px;
+.equipment-section { /* This remains as a block */
+    flex: 1 1 300px; /* Flex properties can remain, min-width is the mobile override */
+    min-width: 100%; /* Mobile First Base */
 }
 
-.equipment-item {
+.equipment-section__item {
     margin-bottom: 12px;
 }
 
-.equipment-item:last-child {
+.equipment-section__item:last-child {
     margin-bottom: 0;
 }
 
 /* アイテム用テキストエリア */
-.items-textarea {
+.character-items__text-area { /* Assuming items grid area contains character-items block */
     min-height: 100px;
     resize: vertical;
 }
 
 /* キャラクターメモ */
-.character-memo .box-content {
+.character-memo .box__content { /* .character-memo is block, .box__content is element of .box */
     max-width: 100%;
 }
 
-.character-memo-textarea {
+.character-memo__text-area { /* .character-memo is block */
     width: 100%;
     min-height: 180px;
     resize: vertical;
@@ -429,27 +611,40 @@ textarea.greyed-out {
    弱点リスト
    ========================================================================== */
 
-.weakness-list .list-item {
+.weakness-list__item { /* Replacing .weakness-list .list-item */
+    display: flex; /* Copied from .list-item */
+    align-items: flex-start; /* Copied from .list-item */
+    gap: 5px; /* Copied from .list-item */
     border-bottom: 1px solid var(--color-border-normal);
     padding: 5px 0;
     font-size: 0.9em;
     align-items: center;
 }
 
-.weakness-list .list-item:last-child {
+.weakness-list__item:last-child {
     padding-bottom: 0;
+    border-bottom: none; /* Copied from .list-item:last-of-type */
 }
 
-.weakness-labels-header {
+.weakness-list__header { /* Replacing .weakness-labels-header */
     color: var(--color-text-muted);
+    /* Assuming this is a flex container like list items for alignment */
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Consistent with items */
+    padding: 5px 0; /* Consistent with items */
 }
 
-.weakness-labels-header .flex-weakness-number {
-    color: transparent;
+.weakness-list__header .weakness-list__number-placeholder { /* Replacing .weakness-labels-header .flex-weakness-number */
+    color: var(--color-transparent);
     user-select: none;
+    font-family: 'Noto Serif JP', serif; /* Copied from .flex-weakness-number */
+    font-weight: 700; /* Copied from .flex-weakness-number */
+    width: 20px; /* Copied from .flex-weakness-number */
+    text-align: center; /* Copied from .flex-weakness-number */
 }
 
-.flex-weakness-number {
+.weakness-list__number { /* Replacing .flex-weakness-number */
     font-family: 'Noto Serif JP', serif;
     color: var(--color-accent);
     font-weight: 700;
@@ -457,19 +652,20 @@ textarea.greyed-out {
     text-align: center;
 }
 
-.flex-weakness-text {
+.weakness-list__text-content { /* Replacing .flex-weakness-text */
     flex: 1;
 }
 
-.flex-weakness-acquired {
-    width: 150px;
+.weakness-list__status { /* Replacing .flex-weakness-acquired */
+    width: 40%; /* Mobile First Base */
+    min-width: 100px; /* Mobile First Base */
 }
 
-.flex-weakness-acquired select {
-    min-width: 120px;
+.weakness-list__status select {
+    width: 100%; /* Mobile First Base */
 }
 
-.flex-weakness-acquired option[disabled] {
+.weakness-list__status option[disabled] {
     color: var(--color-text-muted);
     font-style: italic;
 }
@@ -497,7 +693,7 @@ textarea.greyed-out {
     padding: 18px;
 }
 
-.skills-list>li {
+.skills-list__item {
     margin-bottom: 8px;
     padding: 10px;
     border: 1px solid var(--color-border-normal);
@@ -505,46 +701,64 @@ textarea.greyed-out {
     background-color: var(--color-panel-specialskill);
 }
 
-.skills-list>li .skill-header {
+.skills-list__item-header { /* Replacing .skills-list>li .skill-header */
     display: flex;
     align-items: center;
 }
 
-.skills-list>li .skill-name {
+.skills-list__item-name { /* Replacing .skills-list>li .skill-name */
     /* 特にスタイル変更なし */
 }
 
-.skills-list>li .experts-section {
+.skills-list__experts-section { /* Replacing .skills-list>li .experts-section */
     margin-top: 0;
 }
 
-/* 特技・履歴リストアイテム */
-.list-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 5px;
-}
+/* Generic list-item styling to be applied to specific BEM list items if needed */
+/* For example, .session-history__item would get these if it used .list-item before */
+/* .generic-list-item (if we need to keep it, otherwise apply to specific elements) */
+/* display: flex; */
+/* align-items: flex-start; */
+/* gap: 5px; */
 
-.list-item:last-of-type {
-    border-bottom: none;
-}
+/* .generic-list-item:last-of-type { */
+/* border-bottom: none; */
+/* } */
 
-.list-item .delete-button-wrapper {
-    margin-top: 6px;
-}
+/* Contextual delete button wrapper */
+/* Example: .session-history__item-delete-wrapper */
+/* margin-top: 6px; */
 
-.expert-list-item {
+
+.skill-expert__item { /* Replacing .expert-list-item - assuming skill-expert block */
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 8px;
 }
 
-.special-skill-item {
+.special-skill__item { /* Replaced .special-skill-item, assumes .special-skill block */
+    /* If special-skill-item used list-item styles, they need to be here now */
+    display: flex; /* from .list-item */
+    align-items: flex-start; /* from .list-item */
+    gap: 5px; /* from .list-item */
     margin-bottom: 8px;
 }
+.special-skill__item:last-of-type {
+    border-bottom: none; /* from .list-item:last-of-type */
+}
+.special-skill__delete-wrapper { /* Was .delete-button-wrapper in this context */
+    width: 30px; /* from .delete-button-wrapper */
+    height: 30px; /* from .delete-button-wrapper */
+    display: flex; /* from .delete-button-wrapper */
+    align-items: center; /* from .delete-button-wrapper */
+    justify-content: center; /* from .delete-button-wrapper */
+    flex-shrink: 0; /* from .delete-button-wrapper */
+    margin-top: 6px;
+}
 
-.special-skill-note-input {
+
+.special-skill__note-input { /* Replacing .special-skill-note-input */
     margin-top: 3px;
 }
 
@@ -556,13 +770,13 @@ textarea.greyed-out {
     cursor: pointer;
     border-radius: 3px;
     border: 1px solid var(--color-accent-middle);
-    background-color: var(--color-panel-header);
+    /* background-color: var(--color-panel-header); Removed as it was overridden */
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: text-shadow 1s ease, color 0.5s ease, border-color 0.5s ease;
     flex-shrink: 0;
-    background-color: rgb(0 0 0 / 0);
+    background-color: var(--color-transparent); /* Effective background: transparent */
     color: var(--color-accent);
 }
 
@@ -572,14 +786,7 @@ textarea.greyed-out {
     box-shadow: inset 0 0 3px var(--color-accent), 0 0 6px var(--color-accent);
 }
 
-.delete-button-wrapper {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
+/* Removed generic .delete-button-wrapper, replaced by context-specific BEM elements below */
 
 .list-button {
     padding: 0;
@@ -591,19 +798,17 @@ textarea.greyed-out {
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
     line-height: 1;
     background-color: var(--color-panel-body);
-    color: var(--color-accent);
+    /* color: var(--color-accent); Removed, inherited from .button-base */
 }
 
 .list-button:disabled {
     cursor: default;
-    background-color: var(rgb(0 0 0 / 0));
+    background-color: var(--color-transparent);
     color: var(--color-border-normal);
     border-color: var(--color-border-normal);
 }
 
-.list-button--add:hover:not(:disabled) {
-    border-color: var(--color-accent);
-}
+/* .list-button--add:hover:not(:disabled) removed as it's empty and inherits all styles from .button-base:hover */
 
 .list-button--delete {
     color: var(--color-delete-text);
@@ -616,56 +821,89 @@ textarea.greyed-out {
     box-shadow: inset 0 0 3px var(--color-delete-text), 0 0 6px var(--color-delete-text);
 }
 
-.add-button-container-left {
+.session-history__action-controls--left { /* Replacing .add-button-container-left, assuming part of session-history */
     margin-top: 0;
 }
 
 /* ==========================================================================
-   履歴セクション
+   履歴セクション - Assuming .session-history is the block
    ========================================================================== */
 
-.history-item-inputs {
+.session-history__item-inputs { /* Replacing .history-item-inputs */
     display: flex;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; (Desktop will re-add this) */
     align-items: end;
     gap: 5px;
+    flex-flow: row nowrap; /* Mobile First Base */
 }
 
-.history-item-inputs>div {
+.session-history__input-group { /* New class for the div inside .history-item-inputs */
     display: flex;
     flex-direction: column;
+    margin-bottom: 0; /* Mobile First Base */
 }
 
-.history-item-inputs>div>label {
+.session-history__input-group > label { /* Styling for label within the new group */
     font-size: 0.85em;
     margin-bottom: 4px;
     color: var(--color-text-normal);
     display: block;
 }
 
-.history-labels-header {
+.session-history__header-labels { /* Replacing .history-labels-header */
     padding-top: 0;
     padding-bottom: 0;
     border-bottom: 1px solid var(--color-border-normal);
     margin-bottom: 5px;
+    /* Assuming this is a flex container like list items for alignment */
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Consistent with items */
 }
 
-.history-labels-header .delete-button-wrapper {
-    height: 0;
+.session-history__header-delete-placeholder { /* Was .delete-button-wrapper in this context */
+    width: 30px; /* from .delete-button-wrapper */
+    height: 0; /* Specific override, was 30px */
+    display: flex; /* from .delete-button-wrapper */
+    align-items: center; /* from .delete-button-wrapper */
+    justify-content: center; /* from .delete-button-wrapper */
+    flex-shrink: 0; /* from .delete-button-wrapper */
+    visibility: hidden; /* To hide it but maintain layout */
 }
 
-.flex-history-name {
+.session-history__name-column { /* Replacing .flex-history-name */
     flex: 1 1 150px;
     max-width: 150px;
 }
 
-.flex-history-exp {
+.session-history__exp-column { /* Replacing .flex-history-exp */
     flex: 0 1 80px;
 }
 
-.flex-history-memo {
+.session-history__memo-column { /* Replacing .flex-history-memo */
     flex: 3 2 220px;
 }
+
+/* Assuming .session-history uses .list-item structure for its items */
+.session-history__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    /* Add other .list-item base styles if necessary */
+}
+.session-history__item:last-of-type {
+    border-bottom: none;
+}
+.session-history__delete-wrapper { /* Was .delete-button-wrapper in this context */
+    width: 30px; /* from .delete-button-wrapper */
+    height: 30px; /* from .delete-button-wrapper */
+    display: flex; /* from .delete-button-wrapper */
+    align-items: center; /* from .delete-button-wrapper */
+    justify-content: center; /* from .delete-button-wrapper */
+    flex-shrink: 0; /* from .delete-button-wrapper */
+    margin-top: 6px; /* from original .list-item .delete-button-wrapper */
+}
+
 
 /* ==========================================================================
    フッター
@@ -683,7 +921,7 @@ textarea.greyed-out {
     left: 0;
     width: 100%;
     z-index: 100;
-    box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
+    box-shadow: var(--shadow-footer);
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 15px;
@@ -712,7 +950,7 @@ textarea.greyed-out {
 
 /* ステータス表示 */
 
-.status-display {
+.status-display { /* Standalone block */
     padding: 7px 14px;
     border-radius: 3px;
     font-weight: bold;
@@ -720,30 +958,30 @@ textarea.greyed-out {
     display: inline-block;
     border-width: 2px;
     border-style: solid;
-    box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset;
+    box-shadow: var(--shadow-status-inset);
     white-space: nowrap;
 }
 
 .status-display--experience-ok {
-    border-color: #5a8b5a;
-    color: #9aeaa4;
-    background-color: #2f3d2f;
+    border-color: var(--color-status-ok-border);
+    color: var(--color-status-ok-text);
+    background-color: var(--color-status-ok-bg);
 }
 
 .status-display--experience-over {
-    border-color: #8B0000;
-    color: #ffacac;
-    background-color: #4d2626;
+    border-color: var(--color-status-over-border);
+    color: var(--color-status-over-text);
+    background-color: var(--color-status-over-bg);
 }
 
 .status-display--weight {
-    border-color: #647687;
-    color: #b0c4de;
-    background-color: #2a3038;
+    border-color: var(--color-status-weight-border);
+    color: var(--color-status-weight-text);
+    background-color: var(--color-status-weight-bg);
 }
 
 /* フッターボタン */
-.footer-help-icon {
+.main-footer__help-icon {
     cursor: help;
     height: 48px;
     padding: 0 14px;
@@ -752,19 +990,19 @@ textarea.greyed-out {
     background-color: var(--color-panel-body);
     color: var(--color-accent);
     min-height: 42px;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+    box-shadow: var(--shadow-button-footer);
 }
 
-.footer-help-icon:hover {
+.main-footer__help-icon:hover {
     border-color: var(--color-accent);
 }
 
-.footer-button {
+.main-footer__button {
     padding: 10px 18px;
     font-size: 0.95em;
     font-weight: 700;
     text-align: center;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+    box-shadow: var(--shadow-button-footer);
     min-height: 42px;
     box-sizing: border-box;
     white-space: nowrap;
@@ -772,23 +1010,23 @@ textarea.greyed-out {
 
 
 
-.footer-button--save,
-.footer-button--load {
+.main-footer__button--save,
+.main-footer__button--load {
     height: 48px;
     width: 110px;
 }
 
-.footer-button--output {
+.main-footer__button--output {
     height: 48px;
     width: 175px;
 }
 
 
-.footer-button--load {
+.main-footer__button--load {
     padding: 0;
 }
 
-.footer-button--load>label {
+.main-footer__button--load>label {
     color: inherit;
     font-weight: 700;
     padding: 10px 18px;
@@ -814,10 +1052,10 @@ textarea.greyed-out {
     border: 1px solid var(--color-border-normal);
     padding: 20px;
     border-radius: 4px;
-    box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
+    box-shadow: var(--shadow-panel-help);
     z-index: 1000;
-    max-width: 90%;
-    width: 420px;
+    max-width: none; /* Mobile First Base */
+    width: calc(100% - 40px); /* Mobile First Base */
     font-size: 0.9em;
     color: var(--color-text-normal);
 }
@@ -882,11 +1120,11 @@ textarea.greyed-out {
     top: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--color-panel-header);
-    color: #fff;
+    color: var(--color-white);
     padding: 20px;
     border: 1px solid var(--color-border-normal);
     border-radius: 5px;
-    box-shadow: 0 0 10px rgb(0 0 0 / 50%);
+    box-shadow: var(--shadow-modal-alert);
     z-index: 2000;
     white-space: pre-wrap;
     display: none;
@@ -908,79 +1146,85 @@ textarea.greyed-out {
 }
 
 /* ==========================================================================
-   レスポンシブデザイン
+   レスポンシブデザイン will be restructured mobile-first below
    ========================================================================== */
 
-@media (width <=768px) {
+/* End of previous media queries, new structure will be added */
+
+/* ==========================================================================
+   レスポンシブデザイン (Mobile First)
+   ========================================================================== */
+
+@media (min-width: 481px) { /* Tablet styles */
+    .weakness-list__status {
+        width: 35%; /* Was originally in (width <= 768px) */
+        min-width: 110px; /* Was originally in (width <= 768px) */
+    }
+}
+
+@media (min-width: 769px) { /* Desktop styles (Original base styles restored) */
+    .tool-title {
+        font-size: 2.2em;
+    }
+
     .main-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         grid-template-areas:
-            "character-info"
-            "scar-weakness"
-            "skills"
-            "special-skills"
-            "items"
-            "memo"
-            "history";
-        gap: 20px;
+            "character-info scar-weakness"
+            "skills special-skills"
+            "items items"
+            "memo memo"
+            "history history";
+        gap: 30px 10px;
     }
 
-    .session-history .history-item-inputs {
-        flex-flow: row nowrap;
+    .session-history .session-history__item-inputs {
+        flex-flow: wrap; /* Or flex-wrap: wrap; if row is default/inherited */
     }
-
-    .session-history .history-item-inputs>div {
-        margin-bottom: 0;
-    }
-
-    .flex-weakness-acquired {
-        width: 35%;
-        min-width: 110px;
-    }
-
-    .flex-weakness-acquired select {
-        width: 100%;
-    }
+    /* No specific margin change needed for .session-history__input-group for desktop */
 
     .help-panel {
-        width: calc(100% - 40px);
-        max-width: none;
+        width: 420px;
+        max-width: 90%; /* This was part of original desktop, allowing some flex */
     }
 
     .info-row {
-        flex-direction: column;
-        gap: 8px;
+        flex-direction: row;
+        gap: 5px;
     }
 
-    .info-item,
-    .info-item--triple,
-    .info-item--double {
-        flex-basis: auto;
-        min-width: 0;
-        width: 100%;
+    .info-row__item { /* Reverting to original base flex behavior */
+        flex: 1 1 auto;
+        width: auto; /* Remove width 100% from mobile */
+    }
+    /* Specific width items for desktop */
+    .info-row__item--double {
+        flex-basis: calc(50% - 7.5px); /* Use flex-basis for consistency */
+        min-width: 80px;
+    }
+    .info-row__item--triple {
+        flex-basis: calc(33.333% - 10px);
+        min-width: 90px;
+    }
+    .info-row__item--quadruple {
+        flex-basis: calc(25% - 12.5px);
+        min-width: 65px;
     }
 
     .equipment-section {
-        min-width: 100%;
+        min-width: 280px;
+    }
+
+    .weakness-list__status {
+        width: 150px;
+        min-width: auto; /* Reset min-width from tablet/mobile if necessary */
     }
 }
-
-@media (width <=480px) {
-    .tool-title {
-        font-size: 1.8em;
-    }
-
-    .flex-weakness-acquired {
-        width: 40%;
-        min-width: 100px;
-    }
-}
-
 /* ==========================================================================
    キャラクター画像表示
    ========================================================================== */
 
-.character-image-container {
+.character-image { /* Block name, was .character-image-container */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -991,7 +1235,7 @@ textarea.greyed-out {
     background-color: var(--color-input-bg);
 }
 
-.image-display-area {
+.character-image__display-area {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1003,14 +1247,14 @@ textarea.greyed-out {
     border-radius: 2px;
 }
 
-.character-image-container img.character-image-display {
+.character-image img.character-image__display-img { /* Adjusted parent and img class */
     max-width: 100%;
     max-height: 100%;
     height: auto;
     object-fit: contain;
 }
 
-.character-image-placeholder {
+.character-image__placeholder {
     width: 100%;
     height: 100%;
     display: flex;
@@ -1019,7 +1263,7 @@ textarea.greyed-out {
     color: var(--color-text-input-disabled);
 }
 
-.image-display-wrapper {
+.character-image__display-wrapper {
     position: relative;
     width: 100%;
     height: 100%;
@@ -1028,17 +1272,17 @@ textarea.greyed-out {
     justify-content: center;
 }
 
-.image-display-wrapper .character-image-display {
+.character-image__display-wrapper .character-image__display-img { /* Adjusted img class */
     display: block;
 }
 
-.image-display-wrapper:hover .image-nav-button:not(:disabled),
-.image-display-wrapper:hover .image-count-display {
+.character-image__display-wrapper:hover .character-image__nav-button:not(:disabled),
+.character-image__display-wrapper:hover .character-image__count-display {
     opacity: 1;
 }
 
 
-.image-nav-button {
+.character-image__nav-button {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -1057,15 +1301,15 @@ textarea.greyed-out {
     transition: opacity 0.3s ease;
 }
 
-.image-nav-button.prev-image-button {
+.character-image__nav-button--previous { /* Combined .image-nav-button.prev-image-button */
     left: 10px;
 }
 
-.image-nav-button.next-image-button {
+.character-image__nav-button--next { /* Combined .image-nav-button.next-image-button */
     right: 10px;
 }
 
-.image-nav-button:disabled {
+.character-image__nav-button:disabled {
     opacity: 0.2;
     cursor: default;
 }
@@ -1073,13 +1317,13 @@ textarea.greyed-out {
 
 
 
-.image-count-display {
+.character-image__count-display {
     position: absolute;
     top: 10px;
     right: 10px;
     z-index: 10;
-    background-color: rgb(0 0 0 / 60%);
-    color: white;
+    background-color: var(--color-black-alpha-60);
+    color: var(--color-white);
     padding: 3px 8px;
     font-size: 0.9em;
     border-radius: 3px;
@@ -1087,7 +1331,7 @@ textarea.greyed-out {
     transition: opacity 0.3s ease;
 }
 
-.image-controls {
+.character-image__controls {
     display: flex;
     gap: 10px;
     align-items: center;
@@ -1096,7 +1340,7 @@ textarea.greyed-out {
     padding: 10px 0;
 }
 
-.image-controls .button-base {
+.character-image__controls .button-base { /* Contextual usage of .button-base */
     padding: 8px 15px;
     font-size: 0.9em;
     font-weight: 600;
@@ -1106,13 +1350,13 @@ textarea.greyed-out {
     box-sizing: border-box;
 }
 
-.image-controls .button-remove {
+.character-image__controls .button--remove { /* Assuming .button--remove is a modifier for .button-base */
     background-color: var(--color-delete-hover-bg);
     color: var(--color-delete-hover-text);
     border-color: var(--color-delete-text);
 }
 
-.image-controls .button-remove:disabled {
+.character-image__controls .button--remove:disabled { /* Modifier state */
     color: var(--color-delete-disabled);
     border-color: var(--color-delete-disabled);
     cursor: not-allowed;
