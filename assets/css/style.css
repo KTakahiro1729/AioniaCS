@@ -777,7 +777,6 @@ textarea.greyed-out {
     transition: color 0.1s ease-in;
     background-color: var(--color-accent);
     color: var(--color-background);
-    /* Contrast color for visibility */
 }
 
 /* State 3: Text fades out to background color */
@@ -790,7 +789,6 @@ textarea.greyed-out {
 /* State 4: Reset to original state */
 .footer-button--output.state-4 {
     transition: background-color 0.7s ease-in-out, color 0.2s ease-in-out 0.5s;
-    /* Delay text color change */
     background-color: transparent;
     color: var(--color-accent);
 }
