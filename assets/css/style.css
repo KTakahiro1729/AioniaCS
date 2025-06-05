@@ -757,7 +757,44 @@ textarea.greyed-out {
 
 .footer-button--output {
     width: 175px;
+    user-select: none;
 }
+
+.footer-button--output.is-animating {
+    /* Prevent re-triggering */
+    pointer-events: none;
+}
+
+/* State 1: Background fills, text becomes same color as background */
+.footer-button--output.state-1 {
+    transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+    background-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+/* State 2: New text appears, color changes to be visible */
+.footer-button--output.state-2 {
+    transition: color 0.1s ease-in;
+    background-color: var(--color-accent);
+    color: var(--color-background);
+    /* Contrast color for visibility */
+}
+
+/* State 3: Text fades out to background color */
+.footer-button--output.state-3 {
+    transition: color 0.5s ease-in-out;
+    background-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+/* State 4: Reset to original state */
+.footer-button--output.state-4 {
+    transition: background-color 0.7s ease-in-out, color 0.2s ease-in-out 0.5s;
+    /* Delay text color change */
+    background-color: transparent;
+    color: var(--color-accent);
+}
+
 
 .footer-button--load>label {
     color: inherit;

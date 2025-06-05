@@ -356,7 +356,8 @@
                     class="hidden" />
                 <label for="load_input_vue">データ読込</label>
             </div>
-            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{
+            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia" ref="outputButton">
+                {{
                 outputButtonText
                 }} </div>
             <transition name="fade">

@@ -216,6 +216,8 @@ const app = createApp({
             this.copyToClipboard(textToCopy);
         },
 
+
+
         async copyToClipboard(text) {
             if (!navigator.clipboard) {
                 this.fallbackCopyTextToClipboard(text);
@@ -224,22 +226,11 @@ const app = createApp({
 
             try {
                 await navigator.clipboard.writeText(text);
-                this.setOutputButtonSuccess();
+                this.playOutputAnimation();
             } catch (err) {
                 console.error('Failed to copy: ', err);
                 this.fallbackCopyTextToClipboard(text);
             }
-        },
-
-        flashOutputButtonMessage(key) {
-            this.outputButtonText = this.gameData.uiMessages.outputButton[key];
-            setTimeout(() => {
-                this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-            }, 3000);
-        },
-
-        setOutputButtonSuccess() {
-            this.flashOutputButtonMessage('success');
         },
 
         fallbackCopyTextToClipboard(text) {
@@ -256,16 +247,76 @@ const app = createApp({
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    this.flashOutputButtonMessage('successFallback');
+                    this.playOutputAnimation();
                 } else {
-                    this.flashOutputButtonMessage('failed');
+                    this.outputButtonText = this.gameData.uiMessages.outputButton.failed;
+                    setTimeout(() => {
+                        this.outputButtonText = this.gameData.uiMessages.outputButton.default;
+                    }, 3000);
                 }
             } catch (err) {
                 console.error(err);
-                this.flashOutputButtonMessage('error');
+                this.outputButtonText = this.gameData.uiMessages.outputButton.error;
+                setTimeout(() => {
+                    this.outputButtonText = this.gameData.uiMessages.outputButton.default;
+                }, 3000);
             }
 
             document.body.removeChild(textArea);
+        },
+        playOutputAnimation() {
+            const button = this.$refs.outputButton;
+            if (!button || button.classList.contains('is-animating')) {
+                return;
+            }
+
+            // gameDataからアニメーション設定を取得
+            const buttonMessages = this.gameData.uiMessages.outputButton;
+            const timings = buttonMessages.animationTimings;
+            const originalText = buttonMessages.default;
+            const newText = buttonMessages.animating;
+
+            button.classList.add('is-animating');
+
+            // 各ステップの時間を定義
+            const state1_duration = timings.state1_bgFill;
+            const state2_duration = timings.state2_textHold;
+            const state3_duration = timings.state3_textFadeOut;
+            const state4_duration = timings.state4_bgReset;
+
+            // setTimeoutで使うための累積時間を計算
+            const timeForState2 = state1_duration;
+            const timeForState3 = timeForState2 + state2_duration;
+            const timeForState4 = timeForState3 + state3_duration;
+            const timeForCleanup = timeForState4 + state4_duration;
+
+            // --- Animation Step 1 ---
+            button.classList.add('state-1');
+
+            // --- Animation Step 2 ---
+            setTimeout(() => {
+                button.classList.remove('state-1');
+                this.outputButtonText = newText;
+                button.classList.add('state-2');
+            }, timeForState2);
+
+            // --- Animation Step 3 ---
+            setTimeout(() => {
+                button.classList.remove('state-2');
+                button.classList.add('state-3');
+            }, timeForState3);
+
+            // --- Animation Step 4 ---
+            setTimeout(() => {
+                button.classList.remove('state-3');
+                this.outputButtonText = originalText;
+                button.classList.add('state-4');
+            }, timeForState4);
+
+            // --- Final Cleanup ---
+            setTimeout(() => {
+                button.classList.remove('is-animating', 'state-4');
+            }, timeForCleanup);
         },
 
         showCustomAlert(message) {
