@@ -30,6 +30,7 @@
     <script async defer src="https://apis.google.com/js/api.js" onload="vueGapiLoadedCallback()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="vueGisLoadedCallback()"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,13 +63,38 @@
             <div id="character_info" class="character-info">
                 <div class="box-title">基本情報</div>
                 <div class="box-content">
-                    <div class="info-row">
-                        <div class="info-item info-item--full">
-                            <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name" />
+                    <div class="character-image-container">
+                        <div class="image-display-area">
+                            <div class="image-display-wrapper" v-if="character.images && character.images.length > 0">
+                                <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display"
+                                    alt="Character Image" />
+                                <!-- If currentImageSrc is null but images exist, it implies a broken/missing image, img tag won't render. -->
+                                <button @click="previousImage" class="button-base image-nav-button prev-image-button"
+                                    :disabled="character.images.length <= 1">&lt;</button>
+                                <button @click="nextImage" class="button-base image-nav-button next-image-button"
+                                    :disabled="character.images.length <= 1">&gt;</button>
+                                <div class="image-count-display"> <!-- Removed v-if, parent wrapper handles this -->
+                                    {{ currentImageIndex + 1 }} / {{ character.images.length }}
+                                </div>
+                            </div>
+                            <div class="character-image-placeholder" v-else>
+                                <!-- Shown when character.images is empty -->
+                                No Image
+                            </div>
+                        </div>
+                        <div class="image-controls">
+                            <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*"
+                                style="display: none;">
+                            <label for="character_image_upload" class="button-base button-upload">画像を追加</label>
+                            <button v-if="currentImageSrc" @click="removeCurrentImage"
+                                class="button-base button-remove">画像を削除</button>
                         </div>
                     </div>
                     <div class="info-row">
-                        <div class="info-item info-item--full">
+                        <div class="info-item info-item--double">
+                            <label for="name">キャラクター名</label> <input type="text" id="name" v-model="character.name" />
+                        </div>
+                        <div class="info-item info-item--double">
                             <label for="player_name">プレイヤー名</label> <input type="text" id="player_name"
                                 v-model="character.playerName" />
                         </div>
@@ -125,7 +151,7 @@
                 <div class="box-title">傷痕と弱点</div>
                 <div class="box-content">
                     <div class="scar-section">
-                        <div class="box-title sub-box-title sub-box-title--scar">傷痕</div>
+                        <div class="sub-box-title sub-box-title--scar">傷痕</div>
                         <div class="info-row">
                             <div class="info-item info-item--double">
                                 <div class="link-checkbox-container">
@@ -137,7 +163,7 @@
                                 </div>
                                 <input type="number" id="current_scar" v-model.number="character.currentScar"
                                     @input="handleCurrentScarInput"
-                                    :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0" class="mt-6">
+                                    :class="{'greyed-out': character.linkCurrentToInitialScar}" min="0" class="scar-section__current-input">
                             </div>
                             <div class="info-item info-item--double">
                                 <label for="initial_scar">初期値</label>
@@ -146,7 +172,7 @@
                         </div>
                     </div>
                     <div class="weakness-section">
-                        <div class="box-title sub-box-title sub-box-title--weakness">弱点</div>
+                        <div class="sub-box-title sub-box-title--weakness">弱点</div>
                         <ul class="weakness-list list-reset">
                             <li class="list-item weakness-labels-header">
                                 <div class="flex-weakness-number"></div>
@@ -158,8 +184,8 @@
                                 <div class="flex-weakness-text"><input type="text" v-model="weakness.text" /></div>
                                 <div class="flex-weakness-acquired">
                                     <select v-model="weakness.acquired">
-                                        <option v-for="option in sessionNamesForWeaknessDropdown"
-                                            :key="option.value" :value="option.value" :disabled="option.disabled">
+                                        <option v-for="option in sessionNamesForWeaknessDropdown" :key="option.value"
+                                            :value="option.value" :disabled="option.disabled">
                                             {{ option.text }}
                                         </option>
                                     </select>
@@ -204,7 +230,8 @@
                 <div class="box-title">特技</div>
                 <div class="box-content">
                     <ul class="list-reset">
-                        <li v-for="(specialSkill, index) in specialSkills" :key="index" class="list-item mb-5">
+                        <li v-for="(specialSkill, index) in specialSkills" :key="index"
+                            class="list-item special-skill-item">
                             <div class="delete-button-wrapper">
                                 <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeSpecialSkill(index)"
@@ -244,10 +271,10 @@
             <div id="items_section" class="items">
                 <div class="box-title">所持品</div>
                 <div class="box-content">
-                    <div class="mb-15">
+                    <div class="equipment-wrapper">
                         <div class="equipment-container">
                             <div class="equipment-section">
-                                <div class="equipment-item mb-12">
+                                <div class="equipment-item">
                                     <label for="weapon1">武器1</label>
                                     <div class="flex-group">
                                         <select id="weapon1" v-model="equipments.weapon1.group" class="flex-item-1">
@@ -260,7 +287,7 @@
                                             :placeholder="gameData.placeholderTexts.weaponName" class="flex-item-2" />
                                     </div>
                                 </div>
-                                <div class="equipment-item mb-12">
+                                <div class="equipment-item">
                                     <label for="weapon2">武器2</label>
                                     <div class="flex-group">
                                         <select id="weapon2" v-model="equipments.weapon2.group" class="flex-item-1">
@@ -338,7 +365,8 @@
                         </li>
                     </ul>
                     <div class="add-button-container-left">
-                        <button type="button" class="button-base list-button list-button--add" @click="addHistoryItem()">＋</button>
+                        <button type="button" class="button-base list-button list-button--add"
+                            @click="addHistoryItem()">＋</button>
                     </div>
                 </div>
             </div>
@@ -353,28 +381,36 @@
         </div>
 
         <div class="main-footer">
-            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" title="ヘルプ表示">？
+            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false" @click="toggleHelp"
+                title="ヘルプ表示">？
             </div>
-            <div class="status-display-container">
-                <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
-                    maxExperiencePoints }} </div>
-                <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
-            </div>
+            <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
+                maxExperiencePoints }} </div>
+            <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
             <div class="button-base footer-button footer-button--save" @click="saveData"> データ保存 </div>
             <div class="button-base footer-button footer-button--load">
-                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" class="hidden" />
+                <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip"
+                    class="hidden" />
                 <label for="load_input_vue">データ読込</label>
             </div>
-            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{ outputButtonText }} </div>
+            <div class="button-base footer-button footer-button--output" @click="outputToCocofolia"> {{
+                outputButtonText
+                }} </div>
             <transition name="fade">
-                <div class="help-panel" v-if="showHelp" v-html="helpText"></div>
+                <div class="help-panel" v-if="showHelp">
+                    <button class="help-close" @click="showHelp = false">×</button>
+                    <div v-html="helpText"></div>
+                </div>
             </transition>
         </div>
 
     </div>
+    <script src="js/keyboard-handler.js"></script>
     <script src="src/cocofoliaExporter.js"></script>
     <script src="src/gameData.js"></script>
+    <script src="src/imageManager.js"></script>
     <script src="src/utils.js"></script>
+    <!-- dataManager.js needs JSZip, so ensure it's loaded before -->
     <script src="src/dataManager.js"></script>
     <script src="src/googleDriveManager.js"></script>
     <script src="src/main.js"></script>

@@ -26,6 +26,15 @@
     "stylelint-config-standard": "^38.0.0"
   },
   "jest": {
-    "testPathIgnorePatterns": ["<rootDir>/tests/e2e/"], "roots": ["<rootDir>/tests/unit"]
+    "testPathIgnorePatterns": [
+      "<rootDir>/tests/e2e/"
+    ],
+    "roots": [
+      "<rootDir>/tests/unit"
+    ],
+    "testEnvironment": "jsdom"
+  },
+  "dependencies": {
+    "jest-environment-jsdom": "^30.0.0-beta.3"
   }
 }

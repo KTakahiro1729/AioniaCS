@@ -47,9 +47,19 @@ const app = createApp({
             clientId: '913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com',
             isGapiInitialized: false, // To prevent multiple GAPI initializations
             isGisInitialized: false,  // To prevent multiple GIS initializations
+
+            // Image management
+            currentImageIndex: 0, // Index of the currently displayed image
+            imageManagerInstance: null, // Instance of ImageManager
         };
     },
     computed: {
+        currentImageSrc() {
+            if (this.character && this.character.images && this.character.images.length > 0 && this.currentImageIndex >= 0 && this.currentImageIndex < this.character.images.length) {
+                return this.character.images[this.currentImageIndex];
+            }
+            return null; // Or a placeholder image path
+        },
         maxExperiencePoints() {
             const initialScarExp = Number(this.character.initialScar) || 0;
             const creationWeaknessExp = this.character.weaknesses.reduce((sum, weakness) => {
@@ -129,6 +139,7 @@ const app = createApp({
                 }
             }
         },
+        toggleHelp() { this.showHelp = !this.showHelp; },
         hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
@@ -520,11 +531,70 @@ const app = createApp({
                     this.driveStatusMessage = `Failed to load ${file.name}: ${err.message || 'Unknown error'}`;
                 }
             }, this.driveFolderId || null, ['application/json']);
+        },
+
+        // Image Management Methods
+        async handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            if (!this.imageManagerInstance) {
+                console.error("ImageManager not initialized");
+                return;
+            }
+            try {
+                const imageData = await this.imageManagerInstance.loadImage(file);
+                if (!this.character.images) {
+                    this.character.images = [];
+                }
+                this.character.images.push(imageData);
+                this.currentImageIndex = this.character.images.length - 1; // Show the newly uploaded image
+            } catch (error) {
+                console.error("Error loading image:", error);
+                this.showCustomAlert("画像の読み込みに失敗しました：" + error.message);
+            } finally {
+                event.target.value = null; // Clear the file input
+            }
+        },
+        nextImage() {
+            if (this.character && this.character.images && this.character.images.length > 0) {
+                if (this.currentImageIndex < this.character.images.length - 1) {
+                    this.currentImageIndex++;
+                } else {
+                    this.currentImageIndex = 0; // Loop back to the first image
+                }
+            }
+        },
+        previousImage() {
+            if (this.character && this.character.images && this.character.images.length > 0) {
+                if (this.currentImageIndex > 0) {
+                    this.currentImageIndex--;
+                } else {
+                    this.currentImageIndex = this.character.images.length - 1; // Loop back to the last image
+                }
+            }
+        },
+        removeCurrentImage() {
+            if (this.character && this.character.images && this.character.images.length > 0 && this.currentImageIndex >= 0 && this.currentImageIndex < this.character.images.length) {
+                this.character.images.splice(this.currentImageIndex, 1);
+                // Adjust currentImageIndex
+                if (this.character.images.length === 0) {
+                    this.currentImageIndex = -1;
+                } else if (this.currentImageIndex >= this.character.images.length) {
+                    // If the last image was removed, adjust index to the new last image
+                    this.currentImageIndex = this.character.images.length - 1;
+                }
+                // If the currentImageIndex is still valid or adjusted to 0, it's fine.
+            } else {
+                console.warn("No image to remove or index out of bounds.");
+            }
         }
     },
     mounted() {
         this.cocofoliaExporter = new window.CocofoliaExporter();
         this.dataManager = new window.DataManager(this.gameData);
+        this.imageManagerInstance = window.ImageManager; // Initialize ImageManager
 
         // Make Vue instance globally accessible for the script loader callbacks
         window.vueApp = this;
