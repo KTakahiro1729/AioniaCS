@@ -3,6 +3,7 @@
   "rules": {
     "selector-class-pattern": null,
     "no-descending-specificity": null,
-    "media-feature-range-notation": "prefix"
+    "media-feature-range-notation": "prefix",
+    "scss/operator-no-unspaced": null
   }
 }
