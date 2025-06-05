@@ -272,31 +272,6 @@ textarea.greyed-out {
     flex: 2;
 }
 
-/* マージン */
-.mb-25 {
-    margin-bottom: 25px;
-}
-
-.mb-15 {
-    margin-bottom: 15px;
-}
-
-.mb-12 {
-    margin-bottom: 12px;
-}
-
-.mt-6 {
-    margin-top: 6px;
-}
-
-.mr-8 {
-    margin-right: 8px;
-}
-
-.mr-4 {
-    margin-right: 4px;
-}
-
 /* 表示制御 */
 .block-label {
     display: block;
@@ -382,7 +357,16 @@ textarea.greyed-out {
     margin-bottom: 0;
 }
 
+/* 傷痕入力フィールド */
+.scar-section__current-input {
+    margin-top: 6px;
+}
+
 /* 装備品セクション */
+.equipment-wrapper {
+    margin-bottom: 15px;
+}
+
 .equipment-container {
     display: flex;
     flex-wrap: wrap;
