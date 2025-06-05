@@ -1,5 +1,5 @@
 global.window = {};
-require('../../src/cocofoliaExporter.js');
+require('../../assets/src/cocofoliaExporter.js');
 
 const CocofoliaExporter = window.CocofoliaExporter;
 

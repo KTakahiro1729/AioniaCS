@@ -2,8 +2,8 @@
 
 // Set up global window object and load utilities
 global.window = {};
-require('../../src/utils.js'); // Defines deepClone, createWeaknessArray on window
-require('../../src/gameData.js'); // Defines AioniaGameData on window
+require('../../assets/src/utils.js'); // Defines deepClone, createWeaknessArray on window
+require('../../assets/src/gameData.js'); // Defines AioniaGameData on window
 global.deepClone = window.deepClone;
 global.createWeaknessArray = window.createWeaknessArray;
 
@@ -20,7 +20,7 @@ global.JSZip.loadAsync = jest.fn();
 
 
 // Load DataManager after mocks for JSZip are set up
-require('../../src/dataManager.js');
+require('../../assets/src/dataManager.js');
 
 const DataManager = window.DataManager;
 const gameData = window.AioniaGameData;
