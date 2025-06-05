@@ -838,6 +838,17 @@ textarea.greyed-out {
     margin-bottom: 10px;
 }
 
+.help-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: transparent;
+    border: none;
+    color: var(--color-accent);
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
 /* ==========================================================================
    フッター（著作権表示）
    ========================================================================== */

@@ -112,6 +112,7 @@ const app = createApp({
                 }
             }
         },
+        toggleHelp() { this.showHelp = !this.showHelp; },
         hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
