@@ -900,7 +900,7 @@ textarea.greyed-out {
    レスポンシブデザイン
    ========================================================================== */
 
-@media (width <=768px) {
+@media (max-width: 768px) {
     .main-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
@@ -954,7 +954,7 @@ textarea.greyed-out {
     }
 }
 
-@media (width <=480px) {
+@media (max-width: 480px) {
     .tool-title {
         font-size: 1.8em;
     }
