@@ -31,9 +31,9 @@ class GoogleDriveManager {
             }
             gapi.load('client:picker', () => {
                 if (typeof gapi.client === 'undefined' || !gapi.client.init) {
-                     const err = new Error("GAPI client script not available for gapi.client.init.");
-                     console.error("GDM: " + err.message);
-                     return reject(err);
+                    const err = new Error("GAPI client script not available for gapi.client.init.");
+                    console.error("GDM: " + err.message);
+                    return reject(err);
                 }
                 gapi.client.init({
                     apiKey: this.apiKey,
@@ -106,7 +106,7 @@ class GoogleDriveManager {
         // Prompt the user to select an account and grant access
         // Check if already has an access token
         if (gapi.client.getToken() === null) {
-             this.tokenClient.requestAccessToken({ prompt: 'consent' });
+            this.tokenClient.requestAccessToken({ prompt: 'consent' });
         } else {
             // Already has a token, consider as signed in
             this.tokenClient.requestAccessToken({ prompt: '' }); // Try to get token without prompt
@@ -369,7 +369,6 @@ class GoogleDriveManager {
             .addView(view)
             .enableFeature(google.picker.Feature.NAV_HIDDEN)
             .setOAuthToken(token.access_token)
-            .setDeveloperKey(this.apiKey)
             .setCallback(pickerCallback);
 
         const picker = pickerBuilder.build();
@@ -413,7 +412,6 @@ class GoogleDriveManager {
             .setSelectableMimeTypes('application/vnd.google-apps.folder') // Restrict selection to folders
             .enableFeature(google.picker.Feature.NAV_HIDDEN)
             .setOAuthToken(token.access_token)
-            .setDeveloperKey(this.apiKey)
             .setCallback(pickerCallback);
 
         const picker = pickerBuilder.build();

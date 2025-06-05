@@ -43,7 +43,7 @@ const app = createApp({
             isGapiLoaded: false,
             isGisLoaded: false,
             // IMPORTANT: Replace with your actual API Key and Client ID
-            apiKey: 'AIzaSyD481puTNfH73S2yJtepddwJheGy7rEc9U',
+            apiKey: 'AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU',
             clientId: '913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com',
             isGapiInitialized: false, // To prevent multiple GAPI initializations
             isGisInitialized: false,  // To prevent multiple GIS initializations
@@ -90,6 +90,12 @@ const app = createApp({
                 .map(name => ({ value: name, text: name, disabled: false }));
             const helpOption = { value: 'help-text', text: this.gameData.uiMessages.weaknessDropdownHelp, disabled: true };
             return defaultOptions.concat(sessionOptions).concat(helpOption);
+        },
+        canSignInToGoogle() {
+            return this.isGapiInitialized && this.isGisInitialized && !this.isSignedIn;
+        },
+        canOperateDrive() {
+            return this.isSignedIn && this.driveFolderId;
         }
     },
     watch: {
@@ -357,7 +363,7 @@ const app = createApp({
                         console.log("Sign-in successful.");
 
                         if (!this.driveFolderId) {
-                             this.getOrPromptForDriveFolder(); // Intentionally not awaiting here for now
+                            this.getOrPromptForDriveFolder(); // Intentionally not awaiting here for now
                         }
                     }
                 });
@@ -507,7 +513,7 @@ const app = createApp({
                         // If the loaded file is from a different folder than currently set,
                         // it's a choice whether to update driveFolderId. For now, we don't.
                     } else {
-                         throw new Error("Load operation did not return data.");
+                        throw new Error("Load operation did not return data.");
                     }
                 } catch (err) {
                     console.error("Failed to load data from Drive:", err);

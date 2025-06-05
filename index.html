@@ -6,29 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>慈悲なきアイオニア　非公式キャラクターシート</title>
     <script>
-      window.gapiScriptLoaded = false;
-      window.gisScriptLoaded = false;
+        window.gapiScriptLoaded = false;
+        window.gisScriptLoaded = false;
 
-      function vueGapiLoadedPlaceholder() {
-        console.log("vueGapiLoadedPlaceholder called: Google API script has loaded.");
-        window.gapiScriptLoaded = true;
-        // If Vue app's handler is already defined by main.js, call it.
-        if (window.vueApp && window.vueApp.handleGapiLoaded) {
-          window.vueApp.handleGapiLoaded();
+        function vueGapiLoadedCallback() {
+            console.log("index.html: Google API script (api.js) has loaded.");
+            window.gapiScriptLoaded = true;
+            // 呼び出す関数名を handleGapiLoaded に修正
+            if (window.vueApp && typeof window.vueApp.handleGapiLoaded === 'function') {
+                window.vueApp.handleGapiLoaded();
+            }
         }
-      }
 
-      function vueGisLoadedPlaceholder() {
-        console.log("vueGisLoadedPlaceholder called: Google GIS script has loaded.");
-        window.gisScriptLoaded = true;
-        // If Vue app's handler is already defined by main.js, call it.
-        if (window.vueApp && window.vueApp.handleGisLoaded) {
-          window.vueApp.handleGisLoaded();
+        function vueGisLoadedCallback() {
+            console.log("index.html: Google GIS script (accounts.google.com/gsi/client) has loaded.");
+            window.gisScriptLoaded = true;
+            // 呼び出す関数名を handleGisLoaded に修正
+            if (window.vueApp && typeof window.vueApp.handleGisLoaded === 'function') {
+                window.vueApp.handleGisLoaded();
+            }
         }
-      }
     </script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="vueGapiLoadedPlaceholder()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="vueGisLoadedPlaceholder()"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="vueGapiLoadedCallback()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="vueGisLoadedCallback()"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,6 +42,22 @@
 <body>
     <div id="app">
         <div class="tool-title">Aionia TRPG Character Sheet</div>
+        <div class="google-drive-controls-container">
+            <div id="drive_status_message" class="status-display status-display--drive">{{ driveStatusMessage }}</div>
+            <div class="google-drive-buttons">
+                <div id="google_sign_in_button" class="button-base drive-button" v-if="canSignInToGoogle"
+                    @click="handleSignInClick">Sign In with Google</div>
+                <div id="google_sign_out_button" class="button-base drive-button" v-if="isSignedIn"
+                    @click="handleSignOutClick">Sign Out</div>
+                <div class="button-base drive-button" @click="promptForDriveFolder" :disabled="!isSignedIn">Choose Drive
+                    Folder</div>
+                <div class="button-base drive-button drive-button--save" @click="handleSaveToDriveClick"
+                    :disabled="!canOperateDrive">Save to Drive</div>
+                <div class="button-base drive-button drive-button--load" @click="handleLoadFromDriveClick"
+                    :disabled="!isSignedIn">Load from Drive</div>
+            </div>
+        </div>
+
         <div class="main-grid">
             <div id="character_info" class="character-info">
                 <div class="box-title">基本情報</div>
@@ -153,7 +169,6 @@
                     </div>
                 </div>
             </div>
-
 
             <div id="skills" class="skills">
                 <div class="box-title">技能</div>
@@ -344,13 +359,7 @@
                 <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
                     maxExperiencePoints }} </div>
                 <div class="status-display status-display--weight"> 荷重: {{ currentWeight }} </div>
-                <div id="drive_status_message" class="status-display">{{ driveStatusMessage }}</div>
             </div>
-            <div id="google_sign_in_button" class="button-base footer-button" v-if="!isSignedIn && isGapiLoaded && isGisLoaded" @click="handleSignInClick">Sign In with Google</div>
-            <div id="google_sign_out_button" class="button-base footer-button" v-if="isSignedIn" @click="handleSignOutClick">Sign Out</div>
-            <div class="button-base footer-button footer-button--save-drive" @click="handleSaveToDriveClick" :disabled="!isSignedIn || !driveFolderId">Save to Drive</div>
-            <div class="button-base footer-button footer-button--load-drive" @click="handleLoadFromDriveClick" :disabled="!isSignedIn">Load from Drive</div>
-            <div class="button-base footer-button" @click="promptForDriveFolder" :disabled="!isSignedIn">Choose Drive Folder</div>
             <div class="button-base footer-button footer-button--save" @click="saveData"> データ保存 </div>
             <div class="button-base footer-button footer-button--load">
                 <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt" class="hidden" />
@@ -367,7 +376,6 @@
     <script src="src/gameData.js"></script>
     <script src="src/utils.js"></script>
     <script src="src/dataManager.js"></script>
-    <!-- googleDriveManager.js MUST be before main.js -->
     <script src="src/googleDriveManager.js"></script>
     <script src="src/main.js"></script>
 </body>
