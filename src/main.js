@@ -51,10 +51,10 @@ const app = createApp({
             showSaveDropdown: false, // Controls visibility of the Save dropdown menu
             showLoadDropdown: false, // Controls visibility of the Load dropdown menu
 
-            // Bound event handlers for outside click
-            boundCloseDriveMenuHandler: null,
-            boundCloseSaveDropdownHandler: null,
-            boundCloseLoadDropdownHandler: null,
+            // Current event handlers for outside click - new approach
+            currentDriveMenuHandler: null,
+            currentSaveDropdownHandler: null,
+            currentLoadDropdownHandler: null,
 
             // Image management
             currentImageIndex: 0, // Index of the currently displayed image
@@ -118,24 +118,66 @@ const app = createApp({
     },
     watch: {
         showDriveMenu(newValue) {
+            if (this.currentDriveMenuHandler) {
+                document.removeEventListener('click', this.currentDriveMenuHandler, true);
+                this.currentDriveMenuHandler = null;
+            }
             if (newValue) {
-                document.addEventListener('click', this.boundCloseDriveMenuHandler, true);
-            } else {
-                document.removeEventListener('click', this.boundCloseDriveMenuHandler, true);
+                const menuElement = this.$refs.driveMenu;
+                const toggleButton = this.$refs.driveMenuToggleButton;
+                // Ensure other menus are closed
+                this.showSaveDropdown = false;
+                this.showLoadDropdown = false;
+
+                this.currentDriveMenuHandler = (event) => {
+                    if (menuElement && !menuElement.contains(event.target) &&
+                        toggleButton && !toggleButton.contains(event.target)) {
+                        this.showDriveMenu = false;
+                    }
+                };
+                document.addEventListener('click', this.currentDriveMenuHandler, true);
             }
         },
         showSaveDropdown(newValue) {
+            if (this.currentSaveDropdownHandler) {
+                document.removeEventListener('click', this.currentSaveDropdownHandler, true);
+                this.currentSaveDropdownHandler = null;
+            }
             if (newValue) {
-                document.addEventListener('click', this.boundCloseSaveDropdownHandler, true);
-            } else {
-                document.removeEventListener('click', this.boundCloseSaveDropdownHandler, true);
+                const menuElement = this.$refs.saveDropdownMenu;
+                const toggleButton = this.$refs.saveDropdownToggleButton;
+                // Ensure other menus are closed
+                this.showDriveMenu = false;
+                this.showLoadDropdown = false;
+
+                this.currentSaveDropdownHandler = (event) => {
+                    if (menuElement && !menuElement.contains(event.target) &&
+                        toggleButton && !toggleButton.contains(event.target)) {
+                        this.showSaveDropdown = false;
+                    }
+                };
+                document.addEventListener('click', this.currentSaveDropdownHandler, true);
             }
         },
         showLoadDropdown(newValue) {
+            if (this.currentLoadDropdownHandler) {
+                document.removeEventListener('click', this.currentLoadDropdownHandler, true);
+                this.currentLoadDropdownHandler = null;
+            }
             if (newValue) {
-                document.addEventListener('click', this.boundCloseLoadDropdownHandler, true);
-            } else {
-                document.removeEventListener('click', this.boundCloseLoadDropdownHandler, true);
+                const menuElement = this.$refs.loadDropdownMenu;
+                const toggleButton = this.$refs.loadDropdownToggleButton;
+                // Ensure other menus are closed
+                this.showDriveMenu = false;
+                this.showSaveDropdown = false;
+
+                this.currentLoadDropdownHandler = (event) => {
+                    if (menuElement && !menuElement.contains(event.target) &&
+                        toggleButton && !toggleButton.contains(event.target)) {
+                        this.showLoadDropdown = false;
+                    }
+                };
+                document.addEventListener('click', this.currentLoadDropdownHandler, true);
             }
         },
         'character.initialScar'(newInitialScar) {
@@ -173,30 +215,7 @@ const app = createApp({
             }
         },
 
-        // Outside Click Handlers
-        closeDriveMenuHandler(event) {
-            // Check if the click is outside the menu and its toggle button
-            // Assumes toggle button has a ref or specific ID/class. For now, let's use a class 'icon-button'
-            const menuElement = this.$el.querySelector('.floating-menu'); // More robust: use refs
-            const toggleButton = this.$el.querySelector('.top-left-controls .icon-button');
-            if (menuElement && !menuElement.contains(event.target) && toggleButton && !toggleButton.contains(event.target)) {
-                this.showDriveMenu = false;
-            }
-        },
-        closeSaveDropdownHandler(event) {
-            const menuElement = this.$el.querySelector('.footer-button-container:nth-child(1) .footer-dropdown-menu'); // Nth child is fragile
-            const toggleButton = this.$el.querySelector('.footer-button-container:nth-child(1) .footer-button--dropdown-arrow');
-             if (menuElement && !menuElement.contains(event.target) && toggleButton && !toggleButton.contains(event.target)) {
-                this.showSaveDropdown = false;
-            }
-        },
-        closeLoadDropdownHandler(event) {
-            const menuElement = this.$el.querySelector('.footer-button-container:nth-child(2) .footer-dropdown-menu'); // Nth child is fragile
-            const toggleButton = this.$el.querySelector('.footer-button-container:nth-child(2) .footer-button--dropdown-arrow');
-            if (menuElement && !menuElement.contains(event.target) && toggleButton && !toggleButton.contains(event.target)) {
-                this.showLoadDropdown = false;
-            }
-        },
+        // Outside Click Handlers are now defined within the watchers.
 
         handleCurrentScarInput(event) {
             const enteredValue = parseInt(event.target.value, 10);
@@ -672,10 +691,10 @@ const app = createApp({
         this.dataManager = new window.DataManager(this.gameData);
         this.imageManagerInstance = window.ImageManager;
 
-        // Bind outside click handlers
-        this.boundCloseDriveMenuHandler = this.closeDriveMenuHandler.bind(this);
-        this.boundCloseSaveDropdownHandler = this.closeSaveDropdownHandler.bind(this);
-        this.boundCloseLoadDropdownHandler = this.closeLoadDropdownHandler.bind(this);
+        // Binding of old outside click handlers is removed.
+        // this.boundCloseDriveMenuHandler = this.closeDriveMenuHandler.bind(this);
+        // this.boundCloseSaveDropdownHandler = this.closeSaveDropdownHandler.bind(this);
+        // this.boundCloseLoadDropdownHandler = this.closeLoadDropdownHandler.bind(this);
 
         window.vueApp = this; // Make Vue instance globally accessible
 
