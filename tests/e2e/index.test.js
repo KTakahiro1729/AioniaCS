@@ -60,7 +60,7 @@ test.describe('Character Sheet E2E Tests', () => {
       const nextButton = page.locator('.button-imagenav:has-text(">")');
       const prevButton = page.locator('.button-imagenav:has-text("<")');
       // const removeButton = page.locator('.button-remove:has-text("Remove Current Image")');
-      const removeButton = page.locator('.button-remove:has-text("画像を削除")');
+      const removeButton = page.locator('.imagefile-button--delete:has-text("削除")');
 
       // Upload 3 images (using sample & sample2, then sample again for a third distinct one in array)
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
@@ -115,7 +115,7 @@ test.describe('Character Sheet E2E Tests', () => {
       await removeButton.click();
       await expect(page.locator('.character-image-placeholder')).toBeVisible();
       await expect(imageCountDisplay).not.toBeVisible();
-      await expect(removeButton).not.toBeVisible();
+      await expect(removeButton).toBeDisabled();
     });
 
     test('saves as ZIP when images are present', async ({ page }) => {

@@ -7,6 +7,7 @@
 :root {
     --color-accent: #c09a69;
     --color-accent-middle: #726452;
+    --color-accent-dark: #3b332a;
     --color-background: #222;
     --color-panel-header: #333;
     --color-panel-sub-header: #2e2e2e;
@@ -536,7 +537,8 @@ textarea.greyed-out {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: text-shadow 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+    transition: text-shadow 0.5s ease, color 0.5s ease, border-color 0.5s ease,
+        background-color 0.5s ease, box-shadow 0.5s ease;
     flex-shrink: 0;
     background-color: transparent;
     color: var(--color-accent);
@@ -734,8 +736,10 @@ textarea.greyed-out {
     box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
 }
 
-.footer-help-icon:hover {
-    border-color: var(--color-accent);
+
+.footer-help-icon--fixed,
+.footer-help-icon--fixed:hover {
+    background-color: var(--color-accent-dark);
 }
 
 .footer-button,
@@ -753,10 +757,6 @@ textarea.greyed-out {
 
 .footer-button--load {
     padding: 0;
-}
-
-.footer-button--output {
-    width: 175px;
 }
 
 .footer-button--load>label {
@@ -1109,21 +1109,14 @@ textarea.greyed-out {
 
 body.keyboard-visible {
     padding-bottom: 0 !important;
-    /* Override existing padding */
 }
 
 body.keyboard-visible .main-footer {
     position: relative !important;
-    /* Ensure it scrolls with content */
     bottom: auto !important;
-    /* Reset bottom positioning */
     box-shadow: none !important;
-    /* Remove shadow when not fixed at bottom */
 }
 
 body.keyboard-visible .help-panel {
     bottom: 20px !important;
-    /* Adjust help panel position */
-
-    /* Consider if it should be position: absolute if footer is relative */
 }

@@ -25,7 +25,8 @@ const app = createApp({
             histories: [
                 { sessionName: '', gotExperiments: null, memo: '' }
             ],
-            showHelp: false,
+            helpState: 'closed', // 'closed', 'hovered', 'fixed'
+            isDesktop: false,
             helpText: window.AioniaGameData.helpText,
             outputButtonText: window.AioniaGameData.uiMessages.outputButton.default,
             cocofoliaExporter: null,
@@ -40,6 +41,9 @@ const app = createApp({
                 return this.character.images[this.currentImageIndex];
             }
             return null; // Or a placeholder image path
+        },
+        isHelpVisible() {
+            return this.helpState !== 'closed';
         },
         maxExperiencePoints() {
             const initialScarExp = Number(this.character.initialScar) || 0;
@@ -112,7 +116,56 @@ const app = createApp({
                 }
             }
         },
-        toggleHelp() { this.showHelp = !this.showHelp; },
+        // --- Help Panel Methods ---
+        handleHelpIconMouseOver() {
+            if (this.isDesktop) {
+                if (this.helpState === 'closed') {
+                    this.helpState = 'hovered';
+                }
+            }
+        },
+        handleHelpIconMouseLeave() {
+            if (this.isDesktop) {
+                if (this.helpState === 'hovered') {
+                    this.helpState = 'closed';
+                }
+            }
+        },
+        handleHelpIconClick() {
+            if (this.isDesktop) {
+                this.helpState = this.helpState === 'fixed' ? 'closed' : 'fixed';
+            } else { // Mobile toggle behavior
+                this.helpState = this.helpState === 'closed' ? 'fixed' : 'closed';
+            }
+        },
+        closeHelpPanel() {
+            this.helpState = 'closed';
+        },
+        handleClickOutside(event) {
+            if (this.helpState === 'fixed') {
+                const helpPanelElement = this.$refs.helpPanel; // Use $refs to get the help panel element
+                const helpIconElement = this.$refs.helpIcon;   // Use $refs to get the help icon element
+
+                // Check if both elements are available
+                if (helpPanelElement && helpIconElement) {
+                    // Check if the click target is outside both the help panel and the help icon
+                    if (!helpPanelElement.contains(event.target) && !helpIconElement.contains(event.target)) {
+                        this.helpState = 'closed';
+                    }
+                } else if (helpPanelElement && !helpPanelElement.contains(event.target)) {
+                    // Fallback if helpIconElement is not found, but helpPanelElement is.
+                    // This might happen if the icon isn't part of the click path consideration for closing.
+                    this.helpState = 'closed';
+                } else if (!helpPanelElement && helpIconElement && !helpIconElement.contains(event.target)) {
+                    // Fallback if helpPanelElement is not (e.g. v-if removed it),
+                    // but click is outside helpIcon. This logic might need refinement
+                    // depending on exact desired behavior when panel is not visible but state is 'fixed'.
+                    // For now, this ensures clicking outside icon (if panel somehow not rendered) still closes.
+                    this.helpState = 'closed';
+                }
+            }
+        },
+        // --- Other Methods ---
         hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
@@ -357,6 +410,19 @@ const app = createApp({
         if (this.character.linkCurrentToInitialScar) {
             this.character.currentScar = this.character.initialScar;
         }
+
+        // Detect if it's a desktop device (no touch support)
+        this.isDesktop = !('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 0));
+
+        // Add event listener for both desktop and mobile to handle outside clicks for 'fixed' state
+        // Ensure the listener is added after the initial DOM render is complete for $refs to be available.
+        this.$nextTick(() => {
+            document.addEventListener('click', this.handleClickOutside);
+        });
+    },
+    beforeUnmount() {
+        // Clean up event listener when the component is unmounted
+        document.removeEventListener('click', this.handleClickOutside);
     }
 });
 
