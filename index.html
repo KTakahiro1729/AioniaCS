@@ -344,8 +344,8 @@
         </div>
 
         <div class="main-footer">
-            <div class="button-base footer-help-icon" @mouseover="showHelp = true" @mouseleave="showHelp = false"
-                @click="toggleHelp" title="ヘルプ表示">？
+            <div class="button-base footer-help-icon" ref="helpIcon" @mouseover="handleHelpIconMouseOver"
+                @mouseleave="handleHelpIconMouseLeave" @click="handleHelpIconClick" title="ヘルプ表示">？
             </div>
             <div :class="['status-display', experienceStatusClass]"> 経験点 {{ currentExperiencePoints }} / {{
                 maxExperiencePoints }} </div>
@@ -360,8 +360,8 @@
                 outputButtonText
                 }} </div>
             <transition name="fade">
-                <div class="help-panel" v-if="showHelp">
-                    <button class="help-close" @click="showHelp = false">×</button>
+                <div class="help-panel" ref="helpPanel" v-if="isHelpVisible">
+                    <button class="help-close" @click="closeHelpPanel">×</button>
                     <div v-html="helpText"></div>
                 </div>
             </transition>
