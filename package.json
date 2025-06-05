@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "npm run lint:js && npm run lint:scss && npm run lint:html",
     "lint:js": "eslint assets/src/ assets/js/ tests/ --ext .js",
-    "lint:scss": "stylelint '**/*.scss'",
+    "lint:scss": "stylelint \"assets/**/*.scss\" \"_sass/**/*.scss\"",
     "lint:html": "htmlhint _layouts/ _includes/ index.html _site/**/*.html",
     "test": "jest",
     "e2e": "playwright test",
