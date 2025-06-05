@@ -119,37 +119,56 @@ class DataManager {
           const jsonContent = await jsonDataFile.async("string");
           const rawJsonData = JSON.parse(jsonContent);
 
-          const loadedImages = [];
+          const imageFilesData = []; // Intermediate array for image data and paths
           const imageFolder = zip.folder("images");
           if (imageFolder) {
-            // JSZip's forEach is a bit different, let's get all files and iterate
             const imagePromises = [];
             imageFolder.forEach((relativePath, fileEntry) => {
               if (!fileEntry.dir) { // Ensure it's a file
                 const promise = fileEntry.async("base64").then(base64Data => {
                   const extension = relativePath.substring(relativePath.lastIndexOf('.') + 1) || 'png';
                   const mimeType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
-                  loadedImages.push(`data:${mimeType};base64,${base64Data}`);
+                  // Push an object with relativePath and imageDataUrl
+                  imageFilesData.push({
+                    relativePath: relativePath,
+                    imageDataUrl: `data:${mimeType};base64,${base64Data}`
+                  });
                 }).catch(imgError => {
                   console.error(`Error loading image ${relativePath} from zip:`, imgError);
-                  // Optionally skip this image or handle error
+                  // Optionally skip this image or handle error by not pushing to imageFilesData
                 });
                 imagePromises.push(promise);
               }
             });
             await Promise.all(imagePromises); // Wait for all images to be processed
+
+            // Sort imageFilesData based on relativePath
+            imageFilesData.sort((a, b) => {
+              const regex = /image_(\d+)\..+/i;
+              const matchA = a.relativePath.match(regex);
+              const matchB = b.relativePath.match(regex);
+
+              const numA = matchA ? parseInt(matchA[1], 10) : Infinity;
+              const numB = matchB ? parseInt(matchB[1], 10) : Infinity;
+
+              if (numA !== Infinity && numB !== Infinity) {
+                  return numA - numB;
+              } else if (numA !== Infinity) {
+                  return -1; // A has a number, B doesn't, so A comes first
+              } else if (numB !== Infinity) {
+                  return 1;  // B has a number, A doesn't, so B comes first
+              }
+              // Neither has a valid number pattern, sort by full path as a fallback
+              return a.relativePath.localeCompare(b.relativePath);
+            });
           }
 
           // Ensure character object exists before assigning images
           if (!rawJsonData.character) {
             rawJsonData.character = {};
           }
-          rawJsonData.character.images = loadedImages.sort((a,b) => {
-            // Try to sort images by their original index in the filename if possible
-            const numA = parseInt(a.match(/image_(\d+)/)?.[1] || '0');
-            const numB = parseInt(b.match(/image_(\d+)/)?.[1] || '0');
-            return numA - numB;
-          });
+          // Assign sorted images (only imageDataUrl part)
+          rawJsonData.character.images = imageFilesData.map(item => item.imageDataUrl);
 
 
           const parsedData = this.parseLoadedData(rawJsonData);
@@ -264,16 +283,29 @@ class DataManager {
       }
     } else {
       console.warn("Unknown JSON format, attempting to parse as is. Data integrity not guaranteed.");
+      // Refined logic for unknown format
+      let characterImages = []; // Default
+      if (rawJsonData && rawJsonData.character && Array.isArray(rawJsonData.character.images)) {
+          characterImages = rawJsonData.character.images;
+      } else if (rawJsonData && rawJsonData.character && typeof rawJsonData.character.images !== 'undefined') {
+          // It exists but is not an array, log warning or ignore, still use default empty array
+          console.warn("Loaded character data has an 'images' property that is not an array. Defaulting to empty images array.");
+      }
+
       dataToParse = {
-        character: { images: [] }, // Ensure images array exists
-        skills: [],
-        specialSkills: [],
-        equipments: {},
-        histories: [],
-        ...rawJsonData
+          // Ensure default structure for character if not present in rawJsonData
+          character: { images: characterImages, ...(rawJsonData.character || {}) },
+          skills: [],
+          specialSkills: [],
+          equipments: {},
+          histories: [],
+          ...rawJsonData // Spread rawJsonData, but character.images is now handled more carefully
       };
-       if (dataToParse.character && typeof dataToParse.character.images === 'undefined') {
-        dataToParse.character.images = [];
+      // Now, ensure character.images is an array after all spreads
+      if (!dataToParse.character) { // If rawJsonData completely overwrote character
+           dataToParse.character = { images: [] };
+      } else if (!Array.isArray(dataToParse.character.images)) {
+          dataToParse.character.images = [];
       }
     }
     return this._normalizeLoadedData(dataToParse);
@@ -397,7 +429,7 @@ class DataManager {
     // Ensure character.images exists if it's somehow missing from dataToParse.character
     // but character itself exists.
     const characterData = { ...defaultCharacter, ...(dataToParse.character || {}) };
-    if (typeof characterData.images === 'undefined') {
+    if (!Array.isArray(characterData.images)) {
         characterData.images = [];
     }
 

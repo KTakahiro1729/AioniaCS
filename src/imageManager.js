@@ -8,23 +8,37 @@ window.ImageManager = {
    */
   loadImage: function(file) {
     return new Promise((resolve, reject) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const maxSize = 10 * 1024 * 1024; // 10 MB
+
+      if (!file) {
+        reject(new Error("No file provided."));
+        return;
+      }
+
+      if (!allowedTypes.includes(file.type)) {
+        reject(new Error("Unsupported file type. Please upload JPEG, PNG, GIF, or WebP images."));
+        return;
+      }
+
+      if (file.size > maxSize) {
+        reject(new Error("File is too large. Maximum size is 10MB."));
+        return;
+      }
+
       // Placeholder for file reading logic
       // In a real implementation, you would use FileReader API
-      if (file) {
-        console.log(`Simulating loading image: ${file.name}`);
-        // Simulate async operation using FileReader to get a base64 string
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve(e.target.result);
-        };
-        reader.onerror = (e) => {
-          console.error("FileReader error:", e);
-          reject(new Error("Error reading file."));
-        };
-        reader.readAsDataURL(file); // Reads the file as a base64 encoded string
-      } else {
-        reject(new Error("No file provided."));
-      }
+      // console.log(`Simulating loading image: ${file.name}`); // Original console log
+      // Simulate async operation using FileReader to get a base64 string
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target.result);
+      };
+      reader.onerror = (e) => {
+        console.error("FileReader error:", e);
+        reject(new Error("Error reading file."));
+      };
+      reader.readAsDataURL(file); // Reads the file as a base64 encoded string
     });
   },
 

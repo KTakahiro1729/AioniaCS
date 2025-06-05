@@ -550,12 +550,12 @@ textarea.greyed-out {
     cursor: pointer;
     border-radius: 3px;
     border: 1px solid var(--color-accent-middle);
-    background-color: var(--color-panel-header);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: text-shadow 1s ease, color 0.5s ease, border-color 0.5s ease;
     flex-shrink: 0;
+    background-color: transparent;
     color: var(--color-accent);
 }
 
