@@ -755,6 +755,10 @@ textarea.greyed-out {
     padding: 0;
 }
 
+.footer-button--output {
+    width: 175px;
+}
+
 .footer-button--load>label {
     color: inherit;
     font-weight: 700;
