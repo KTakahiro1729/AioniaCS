@@ -37,6 +37,9 @@ jobs:
       - name: Build Jekyll site
         run: npm run jekyll:build # Uses bundle exec jekyll build
 
+      - name: Install Playwright browsers and dependencies
+        run: npx playwright install --with-deps
+
       - name: Serve Jekyll site and run E2E tests
         run: |
           npm install -g http-server # Install http-server globally in the CI environment

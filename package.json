@@ -9,7 +9,6 @@
     "lint:html": "htmlhint _layouts/ _includes/ index.html _site/**/*.html",
     "test": "jest",
     "e2e": "playwright test",
-    "pree2e": "playwright install",
     "jekyll:build": "bundle exec jekyll build",
     "jekyll:serve": "bundle exec jekyll serve --livereload",
     "jekyll:clean": "bundle exec jekyll clean"
