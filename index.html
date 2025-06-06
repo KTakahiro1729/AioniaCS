@@ -288,7 +288,7 @@
                         @click="removeExpert(skill, expIndex)"
                         :disabled="skill.experts.length
                                             <= 1 && expert.value===''"
-                        aria-label="専門知識を削除"
+                        aria-label="専門技能を削除"
                       >
                         －
                       </button>
@@ -307,7 +307,7 @@
                     type="button"
                     class="button-base list-button list-button--add"
                     @click="addExpert(skill)"
-                    aria-label="専門知識を追加"
+                    aria-label="専門技能を追加"
                   >
                     ＋
                   </button>
@@ -529,7 +529,7 @@
                     class="button-base list-button list-button--delete"
                     @click="removeHistoryItem(index)"
                     :disabled="histories.length <= 1 && !hasHistoryContent(history)"
-                    aria-label="履歴項目を削除"
+                    aria-label="冒険記録を削除"
                   >
                     －
                   </button>
@@ -558,7 +558,7 @@
                 type="button"
                 class="button-base list-button list-button--add"
                 @click="addHistoryItem()"
-                aria-label="履歴項目を追加"
+                aria-label="冒険記録を追加"
               >
                 ＋
               </button>
@@ -592,6 +592,8 @@
           @mouseover="handleHelpIconMouseOver"
           @mouseleave="handleHelpIconMouseLeave"
           @click="handleHelpIconClick"
+          @keydown.enter.prevent="handleHelpIconClick"
+          @keydown.space.prevent="handleHelpIconClick"
           title="ヘルプ表示"
           role="button"
           tabindex="0"
