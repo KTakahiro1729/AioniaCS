@@ -409,14 +409,13 @@ textarea.greyed-out {
    ========================================================================== */
 
 .weakness-list .base-list-item {
-    border-bottom: 1px solid var(--color-border-normal);
-    padding: 5px 0;
+    /* border-bottom and padding are handled by custom-list-item */
     font-size: 0.9em;
     align-items: center;
 }
 
 .weakness-list .base-list-item:last-child {
-    padding-bottom: 0;
+    /* padding-bottom is handled by custom-list-item */
 }
 
 .weakness-labels-header {
@@ -495,7 +494,8 @@ textarea.greyed-out {
     display: flex;
     align-items: flex-start;
     gap: 5px;
-    margin-bottom: 8px;
+
+    /* margin-bottom will be handled by custom-list-item or specific list item styles */
 }
 
 .base-list-header {
@@ -517,11 +517,19 @@ textarea.greyed-out {
 }
 
 .base-list-item:last-of-type {
-    border-bottom: none;
+    /* border-bottom is handled by custom-list-item or specific list item styles */
 }
 
 .base-list-item .delete-button-wrapper {
     margin-top: 4px;
+}
+
+.custom-list-item {
+    /* Add custom styling here, for example: */
+    padding: 10px;
+    border: 1px solid var(--color-accent);
+    margin-bottom: 10px;
+    border-radius: 4px;
 }
 
 .expert-list {
