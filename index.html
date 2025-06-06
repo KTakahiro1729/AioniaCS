@@ -81,21 +81,21 @@
               {{ driveStatusMessage }}
             </div>
             <button
-              class.e="menu-item button-base"
+              class="menu-item button-base"
               v-if="canSignInToGoogle"
               @click="handleSignInClick"
             >
               Sign In with Google
             </button>
             <button
-              class.e="menu-item button-base"
+              class="menu-item button-base"
               v-if="isSignedIn"
               @click="handleSignOutClick"
             >
               Sign Out
             </button>
             <button
-              class.e="menu-item button-base"
+              class="menu-item button-base"
               v-if="isSignedIn"
               @click="promptForDriveFolder(true)"
               :disabled="!isSignedIn"
