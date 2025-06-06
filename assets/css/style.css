@@ -107,7 +107,7 @@ body {
     grid-area: memo;
 }
 
-.session-history {
+.adventure-log-section {
     grid-area: history;
 }
 
@@ -931,7 +931,7 @@ textarea.greyed-out {
         gap: 20px;
     }
 
-    .session-history .history-item-inputs {
+    .adventure-log-section .history-item-inputs {
         flex-flow: row nowrap;
     }
 
