@@ -166,20 +166,41 @@ const app = createApp({
             }
         },
         // --- Other Methods ---
+        _manageListItem({ list, action, index, newItemFactory, hasContentChecker, maxLength }) {
+            if (action === 'add') {
+                if (maxLength && list.length >= maxLength) {
+                    return; // Do nothing if max length reached
+                }
+                const newItem = typeof newItemFactory === 'function' ? newItemFactory() : newItemFactory;
+                list.push(typeof newItem === 'object' && newItem !== null ? window.deepClone(newItem) : newItem);
+            } else if (action === 'remove') {
+                if (list.length > 1) {
+                    list.splice(index, 1);
+                } else if (list.length === 1 && hasContentChecker && hasContentChecker(list[index])) {
+                    const emptyItem = typeof newItemFactory === 'function' ? newItemFactory() : newItemFactory;
+                    list[index] = typeof emptyItem === 'object' && emptyItem !== null ? window.deepClone(emptyItem) : emptyItem;
+                }
+            }
+        },
         hasSpecialSkillContent(ss) { return !!(ss.group || ss.name || ss.note); },
         hasHistoryContent(h) { return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo); },
 
         addSpecialSkillItem() {
-            if (this.specialSkills.length < this.gameData.config.maxSpecialSkills) {
-                this.specialSkills.push({ group: '', name: '', note: '', showNote: false });
-            }
+            this._manageListItem({
+                list: this.specialSkills,
+                action: 'add',
+                newItemFactory: () => ({ group: '', name: '', note: '', showNote: false }),
+                maxLength: this.gameData.config.maxSpecialSkills
+            });
         },
         removeSpecialSkill(index) {
-            if (this.specialSkills.length > 1) {
-                this.specialSkills.splice(index, 1);
-            } else if (this.specialSkills.length === 1 && this.hasSpecialSkillContent(this.specialSkills[index])) {
-                this.specialSkills[index] = { group: '', name: '', note: '', showNote: false };
-            }
+            this._manageListItem({
+                list: this.specialSkills,
+                action: 'remove',
+                index: index,
+                newItemFactory: () => ({ group: '', name: '', note: '', showNote: false }),
+                hasContentChecker: this.hasSpecialSkillContent
+            });
         },
         expertPlaceholder(skill) {
             return skill.checked ? this.gameData.placeholderTexts.expertSkill : this.gameData.placeholderTexts.expertSkillDisabled;
@@ -189,13 +210,23 @@ const app = createApp({
                 this.character.rareSpecies = '';
             }
         },
-        addExpert(skill) { if (skill.canHaveExperts) { skill.experts.push({ value: '' }); } },
-        removeExpert(skill, expertIndex) {
-            if (skill.experts.length > 1) {
-                skill.experts.splice(expertIndex, 1);
-            } else if (skill.experts.length === 1 && skill.experts[expertIndex].value !== '') {
-                skill.experts[expertIndex].value = '';
+        addExpert(skill) {
+            if (skill.canHaveExperts) {
+                this._manageListItem({
+                    list: skill.experts,
+                    action: 'add',
+                    newItemFactory: () => ({ value: '' })
+                });
             }
+        },
+        removeExpert(skill, expertIndex) {
+            this._manageListItem({
+                list: skill.experts,
+                action: 'remove',
+                index: expertIndex,
+                newItemFactory: () => ({ value: '' }),
+                hasContentChecker: (expert) => expert.value && expert.value.trim() !== ''
+            });
         },
         availableSpecialSkillNames(index) {
             if (this.specialSkills[index]) {
@@ -216,13 +247,21 @@ const app = createApp({
                 this.specialSkills[index].showNote = this.gameData.specialSkillsRequiringNote.includes(skillName);
             }
         },
-        addHistoryItem() { this.histories.push({ sessionName: '', gotExperiments: null, memo: '' }); },
+        addHistoryItem() {
+            this._manageListItem({
+                list: this.histories,
+                action: 'add',
+                newItemFactory: () => ({ sessionName: '', gotExperiments: null, memo: '' })
+            });
+        },
         removeHistoryItem(index) {
-            if (this.histories.length > 1) {
-                this.histories.splice(index, 1);
-            } else if (this.histories.length === 1 && this.hasHistoryContent(this.histories[index])) {
-                this.histories[index] = { sessionName: '', gotExperiments: null, memo: '' };
-            }
+            this._manageListItem({
+                list: this.histories,
+                action: 'remove',
+                index: index,
+                newItemFactory: () => ({ sessionName: '', gotExperiments: null, memo: '' }),
+                hasContentChecker: this.hasHistoryContent
+            });
         },
         saveData() {
             this.dataManager.saveData(

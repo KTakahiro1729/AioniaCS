@@ -141,7 +141,7 @@
                                 <div class="flex-weakness-text"><label>弱点</label></div>
                                 <div class="flex-weakness-acquired"><label>獲得</label></div>
                             </li>
-                            <li v-for="(weakness, index) in character.weaknesses" :key="index" class="base-list-item">
+                            <li v-for="(weakness, index) in character.weaknesses" :key="index" class="base-list-item custom-list-item">
                                 <div class="flex-weakness-number">{{ index + 1 }}</div>
                                 <div class="flex-weakness-text"><input type="text" v-model="weakness.text" /></div>
                                 <div class="flex-weakness-acquired">
@@ -169,7 +169,7 @@
                         </div>
                         <div v-if="skill.canHaveExperts && skill.checked" class="experts-section">
                             <ul class="expert-list list-reset">
-                                <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="base-list-item">
+                                <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="base-list-item custom-list-item">
                                     <div class="delete-button-wrapper">
                                         <button type="button" class="button-base list-button list-button--delete"
                                             @click="removeExpert(skill, expIndex)" :disabled="skill.experts.length
@@ -193,7 +193,7 @@
                 <div class="box-content">
                     <ul class="list-reset special-skills-list">
                         <li v-for="(specialSkill, index) in specialSkills" :key="index"
-                            class="base-list-item special-skill-item">
+                            class="base-list-item special-skill-item custom-list-item">
                             <div class="delete-button-wrapper">
                                 <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeSpecialSkill(index)"
@@ -308,7 +308,7 @@
                     </div>
 
                     <ul id="histories" class="list-reset">
-                        <li v-for="(history, index) in histories" :key="index" class="base-list-item">
+                        <li v-for="(history, index) in histories" :key="index" class="base-list-item custom-list-item">
                             <div class="delete-button-wrapper">
                                 <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeHistoryItem(index)"
