@@ -38,6 +38,9 @@ const mockVueInstanceMethods = {
 describe('Vue app methods - _manageListItem', () => {
     let list;
 
+    // Ensure window.deepClone is a Jest mock function for this test suite
+    window.deepClone = jest.fn(item => JSON.parse(JSON.stringify(item)));
+
     beforeEach(() => {
         list = [];
         // Reset mock calls for deepClone before each test
