@@ -502,7 +502,18 @@ textarea.greyed-out {
     display: flex;
     align-items: flex-start;
     gap: 5px;
-    margin-bottom: 8px;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom: 1px solid var(--color-border-normal);
+    margin-bottom: 5px;
+}
+
+.base-list-header .base-list-header-placeholder {
+    height: 0;
+}
+
+.base-list-header label {
+    color: var(--color-text-muted)
 }
 
 .base-list-item:last-of-type {
@@ -607,20 +618,6 @@ textarea.greyed-out {
     gap: 5px;
 }
 
-.base-list-header {
-    padding-top: 0;
-    padding-bottom: 0;
-    border-bottom: 1px solid var(--color-border-normal);
-    margin-bottom: 5px;
-}
-
-.base-list-header .base-list-header-placeholder {
-    height: 0;
-}
-
-.base-list-header label {
-    color: var(--color-text-muted)
-}
 
 .flex-history-name {
     flex: 1 1 150px;
