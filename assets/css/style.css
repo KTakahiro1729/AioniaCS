@@ -23,6 +23,16 @@
   --color-link-hover: var(--color-accent);
   --color-delete-text: #c05a5a;
   --color-delete-border: #7f5454;
+  --color-delete-hover-text: #a86f6f;
+  --color-status-experience-ok-border: #5a8b5a;
+  --color-status-experience-ok-text: #9aeaa4;
+  --color-status-experience-ok-bg: #2f3d2f;
+  --color-status-experience-over-border: #8b0000;
+  --color-status-experience-over-text: #ffacac;
+  --color-status-experience-over-bg: #4d2626;
+  --color-status-weight-border: #647687;
+  --color-status-weight-text: #b0c4de;
+  --color-status-weight-bg: #2a3038;
 }
 
 body {
@@ -703,21 +713,21 @@ textarea.greyed-out {
 }
 
 .status-display--experience-ok {
-  border-color: #5a8b5a;
-  color: #9aeaa4;
-  background-color: #2f3d2f;
+  border-color: var(--color-status-experience-ok-border);
+  color: var(--color-status-experience-ok-text);
+  background-color: var(--color-status-experience-ok-bg);
 }
 
 .status-display--experience-over {
-  border-color: #8b0000;
-  color: #ffacac;
-  background-color: #4d2626;
+  border-color: var(--color-status-experience-over-border);
+  color: var(--color-status-experience-over-text);
+  background-color: var(--color-status-experience-over-bg);
 }
 
 .status-display--weight {
-  border-color: #647687;
-  color: #b0c4de;
-  background-color: #2a3038;
+  border-color: var(--color-status-weight-border);
+  color: var(--color-status-weight-text);
+  background-color: var(--color-status-weight-bg);
 }
 
 /* フッターボタン */
