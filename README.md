@@ -1,3 +1,4 @@
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/KTakahiro1729/AioniaCS?utm_source=oss&utm_medium=github&utm_campaign=KTakahiro1729%2FAioniaCS&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 # AioniaCS
 慈悲なきアイオニアのための非公式キャラクターシート作成ツールです
 
@@ -36,3 +37,9 @@
    ```bash
    npm run lint
    ```
+
+## Customization
+
+Status display colors can be adjusted by editing the CSS variables defined in
+`assets/css/style.css`. Look for variables starting with
+`--color-status-` to tweak border, text, and background colors.
