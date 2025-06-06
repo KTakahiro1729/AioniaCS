@@ -494,6 +494,7 @@ textarea.greyed-out {
     display: flex;
     align-items: flex-start;
     gap: 5px;
+
     /* margin-bottom will be handled by custom-list-item or specific list item styles */
 }
 
