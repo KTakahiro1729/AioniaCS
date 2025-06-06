@@ -56,11 +56,7 @@ const app = createApp({
 
       // Dropdown and Menu visibility
       showDriveMenu: false,
-      showSaveDropdown: false,
-      showLoadDropdown: false,
       currentDriveMenuHandler: null,
-      currentSaveDropdownHandler: null,
-      currentLoadDropdownHandler: null,
 
       // Image management
       currentImageIndex: 0,
@@ -191,111 +187,25 @@ const app = createApp({
         this.currentDriveMenuHandler = null;
       }
       if (newValue) {
-        const menuElement = this.$refs.driveMenu;
-        const toggleButton = this.$refs.driveMenuToggleButton;
-        this.showSaveDropdown = false;
-        this.showLoadDropdown = false;
-        this.currentDriveMenuHandler = (event) => {
-          if (
-            menuElement &&
-            !menuElement.contains(event.target) &&
-            toggleButton &&
-            !toggleButton.contains(event.target)
-          ) {
-            this.showDriveMenu = false;
-          }
-        };
-        document.addEventListener("click", this.currentDriveMenuHandler, true);
-      }
-    },
-    showSaveDropdown(newValue) {
-      if (this.currentSaveDropdownHandler) {
-        document.removeEventListener(
-          "click",
-          this.currentSaveDropdownHandler,
-          true,
-        );
-        this.currentSaveDropdownHandler = null;
-      }
-      if (newValue) {
-        this.showDriveMenu = false;
-        this.showLoadDropdown = false;
-
-        // メニュー位置を動的に設定
         this.$nextTick(() => {
-          const menuEl = this.$refs.saveDropdownMenu;
-          const toggleEl = this.$refs.saveDropdownToggleButton;
-          if (menuEl && toggleEl) {
-            const toggleRect = toggleEl.getBoundingClientRect();
-            menuEl.style.right = `${window.innerWidth - toggleRect.right}px`;
-            menuEl.style.bottom = `${
-              window.innerHeight - toggleRect.top + 5
-            }px`;
+          const menuElement = this.$refs.driveMenu;
+          const toggleButton = this.$refs.driveMenuToggleButton;
+          if (menuElement && toggleButton) {
+            this.currentDriveMenuHandler = (event) => {
+              if (
+                !menuElement.contains(event.target) &&
+                !toggleButton.contains(event.target)
+              ) {
+                this.showDriveMenu = false;
+              }
+            };
+            document.addEventListener(
+              "click",
+              this.currentDriveMenuHandler,
+              true,
+            );
           }
         });
-
-        const menuElement = this.$refs.saveDropdownMenu;
-        const toggleButton = this.$refs.saveDropdownToggleButton;
-        this.currentSaveDropdownHandler = (event) => {
-          if (
-            menuElement &&
-            !menuElement.contains(event.target) &&
-            toggleButton &&
-            !toggleButton.contains(event.target)
-          ) {
-            this.showSaveDropdown = false;
-          }
-        };
-        document.addEventListener(
-          "click",
-          this.currentSaveDropdownHandler,
-          true,
-        );
-      }
-    },
-    showLoadDropdown(newValue) {
-      if (this.currentLoadDropdownHandler) {
-        document.removeEventListener(
-          "click",
-          this.currentLoadDropdownHandler,
-          true,
-        );
-        this.currentLoadDropdownHandler = null;
-      }
-      if (newValue) {
-        this.showDriveMenu = false;
-        this.showSaveDropdown = false;
-
-        // メニュー位置を動的に設定
-        this.$nextTick(() => {
-          const menuEl = this.$refs.loadDropdownMenu;
-          const toggleEl = this.$refs.loadDropdownToggleButton;
-          if (menuEl && toggleEl) {
-            const toggleRect = toggleEl.getBoundingClientRect();
-            menuEl.style.right = `${window.innerWidth - toggleRect.right}px`;
-            menuEl.style.bottom = `${
-              window.innerHeight - toggleRect.top + 5
-            }px`;
-          }
-        });
-
-        const menuElement = this.$refs.loadDropdownMenu;
-        const toggleButton = this.$refs.loadDropdownToggleButton;
-        this.currentLoadDropdownHandler = (event) => {
-          if (
-            menuElement &&
-            !menuElement.contains(event.target) &&
-            toggleButton &&
-            !toggleButton.contains(event.target)
-          ) {
-            this.showLoadDropdown = false;
-          }
-        };
-        document.addEventListener(
-          "click",
-          this.currentLoadDropdownHandler,
-          true,
-        );
       }
     },
     "character.initialScar"(newInitialScar) {
@@ -313,24 +223,6 @@ const app = createApp({
     // Menu and Dropdown Toggle Methods
     toggleDriveMenu() {
       this.showDriveMenu = !this.showDriveMenu;
-      if (this.showDriveMenu) {
-        this.showSaveDropdown = false;
-        this.showLoadDropdown = false;
-      }
-    },
-    toggleSaveDropdown() {
-      this.showSaveDropdown = !this.showSaveDropdown;
-      if (this.showSaveDropdown) {
-        this.showLoadDropdown = false;
-        this.showDriveMenu = false;
-      }
-    },
-    toggleLoadDropdown() {
-      this.showLoadDropdown = !this.showLoadDropdown;
-      if (this.showLoadDropdown) {
-        this.showSaveDropdown = false;
-        this.showDriveMenu = false;
-      }
     },
     handleCurrentScarInput(event) {
       const enteredValue = parseInt(event.target.value, 10);
@@ -559,7 +451,6 @@ const app = createApp({
         this.equipments,
         this.histories,
       );
-      this.showSaveDropdown = false;
     },
     handleFileUpload(event) {
       this.dataManager.handleFileUpload(
@@ -575,7 +466,6 @@ const app = createApp({
           this.showCustomAlert(errorMessage);
         },
       );
-      this.showLoadDropdown = false;
     },
 
     // --- Cocofolia & Clipboard ---
@@ -883,7 +773,7 @@ const app = createApp({
       });
     },
     async handleSaveToDriveClick() {
-      this.showSaveDropdown = false;
+      console.log("handleSaveToDriveClick triggered"); // デバッグ用ログ
       if (!this.isSignedIn || !this.googleDriveManager) {
         this.driveStatusMessage = "Error: Please sign in to save.";
         return;
@@ -928,7 +818,7 @@ const app = createApp({
       }
     },
     async handleLoadFromDriveClick() {
-      this.showLoadDropdown = false;
+      console.log("handleLoadFromDriveClick triggered"); // デバッグ用ログ
       if (!this.isSignedIn || !this.googleDriveManager) {
         this.driveStatusMessage = "Error: Please sign in to load.";
         return;
@@ -1082,18 +972,6 @@ const app = createApp({
     document.removeEventListener("click", this.handleClickOutside);
     if (this.currentDriveMenuHandler)
       document.removeEventListener("click", this.currentDriveMenuHandler, true);
-    if (this.currentSaveDropdownHandler)
-      document.removeEventListener(
-        "click",
-        this.currentSaveDropdownHandler,
-        true,
-      );
-    if (this.currentLoadDropdownHandler)
-      document.removeEventListener(
-        "click",
-        this.currentLoadDropdownHandler,
-        true,
-      );
   },
 });
 

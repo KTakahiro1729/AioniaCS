@@ -697,30 +697,18 @@
             データ保存
           </button>
           <button
-            class="button-base footer-button footer-button--dropdown-arrow"
-            @click="toggleSaveDropdown"
-            ref="saveDropdownToggleButton"
+            v-if="isSignedIn"
+            class="button-base footer-button footer-button--cloud"
+            @click="handleSaveToDriveClick"
+            :disabled="!canOperateDrive"
+            title="Google Driveに保存"
           >
-            ▼
+            <img
+              src="assets/medieval_cloud.svg"
+              alt="Save to Drive"
+              class="icon-svg icon-svg--footer"
+            />
           </button>
-          <teleport to="body">
-            <div
-              class="footer-dropdown-menu"
-              v-if="showSaveDropdown"
-              ref="saveDropdownMenu"
-            >
-              <button class="menu-item button-base" @click="saveData">
-                ローカルに保存
-              </button>
-              <button
-                class="menu-item button-base"
-                @click="handleSaveToDriveClick"
-                :disabled="!canOperateDrive"
-              >
-                Google Driveに保存
-              </button>
-            </div>
-          </teleport>
         </div>
 
         <div class="footer-button-container">
@@ -737,37 +725,18 @@
             class="hidden"
           />
           <button
-            class="button-base footer-button footer-button--dropdown-arrow"
-            @click="toggleLoadDropdown"
-            ref="loadDropdownToggleButton"
+            v-if="isSignedIn"
+            class="button-base footer-button footer-button--cloud"
+            @click="handleLoadFromDriveClick"
+            :disabled="!isSignedIn"
+            title="Google Driveから読込"
           >
-            ▼
+            <img
+              src="assets/medieval_cloud.svg"
+              alt="Load from Drive"
+              class="icon-svg icon-svg--footer"
+            />
           </button>
-          <teleport to="body">
-            <div
-              class="footer-dropdown-menu"
-              v-if="showLoadDropdown"
-              ref="loadDropdownMenu"
-            >
-              <label for="load_input_vue_dropdown" class="menu-item button-base"
-                >ローカルから読込</label
-              >
-              <input
-                type="file"
-                id="load_input_vue_dropdown"
-                @change="handleFileUpload"
-                accept=".json,.txt,.zip"
-                class="hidden"
-              />
-              <button
-                class="menu-item button-base"
-                @click="handleLoadFromDriveClick"
-                :disabled="!isSignedIn"
-              >
-                Google Driveから読込
-              </button>
-            </div>
-          </teleport>
         </div>
 
         <div
