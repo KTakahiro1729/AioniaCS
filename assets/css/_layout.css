@@ -81,7 +81,7 @@
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 /* フォーム行レイアウト */
@@ -163,8 +163,6 @@
 .help-panel {
   position: fixed;
   bottom: 92px;
-
-  /* フッター高さ + 余白 */
   left: 20px;
   background-color: var(--color-panel-body);
   border: 1px solid var(--color-border-normal);
@@ -252,8 +250,6 @@
   z-index: 2000;
   white-space: pre-wrap;
   display: none;
-
-  /* 初期状態では非表示 */
 }
 
 .custom-alert-modal p {
@@ -269,7 +265,10 @@
   cursor: pointer;
 }
 
-/* レスポンシブデザイン */
+/* ==========================================================================
+   レスポンシブデザイン
+   ========================================================================== */
+
 @media (max-width: 768px) {
   .main-grid {
     grid-template-columns: 1fr;
@@ -300,6 +299,8 @@
   .help-panel {
     width: calc(100% - 40px);
     max-width: none;
+    left: 10px;
+    bottom: 82px;
   }
 
   .info-row {
@@ -309,8 +310,7 @@
 
   .info-item,
   .info-item--triple,
-  .info-item--double,
-  .info-item--quadruple {
+  .info-item--double {
     flex-basis: auto;
     min-width: 0;
     width: 100%;
@@ -318,6 +318,49 @@
 
   .equipment-section {
     min-width: 100%;
+  }
+
+  .top-left-controls {
+    top: 5px;
+    left: 5px;
+  }
+
+  .icon-button {
+    width: 72px;
+    height: 72px;
+    padding: 12px;
+  }
+
+  .icon-button img.icon-svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .floating-menu {
+    min-width: 180px;
+  }
+
+  .main-footer {
+    padding: 10px 15px;
+    gap: 10px;
+  }
+
+  .footer-button-container > .footer-button,
+  .footer-button--dropdown-arrow {
+    height: 42px;
+  }
+
+  .footer-button--save,
+  .footer-button--load {
+    width: 90px;
+  }
+
+  .footer-button--output {
+    width: 140px;
+  }
+
+  .footer-dropdown-menu {
+    min-width: 180px;
   }
 }
 
@@ -329,5 +372,13 @@
   .flex-weakness-acquired {
     width: 40%;
     min-width: 100px;
+  }
+
+  .floating-menu {
+    font-size: 0.9em;
+  }
+
+  .footer-dropdown-menu {
+    font-size: 0.9em;
   }
 }

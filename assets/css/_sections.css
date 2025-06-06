@@ -86,8 +86,6 @@
 /* スキルリスト */
 .skills-list {
   padding: 18px;
-
-  /* box-contentと同じだが、こちらに残す */
 }
 
 .skills-list > li {
@@ -101,10 +99,6 @@
 .skills-list > li .skill-header {
   display: flex;
   align-items: center;
-}
-
-.skills-list > li .skill-name {
-  /* 特にスタイル変更なし */
 }
 
 .skills-list > li .experts-section {

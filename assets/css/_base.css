@@ -8,6 +8,7 @@ body {
   color: var(--color-text-normal);
   line-height: 1.7;
   padding-bottom: 72px;
+  position: relative;
 
   /* 固定フッター分の余白 */
 }
@@ -49,4 +50,8 @@ body.keyboard-visible .main-footer {
 
 body.keyboard-visible .help-panel {
   bottom: 20px !important;
+}
+
+body.keyboard-visible .top-left-controls {
+  position: fixed !important;
 }
