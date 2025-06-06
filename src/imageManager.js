@@ -6,9 +6,14 @@ window.ImageManager = {
    * @param {File} file - The image file to load.
    * @returns {Promise<string>} A promise that resolves with the image data as a base64 string.
    */
-  loadImage: function(file) {
+  loadImage: function (file) {
     return new Promise((resolve, reject) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
       const maxSize = 10 * 1024 * 1024; // 10 MB
 
       if (!file) {
@@ -17,7 +22,11 @@ window.ImageManager = {
       }
 
       if (!allowedTypes.includes(file.type)) {
-        reject(new Error("Unsupported file type. Please upload JPEG, PNG, GIF, or WebP images."));
+        reject(
+          new Error(
+            "Unsupported file type. Please upload JPEG, PNG, GIF, or WebP images.",
+          ),
+        );
         return;
       }
 
@@ -28,7 +37,6 @@ window.ImageManager = {
 
       // Placeholder for file reading logic
       // In a real implementation, you would use FileReader API
-      // console.log(`Simulating loading image: ${file.name}`); // Original console log
       // Simulate async operation using FileReader to get a base64 string
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -49,15 +57,17 @@ window.ImageManager = {
    * @param {number} index - The index of the image to remove.
    * @returns {Array<string>} A new array with the image removed.
    */
-  removeImage: function(imagesArray, index) {
+  removeImage: function (imagesArray, index) {
     if (index >= 0 && index < imagesArray.length) {
       const updatedImagesArray = [...imagesArray];
       updatedImagesArray.splice(index, 1);
-      console.log(`Simulating removal of image at index: ${index}`);
+      if (window.DEBUG) {
+        console.log(`Simulating removal of image at index: ${index}`);
+      }
       return updatedImagesArray;
     } else {
       console.error("Invalid index for image removal.");
       return imagesArray; // Return original array if index is invalid
     }
-  }
+  },
 };

@@ -1,6 +1,7 @@
-(function(global) {
+(function (global) {
+  global.DEBUG = false;
   function deepClone(obj) {
-    if (typeof structuredClone === 'function') {
+    if (typeof structuredClone === "function") {
       try {
         return structuredClone(obj);
       } catch (e) {
@@ -14,9 +15,9 @@
   function createWeaknessArray(max) {
     return Array(max)
       .fill(null)
-      .map(() => ({ text: '', acquired: '--' }));
+      .map(() => ({ text: "", acquired: "--" }));
   }
 
   global.deepClone = deepClone;
   global.createWeaknessArray = createWeaknessArray;
-})(typeof window !== 'undefined' ? window : globalThis);
+})(typeof window !== "undefined" ? window : globalThis);
