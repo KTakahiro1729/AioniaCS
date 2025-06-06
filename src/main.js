@@ -677,22 +677,78 @@ const app = createApp({
     showCustomAlert(message) {
       const alertModalId = "custom-alert-modal";
       let modal = document.getElementById(alertModalId);
-      if (!modal) {
-        modal = document.createElement("div");
-        modal.id = alertModalId;
-        modal.classList.add("custom-alert-modal");
-        const messageP = document.createElement("p");
-        messageP.classList.add("custom-alert-message");
-        modal.appendChild(messageP);
-        const closeButton = document.createElement("button");
-        closeButton.textContent = "OK";
-        closeButton.classList.add("custom-alert-button");
-        closeButton.onclick = () => modal.remove();
-        modal.appendChild(closeButton);
-        document.body.appendChild(modal);
+
+      // If modal exists from a previous call, remove it to ensure clean state
+      if (modal) {
+        modal.remove();
       }
-      modal.querySelector("p").textContent = message;
-      modal.style.display = "block";
+
+      let lastFocusedElement = document.activeElement;
+
+      modal = document.createElement("div");
+      modal.id = alertModalId;
+      modal.classList.add("custom-alert-modal");
+      modal.setAttribute("role", "alertdialog");
+      modal.setAttribute("aria-modal", "true");
+      // Setting tabindex to -1 allows the modal to be focusable programmatically
+      // and to receive keydown events, especially if no interactive elements are initially focused.
+      // However, we will focus the button directly.
+      modal.setAttribute("tabindex", "-1");
+
+      const titleElement = document.createElement("h4");
+      titleElement.id = "custom-alert-title";
+      titleElement.textContent = "アラート"; // "Alert"
+      modal.appendChild(titleElement);
+      modal.setAttribute("aria-labelledby", titleElement.id);
+
+      const messageP = document.createElement("p");
+      messageP.id = "custom-alert-message-content"; // Ensure this ID is unique
+      messageP.classList.add("custom-alert-message");
+      messageP.textContent = message;
+      modal.appendChild(messageP);
+      modal.setAttribute("aria-describedby", messageP.id);
+
+      const closeButton = document.createElement("button");
+      closeButton.textContent = "OK";
+      closeButton.classList.add("custom-alert-button");
+
+      // Centralized modal closing function
+      const closeCustomAlertModal = () => {
+        modal.removeEventListener("keydown", handleModalKeyDown);
+        if (modal.parentNode) {
+          modal.parentNode.removeChild(modal);
+        }
+        if (
+          lastFocusedElement &&
+          typeof lastFocusedElement.focus === "function"
+        ) {
+          lastFocusedElement.focus();
+        }
+      };
+
+      // Keyboard event handler for the modal
+      const handleModalKeyDown = (event) => {
+        if (event.key === "Escape") {
+          closeCustomAlertModal();
+        } else if (event.key === "Tab") {
+          event.preventDefault(); // Keep focus within the modal
+          closeButton.focus(); // Explicitly focus the button
+        }
+      };
+
+      closeButton.onclick = closeCustomAlertModal;
+      modal.appendChild(closeButton);
+      document.body.appendChild(modal);
+
+      modal.addEventListener("keydown", handleModalKeyDown);
+
+      // Set initial focus on the button.
+      // Using requestAnimationFrame to ensure the modal is rendered and focusable.
+      requestAnimationFrame(() => {
+        closeButton.focus();
+      });
+
+      // modal.style.display = "block"; // This is handled by appending to body and CSS rules.
     },
 
     // --- Google Drive Methods ---

@@ -126,6 +126,7 @@
                     @click="previousImage"
                     class="button-base button-imagenav button-imagenav--prev"
                     :disabled="character.images.length <= 1"
+                    aria-label="前の画像"
                   >
                     &lt;
                   </button>
@@ -133,6 +134,7 @@
                     @click="nextImage"
                     class="button-base button-imagenav button-imagenav--next"
                     :disabled="character.images.length <= 1"
+                    aria-label="次の画像"
                   >
                     &gt;
                   </button>
@@ -159,6 +161,7 @@
                   :disabled="!currentImageSrc"
                   @click="removeCurrentImage"
                   class="button-base imagefile-button imagefile-button--delete"
+                  aria-label="現在の画像を削除"
                 >
                   削除
                 </button>
@@ -365,7 +368,9 @@
                         type="button"
                         class="button-base list-button list-button--delete"
                         @click="removeExpert(skill, expIndex)"
-                        :disabled="skill.experts.length <= 1 && expert.value === ''"
+                        :disabled="skill.experts.length
+                                            <= 1 && expert.value===''"
+                        aria-label="専門技能を削除"
                       >
                         －
                       </button>
@@ -384,6 +389,7 @@
                     type="button"
                     class="button-base list-button list-button--add"
                     @click="addExpert(skill)"
+                    aria-label="専門技能を追加"
                   >
                     ＋
                   </button>
@@ -408,6 +414,7 @@
                     class="button-base list-button list-button--delete"
                     @click="removeSpecialSkill(index)"
                     :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)"
+                    aria-label="特技を削除"
                   >
                     －
                   </button>
@@ -461,6 +468,7 @@
                 type="button"
                 class="button-base list-button list-button--add"
                 @click="addSpecialSkillItem()"
+                aria-label="特技を追加"
               >
                 ＋
               </button>
@@ -602,6 +610,7 @@
                     class="button-base list-button list-button--delete"
                     @click="removeHistoryItem(index)"
                     :disabled="histories.length <= 1 && !hasHistoryContent(history)"
+                    aria-label="冒険記録を削除"
                   >
                     －
                   </button>
@@ -630,6 +639,7 @@
                 type="button"
                 class="button-base list-button list-button--add"
                 @click="addHistoryItem()"
+                aria-label="冒険記録を追加"
               >
                 ＋
               </button>
@@ -662,7 +672,13 @@
           @mouseover="handleHelpIconMouseOver"
           @mouseleave="handleHelpIconMouseLeave"
           @click="handleHelpIconClick"
+          @keydown.enter.prevent="handleHelpIconClick"
+          @keydown.space.prevent="handleHelpIconClick"
           title="ヘルプ表示"
+          role="button"
+          tabindex="0"
+          aria-label="ヘルプを表示"
+          :aria-expanded="isHelpVisible.toString()"
         >
           ？
         </div>
