@@ -218,10 +218,24 @@ const app = createApp({
         this.currentSaveDropdownHandler = null;
       }
       if (newValue) {
-        const menuElement = this.$refs.saveDropdownMenu;
-        const toggleButton = this.$refs.saveDropdownToggleButton;
         this.showDriveMenu = false;
         this.showLoadDropdown = false;
+
+        // メニュー位置を動的に設定
+        this.$nextTick(() => {
+          const menuEl = this.$refs.saveDropdownMenu;
+          const toggleEl = this.$refs.saveDropdownToggleButton;
+          if (menuEl && toggleEl) {
+            const toggleRect = toggleEl.getBoundingClientRect();
+            menuEl.style.right = `${window.innerWidth - toggleRect.right}px`;
+            menuEl.style.bottom = `${
+              window.innerHeight - toggleRect.top + 5
+            }px`;
+          }
+        });
+
+        const menuElement = this.$refs.saveDropdownMenu;
+        const toggleButton = this.$refs.saveDropdownToggleButton;
         this.currentSaveDropdownHandler = (event) => {
           if (
             menuElement &&
@@ -249,10 +263,24 @@ const app = createApp({
         this.currentLoadDropdownHandler = null;
       }
       if (newValue) {
-        const menuElement = this.$refs.loadDropdownMenu;
-        const toggleButton = this.$refs.loadDropdownToggleButton;
         this.showDriveMenu = false;
         this.showSaveDropdown = false;
+
+        // メニュー位置を動的に設定
+        this.$nextTick(() => {
+          const menuEl = this.$refs.loadDropdownMenu;
+          const toggleEl = this.$refs.loadDropdownToggleButton;
+          if (menuEl && toggleEl) {
+            const toggleRect = toggleEl.getBoundingClientRect();
+            menuEl.style.right = `${window.innerWidth - toggleRect.right}px`;
+            menuEl.style.bottom = `${
+              window.innerHeight - toggleRect.top + 5
+            }px`;
+          }
+        });
+
+        const menuElement = this.$refs.loadDropdownMenu;
+        const toggleButton = this.$refs.loadDropdownToggleButton;
         this.currentLoadDropdownHandler = (event) => {
           if (
             menuElement &&

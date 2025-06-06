@@ -919,9 +919,7 @@ textarea.greyed-out {
 }
 
 .footer-dropdown-menu {
-  position: absolute;
-  bottom: calc(100% + 5px);
-  right: 0;
+  position: fixed;
   background-color: var(--color-panel-body);
   border: 1px solid var(--color-border-normal);
   border-radius: 4px;

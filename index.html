@@ -687,22 +687,24 @@
           >
             ▼
           </button>
-          <div
-            class="footer-dropdown-menu"
-            v-if="showSaveDropdown"
-            ref="saveDropdownMenu"
-          >
-            <button class="menu-item button-base" @click="saveData">
-              ローカルに保存
-            </button>
-            <button
-              class="menu-item button-base"
-              @click="handleSaveToDriveClick"
-              :disabled="!canOperateDrive"
+          <teleport to="body">
+            <div
+              class="footer-dropdown-menu"
+              v-if="showSaveDropdown"
+              ref="saveDropdownMenu"
             >
-              Google Driveに保存
-            </button>
-          </div>
+              <button class="menu-item button-base" @click="saveData">
+                ローカルに保存
+              </button>
+              <button
+                class="menu-item button-base"
+                @click="handleSaveToDriveClick"
+                :disabled="!canOperateDrive"
+              >
+                Google Driveに保存
+              </button>
+            </div>
+          </teleport>
         </div>
 
         <div class="footer-button-container">
@@ -725,29 +727,31 @@
           >
             ▼
           </button>
-          <div
-            class="footer-dropdown-menu"
-            v-if="showLoadDropdown"
-            ref="loadDropdownMenu"
-          >
-            <label for="load_input_vue_dropdown" class="menu-item button-base"
-              >ローカルから読込</label
+          <teleport to="body">
+            <div
+              class="footer-dropdown-menu"
+              v-if="showLoadDropdown"
+              ref="loadDropdownMenu"
             >
-            <input
-              type="file"
-              id="load_input_vue_dropdown"
-              @change="handleFileUpload"
-              accept=".json,.txt,.zip"
-              class="hidden"
-            />
-            <button
-              class="menu-item button-base"
-              @click="handleLoadFromDriveClick"
-              :disabled="!isSignedIn"
-            >
-              Google Driveから読込
-            </button>
-          </div>
+              <label for="load_input_vue_dropdown" class="menu-item button-base"
+                >ローカルから読込</label
+              >
+              <input
+                type="file"
+                id="load_input_vue_dropdown"
+                @change="handleFileUpload"
+                accept=".json,.txt,.zip"
+                class="hidden"
+              />
+              <button
+                class="menu-item button-base"
+                @click="handleLoadFromDriveClick"
+                :disabled="!isSignedIn"
+              >
+                Google Driveから読込
+              </button>
+            </div>
+          </teleport>
         </div>
 
         <div
