@@ -136,12 +136,12 @@
                     <div class="weakness-section">
                         <div class="sub-box-title sub-box-title--weakness">弱点</div>
                         <ul class="weakness-list list-reset">
-                            <li class="list-item weakness-labels-header">
-                                <div class="flex-weakness-number"></div>
+                            <li class="base-list-header">
+                                <div class="flex-weakness-number base-list-header-placeholder"></div>
                                 <div class="flex-weakness-text"><label>弱点</label></div>
                                 <div class="flex-weakness-acquired"><label>獲得</label></div>
                             </li>
-                            <li v-for="(weakness, index) in character.weaknesses" :key="index" class="list-item">
+                            <li v-for="(weakness, index) in character.weaknesses" :key="index" class="base-list-item">
                                 <div class="flex-weakness-number">{{ index + 1 }}</div>
                                 <div class="flex-weakness-text"><input type="text" v-model="weakness.text" /></div>
                                 <div class="flex-weakness-acquired">
@@ -162,15 +162,14 @@
             <div id="skills" class="skills">
                 <div class="box-title">技能</div>
                 <ul class="skills-list box-content list-reset">
-                    <li v-for="(skill) in skills" :key="skill.id">
+                    <li v-for="(skill) in skills" :key="skill.id" class="skill-list">
                         <div class="skill-header">
                             <input type="checkbox" :id="skill.id" v-model="skill.checked" />
                             <label :for="skill.id" class="skill-name">{{ skill.name }}</label>
                         </div>
                         <div v-if="skill.canHaveExperts && skill.checked" class="experts-section">
-                            <ul class="expert-list list-reset list-reset--with-top-margin">
-                                <li v-for="(expert, expIndex) in skill.experts" :key="expIndex"
-                                    class="expert-list-item">
+                            <ul class="expert-list list-reset">
+                                <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="base-list-item">
                                     <div class="delete-button-wrapper">
                                         <button type="button" class="button-base list-button list-button--delete"
                                             @click="removeExpert(skill, expIndex)" :disabled="skill.experts.length
@@ -192,9 +191,9 @@
             <div id="special_skills" class="special-skills">
                 <div class="box-title">特技</div>
                 <div class="box-content">
-                    <ul class="list-reset">
+                    <ul class="list-reset special-skills-list">
                         <li v-for="(specialSkill, index) in specialSkills" :key="index"
-                            class="list-item special-skill-item">
+                            class="base-list-item special-skill-item">
                             <div class="delete-button-wrapper">
                                 <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeSpecialSkill(index)"
@@ -297,8 +296,8 @@
             <div id="adventure_log_section" class="session-history">
                 <div class="box-title">冒険の記録</div>
                 <div class="box-content">
-                    <div class="list-item history-labels-header">
-                        <div class="delete-button-wrapper"></div>
+                    <div class="base-list-header">
+                        <div class="delete-button-wrapper base-list-header-placeholder"></div>
                         <div class="flex-grow">
                             <div class="history-item-inputs">
                                 <div class="flex-history-name"> <label>シナリオ名</label> </div>
@@ -309,7 +308,7 @@
                     </div>
 
                     <ul id="histories" class="list-reset">
-                        <li v-for="(history, index) in histories" :key="index" class="list-item">
+                        <li v-for="(history, index) in histories" :key="index" class="base-list-item">
                             <div class="delete-button-wrapper">
                                 <button type="button" class="button-base list-button list-button--delete"
                                     @click="removeHistoryItem(index)"
