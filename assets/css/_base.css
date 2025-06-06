@@ -1,0 +1,52 @@
+/* assets/css/_base.css */
+
+/* リセットとベーススタイル */
+body {
+  font-family: "Noto Sans JP", sans-serif;
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text-normal);
+  line-height: 1.7;
+  padding-bottom: 72px;
+
+  /* 固定フッター分の余白 */
+}
+
+#app {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Vueトランジション */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* リストリセット（共通的なリストの初期化） */
+.list-reset {
+  padding-left: 0;
+  list-style-type: none;
+  margin: 0;
+}
+
+/* Keyboard Handling Adjustments (グローバルなベース調整) */
+body.keyboard-visible {
+  padding-bottom: 0 !important;
+}
+
+body.keyboard-visible .main-footer {
+  position: relative !important;
+  bottom: auto !important;
+  box-shadow: none !important;
+}
+
+body.keyboard-visible .help-panel {
+  bottom: 20px !important;
+}
