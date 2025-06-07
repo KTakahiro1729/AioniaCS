@@ -576,7 +576,10 @@ const app = createApp({
         if (modal.parentNode) {
           modal.parentNode.removeChild(modal);
         }
-        if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+        if (
+          lastFocusedElement &&
+          typeof lastFocusedElement.focus === "function"
+        ) {
           lastFocusedElement.focus();
         }
       };
@@ -587,7 +590,7 @@ const app = createApp({
           closeCustomAlertModal();
         } else if (event.key === "Tab") {
           event.preventDefault(); // Keep focus within the modal
-          closeButton.focus();    // Explicitly focus the button
+          closeButton.focus(); // Explicitly focus the button
         }
       };
 
