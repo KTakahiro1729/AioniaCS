@@ -48,9 +48,9 @@ const app = createApp({
       driveStatusMessage: "",
       isGapiLoaded: false,
       isGisLoaded: false,
-      apiKey: "AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU", // Placeholder
+      apiKey: "AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU",
       clientId:
-        "913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com", // Placeholder
+        "913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com",
       isGapiInitialized: false,
       isGisInitialized: false,
       isCloudSaveSuccess: false,
