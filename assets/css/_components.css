@@ -327,7 +327,7 @@ label.footer-button--load {
 }
 
 /* ==========================================================================
-   アイコンSVGのスタイル (★★★ 変更箇所 ★★★)
+   アイコンSVGのスタイル
    CSS Mask を使用して色を制御
    ========================================================================== */
 
@@ -337,29 +337,22 @@ label.footer-button--load {
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
   transition: background-color 0.2s ease;
 }
 
 .icon-svg-cloud {
   mask-image: url("../svg/medieval_cloud.svg");
-  mask-image: url("../svg/medieval_cloud.svg");
 }
 
 .icon-svg-success {
-  mask-image: url("../svg/medieval_check.svg");
   mask-image: url("../svg/medieval_check.svg");
 }
 
 .icon-svg-upload {
   mask-image: url("../svg/medieval_cloud_upload.svg");
-  mask-image: url("../svg/medieval_cloud_upload.svg");
 }
 
 .icon-svg-download {
-  mask-image: url("../svg/medieval_cloud_download.svg");
   mask-image: url("../svg/medieval_cloud_download.svg");
 }
 
@@ -373,7 +366,7 @@ label.footer-button--load {
 }
 
 /* ==========================================================================
-     トップ左コントロール (Google Drive Button) (★★★ 変更箇所 ★★★)
+     トップ左コントロール (Google Drive Button)
      ========================================================================== */
 .top-left-controls {
   position: fixed;
