@@ -30,11 +30,6 @@
   margin-bottom: 0;
 }
 
-/* 傷痕入力フィールド */
-.scar-section__current-input {
-  margin-top: 6px;
-}
-
 /* サブボックスタイトル（特定のセクション用） */
 .sub-box-title--scar {
   margin-top: -18px;
