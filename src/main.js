@@ -53,6 +53,7 @@ const app = createApp({
         "913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com", // Placeholder
       isGapiInitialized: false,
       isGisInitialized: false,
+      isCloudSaveSuccess: false,
 
       // Dropdown and Menu visibility
       showDriveMenu: false,
@@ -808,6 +809,10 @@ const app = createApp({
           this.currentDriveFileId = savedFile.id;
           this.currentDriveFileName = savedFile.name;
           this.driveStatusMessage = `Saved: ${this.currentDriveFileName} to "${this.driveFolderName}".`;
+          this.isCloudSaveSuccess = true;
+          setTimeout(() => {
+            this.isCloudSaveSuccess = false;
+          }, 2000);
         } else {
           throw new Error(
             "Save operation did not return expected file information.",

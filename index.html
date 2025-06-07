@@ -704,6 +704,13 @@
             title="Google Driveに保存"
           >
             <img
+              v-if="isCloudSaveSuccess"
+              src="assets/medieval_check.svg"
+              alt="Save Succeeded"
+              class="icon-svg icon-svg--footer icon-svg--success"
+            />
+            <img
+              v-else
               src="assets/medieval_cloud.svg"
               alt="Save to Drive"
               class="icon-svg icon-svg--footer"
