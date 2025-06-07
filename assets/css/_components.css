@@ -321,61 +321,60 @@ label.footer-button--load {
 
 .footer-button--cloud {
   padding: 0 12px;
-  border-left: none;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   margin-left: -1px;
 }
 
-.icon-svg--footer {
-  width: 24px;
-  height: 24px;
-  filter: invert(70%) sepia(20%) saturate(500%) hue-rotate(0deg)
-    brightness(100%) contrast(90%);
+/* ==========================================================================
+   アイコンSVGのスタイル (★★★ 変更箇所 ★★★)
+   CSS Mask を使用して色を制御
+   ========================================================================== */
+
+.icon-svg {
+  display: inline-block;
+  background-color: var(--color-accent);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  transition: background-color 0.2s ease;
 }
 
-.icon-svg--success {
-  filter: invert(70%) sepia(20%) saturate(500%) hue-rotate(0deg)
-    brightness(100%) contrast(90%);
+.icon-svg-cloud {
+  mask-image: url("../svg/medieval_cloud.svg");
+  mask-image: url("../svg/medieval_cloud.svg");
+}
+
+.icon-svg-success {
+  mask-image: url("../svg/medieval_check.svg");
+  mask-image: url("../svg/medieval_check.svg");
+}
+
+.icon-svg-upload {
+  mask-image: url("../svg/medieval_cloud_upload.svg");
+  mask-image: url("../svg/medieval_cloud_upload.svg");
+}
+
+.icon-svg-download {
+  mask-image: url("../svg/medieval_cloud_download.svg");
+  mask-image: url("../svg/medieval_cloud_download.svg");
+}
+
+.icon-svg--footer {
+  width: 35px;
+  height: 35px;
 }
 
 .footer-button--cloud:hover .icon-svg--footer {
-  filter: invert(90%) sepia(30%) saturate(700%) hue-rotate(0deg)
-    brightness(110%) contrast(100%);
-}
-
-.footer-button--load > label {
-  color: inherit;
-  font-weight: 700;
-  padding: 10px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-.imagefile-button--add:hover:not(:disabled) {
-  border-color: var(--color-accent);
-}
-
-.imagefile-button--delete {
-  color: var(--color-delete-text);
-  border-color: var(--color-delete-border);
-}
-
-.imagefile-button--delete:hover:not(:disabled) {
-  border-color: var(--color-delete-text);
-  box-shadow:
-    inset 0 0 3px var(--color-delete-text),
-    0 0 6px var(--color-delete-text);
-  text-shadow: 0 0 2px var(--color-delete-text);
+  background-color: var(--color-accent-light);
 }
 
 /* ==========================================================================
-   トップ左コントロール (Google Drive Button)
-   ========================================================================== */
+     トップ左コントロール (Google Drive Button) (★★★ 変更箇所 ★★★)
+     ========================================================================== */
 .top-left-controls {
   position: fixed;
   top: 10px;
@@ -405,16 +404,14 @@ label.footer-button--load {
   background-color: var(--color-panel-header);
 }
 
-.icon-button img.icon-svg {
+.icon-button .icon-svg {
   width: 48px;
   height: 48px;
-  filter: invert(70%) sepia(20%) saturate(500%) hue-rotate(0deg)
-    brightness(100%) contrast(90%);
 }
 
-.icon-button:hover img.icon-svg {
-  filter: invert(90%) sepia(30%) saturate(700%) hue-rotate(0deg)
-    brightness(110%) contrast(100%);
+.icon-button:hover .icon-svg {
+  border-color: var(--color-accent-light);
+  background-color: var(--color-accent-light);
 }
 
 .floating-menu {
