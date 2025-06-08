@@ -720,8 +720,7 @@ const app = createApp({
     },
     async getOrPromptForDriveFolder() {
       this.showDriveMenu = false;
-      if (!this.isSignedIn || !this.googleDriveManager) {
-        this.driveStatusMessage = "Error: Please sign in first.";
+      if (!this._checkDriveReadiness("set up a folder")) {
         return;
       }
       this.driveStatusMessage = "Accessing Google Drive folder...";
@@ -747,8 +746,7 @@ const app = createApp({
     },
     async promptForDriveFolder(isDirectClick = true) {
       if (isDirectClick) this.showDriveMenu = false;
-      if (!this.isSignedIn || !this.googleDriveManager) {
-        this.driveStatusMessage = "Error: Please sign in first.";
+      if (!this._checkDriveReadiness("select a folder")) {
         return;
       }
       this.driveStatusMessage = "Opening Google Drive folder picker...";
@@ -772,10 +770,10 @@ const app = createApp({
     },
     async handleSaveToDriveClick() {
       console.log("handleSaveToDriveClick triggered"); // デバッグ用ログ
-      if (!this.isSignedIn || !this.googleDriveManager) {
-        this.driveStatusMessage = "Error: Please sign in to save.";
+      if (!this._checkDriveReadiness("save")) {
         return;
       }
+
       if (!this.driveFolderId) {
         this.driveStatusMessage =
           "Drive folder not set. Please choose a folder first.";
@@ -821,8 +819,7 @@ const app = createApp({
     },
     async handleLoadFromDriveClick() {
       console.log("handleLoadFromDriveClick triggered"); // デバッグ用ログ
-      if (!this.isSignedIn || !this.googleDriveManager) {
-        this.driveStatusMessage = "Error: Please sign in to load.";
+      if (!this._checkDriveReadiness("load")) {
         return;
       }
       this.driveStatusMessage = "Opening Google Drive file picker...";
@@ -923,6 +920,19 @@ const app = createApp({
           this.currentImageIndex = this.character.images.length - 1;
         }
       }
+    },
+    _checkDriveReadiness(actionContext = "operate") {
+      if (!this.googleDriveManager) {
+        this.driveStatusMessage = "Error: Drive Manager is not available.";
+        return false;
+      }
+      if (!this.isSignedIn) {
+        // メッセージを動的に生成
+        this.driveStatusMessage = `Error: Please sign in to ${actionContext}.`;
+        return false;
+      }
+      // 全てのチェックをパス
+      return true;
     },
   },
   mounted() {
