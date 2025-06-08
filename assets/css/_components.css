@@ -155,15 +155,74 @@ textarea.greyed-out {
   flex-shrink: 0;
   background-color: transparent;
   color: var(--color-accent);
+  text-decoration: none;
 }
 
 .button-base:hover {
   border-color: var(--color-accent);
+  color: var(--color-accent-light);
   background-color: var(--color-background);
   box-shadow:
     inset 0 0 3px var(--color-accent),
     0 0 6px var(--color-accent);
   text-shadow: 0 0 2px var(--color-accent);
+}
+
+.footer-button--output.state-1 {
+  transition:
+    background-color 0.5s ease-in-out,
+    color 0.5s ease-in-out;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-light);
+}
+
+.footer-button--output.state-2 {
+  transition: color 0.1s ease-in;
+  background-color: var(--color-accent-light);
+  color: var(--color-background);
+}
+
+.footer-button--output.state-3 {
+  transition: color 0.5s ease-in-out;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-light);
+}
+
+.footer-button--output.state-4 {
+  transition:
+    background-color 0.7s ease-in-out,
+    color 0.2s ease-in-out 0.5s;
+  background-color: transparent;
+  color: var(--color-accent);
+}
+
+.footer-button--load > label {
+  color: inherit;
+  font-weight: 700;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.imagefile-button--add:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.imagefile-button--delete {
+  color: var(--color-delete-text);
+  border-color: var(--color-delete-border);
+}
+
+.imagefile-button--delete:hover:not(:disabled) {
+  border-color: var(--color-delete-text);
+  box-shadow:
+    inset 0 0 3px var(--color-delete-text),
+    0 0 6px var(--color-delete-text);
+  text-shadow: 0 0 2px var(--color-delete-text);
 }
 
 .button-base:disabled {
@@ -297,59 +356,159 @@ textarea.greyed-out {
   pointer-events: none;
 }
 
-.footer-button--output.state-1 {
-  transition:
-    background-color 0.5s ease-in-out,
-    color 0.5s ease-in-out;
+.footer-button-container {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.footer-button--save,
+label.footer-button--load {
+  width: 120px;
+  flex-shrink: 0;
+
+  /* ボタンの横幅を固定 */
+  justify-content: center;
+}
+
+/* クラウドボタンが隣にある場合、メインボタンの角を平らにする */
+.footer-button-container > .button-base:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.footer-button--cloud {
+  padding: 0 12px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+
+/* ==========================================================================
+   アイコンSVGのスタイル
+   CSS Mask を使用して色を制御
+   ========================================================================== */
+
+.icon-svg {
+  display: inline-block;
   background-color: var(--color-accent);
-  color: var(--color-accent);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  transition: background-color 0.2s ease;
 }
 
-.footer-button--output.state-2 {
-  transition: color 0.1s ease-in;
-  background-color: var(--color-accent);
-  color: var(--color-background);
+.icon-svg-cloud {
+  mask-image: url("../svg/medieval_cloud.svg");
 }
 
-.footer-button--output.state-3 {
-  transition: color 0.5s ease-in-out;
-  background-color: var(--color-accent);
-  color: var(--color-accent);
+.icon-svg-success {
+  mask-image: url("../svg/medieval_check.svg");
 }
 
-.footer-button--output.state-4 {
-  transition:
-    background-color 0.7s ease-in-out,
-    color 0.2s ease-in-out 0.5s;
-  background-color: transparent;
-  color: var(--color-accent);
+.icon-svg-upload {
+  mask-image: url("../svg/medieval_cloud_upload.svg");
 }
 
-.footer-button--load > label {
-  color: inherit;
-  font-weight: 700;
-  padding: 10px 18px;
+.icon-svg-download {
+  mask-image: url("../svg/medieval_cloud_download.svg");
+}
+
+.icon-svg--footer {
+  width: 35px;
+  height: 35px;
+}
+
+.footer-button--cloud:hover .icon-svg--footer {
+  background-color: var(--color-accent-light);
+}
+
+/* ==========================================================================
+     トップ左コントロール (Google Drive Button)
+     ========================================================================== */
+.top-left-controls {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1050;
+}
+
+.google-drive-button-container {
+  position: relative;
+}
+
+.icon-button {
+  padding: 16px;
+  background-color: var(--color-panel-body);
+  border: 1px solid var(--color-border-normal);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  box-sizing: border-box;
-  cursor: pointer;
+  width: 80px;
+  height: 80px;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
 }
 
-.imagefile-button--add:hover:not(:disabled) {
+.icon-button:hover {
   border-color: var(--color-accent);
+  background-color: var(--color-panel-header);
 }
 
-.imagefile-button--delete {
-  color: var(--color-delete-text);
-  border-color: var(--color-delete-border);
+.icon-button .icon-svg {
+  width: 48px;
+  height: 48px;
 }
 
-.imagefile-button--delete:hover:not(:disabled) {
-  border-color: var(--color-delete-text);
-  box-shadow:
-    inset 0 0 3px var(--color-delete-text),
-    0 0 6px var(--color-delete-text);
-  text-shadow: 0 0 2px var(--color-delete-text);
+.icon-button:hover .icon-svg {
+  border-color: var(--color-accent-light);
+  background-color: var(--color-accent-light);
+}
+
+.floating-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  background-color: var(--color-panel-body);
+  border: 1px solid var(--color-border-normal);
+  border-radius: 4px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+  z-index: 100;
+  min-width: 200px;
+}
+
+.floating-menu .menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  text-align: left;
+  background-color: transparent;
+  color: var(--color-text-normal);
+  border: none;
+  border-radius: 3px;
+}
+
+.floating-menu .menu-item.button-base {
+  width: calc(100% - 0px);
+  margin-bottom: 4px;
+  justify-content: flex-start;
+}
+
+.floating-menu .menu-item:last-child {
+  margin-bottom: 0;
+}
+
+.floating-menu .menu-item:hover:not(.status-message) {
+  background-color: var(--color-panel-header);
+  color: var(--color-accent);
+}
+
+.floating-menu .status-message {
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border-normal);
+  margin-bottom: 5px;
 }

@@ -1,4 +1,5 @@
 const { createApp } = Vue;
+// Global flags like window.gapiScriptLoaded are set by placeholder functions in index.html
 
 // Base character data copied from gameData with weaknesses initialized
 const baseChar = deepClone(window.AioniaGameData.defaultCharacterData);
@@ -9,7 +10,7 @@ baseChar.weaknesses = createWeaknessArray(
 const app = createApp({
   data() {
     return {
-      // gameData.jsへの参照を追加
+      // Common Data
       gameData: window.AioniaGameData,
       dataManager: null,
       character: baseChar,
@@ -28,14 +29,36 @@ const app = createApp({
         armor: { group: "", name: "" },
       },
       histories: [{ sessionName: "", gotExperiments: null, memo: "" }],
+      outputButtonText: window.AioniaGameData.uiMessages.outputButton.default,
+      cocofoliaExporter: null,
+
+      // Help Panel Data
       helpState: "closed", // 'closed', 'hovered', 'fixed'
       isDesktop: false,
       helpText: window.AioniaGameData.helpText,
-      outputButtonText: window.AioniaGameData.uiMessages.outputButton.default,
-      cocofoliaExporter: null,
+
+      // Google Drive Integration Data
+      googleDriveManager: null,
+      isSignedIn: false,
+      googleUser: null,
+      driveFolderId: null,
+      driveFolderName: "",
+      currentDriveFileId: null,
+      currentDriveFileName: "",
+      driveStatusMessage: "",
+      isGapiLoaded: false,
+      isGisLoaded: false,
+      isGapiInitialized: false,
+      isGisInitialized: false,
+      isCloudSaveSuccess: false,
+
+      // Dropdown and Menu visibility
+      showDriveMenu: false,
+      currentDriveMenuHandler: null,
+
       // Image management
-      currentImageIndex: 0, // Index of the currently displayed image
-      imageManagerInstance: null, // Instance of ImageManager
+      currentImageIndex: 0,
+      imageManagerInstance: null,
     };
   },
   computed: {
@@ -49,7 +72,7 @@ const app = createApp({
       ) {
         return this.character.images[this.currentImageIndex];
       }
-      return null; // Or a placeholder image path
+      return null;
     },
     isHelpVisible() {
       return this.helpState !== "closed";
@@ -142,6 +165,47 @@ const app = createApp({
       };
       return defaultOptions.concat(sessionOptions).concat(helpOption);
     },
+    canSignInToGoogle() {
+      return (
+        this.isGapiInitialized && this.isGisInitialized && !this.isSignedIn
+      );
+    },
+    canOperateDrive() {
+      return this.isSignedIn && this.driveFolderId;
+    },
+  },
+  watch: {
+    showDriveMenu(newValue) {
+      if (this.currentDriveMenuHandler) {
+        document.removeEventListener(
+          "click",
+          this.currentDriveMenuHandler,
+          true,
+        );
+        this.currentDriveMenuHandler = null;
+      }
+      if (newValue) {
+        this.$nextTick(() => {
+          const menuElement = this.$refs.driveMenu;
+          const toggleButton = this.$refs.driveMenuToggleButton;
+          if (menuElement && toggleButton) {
+            this.currentDriveMenuHandler = (event) => {
+              if (
+                !menuElement.contains(event.target) &&
+                !toggleButton.contains(event.target)
+              ) {
+                this.showDriveMenu = false;
+              }
+            };
+            document.addEventListener(
+              "click",
+              this.currentDriveMenuHandler,
+              true,
+            );
+          }
+        });
+      }
+    },
     "character.initialScar"(newInitialScar) {
       if (this.character.linkCurrentToInitialScar) {
         this.character.currentScar = newInitialScar;
@@ -154,6 +218,10 @@ const app = createApp({
     },
   },
   methods: {
+    // Menu and Dropdown Toggle Methods
+    toggleDriveMenu() {
+      this.showDriveMenu = !this.showDriveMenu;
+    },
     handleCurrentScarInput(event) {
       const enteredValue = parseInt(event.target.value, 10);
       if (isNaN(enteredValue)) {
@@ -164,7 +232,6 @@ const app = createApp({
         }
         return;
       }
-
       if (this.character.linkCurrentToInitialScar) {
         if (enteredValue !== this.character.initialScar) {
           this.character.linkCurrentToInitialScar = false;
@@ -191,7 +258,6 @@ const app = createApp({
       if (this.isDesktop) {
         this.helpState = this.helpState === "fixed" ? "closed" : "fixed";
       } else {
-        // Mobile toggle behavior
         this.helpState = this.helpState === "closed" ? "fixed" : "closed";
       }
     },
@@ -200,12 +266,9 @@ const app = createApp({
     },
     handleClickOutside(event) {
       if (this.helpState === "fixed") {
-        const helpPanelElement = this.$refs.helpPanel; // Use $refs to get the help panel element
-        const helpIconElement = this.$refs.helpIcon; // Use $refs to get the help icon element
-
-        // Check if both elements are available
+        const helpPanelElement = this.$refs.helpPanel;
+        const helpIconElement = this.$refs.helpIcon;
         if (helpPanelElement && helpIconElement) {
-          // Check if the click target is outside both the help panel and the help icon
           if (
             !helpPanelElement.contains(event.target) &&
             !helpIconElement.contains(event.target)
@@ -216,23 +279,17 @@ const app = createApp({
           helpPanelElement &&
           !helpPanelElement.contains(event.target)
         ) {
-          // Fallback if helpIconElement is not found, but helpPanelElement is.
-          // This might happen if the icon isn't part of the click path consideration for closing.
           this.helpState = "closed";
         } else if (
           !helpPanelElement &&
           helpIconElement &&
           !helpIconElement.contains(event.target)
         ) {
-          // Fallback if helpPanelElement is not (e.g. v-if removed it),
-          // but click is outside helpIcon. This logic might need refinement
-          // depending on exact desired behavior when panel is not visible but state is 'fixed'.
-          // For now, this ensures clicking outside icon (if panel somehow not rendered) still closes.
           this.helpState = "closed";
         }
       }
     },
-    // --- Other Methods ---
+    // --- List Management Methods ---
     _manageListItem({
       list,
       action,
@@ -243,7 +300,7 @@ const app = createApp({
     }) {
       if (action === "add") {
         if (maxLength && list.length >= maxLength) {
-          return; // Do nothing if max length reached
+          return;
         }
         const newItem =
           typeof newItemFactory === "function"
@@ -283,7 +340,6 @@ const app = createApp({
         h.memo
       );
     },
-
     addSpecialSkillItem() {
       this._manageListItem({
         list: this.specialSkills,
@@ -311,16 +367,6 @@ const app = createApp({
         hasContentChecker: this.hasSpecialSkillContent,
       });
     },
-    expertPlaceholder(skill) {
-      return skill.checked
-        ? this.gameData.placeholderTexts.expertSkill
-        : this.gameData.placeholderTexts.expertSkillDisabled;
-    },
-    handleSpeciesChange() {
-      if (this.character.species !== "other") {
-        this.character.rareSpecies = "";
-      }
-    },
     addExpert(skill) {
       if (skill.canHaveExperts) {
         this._manageListItem({
@@ -339,26 +385,6 @@ const app = createApp({
         hasContentChecker: (expert) =>
           expert.value && expert.value.trim() !== "",
       });
-    },
-    availableSpecialSkillNames(index) {
-      if (this.specialSkills[index]) {
-        const group = this.specialSkills[index].group;
-        return this.gameData.specialSkillData[group] || [];
-      }
-      return [];
-    },
-    updateSpecialSkillOptions(index) {
-      if (this.specialSkills[index]) {
-        this.specialSkills[index].name = "";
-        this.updateSpecialSkillNoteVisibility(index);
-      }
-    },
-    updateSpecialSkillNoteVisibility(index) {
-      if (this.specialSkills[index]) {
-        const skillName = this.specialSkills[index].name;
-        this.specialSkills[index].showNote =
-          this.gameData.specialSkillsRequiringNote.includes(skillName);
-      }
     },
     addHistoryItem() {
       this._manageListItem({
@@ -383,6 +409,37 @@ const app = createApp({
         }),
         hasContentChecker: this.hasHistoryContent,
       });
+    },
+    // --- Data & UI Interaction Methods ---
+    expertPlaceholder(skill) {
+      return skill.checked
+        ? this.gameData.placeholderTexts.expertSkill
+        : this.gameData.placeholderTexts.expertSkillDisabled;
+    },
+    handleSpeciesChange() {
+      if (this.character.species !== "other") {
+        this.character.rareSpecies = "";
+      }
+    },
+    availableSpecialSkillNames(index) {
+      if (this.specialSkills[index]) {
+        const group = this.specialSkills[index].group;
+        return this.gameData.specialSkillData[group] || [];
+      }
+      return [];
+    },
+    updateSpecialSkillOptions(index) {
+      if (this.specialSkills[index]) {
+        this.specialSkills[index].name = "";
+        this.updateSpecialSkillNoteVisibility(index);
+      }
+    },
+    updateSpecialSkillNoteVisibility(index) {
+      if (this.specialSkills[index]) {
+        const skillName = this.specialSkills[index].name;
+        this.specialSkills[index].showNote =
+          this.gameData.specialSkillsRequiringNote.includes(skillName);
+      }
     },
     saveData() {
       this.dataManager.saveData(
@@ -409,6 +466,7 @@ const app = createApp({
       );
     },
 
+    // --- Cocofolia & Clipboard ---
     outputToCocofolia() {
       const exportData = {
         character: this.character,
@@ -422,20 +480,16 @@ const app = createApp({
         specialSkillsRequiringNote: this.gameData.specialSkillsRequiringNote,
         weaponDamage: this.gameData.weaponDamage,
       };
-
       const cocofoliaCharacter =
         this.cocofoliaExporter.generateCocofoliaData(exportData);
-
       const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
       this.copyToClipboard(textToCopy);
     },
-
     async copyToClipboard(text) {
       if (!navigator.clipboard) {
         this.fallbackCopyTextToClipboard(text);
         return;
       }
-
       try {
         await navigator.clipboard.writeText(text);
         this.playOutputAnimation();
@@ -444,7 +498,6 @@ const app = createApp({
         this.fallbackCopyTextToClipboard(text);
       }
     },
-
     fallbackCopyTextToClipboard(text) {
       const textArea = document.createElement("textarea");
       textArea.value = text;
@@ -455,7 +508,6 @@ const app = createApp({
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-
       try {
         const successful = document.execCommand("copy");
         if (successful) {
@@ -474,7 +526,6 @@ const app = createApp({
           this.outputButtonText = this.gameData.uiMessages.outputButton.default;
         }, 3000);
       }
-
       document.body.removeChild(textArea);
     },
     playOutputAnimation() {
@@ -482,56 +533,35 @@ const app = createApp({
       if (!button || button.classList.contains("is-animating")) {
         return;
       }
-
-      // gameDataからアニメーション設定を取得
       const buttonMessages = this.gameData.uiMessages.outputButton;
       const timings = buttonMessages.animationTimings;
       const originalText = buttonMessages.default;
       const newText = buttonMessages.animating;
-
       button.classList.add("is-animating");
+      const timeForState2 = timings.state1_bgFill;
+      const timeForState3 = timeForState2 + timings.state2_textHold;
+      const timeForState4 = timeForState3 + timings.state3_textFadeOut;
+      const timeForCleanup = timeForState4 + timings.state4_bgReset;
 
-      // 各ステップの時間を定義
-      const state1_duration = timings.state1_bgFill;
-      const state2_duration = timings.state2_textHold;
-      const state3_duration = timings.state3_textFadeOut;
-      const state4_duration = timings.state4_bgReset;
-
-      // setTimeoutで使うための累積時間を計算
-      const timeForState2 = state1_duration;
-      const timeForState3 = timeForState2 + state2_duration;
-      const timeForState4 = timeForState3 + state3_duration;
-      const timeForCleanup = timeForState4 + state4_duration;
-
-      // --- Animation Step 1 ---
       button.classList.add("state-1");
-
-      // --- Animation Step 2 ---
       setTimeout(() => {
         button.classList.remove("state-1");
         this.outputButtonText = newText;
         button.classList.add("state-2");
       }, timeForState2);
-
-      // --- Animation Step 3 ---
       setTimeout(() => {
         button.classList.remove("state-2");
         button.classList.add("state-3");
       }, timeForState3);
-
-      // --- Animation Step 4 ---
       setTimeout(() => {
         button.classList.remove("state-3");
         this.outputButtonText = originalText;
         button.classList.add("state-4");
       }, timeForState4);
-
-      // --- Final Cleanup ---
       setTimeout(() => {
         button.classList.remove("is-animating", "state-4");
       }, timeForCleanup);
     },
-
     showCustomAlert(message) {
       const alertModalId = "custom-alert-modal";
       let modal = document.getElementById(alertModalId);
@@ -609,7 +639,228 @@ const app = createApp({
       // modal.style.display = "block"; // This is handled by appending to body and CSS rules.
     },
 
-    // Image Management Methods
+    // --- Google Drive Methods ---
+    async handleGapiLoaded() {
+      if (this.isGapiInitialized || !this.googleDriveManager) return;
+      this.isGapiInitialized = true;
+      this.isGapiLoaded = true;
+      this.driveStatusMessage = "Google API Client: Loading...";
+      try {
+        await this.googleDriveManager.onGapiLoad();
+        this.driveStatusMessage = this.isSignedIn
+          ? `Signed in. Folder: ${this.driveFolderName || "Not selected"}`
+          : "Google API Client: Ready. Please sign in.";
+      } catch (err) {
+        this.driveStatusMessage = "Google API Client: Error initializing.";
+        console.error("GAPI client init error in Vue app:", err);
+      }
+    },
+    async handleGisLoaded() {
+      if (this.isGisInitialized || !this.googleDriveManager) return;
+      this.isGisInitialized = true;
+      this.isGisLoaded = true;
+      this.driveStatusMessage = "Google Sign-In: Loading...";
+      try {
+        await this.googleDriveManager.onGisLoad();
+        this.driveStatusMessage = this.isSignedIn
+          ? `Signed in. Folder: ${this.driveFolderName || "Not selected"}`
+          : "Google Sign-In: Ready. Please sign in.";
+      } catch (err) {
+        this.driveStatusMessage = "Google Sign-In: Error initializing.";
+        console.error("GIS client init error in Vue app:", err);
+      }
+    },
+    async handleSignInClick() {
+      this.showDriveMenu = false;
+      if (!this.googleDriveManager) {
+        this.driveStatusMessage = "Error: Drive Manager not available.";
+        return;
+      }
+      this.driveStatusMessage = "Signing in... Please wait.";
+      try {
+        this.googleDriveManager.handleSignIn((error, authResult) => {
+          if (error || !authResult || !authResult.signedIn) {
+            this.isSignedIn = false;
+            this.googleUser = null;
+            this.driveStatusMessage =
+              "Sign-in failed. " +
+              (error
+                ? error.message || error.details || "Please try again."
+                : "Ensure pop-ups are enabled.");
+          } else {
+            this.isSignedIn = true;
+            this.googleUser = { displayName: "User" };
+            this.driveStatusMessage = `Signed in. Folder: ${this.driveFolderName || "Not selected"}`;
+            if (!this.driveFolderId) {
+              this.getOrPromptForDriveFolder();
+            }
+          }
+        });
+      } catch (err) {
+        this.isSignedIn = false;
+        this.googleUser = null;
+        this.driveStatusMessage =
+          "Sign-in error: " + (err.message || "An unexpected error occurred.");
+      }
+    },
+    handleSignOutClick() {
+      this.showDriveMenu = false;
+      if (!this.googleDriveManager) {
+        this.driveStatusMessage = "Error: Drive Manager not available.";
+        return;
+      }
+      this.driveStatusMessage = "Signing out...";
+      this.googleDriveManager.handleSignOut(() => {
+        this.isSignedIn = false;
+        this.googleUser = null;
+        this.currentDriveFileId = null;
+        this.currentDriveFileName = "";
+        this.driveStatusMessage = "Signed out.";
+      });
+    },
+    async getOrPromptForDriveFolder() {
+      this.showDriveMenu = false;
+      if (!this._checkDriveReadiness("set up a folder")) {
+        return;
+      }
+      this.driveStatusMessage = "Accessing Google Drive folder...";
+      const appFolderName = "AioniaCS_Data";
+      try {
+        const folderInfo =
+          await this.googleDriveManager.getOrCreateAppFolder(appFolderName);
+        if (folderInfo && folderInfo.id) {
+          this.driveFolderId = folderInfo.id;
+          this.driveFolderName = folderInfo.name;
+          localStorage.setItem("aioniaDriveFolderId", folderInfo.id);
+          localStorage.setItem("aioniaDriveFolderName", folderInfo.name);
+          this.driveStatusMessage = `Drive Folder: ${this.driveFolderName}`;
+        } else {
+          this.driveStatusMessage =
+            "Could not auto-setup Drive folder. Please choose one.";
+          await this.promptForDriveFolder(false);
+        }
+      } catch (error) {
+        this.driveStatusMessage = `Folder setup error: ${error.message || "Please choose manually."}`;
+        await this.promptForDriveFolder(false);
+      }
+    },
+    async promptForDriveFolder(isDirectClick = true) {
+      if (isDirectClick) this.showDriveMenu = false;
+      if (!this._checkDriveReadiness("select a folder")) {
+        return;
+      }
+      this.driveStatusMessage = "Opening Google Drive folder picker...";
+      this.googleDriveManager.showFolderPicker((error, folder) => {
+        if (error) {
+          this.driveStatusMessage = `Folder selection error: ${error.message || "Cancelled or failed."}`;
+        } else if (folder && folder.id) {
+          this.driveFolderId = folder.id;
+          this.driveFolderName = folder.name;
+          localStorage.setItem("aioniaDriveFolderId", folder.id);
+          localStorage.setItem("aioniaDriveFolderName", folder.name);
+          this.driveStatusMessage = `Drive Folder: ${this.driveFolderName}`;
+          this.currentDriveFileId = null;
+          this.currentDriveFileName = "";
+        } else {
+          this.driveStatusMessage = this.driveFolderId
+            ? `Drive Folder: ${this.driveFolderName}`
+            : "Folder selection cancelled.";
+        }
+      });
+    },
+    async handleSaveToDriveClick() {
+      console.log("handleSaveToDriveClick triggered"); // デバッグ用ログ
+      if (!this._checkDriveReadiness("save")) {
+        return;
+      }
+
+      if (!this.driveFolderId) {
+        this.driveStatusMessage =
+          "Drive folder not set. Please choose a folder first.";
+        await this.promptForDriveFolder(false);
+        if (!this.driveFolderId) {
+          this.driveStatusMessage = "Save cancelled: No Drive folder selected.";
+          return;
+        }
+      }
+      this.driveStatusMessage = `Saving to "${this.driveFolderName}"...`;
+      const fileName =
+        (this.character.name || "Aionia_Character_Sheet").replace(
+          /[\\/:*?"<>|]/g,
+          "_",
+        ) + ".json";
+      try {
+        const savedFile = await this.dataManager.saveDataToDrive(
+          this.character,
+          this.skills,
+          this.specialSkills,
+          this.equipments,
+          this.histories,
+          this.driveFolderId,
+          this.currentDriveFileId,
+          fileName,
+        );
+        if (savedFile && savedFile.id) {
+          this.currentDriveFileId = savedFile.id;
+          this.currentDriveFileName = savedFile.name;
+          this.driveStatusMessage = `Saved: ${this.currentDriveFileName} to "${this.driveFolderName}".`;
+          this.isCloudSaveSuccess = true;
+          setTimeout(() => {
+            this.isCloudSaveSuccess = false;
+          }, 2000);
+        } else {
+          throw new Error(
+            "Save operation did not return expected file information.",
+          );
+        }
+      } catch (error) {
+        this.driveStatusMessage = `Save error: ${error.message || "Unknown error"}`;
+      }
+    },
+    async handleLoadFromDriveClick() {
+      console.log("handleLoadFromDriveClick triggered"); // デバッグ用ログ
+      if (!this._checkDriveReadiness("load")) {
+        return;
+      }
+      this.driveStatusMessage = "Opening Google Drive file picker...";
+      this.googleDriveManager.showFilePicker(
+        async (error, file) => {
+          if (error) {
+            this.driveStatusMessage = `File selection error: ${error.message || "Cancelled or failed."}`;
+            return;
+          }
+          if (!file || !file.id) {
+            this.driveStatusMessage =
+              "File selection cancelled or no file chosen.";
+            return;
+          }
+          this.driveStatusMessage = `Loading ${file.name} from Drive...`;
+          try {
+            const parsedData = await this.dataManager.loadDataFromDrive(
+              file.id,
+            );
+            if (parsedData) {
+              this.character = parsedData.character;
+              this.skills = parsedData.skills;
+              this.specialSkills = parsedData.specialSkills;
+              this.equipments = parsedData.equipments;
+              this.histories = parsedData.histories;
+              this.currentDriveFileId = file.id;
+              this.currentDriveFileName = file.name;
+              this.driveStatusMessage = `Loaded: ${this.currentDriveFileName} from Drive.`;
+            } else {
+              throw new Error("Load operation did not return data.");
+            }
+          } catch (err) {
+            this.driveStatusMessage = `Load error for ${file.name || "file"}: ${err.message || "Unknown error"}`;
+          }
+        },
+        this.driveFolderId || null,
+        ["application/json"],
+      );
+    },
+
+    // --- Image Management Methods ---
     async handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) {
@@ -625,12 +876,12 @@ const app = createApp({
           this.character.images = [];
         }
         this.character.images.push(imageData);
-        this.currentImageIndex = this.character.images.length - 1; // Show the newly uploaded image
+        this.currentImageIndex = this.character.images.length - 1;
       } catch (error) {
         console.error("Error loading image:", error);
         this.showCustomAlert("画像の読み込みに失敗しました：" + error.message);
       } finally {
-        event.target.value = null; // Clear the file input
+        event.target.value = null;
       }
     },
     nextImage() {
@@ -639,11 +890,8 @@ const app = createApp({
         this.character.images &&
         this.character.images.length > 0
       ) {
-        if (this.currentImageIndex < this.character.images.length - 1) {
-          this.currentImageIndex++;
-        } else {
-          this.currentImageIndex = 0; // Loop back to the first image
-        }
+        this.currentImageIndex =
+          (this.currentImageIndex + 1) % this.character.images.length;
       }
     },
     previousImage() {
@@ -652,11 +900,9 @@ const app = createApp({
         this.character.images &&
         this.character.images.length > 0
       ) {
-        if (this.currentImageIndex > 0) {
-          this.currentImageIndex--;
-        } else {
-          this.currentImageIndex = this.character.images.length - 1; // Loop back to the last image
-        }
+        this.currentImageIndex =
+          (this.currentImageIndex - 1 + this.character.images.length) %
+          this.character.images.length;
       }
     },
     removeCurrentImage() {
@@ -668,44 +914,78 @@ const app = createApp({
         this.currentImageIndex < this.character.images.length
       ) {
         this.character.images.splice(this.currentImageIndex, 1);
-        // Adjust currentImageIndex
         if (this.character.images.length === 0) {
           this.currentImageIndex = -1;
         } else if (this.currentImageIndex >= this.character.images.length) {
-          // If the last image was removed, adjust index to the new last image
           this.currentImageIndex = this.character.images.length - 1;
         }
-        // If the currentImageIndex is still valid or adjusted to 0, it's fine.
-      } else {
-        console.warn("No image to remove or index out of bounds.");
       }
+    },
+    _checkDriveReadiness(actionContext = "operate") {
+      if (!this.googleDriveManager) {
+        this.driveStatusMessage = "Error: Drive Manager is not available.";
+        return false;
+      }
+      if (!this.isSignedIn) {
+        // メッセージを動的に生成
+        this.driveStatusMessage = `Error: Please sign in to ${actionContext}.`;
+        return false;
+      }
+      // 全てのチェックをパス
+      return true;
     },
   },
   mounted() {
     this.cocofoliaExporter = new window.CocofoliaExporter();
     this.dataManager = new window.DataManager(this.gameData);
-    this.imageManagerInstance = window.ImageManager; // Initialize ImageManager
+    this.imageManagerInstance = window.ImageManager;
+    window.vueApp = this;
 
+    // Initialize Help Panel & Link Scar
     if (this.character.linkCurrentToInitialScar) {
       this.character.currentScar = this.character.initialScar;
     }
-
-    // Detect if it's a desktop device (no touch support)
     this.isDesktop = !(
       "ontouchstart" in window ||
-      (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
-      (navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 0)
+      navigator.maxTouchPoints > 0 ||
+      navigator.msMaxTouchPoints > 0
     );
-
-    // Add event listener for both desktop and mobile to handle outside clicks for 'fixed' state
-    // Ensure the listener is added after the initial DOM render is complete for $refs to be available.
     this.$nextTick(() => {
       document.addEventListener("click", this.handleClickOutside);
     });
+
+    // Initialize Google Drive Manager
+    this.driveStatusMessage = "Initializing Google services...";
+    if (window.GoogleDriveManager) {
+      const apiKey = "AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU";
+      const clientId =
+        "913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com";
+
+      this.googleDriveManager = new window.GoogleDriveManager(apiKey, clientId);
+      this.dataManager.setGoogleDriveManager(this.googleDriveManager);
+
+      if (window.gapiScriptLoaded) {
+        this.handleGapiLoaded();
+      }
+      if (window.gisScriptLoaded) {
+        this.handleGisLoaded();
+      }
+    } else {
+      this.driveStatusMessage = "Error: Google Drive component failed to load.";
+    }
+
+    // Load saved folder from localStorage
+    const savedFolderId = localStorage.getItem("aioniaDriveFolderId");
+    const savedFolderName = localStorage.getItem("aioniaDriveFolderName");
+    if (savedFolderId) {
+      this.driveFolderId = savedFolderId;
+      this.driveFolderName = savedFolderName || "Previously Selected Folder";
+    }
   },
   beforeUnmount() {
-    // Clean up event listener when the component is unmounted
     document.removeEventListener("click", this.handleClickOutside);
+    if (this.currentDriveMenuHandler)
+      document.removeEventListener("click", this.currentDriveMenuHandler, true);
   },
 });
 

@@ -1,13 +1,12 @@
 (function (global) {
+  /**
+   * Performs a deep clone of a JSON-compatible object.
+   * @param {any} obj The object to clone.
+   * @returns {any} A deep copy of the object.
+   */
   function deepClone(obj) {
-    if (typeof structuredClone === "function") {
-      try {
-        return structuredClone(obj);
-      } catch (e) {
-        console.error(e);
-        // fallback below
-      }
-    }
+    // structuredCloneで発生するブラウザ間の互換性問題を避けるため、
+    // アプリケーションのデータ構造に対して十分堅牢なJSONメソッドのみを使用します。
     return JSON.parse(JSON.stringify(obj));
   }
 

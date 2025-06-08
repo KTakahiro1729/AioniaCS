@@ -4,6 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>慈悲なきアイオニア　非公式キャラクターシート</title>
+    <script>
+      window.gapiScriptLoaded = false;
+      window.gisScriptLoaded = false;
+
+      function vueGapiLoadedCallback() {
+        console.log("index.html: Google API script (api.js) has loaded.");
+        window.gapiScriptLoaded = true;
+        if (
+          window.vueApp &&
+          typeof window.vueApp.handleGapiLoaded === "function"
+        ) {
+          window.vueApp.handleGapiLoaded();
+        }
+      }
+
+      function vueGisLoadedCallback() {
+        console.log(
+          "index.html: Google GIS script (accounts.google.com/gsi/client) has loaded.",
+        );
+        window.gisScriptLoaded = true;
+        if (
+          window.vueApp &&
+          typeof window.vueApp.handleGisLoaded === "function"
+        ) {
+          window.vueApp.handleGisLoaded();
+        }
+      }
+    </script>
+    <script
+      async
+      defer
+      src="https://apis.google.com/js/api.js"
+      onload="vueGapiLoadedCallback()"
+    ></script>
+    <script
+      async
+      defer
+      src="https://accounts.google.com/gsi/client"
+      onload="vueGisLoadedCallback()"
+    ></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico" />
@@ -18,6 +58,52 @@
 
   <body>
     <div id="app">
+      <div class="top-left-controls">
+        <div class="google-drive-button-container">
+          <button
+            class="button-base icon-button"
+            title="Google Drive Menu"
+            v-if="isGapiInitialized && isGisInitialized"
+            @click="toggleDriveMenu"
+            ref="driveMenuToggleButton"
+          >
+            <span
+              class="icon-svg icon-svg-cloud"
+              aria-label="Google Drive"
+            ></span>
+          </button>
+          <div class="floating-menu" v-if="showDriveMenu" ref="driveMenu">
+            <div
+              class="menu-item status-message"
+              id="floating_drive_status_message"
+            >
+              {{ driveStatusMessage }}
+            </div>
+            <button
+              class="menu-item button-base"
+              v-if="canSignInToGoogle"
+              @click="handleSignInClick"
+            >
+              Sign In with Google
+            </button>
+            <button
+              class="menu-item button-base"
+              v-if="isSignedIn"
+              @click="handleSignOutClick"
+            >
+              Sign Out
+            </button>
+            <button
+              class="menu-item button-base"
+              v-if="isSignedIn"
+              @click="promptForDriveFolder(true)"
+              :disabled="!isSignedIn"
+            >
+              Choose Drive Folder
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="tool-title">Aionia TRPG Character Sheet</div>
       <div class="main-grid">
         <div id="character_info" class="character-info">
@@ -287,7 +373,7 @@
                         class="button-base list-button list-button--delete"
                         @click="removeExpert(skill, expIndex)"
                         :disabled="skill.experts.length
-                                            <= 1 && expert.value===''"
+                                                  <= 1 && expert.value===''"
                         aria-label="専門技能を削除"
                       >
                         －
@@ -573,8 +659,7 @@
             target="_blank"
             rel="noopener noreferrer"
             >「イチ（フシギ製作所）」様が権利を有する「慈悲なきアイオニア」</a
-          >の二次創作物です(Ver 1.2対応)。
-          <br />
+          >の二次創作物です(Ver 1.2対応)。<br />
           本サイトは<a
             href="https://bright-trpg.github.io/aionia_character_maker/"
             target="_blank"
@@ -608,13 +693,40 @@
         <div class="status-display status-display--weight">
           荷重: {{ currentWeight }}
         </div>
-        <div
-          class="button-base footer-button footer-button--save"
-          @click="saveData"
-        >
-          データ保存
+
+        <div class="footer-button-container">
+          <button
+            class="button-base footer-button footer-button--save"
+            @click="saveData"
+          >
+            データ保存
+          </button>
+          <button
+            v-if="isSignedIn"
+            class="button-base footer-button footer-button--cloud"
+            @click="handleSaveToDriveClick"
+            :disabled="!canOperateDrive"
+            title="Google Driveに保存"
+          >
+            <span
+              v-if="isCloudSaveSuccess"
+              class="icon-svg icon-svg--footer icon-svg-success"
+              aria-label="Save Succeeded"
+            ></span>
+            <span
+              v-else
+              class="icon-svg icon-svg--footer icon-svg-upload"
+              aria-label="Save to Drive"
+            ></span>
+          </button>
         </div>
-        <div class="button-base footer-button footer-button--load">
+
+        <div class="footer-button-container">
+          <label
+            for="load_input_vue"
+            class="button-base footer-button footer-button--load"
+            >データ読込</label
+          >
           <input
             type="file"
             id="load_input_vue"
@@ -622,8 +734,20 @@
             accept=".json,.txt,.zip"
             class="hidden"
           />
-          <label for="load_input_vue">データ読込</label>
+          <button
+            v-if="isSignedIn"
+            class="button-base footer-button footer-button--cloud"
+            @click="handleLoadFromDriveClick"
+            :disabled="!isSignedIn"
+            title="Google Driveから読込"
+          >
+            <span
+              class="icon-svg icon-svg--footer icon-svg-download"
+              aria-label="Load from Drive"
+            ></span>
+          </button>
         </div>
+
         <div
           class="button-base footer-button footer-button--output"
           @click="outputToCocofolia"
@@ -644,8 +768,8 @@
     <script src="src/gameData.js"></script>
     <script src="src/imageManager.js"></script>
     <script src="src/utils.js"></script>
-    <!-- dataManager.js needs JSZip, so ensure it's loaded before -->
     <script src="src/dataManager.js"></script>
+    <script src="src/googleDriveManager.js"></script>
     <script src="src/main.js"></script>
   </body>
 </html>
