@@ -48,9 +48,6 @@ const app = createApp({
       driveStatusMessage: "",
       isGapiLoaded: false,
       isGisLoaded: false,
-      apiKey: "AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU",
-      clientId:
-        "913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com",
       isGapiInitialized: false,
       isGisInitialized: false,
       isCloudSaveSuccess: false,
@@ -950,11 +947,13 @@ const app = createApp({
     // Initialize Google Drive Manager
     this.driveStatusMessage = "Initializing Google services...";
     if (window.GoogleDriveManager) {
-      this.googleDriveManager = new window.GoogleDriveManager(
-        this.apiKey,
-        this.clientId,
-      );
+      const apiKey = "AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU";
+      const clientId =
+        "913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com";
+
+      this.googleDriveManager = new window.GoogleDriveManager(apiKey, clientId);
       this.dataManager.setGoogleDriveManager(this.googleDriveManager);
+
       if (window.gapiScriptLoaded) {
         this.handleGapiLoaded();
       }
