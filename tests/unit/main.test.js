@@ -1,284 +1,184 @@
-// Mock global objects and functions expected by main.js methods
+// tests/unit/main.test.js
+
+// It's assumed that a testing environment like Jest is set up.
+// We'll use Jest-like syntax for mock and test definitions.
+
+// Mocking the newly created modules is crucial to test main.js in isolation.
+// The actual implementation of these mocks might be more complex
+// if main.js directly accesses properties or methods of manager instances
+// during its own lifecycle hooks beyond just calling methods.
+
+// jest.mock('../../src/uiManager.js');
+// jest.mock('../../src/listManager.js'); // listManager exports functions, so mocking might be different
+// jest.mock('../../src/googleDriveUIManager.js');
+// jest.mock('../../src/characterImageManager.js');
+// jest.mock('../../src/characterSheetLogic.js');
+
+// Mock global utilities and data that main.js might depend on for instantiation or basic setup
 global.window = {
   AioniaGameData: {
-    config: {
-      maxSpecialSkills: 3, // Example maxLength
+    defaultCharacterData: {
+      weaknesses: [], // Ensure this is an array for createWeaknessArray
+      // Add other necessary default properties main.js might access on init
     },
-    // ... other necessary mock parts of AioniaGameData
+    config: {
+      maxWeaknesses: 5,
+      initialSpecialSkillCount: 3,
+      // Add other config properties main.js might access on init
+    },
+    baseSkills: [],
+    externalSkillOrder: [],
+    uiMessages: {
+      outputButton: {
+        default: "Default Text",
+        // ... other messages
+      },
+      weaknessDropdownHelp: "Help Text",
+    },
+    helpText: "Help Content",
+    speciesLabelMap: {},
+    equipmentGroupLabelMap: {},
+    specialSkillData: {},
+    specialSkillsRequiringNote: [],
+    weaponDamage: {},
+    // ... any other parts of AioniaGameData main.js needs at a top level
   },
-  deepClone: jest.fn((obj) => JSON.parse(JSON.stringify(obj))), // Simple deepClone mock
+  deepClone: jest.fn(obj => JSON.parse(JSON.stringify(obj))),
+  createWeaknessArray: jest.fn(count => new Array(count).fill(null).map(() => ({}))),
+  CocofoliaExporter: jest.fn().mockImplementation(() => ({
+    generateCocofoliaData: jest.fn(),
+  })),
+  DataManager: jest.fn().mockImplementation(() => ({
+    saveData: jest.fn(),
+    handleFileUpload: jest.fn(),
+    setGoogleDriveManager: jest.fn(),
+    saveDataToDrive: jest.fn(),
+    loadDataFromDrive: jest.fn(),
+  })),
+  ImageManager: { // Assuming ImageManager is a static class or object
+    loadImage: jest.fn(),
+  },
+  GoogleDriveManager: jest.fn().mockImplementation(() => ({ // Mock the constructor
+    onGapiLoad: jest.fn(),
+    onGisLoad: jest.fn(),
+    handleSignIn: jest.fn(),
+    handleSignOut: jest.fn(),
+    getOrCreateAppFolder: jest.fn(),
+    showFolderPicker: jest.fn(),
+    showFilePicker: jest.fn(),
+  })),
+  // Mock Vue's createApp if main.js calls it directly in the global scope
+  // Vue: { createApp: jest.fn().mockReturnValue({ mount: jest.fn() }) }
 };
 
-// This is a simplified mock of the Vue app's methods.
-// In a real Vue testing environment, you might use Vue Test Utils.
-// For this exercise, we'll directly test the _manageListItem logic.
-const mockVueInstanceMethods = {
-  _manageListItem({
-    list,
-    action,
-    index,
-    newItemFactory,
-    hasContentChecker,
-    maxLength,
-  }) {
-    if (action === "add") {
-      if (maxLength && list.length >= maxLength) {
-        return;
-      }
-      const newItem =
-        typeof newItemFactory === "function"
-          ? newItemFactory()
-          : newItemFactory;
-      list.push(
-        typeof newItem === "object" && newItem !== null
-          ? window.deepClone(newItem)
-          : newItem,
-      );
-    } else if (action === "remove") {
-      if (list.length > 1) {
-        list.splice(index, 1);
-      } else if (
-        list.length === 1 &&
-        hasContentChecker &&
-        hasContentChecker(list[index])
-      ) {
-        const emptyItem =
-          typeof newItemFactory === "function"
-            ? newItemFactory()
-            : newItemFactory;
-        // Ensure deepClone is called for objects when resetting
-        list[index] =
-          typeof emptyItem === "object" && emptyItem !== null
-            ? window.deepClone(emptyItem)
-            : emptyItem;
-      }
-    }
-  },
-  // We can add other methods here if needed for more complex tests,
-  // but for _manageListItem, direct invocation is cleaner.
-};
 
-describe("Vue app methods - _manageListItem", () => {
-  let list;
-
-  // Ensure window.deepClone is a Jest mock function for this test suite
-  window.deepClone = jest.fn((item) => JSON.parse(JSON.stringify(item)));
+describe('Main App (main.js) - Orchestration, Core Logic, and Lifecycle', () => {
+  // let app; // This would be your Vue app instance
 
   beforeEach(() => {
-    list = [];
-    // Reset mock calls for deepClone before each test
+    // Clear mocks before each test
+    // UIManager.mockClear();
+    // GoogleDriveUIManager.mockClear();
+    // CharacterImageManager.mockClear();
+    // CharacterSheetLogic.mockClear();
+    // listManager functions would need individual mock clear if they were spied on/mocked directly.
+
+    // Reset mocks for global utilities/constructors
     window.deepClone.mockClear();
+    window.createWeaknessArray.mockClear();
+    window.CocofoliaExporter.mockClear();
+    window.DataManager.mockClear();
+    // window.ImageManager.loadImage.mockClear(); // If ImageManager is an object with methods
+    window.GoogleDriveManager.mockClear();
+
+
+    // TODO: Setup a simplified Vue app instance or use Vue Test Utils to mount main.js component
+    // For now, we assume main.js has been loaded and its `mounted` logic (or parts of it) can be simulated
+    // or that we can test its methods by manually creating an object that mimics the Vue instance.
+    // Example:
+    // const MainAppDefinition = require('../../src/main.js'); // This won't work directly due to ES modules
+    // app = new Vue(MainAppDefinition); // Or using Vue Test Utils: wrapper = mount(MainAppDefinition);
   });
 
-  // --- Add Action Tests ---
-  describe("Add Action", () => {
-    it("should add an item to an empty list", () => {
-      const newItemFactory = () => ({ id: 1, value: "test" });
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "add",
-        newItemFactory,
-      });
-      expect(list).toHaveLength(1);
-      expect(list[0]).toEqual({ id: 1, value: "test" });
-      expect(window.deepClone).toHaveBeenCalledTimes(1); // Called for the new object
-    });
-
-    it("should add an item to a non-empty list", () => {
-      list.push({ id: 1, value: "existing" });
-      const newItemFactory = () => ({ id: 2, value: "new" });
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "add",
-        newItemFactory,
-      });
-      expect(list).toHaveLength(2);
-      expect(list[1]).toEqual({ id: 2, value: "new" });
-      expect(window.deepClone).toHaveBeenCalledTimes(1);
-    });
-
-    it("should respect maxLength and not add if list is full", () => {
-      const newItemFactory = () => ({ id: 1, value: "test" });
-      const maxLength = 2;
-      list.push({ id: "a" }, { id: "b" }); // List is now full
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "add",
-        newItemFactory,
-        maxLength,
-      });
-      expect(list).toHaveLength(2); // Still 2, not 3
-      expect(window.deepClone).not.toHaveBeenCalled(); // Not called as item wasn't added
-    });
-
-    it("should call newItemFactory (function) to create the new item", () => {
-      const newItemFactory = jest.fn(() => ({ id: 1, value: "created" }));
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "add",
-        newItemFactory,
-      });
-      expect(newItemFactory).toHaveBeenCalledTimes(1);
-      expect(list[0]).toEqual({ id: 1, value: "created" });
-      expect(window.deepClone).toHaveBeenCalledWith({
-        id: 1,
-        value: "created",
-      });
-    });
-
-    it("should deep clone newItemFactory (object) if it is an object", () => {
-      const itemTemplate = { id: 1, value: "template" };
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "add",
-        newItemFactory: itemTemplate,
-      });
-      expect(list[0]).toEqual(itemTemplate);
-      expect(list[0]).not.toBe(itemTemplate); // Ensure it's a clone
-      expect(window.deepClone).toHaveBeenCalledWith(itemTemplate);
-    });
-
-    it("should add primitive values directly without cloning", () => {
-      const newItemFactory = () => 123;
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "add",
-        newItemFactory,
-      });
-      expect(list[0]).toBe(123);
-      expect(window.deepClone).not.toHaveBeenCalled();
-    });
+  describe('Manager Instantiation and Setup', () => {
+    it.todo('should instantiate UIManager in mounted hook');
+    it.todo('should instantiate GoogleDriveUIManager in mounted hook');
+    it.todo('should instantiate CharacterImageManager in mounted hook');
+    it.todo('should instantiate CharacterSheetLogic in mounted hook');
+    it.todo('should initialize DataManager with gameData');
+    it.todo('should initialize CocofoliaExporter');
+    it.todo('should assign window.ImageManager to imageManagerInstance');
+    it.todo('should set up GoogleDriveManager and call handleGapiLoaded/handleGisLoaded if scripts were loaded');
+    it.todo('should correctly set up helpPanelClickHandler in mounted and remove in beforeUnmount');
   });
 
-  // --- Remove Action Tests ---
-  describe("Remove Action", () => {
-    it("should remove an item from a list with multiple items", () => {
-      list.push({ id: 1 }, { id: 2 }, { id: 3 });
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 1,
-      });
-      expect(list).toHaveLength(2);
-      expect(list.map((i) => i.id)).toEqual([1, 3]);
-    });
+  describe('Delegation to UIManager', () => {
+    it.todo('should call uiManager.handleHelpIconMouseOver when its wrapper is called');
+    it.todo('should call uiManager.handleHelpIconMouseLeave when its wrapper is called');
+    it.todo('should call uiManager.handleHelpIconClick when its wrapper is called');
+    it.todo('should call uiManager.closeHelpPanel when its wrapper is called');
+    it.todo('should call uiManager.toggleDriveMenu when its wrapper is called');
+    // For methods like showCustomAlert and copyToClipboard, they are called by other methods in main.js
+    // So, those other methods should be tested to ensure they call the uiManager methods.
+  });
 
-    it("should reset an item if list.length === 1 and hasContentChecker returns true", () => {
-      const originalItem = { id: 1, value: "filled" };
-      list.push(originalItem);
-      const newItemFactory = () => ({ id: "empty", value: "" });
-      const hasContentChecker = jest.fn(() => true);
+  describe('Delegation to ListManager', () => {
+    it.todo('should call listManager.addSpecialSkillItem when its wrapper is called');
+    it.todo('should call listManager.removeSpecialSkill when its wrapper is called');
+    it.todo('should call listManager.addExpert when its wrapper is called');
+    it.todo('should call listManager.removeExpert when its wrapper is called');
+    it.todo('should call listManager.addHistoryItem when its wrapper is called');
+    it.todo('should call listManager.removeHistoryItem when its wrapper is called');
+  });
 
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 0,
-        newItemFactory,
-        hasContentChecker,
-      });
+  describe('Delegation to GoogleDriveUIManager', () => {
+    it.todo('should call googleDriveUIManager.handleGapiLoaded from its wrapper (and mounted)');
+    it.todo('should call googleDriveUIManager.handleGisLoaded from its wrapper (and mounted)');
+    it.todo('should call googleDriveUIManager.handleSignInClick when its wrapper is called');
+    it.todo('should call googleDriveUIManager.handleSignOutClick when its wrapper is called');
+    it.todo('should call googleDriveUIManager.getOrPromptForDriveFolder when its wrapper is called');
+    it.todo('should call googleDriveUIManager.promptForDriveFolder when its wrapper is called');
+    it.todo('should call googleDriveUIManager.handleSaveToDriveClick when its wrapper is called');
+    it.todo('should call googleDriveUIManager.handleLoadFromDriveClick when its wrapper is called');
+  });
 
-      expect(list).toHaveLength(1);
-      expect(list[0]).toEqual({ id: "empty", value: "" }); // Item is reset
-      expect(list[0]).not.toBe(originalItem); // Ensure it's a new object
-      expect(hasContentChecker).toHaveBeenCalledWith(originalItem);
-      expect(window.deepClone).toHaveBeenCalledWith({ id: "empty", value: "" }); // Called for the reset object
-    });
+  describe('Delegation to CharacterImageManager', () => {
+    it.todo('should call characterImageManager.handleImageUpload when its wrapper is called');
+    it.todo('should call characterImageManager.nextImage when its wrapper is called');
+    it.todo('should call characterImageManager.previousImage when its wrapper is called');
+    it.todo('should call characterImageManager.removeCurrentImage when its wrapper is called');
+  });
 
-    it("should not reset (or change) if list.length === 1 and hasContentChecker returns false", () => {
-      list.push({ id: 1, value: "no-content" });
-      const originalItemRef = list[0];
-      const newItemFactory = () => ({ id: "empty" }); // Should not be used
-      const hasContentChecker = jest.fn(() => false);
+  describe('Delegation to CharacterSheetLogic', () => {
+    it.todo('should call characterSheetLogic.handleCurrentScarInput when its wrapper is called');
+    it.todo('should call characterSheetLogic.expertPlaceholder when its wrapper is called');
+    it.todo('should call characterSheetLogic.handleSpeciesChange when its wrapper is called');
+    it.todo('should call characterSheetLogic.availableSpecialSkillNames when its wrapper is called');
+    it.todo('should call characterSheetLogic.updateSpecialSkillOptions when its wrapper is called');
+    it.todo('should call characterSheetLogic.updateSpecialSkillNoteVisibility when its wrapper is called');
+  });
 
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 0,
-        newItemFactory,
-        hasContentChecker,
-      });
+  describe('Core main.js Responsibilities', () => {
+    it.todo('should correctly handle saveData by calling dataManager.saveData');
+    it.todo('should correctly handle handleFileUpload, calling dataManager.handleFileUpload and uiManager.showCustomAlert on error');
+    it.todo('should correctly handle outputToCocofolia, calling cocofoliaExporter.generateCocofoliaData and uiManager.copyToClipboard');
+  });
 
-      expect(list).toHaveLength(1);
-      expect(list[0]).toEqual({ id: 1, value: "no-content" }); // Item remains unchanged
-      expect(list[0]).toBe(originalItemRef); // Should be the same object reference
-      expect(hasContentChecker).toHaveBeenCalledWith({
-        id: 1,
-        value: "no-content",
-      });
-      expect(window.deepClone).not.toHaveBeenCalled(); // Not called as no reset happened
-    });
+  describe('Watchers', () => {
+    it.todo('should update currentScar when initialScar changes and link is active');
+    it.todo('should update currentScar to initialScar when linkCurrentToInitialScar becomes true');
+    it.todo('should not update currentScar from initialScar when link is inactive');
+  });
 
-    it("should do nothing if list.length === 1 and hasContentChecker is not provided", () => {
-      list.push({ id: 1, value: "no-checker" });
-      const originalItemRef = list[0];
-      const newItemFactory = () => ({ id: "empty" }); // Should not be used
-
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 0,
-        newItemFactory,
-      }); // No hasContentChecker
-
-      expect(list).toHaveLength(1);
-      expect(list[0]).toEqual({ id: 1, value: "no-checker" });
-      expect(list[0]).toBe(originalItemRef);
-      expect(window.deepClone).not.toHaveBeenCalled();
-    });
-
-    it("should remove the correct item based on index", () => {
-      list.push({ id: "first" }, { id: "second" }, { id: "third" });
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 0,
-      }); // Remove first
-      expect(list.map((i) => i.id)).toEqual(["second", "third"]);
-
-      list = [{ id: "first" }, { id: "second" }, { id: "third" }];
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 2,
-      }); // Remove last
-      expect(list.map((i) => i.id)).toEqual(["first", "second"]);
-    });
-
-    it("should use newItemFactory (object) for resetting and deep clone it", () => {
-      const itemToReset = { id: 1, value: "old" };
-      list.push(itemToReset);
-      const emptyItemTemplate = { id: "reset", value: "" };
-      const hasContentChecker = () => true;
-
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 0,
-        newItemFactory: emptyItemTemplate,
-        hasContentChecker,
-      });
-
-      expect(list[0]).toEqual(emptyItemTemplate);
-      expect(list[0]).not.toBe(emptyItemTemplate); // Ensure it's a clone
-      expect(window.deepClone).toHaveBeenCalledWith(emptyItemTemplate);
-    });
-
-    it("should reset with primitive value directly without cloning if newItemFactory returns primitive", () => {
-      const itemToReset = { id: 1, value: "old" };
-      list.push(itemToReset);
-      const newItemFactory = () => null; // Primitive value
-      const hasContentChecker = () => true;
-
-      mockVueInstanceMethods._manageListItem({
-        list,
-        action: "remove",
-        index: 0,
-        newItemFactory,
-        hasContentChecker,
-      });
-
-      expect(list[0]).toBeNull();
-      expect(window.deepClone).not.toHaveBeenCalled();
-    });
+  describe('Computed Properties', () => {
+    it.todo('should compute currentImageSrc correctly');
+    it.todo('should compute isHelpVisible correctly');
+    it.todo('should compute maxExperiencePoints correctly');
+    it.todo('should compute currentExperiencePoints correctly');
+    it.todo('should compute currentWeight correctly');
+    it.todo('should compute experienceStatusClass correctly');
+    it.todo('should compute sessionNamesForWeaknessDropdown correctly');
+    it.todo('should compute canSignInToGoogle correctly');
+    it.todo('should compute canOperateDrive correctly');
   });
 });
