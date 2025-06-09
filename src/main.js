@@ -1,4 +1,4 @@
-const { createApp } = Vue;
+import { createApp } from "vue";
 // Global flags like window.gapiScriptLoaded are set by placeholder functions in index.html
 
 // Base character data copied from gameData with weaknesses initialized

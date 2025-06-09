@@ -1,3 +1,5 @@
+dist/
+*.local
 node_modules/
 test-results/
 *.patch
