@@ -34,7 +34,9 @@ test.describe("Character Sheet E2E Tests", () => {
       // Intercept downloads
       const [jsonDownload] = await Promise.all([
         page.waitForEvent("download"),
-        page.locator('div.footer-button--save:has-text("データ保存")').click(),
+        page
+          .locator('button.footer-button--save:has-text("データ保存")')
+          .click(),
       ]);
       // expect(jsonDownload.suggestedFilename()).toBe('JsonSaveChar_AioniaSheet.json');
       expect(jsonDownload.suggestedFilename()).toMatch(
@@ -130,7 +132,9 @@ test.describe("Character Sheet E2E Tests", () => {
 
       const [zipDownload] = await Promise.all([
         page.waitForEvent("download"),
-        page.locator('div.footer-button--save:has-text("データ保存")').click(),
+        page
+          .locator('button.footer-button--save:has-text("データ保存")')
+          .click(),
       ]);
       // expect(zipDownload.suggestedFilename()).toBe('ZipSaveChar_AioniaSheet.zip');
       expect(zipDownload.suggestedFilename()).toMatch(
