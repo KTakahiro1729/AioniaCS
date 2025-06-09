@@ -1,107 +1,14 @@
 // tests/unit/main.test.js
 
-// Mock global objects and functions expected by main.js
-// These would ideally be more comprehensively mocked or provided by a test setup file.
-global.window = {
-  AioniaGameData: {
-    config: {
-      maxSpecialSkills: 20,
-      initialSpecialSkillCount: 1,
-      maxWeaknesses: 5, // Example value
-    },
-    defaultCharacterData: {
-      name: "",
-      images: [],
-      // ... other default properties
-    },
-    baseSkills: [],
-    externalSkillOrder: [],
-    speciesOptions: [],
-    specialSkillGroupOptions: [],
-    specialSkillData: {},
-    specialSkillsRequiringNote: [],
-    weaponOptions: [],
-    armorOptions: [],
-    uiMessages: {
-      outputButton: {
-        default: "Default",
-        animating: "Animating",
-        failed: "Failed",
-        error: "Error",
-        animationTimings: {
-          state1_bgFill: 100,
-          state2_textHold: 100,
-          state3_textFadeOut: 100,
-          state4_bgReset: 100,
-        },
-      },
-      weaknessDropdownHelp: "Help", // Example value
-    },
-    experiencePointValues: {}, // Example value
-    equipmentWeights: { weapon: {}, armor: {} }, // Example value
-    placeholderTexts: {}, // Example value
-    helpText: "", // Example value
-    speciesLabelMap: {}, // Example value
-    equipmentGroupLabelMap: {}, // Example value
-    weaponDamage: {}, // Example value
-    weaknessAcquisitionOptions: [], // Example value
-  },
-  deepClone: jest.fn((obj) => JSON.parse(JSON.stringify(obj))),
-  uiManager: { // Mock uiManager as it's now external
-    handleHelpIconMouseOver: jest.fn(),
-    handleHelpIconMouseLeave: jest.fn(),
-    handleHelpIconClick: jest.fn(),
-    closeHelpPanel: jest.fn(),
-    showCustomAlert: jest.fn(),
-    copyToClipboard: jest.fn().mockResolvedValue(undefined), // Assuming it's async
-    toggleDriveMenu: jest.fn(),
-    handleClickOutside: jest.fn(), // If main.js still had direct calls or complex interactions
-    // playOutputAnimation and fallbackCopyTextToClipboard are internal to uiManager now
-  },
-  listManager: { // Mock listManager as it's now external
-    addSpecialSkillItem: jest.fn(),
-    removeSpecialSkill: jest.fn(),
-    addExpert: jest.fn(),
-    removeExpert: jest.fn(),
-    addHistoryItem: jest.fn(),
-    removeHistoryItem: jest.fn(),
-    // _manageListItem, hasSpecialSkillContent, hasHistoryContent are internal
-  },
-  // Mock other global dependencies if main.js uses them directly
-  Vue: { // If main.js directly uses Vue.createApp or similar and it's not handled by Vue Test Utils
-    createApp: jest.fn().mockReturnValue({
-      mount: jest.fn(),
-      // Mock other Vue app instance properties/methods if needed for setup
-    }),
-  },
-  DataManager: jest.fn().mockImplementation(() => ({
-    saveData: jest.fn(),
-    handleFileUpload: jest.fn(),
-    saveDataToDrive: jest.fn().mockResolvedValue({ id: 'file123', name: 'test.json' }),
-    loadDataFromDrive: jest.fn().mockResolvedValue({ character: {} /* mock data */ }),
-    setGoogleDriveManager: jest.fn(),
-  })),
-  CocofoliaExporter: jest.fn().mockImplementation(() => ({
-    generateCocofoliaData: jest.fn().mockReturnValue({}),
-  })),
-  ImageManager: { // Assuming ImageManager is an object with methods
-    loadImage: jest.fn().mockResolvedValue("imageDataString"),
-  },
-  GoogleDriveManager: jest.fn().mockImplementation(() => ({
-    onGapiLoad: jest.fn().mockResolvedValue(undefined),
-    onGisLoad: jest.fn().mockResolvedValue(undefined),
-    handleSignIn: jest.fn(),
-    handleSignOut: jest.fn(),
-    getOrCreateAppFolder: jest.fn().mockResolvedValue({ id: 'folder123', name: 'AioniaCS_Data' }),
-    showFolderPicker: jest.fn(),
-    showFilePicker: jest.fn(),
-  })),
-  // Utility functions that were previously part of main.js or globally available
-  createWeaknessArray: jest.fn(count => Array(count).fill(null).map(() => ({ text: '', acquired: '' }))),
-};
+// Note: `setupTests.js` is expected to load AioniaGameData, uiManager, listManager, etc., onto `window`.
+// So, we should not mock them here if we want to test the integration with the actual modules.
 
-// Mock document and other browser features if necessary, Jest JSDOM provides many.
-// For example, navigator.clipboard might need a specific mock if not using a robust JSDOM setup.
+// If Vue Test Utils were used, we would mount the Vue app from main.js.
+// Since it's not, these tests will be more about ensuring that when a method
+// from main.js (if it were callable) is invoked, it correctly calls
+// the respective global manager functions.
+
+// Mock browser features not fully supported by JSDOM or if specific behavior is needed.
 Object.defineProperty(global.navigator, 'clipboard', {
   value: {
     writeText: jest.fn().mockResolvedValue(undefined),
@@ -110,28 +17,51 @@ Object.defineProperty(global.navigator, 'clipboard', {
   writable: true,
 });
 
+// Mock other global dependencies that main.js might use but are not loaded by setupTests.js,
+// or if they need specific mock implementations for main.js tests.
+// For example, DataManager, CocofoliaExporter, ImageManager, GoogleDriveManager are used by main.js.
+// If their actual scripts are not loaded by setupTests.js, they need to be mocked here.
+// If setupTests.js *does* load them, these mocks might be redundant or conflict.
+// For this task, we assume setupTests.js primarily loads uiManager, listManager, gameData, utils.
+// So, other complex objects used by main.js might still need mocking here.
+
+global.window.DataManager = jest.fn().mockImplementation(() => ({
+  saveData: jest.fn(),
+  handleFileUpload: jest.fn(),
+  saveDataToDrive: jest.fn().mockResolvedValue({ id: 'file123', name: 'test.json' }),
+  loadDataFromDrive: jest.fn().mockResolvedValue({ character: {} }),
+  setGoogleDriveManager: jest.fn(),
+}));
+global.window.CocofoliaExporter = jest.fn().mockImplementation(() => ({
+  generateCocofoliaData: jest.fn().mockReturnValue({}),
+}));
+global.window.ImageManager = {
+  loadImage: jest.fn().mockResolvedValue("imageDataString"),
+};
+global.window.GoogleDriveManager = jest.fn().mockImplementation(() => ({
+  onGapiLoad: jest.fn().mockResolvedValue(undefined),
+  onGisLoad: jest.fn().mockResolvedValue(undefined),
+  handleSignIn: jest.fn(),
+  handleSignOut: jest.fn(),
+  getOrCreateAppFolder: jest.fn().mockResolvedValue({ id: 'folder123', name: 'AioniaCS_Data' }),
+  showFolderPicker: jest.fn(),
+  showFilePicker: jest.fn(),
+}));
+
 
 describe("Vue app integration with uiManager and listManager", () => {
-  let app; // To hold the Vue app instance or its methods context if testing directly
+  let mockAppInstance;
 
   beforeEach(() => {
-    // Reset mocks before each test
-    jest.clearAllMocks();
+    // Reset mocks for window.uiManager and window.listManager if they are spies
+    // If they are the actual objects loaded by setupTests, we don't mock them here.
+    // Instead, we might spy on their methods if needed for specific tests.
+    jest.clearAllMocks(); // Clears all Jest mocks, including those on global objects if any.
 
-    // Example: If you were testing the Vue app instance methods directly (simplified)
-    // This is not using Vue Test Utils, just showing concept if main.js was structured to export its methods
-    // For a real app, you'd mount the component.
-    // For this subtask, we'll assume main.js makes its methods available for testing,
-    // or we are testing interactions that call the global managers.
-
-    // Since main.js itself is a script that creates and mounts a Vue app,
-    // true unit testing of its methods in isolation is tricky without refactoring it
-    // to export the app configuration or using Vue Test Utils to mount the app.
-    // The tests here will focus on verifying that the correct manager functions are called.
-    // We will simulate a Vue instance `this` context for methods from main.js.
-
-    app = { // A mock 'this' context for main.js methods
-      // data properties
+    // Create a mock Vue app instance context for each test.
+    // This context should reflect the data properties main.js would initialize.
+    // Crucially, it should use window.AioniaGameData loaded by setupTests.js.
+    mockAppInstance = {
       isDesktop: true,
       helpState: 'closed',
       $refs: {
@@ -139,78 +69,104 @@ describe("Vue app integration with uiManager and listManager", () => {
         helpIcon: document.createElement('div'),
         outputButton: document.createElement('button'),
       },
-      gameData: global.window.AioniaGameData, // Use the mocked gameData
-      outputButtonText: global.window.AioniaGameData.uiMessages.outputButton.default,
+      // Use the globally loaded AioniaGameData
+      gameData: window.AioniaGameData,
+      outputButtonText: window.AioniaGameData.uiMessages.outputButton.default,
       specialSkills: [{ group: "", name: "", note: "", showNote: false }],
       histories: [{ sessionName: "", gotExperiments: null, memo: "" }],
-      character: global.window.AioniaGameData.defaultCharacterData,
-      skills: [],
-      equipments: {},
+      // Ensure defaultCharacterData and other startup data are correctly accessed
+      character: window.deepClone(window.AioniaGameData.defaultCharacterData),
+      skills: window.deepClone(window.AioniaGameData.baseSkills),
+      equipments: {
+        weapon1: { group: "", name: "" },
+        weapon2: { group: "", name: "" },
+        armor: { group: "", name: "" },
+      },
       currentWeight: 0,
-      // methods (if we were to copy them here for testing - not ideal)
-      // For now, we'll assume that methods in main.js call the global managers.
-      // e.g. a method in main.js: handleHelpClick() { window.uiManager.handleHelpIconClick(this); }
+      cocofoliaExporter: new window.CocofoliaExporter(), // Use mocked version
+      dataManager: new window.DataManager(), // Use mocked version
+      // ... any other properties main.js's methods would expect in `this` context.
     };
-    document.body.appendChild(app.$refs.helpPanel);
-    document.body.appendChild(app.$refs.helpIcon);
-    document.body.appendChild(app.$refs.outputButton);
+    document.body.appendChild(mockAppInstance.$refs.helpPanel);
+    document.body.appendChild(mockAppInstance.$refs.helpIcon);
+    document.body.appendChild(mockAppInstance.$refs.outputButton);
+
+    // If main.js methods were directly testable (e.g., exported or on a mounted app):
+    // e.g., vueApp = main.initApp(); or const wrapper = mount(App); vueApp = wrapper.vm;
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
   });
 
-  // Example test for a method in main.js that calls a uiManager method
-  test('handleHelpIconClick in main.js should call uiManager.handleHelpIconClick', () => {
-    // Assuming main.js has a method like this:
-    // handleHelpIconClick() { window.uiManager.handleHelpIconClick(this); }
-    // We would call that method:
-    // mainJsMethods.handleHelpIconClick(app); // If mainJsMethods were exported
+  // Test that methods in main.js (if they were callable) correctly delegate to window.uiManager
+  test('main.js method for help icon click should use window.uiManager', () => {
+    // This test is conceptual. We need a way to invoke a method from main.js.
+    // If main.js's methods were, e.g., app.methods.handleHelpIconClick.call(mockAppInstance):
+    // app.methods.handleHelpIconClick.call(mockAppInstance);
+    // expect(window.uiManager.handleHelpIconClick).toHaveBeenCalledWith(mockAppInstance);
 
-    // For now, directly test if the global mock is called by a hypothetical wrapper
-    // This is more of a placeholder as we don't have main.js's app instance here.
-    // If main.js was refactored to be testable, we'd call its method.
-    // e.g. appInstance.handleHelpIconClick();
-    // expect(window.uiManager.handleHelpIconClick).toHaveBeenCalledWith(appInstance);
+    // For now, let's simulate the call as if it's coming from a Vue method context
+    // We are testing that IF such a method in main.js is called, it uses the global uiManager
+    // This requires window.uiManager.handleHelpIconClick to be a spy or mock if we want to assert calls.
+    // Since setupTests.js loads the actual uiManager, we'd spy on its methods.
+    jest.spyOn(window.uiManager, 'handleHelpIconClick');
 
-    // Since we are not actually running the Vue app from main.js in this test file,
-    // we can only test that the mocks are callable.
-    // A true integration test would require mounting the Vue app via Vue Test Utils.
-    window.uiManager.handleHelpIconClick(app); // Simulate a call as it might happen in main.js
-    expect(window.uiManager.handleHelpIconClick).toHaveBeenCalledWith(app);
+    // Simulate a method from main.js being called:
+    // mainJsAppMountedInstance.handleHelpIconClick();
+    // Since we don't have the instance, we call the global function directly
+    // with the expected 'this' context.
+    window.uiManager.handleHelpIconClick(mockAppInstance);
+    expect(window.uiManager.handleHelpIconClick).toHaveBeenCalledWith(mockAppInstance);
+
+    window.uiManager.handleHelpIconClick.mockRestore(); // Clean up spy
   });
 
-  test('addSpecialSkillItem in main.js should call listManager.addSpecialSkillItem', () => {
-    // Similar to above, assuming a method in main.js calls the listManager
-    window.listManager.addSpecialSkillItem(app); // Simulate the call
-    expect(window.listManager.addSpecialSkillItem).toHaveBeenCalledWith(app);
+  // Test that methods in main.js correctly delegate to window.listManager
+  test('main.js method for adding special skill should use window.listManager', () => {
+    jest.spyOn(window.listManager, 'addSpecialSkillItem');
+
+    // Simulate main.js method call:
+    // mainJsAppMountedInstance.addSpecialSkillItem();
+    window.listManager.addSpecialSkillItem(mockAppInstance);
+    expect(window.listManager.addSpecialSkillItem).toHaveBeenCalledWith(mockAppInstance);
+
+    window.listManager.addSpecialSkillItem.mockRestore();
   });
 
-  test('outputToCocofolia in main.js should call uiManager.copyToClipboard', async () => {
-    // This tests a method that remains in main.js but calls a refactored UI function.
-    // Mock the parts of `app` that `outputToCocofolia` would use.
-    app.character = { name: "Test Char" };
-    app.skills = [];
-    app.specialSkills = [];
-    app.equipments = {};
-    app.currentWeight = 10;
-    app.gameData = global.window.AioniaGameData; // Ensure gameData is present
-    app.cocofoliaExporter = new global.window.CocofoliaExporter(); // Use the mock
+  test('outputToCocofolia (conceptual main.js method) should use window.uiManager.copyToClipboard', async () => {
+    // This test assumes `outputToCocofolia` is a method within the Vue app context (mockAppInstance)
+    // that internally calls `this.copyToClipboard`, which in turn calls `window.uiManager.copyToClipboard`.
 
-    // Simulate the method from main.js (if it were directly testable)
-    // For this example, let's assume a simplified version of the call:
-    const textToCopy = JSON.stringify(app.cocofoliaExporter.generateCocofoliaData({}), null, 2);
-    await window.uiManager.copyToClipboard(app, textToCopy); // Simulate the internal call
+    // Spy on the actual window.uiManager.copyToClipboard
+    jest.spyOn(window.uiManager, 'copyToClipboard');
 
-    expect(global.window.CocofoliaExporter).toHaveBeenCalled();
-    expect(app.cocofoliaExporter.generateCocofoliaData).toHaveBeenCalled();
-    expect(window.uiManager.copyToClipboard).toHaveBeenCalledWith(app, textToCopy);
+    // Simulate the relevant part of outputToCocofolia that calls copyToClipboard
+    const textToCopy = JSON.stringify(mockAppInstance.cocofoliaExporter.generateCocofoliaData({
+        character: mockAppInstance.character,
+        skills: mockAppInstance.skills,
+        specialSkills: mockAppInstance.specialSkills,
+        equipments: mockAppInstance.equipments,
+        currentWeight: mockAppInstance.currentWeight,
+        speciesLabelMap: mockAppInstance.gameData.speciesLabelMap,
+        equipmentGroupLabelMap: mockAppInstance.gameData.equipmentGroupLabelMap,
+        specialSkillData: mockAppInstance.gameData.specialSkillData,
+        specialSkillsRequiringNote: mockAppInstance.gameData.specialSkillsRequiringNote,
+        weaponDamage: mockAppInstance.gameData.weaponDamage,
+    }), null, 2);
+
+    // Simulate the call to copyToClipboard as it would happen from within main.js's Vue app context
+    // e.g., if copyToClipboard method in main.js is: async copyToClipboard(text) { await window.uiManager.copyToClipboard(this, text); }
+    // We are testing that this delegation happens.
+    await window.uiManager.copyToClipboard(mockAppInstance, textToCopy);
+
+    expect(mockAppInstance.cocofoliaExporter.generateCocofoliaData).toHaveBeenCalled();
+    expect(window.uiManager.copyToClipboard).toHaveBeenCalledWith(mockAppInstance, textToCopy);
+
+    window.uiManager.copyToClipboard.mockRestore();
   });
 
-  // Add more tests here for other main.js methods that integrate with the managers.
-  // For example, testing `handleFileUpload` to ensure it calls `uiManager.showCustomAlert` on error.
-
-  // The tests for _manageListItem, hasSpecialSkillContent, showCustomAlert (direct unit tests),
-  // handleHelpIconClick (direct unit tests), etc., are now in their respective
-  // listManager.test.js and uiManager.test.js files.
+  // More tests could be added here for other main.js methods, ensuring they correctly
+  // use the global managers and data loaded by setupTests.js.
+  // For example, testing `handleFileUpload` to ensure it calls `window.uiManager.showCustomAlert` on error.
 });

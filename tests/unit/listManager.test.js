@@ -5,20 +5,20 @@
 let mockVueInstance;
 
 describe('listManager', () => {
-  beforeAll(() => {
-    // Mock global dependencies if not loaded by Jest setup
-    if (typeof window.deepClone === 'undefined') {
-      window.deepClone = (obj) => JSON.parse(JSON.stringify(obj)); // Simple mock
-    }
-    if (typeof window.AioniaGameData === 'undefined') {
-      window.AioniaGameData = { // Mock parts listManager uses
-        config: {
-          maxSpecialSkills: 20,
-        },
-      };
-    }
-    // listManager is expected to be on window from src/listManager.js
-  });
+  // beforeAll(() => {
+  //   // Mock global dependencies if not loaded by Jest setup
+  //   if (typeof window.deepClone === 'undefined') {
+  //     window.deepClone = (obj) => JSON.parse(JSON.stringify(obj)); // Simple mock
+  //   }
+  //   if (typeof window.AioniaGameData === 'undefined') {
+  //     window.AioniaGameData = { // Mock parts listManager uses
+  //       config: {
+  //         maxSpecialSkills: 20,
+  //       },
+  //     };
+  //   }
+  //   // listManager is expected to be on window from src/listManager.js
+  // });
 
   beforeEach(() => {
     mockVueInstance = {

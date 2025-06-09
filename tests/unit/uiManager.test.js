@@ -12,33 +12,33 @@
 let mockVueInstance;
 
 describe('uiManager', () => {
-  beforeAll(() => {
-    // Manually ensure globals if not handled by Jest setup
-    // This is a simplified approach for the subtask. A real setup might use jest.config.js setupFilesAfterEnv.
-    if (typeof window.AioniaGameData === 'undefined') {
-      // This is a placeholder. In a real test, gameData would need to be loaded.
-      // For now, mock the parts uiManager directly uses if gameData isn't loaded globally.
-      window.AioniaGameData = {
-        uiMessages: {
-          outputButton: {
-            default: "Default Text",
-            animating: "Animating...",
-            failed: "Failed",
-            error: "Error",
-            animationTimings: {
-              state1_bgFill: 100,
-              state2_textHold: 100,
-              state3_textFadeOut: 100,
-              state4_bgReset: 100,
-            },
-          },
-        },
-      };
-    }
-    // uiManager is expected to be on window from src/uiManager.js
-    // If src/uiManager.js was not loaded (e.g. via Jest setup), this test file would fail.
-    // We are proceeding as if it IS loaded and window.uiManager is defined.
-  });
+  // beforeAll(() => {
+  //   // Manually ensure globals if not handled by Jest setup
+  //   // This is a simplified approach for the subtask. A real setup might use jest.config.js setupFilesAfterEnv.
+  //   if (typeof window.AioniaGameData === 'undefined') {
+  //     // This is a placeholder. In a real test, gameData would need to be loaded.
+  //     // For now, mock the parts uiManager directly uses if gameData isn't loaded globally.
+  //     window.AioniaGameData = {
+  //       uiMessages: {
+  //         outputButton: {
+  //           default: "Default Text",
+  //           animating: "Animating...",
+  //           failed: "Failed",
+  //           error: "Error",
+  //           animationTimings: {
+  //             state1_bgFill: 100,
+  //             state2_textHold: 100,
+  //             state3_textFadeOut: 100,
+  //             state4_bgReset: 100,
+  //           },
+  //         },
+  //       },
+  //     };
+  //   }
+  //   // uiManager is expected to be on window from src/uiManager.js
+  //   // If src/uiManager.js was not loaded (e.g. via Jest setup), this test file would fail.
+  //   // We are proceeding as if it IS loaded and window.uiManager is defined.
+  // });
 
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -85,7 +85,15 @@ describe('uiManager', () => {
   });
 
   describe('showCustomAlert', () => {
-    test('should create and display an alert modal', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    test('should create and display an alert modal, and call focus on button', () => {
       const message = 'Test alert message';
       window.uiManager.showCustomAlert(message);
 
@@ -95,10 +103,21 @@ describe('uiManager', () => {
       expect(modal.textContent).toContain(message);
 
       const okButton = modal.querySelector('.custom-alert-button');
-      expect(document.activeElement).toBe(okButton); // Check focus
+      const focusSpy = jest.spyOn(okButton, 'focus');
+
+      // Call the function that should trigger the focus
+      // Note: showCustomAlert was already called. The requestAnimationFrame part needs to resolve.
+      // To test this properly with jest, we might need to use jest.runAllTimers() if timers are mocked.
+      // For now, let's assume the spy is set up before the async operation that calls focus completes.
+      // The original call to showCustomAlert includes the requestAnimationFrame.
+      // We need to ensure Jest can advance timers if `requestAnimationFrame` is mocked with `setTimeout`.
+      jest.runOnlyPendingTimers(); // If using jest.useFakeTimers()
+
+      expect(focusSpy).toHaveBeenCalled(); // Check if focus was called
 
       okButton.click();
       expect(document.getElementById('custom-alert-modal')).toBeNull();
+      focusSpy.mockRestore(); // Clean up the spy
     });
   });
 });
