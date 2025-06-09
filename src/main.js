@@ -220,7 +220,7 @@ const app = createApp({
   methods: {
     // Menu and Dropdown Toggle Methods
     toggleDriveMenu() {
-      this.showDriveMenu = !this.showDriveMenu;
+      uiManager.toggleDriveMenu(this);
     },
     handleCurrentScarInput(event) {
       const enteredValue = parseInt(event.target.value, 10);
@@ -241,174 +241,38 @@ const app = createApp({
     },
     // --- Help Panel Methods ---
     handleHelpIconMouseOver() {
-      if (this.isDesktop) {
-        if (this.helpState === "closed") {
-          this.helpState = "hovered";
-        }
-      }
+      uiManager.handleHelpIconMouseOver(this);
     },
     handleHelpIconMouseLeave() {
-      if (this.isDesktop) {
-        if (this.helpState === "hovered") {
-          this.helpState = "closed";
-        }
-      }
+      uiManager.handleHelpIconMouseLeave(this);
     },
     handleHelpIconClick() {
-      if (this.isDesktop) {
-        this.helpState = this.helpState === "fixed" ? "closed" : "fixed";
-      } else {
-        this.helpState = this.helpState === "closed" ? "fixed" : "closed";
-      }
+      uiManager.handleHelpIconClick(this);
     },
     closeHelpPanel() {
-      this.helpState = "closed";
+      uiManager.closeHelpPanel(this);
     },
-    handleClickOutside(event) {
-      if (this.helpState === "fixed") {
-        const helpPanelElement = this.$refs.helpPanel;
-        const helpIconElement = this.$refs.helpIcon;
-        if (helpPanelElement && helpIconElement) {
-          if (
-            !helpPanelElement.contains(event.target) &&
-            !helpIconElement.contains(event.target)
-          ) {
-            this.helpState = "closed";
-          }
-        } else if (
-          helpPanelElement &&
-          !helpPanelElement.contains(event.target)
-        ) {
-          this.helpState = "closed";
-        } else if (
-          !helpPanelElement &&
-          helpIconElement &&
-          !helpIconElement.contains(event.target)
-        ) {
-          this.helpState = "closed";
-        }
-      }
-    },
+    // handleClickOutside is removed, will be handled by uiManager via event listener in mounted/beforeUnmount
+
     // --- List Management Methods ---
-    _manageListItem({
-      list,
-      action,
-      index,
-      newItemFactory,
-      hasContentChecker,
-      maxLength,
-    }) {
-      if (action === "add") {
-        if (maxLength && list.length >= maxLength) {
-          return;
-        }
-        const newItem =
-          typeof newItemFactory === "function"
-            ? newItemFactory()
-            : newItemFactory;
-        list.push(
-          typeof newItem === "object" && newItem !== null
-            ? window.deepClone(newItem)
-            : newItem,
-        );
-      } else if (action === "remove") {
-        if (list.length > 1) {
-          list.splice(index, 1);
-        } else if (
-          list.length === 1 &&
-          hasContentChecker &&
-          hasContentChecker(list[index])
-        ) {
-          const emptyItem =
-            typeof newItemFactory === "function"
-              ? newItemFactory()
-              : newItemFactory;
-          list[index] =
-            typeof emptyItem === "object" && emptyItem !== null
-              ? window.deepClone(emptyItem)
-              : emptyItem;
-        }
-      }
-    },
-    hasSpecialSkillContent(ss) {
-      return !!(ss.group || ss.name || ss.note);
-    },
-    hasHistoryContent(h) {
-      return !!(
-        h.sessionName ||
-        (h.gotExperiments !== null && h.gotExperiments !== "") ||
-        h.memo
-      );
-    },
+    // _manageListItem, hasSpecialSkillContent, hasHistoryContent are removed as they are now in listManager
     addSpecialSkillItem() {
-      this._manageListItem({
-        list: this.specialSkills,
-        action: "add",
-        newItemFactory: () => ({
-          group: "",
-          name: "",
-          note: "",
-          showNote: false,
-        }),
-        maxLength: this.gameData.config.maxSpecialSkills,
-      });
+      listManager.addSpecialSkillItem(this);
     },
     removeSpecialSkill(index) {
-      this._manageListItem({
-        list: this.specialSkills,
-        action: "remove",
-        index: index,
-        newItemFactory: () => ({
-          group: "",
-          name: "",
-          note: "",
-          showNote: false,
-        }),
-        hasContentChecker: this.hasSpecialSkillContent,
-      });
+      listManager.removeSpecialSkill(this, index);
     },
     addExpert(skill) {
-      if (skill.canHaveExperts) {
-        this._manageListItem({
-          list: skill.experts,
-          action: "add",
-          newItemFactory: () => ({ value: "" }),
-        });
-      }
+      listManager.addExpert(skill);
     },
     removeExpert(skill, expertIndex) {
-      this._manageListItem({
-        list: skill.experts,
-        action: "remove",
-        index: expertIndex,
-        newItemFactory: () => ({ value: "" }),
-        hasContentChecker: (expert) =>
-          expert.value && expert.value.trim() !== "",
-      });
+      listManager.removeExpert(skill, expertIndex);
     },
     addHistoryItem() {
-      this._manageListItem({
-        list: this.histories,
-        action: "add",
-        newItemFactory: () => ({
-          sessionName: "",
-          gotExperiments: null,
-          memo: "",
-        }),
-      });
+      listManager.addHistoryItem(this);
     },
     removeHistoryItem(index) {
-      this._manageListItem({
-        list: this.histories,
-        action: "remove",
-        index: index,
-        newItemFactory: () => ({
-          sessionName: "",
-          gotExperiments: null,
-          memo: "",
-        }),
-        hasContentChecker: this.hasHistoryContent,
-      });
+      listManager.removeHistoryItem(this, index);
     },
     // --- Data & UI Interaction Methods ---
     expertPlaceholder(skill) {
@@ -461,7 +325,7 @@ const app = createApp({
           this.histories = parsedData.histories;
         },
         (errorMessage) => {
-          this.showCustomAlert(errorMessage);
+          uiManager.showCustomAlert(errorMessage);
         },
       );
     },
@@ -483,160 +347,16 @@ const app = createApp({
       const cocofoliaCharacter =
         this.cocofoliaExporter.generateCocofoliaData(exportData);
       const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
-      this.copyToClipboard(textToCopy);
+      // Updated to call uiManager method
+      uiManager.copyToClipboard(this, textToCopy);
     },
-    async copyToClipboard(text) {
-      if (!navigator.clipboard) {
-        this.fallbackCopyTextToClipboard(text);
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(text);
-        this.playOutputAnimation();
-      } catch (err) {
-        console.error("Failed to copy: ", err);
-        this.fallbackCopyTextToClipboard(text);
-      }
+    async copyToClipboard(text) { // Make sure this is async
+      await uiManager.copyToClipboard(this, text);
     },
-    fallbackCopyTextToClipboard(text) {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.top = "0";
-      textArea.style.left = "0";
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      try {
-        const successful = document.execCommand("copy");
-        if (successful) {
-          this.playOutputAnimation();
-        } else {
-          this.outputButtonText = this.gameData.uiMessages.outputButton.failed;
-          setTimeout(() => {
-            this.outputButtonText =
-              this.gameData.uiMessages.outputButton.default;
-          }, 3000);
-        }
-      } catch (err) {
-        console.error(err);
-        this.outputButtonText = this.gameData.uiMessages.outputButton.error;
-        setTimeout(() => {
-          this.outputButtonText = this.gameData.uiMessages.outputButton.default;
-        }, 3000);
-      }
-      document.body.removeChild(textArea);
-    },
-    playOutputAnimation() {
-      const button = this.$refs.outputButton;
-      if (!button || button.classList.contains("is-animating")) {
-        return;
-      }
-      const buttonMessages = this.gameData.uiMessages.outputButton;
-      const timings = buttonMessages.animationTimings;
-      const originalText = buttonMessages.default;
-      const newText = buttonMessages.animating;
-      button.classList.add("is-animating");
-      const timeForState2 = timings.state1_bgFill;
-      const timeForState3 = timeForState2 + timings.state2_textHold;
-      const timeForState4 = timeForState3 + timings.state3_textFadeOut;
-      const timeForCleanup = timeForState4 + timings.state4_bgReset;
-
-      button.classList.add("state-1");
-      setTimeout(() => {
-        button.classList.remove("state-1");
-        this.outputButtonText = newText;
-        button.classList.add("state-2");
-      }, timeForState2);
-      setTimeout(() => {
-        button.classList.remove("state-2");
-        button.classList.add("state-3");
-      }, timeForState3);
-      setTimeout(() => {
-        button.classList.remove("state-3");
-        this.outputButtonText = originalText;
-        button.classList.add("state-4");
-      }, timeForState4);
-      setTimeout(() => {
-        button.classList.remove("is-animating", "state-4");
-      }, timeForCleanup);
-    },
+    // fallbackCopyTextToClipboard is removed, now internal to uiManager
+    // playOutputAnimation is removed, now internal to uiManager
     showCustomAlert(message) {
-      const alertModalId = "custom-alert-modal";
-      let modal = document.getElementById(alertModalId);
-
-      // If modal exists from a previous call, remove it to ensure clean state
-      if (modal) {
-        modal.remove();
-      }
-
-      let lastFocusedElement = document.activeElement;
-
-      modal = document.createElement("div");
-      modal.id = alertModalId;
-      modal.classList.add("custom-alert-modal");
-      modal.setAttribute("role", "alertdialog");
-      modal.setAttribute("aria-modal", "true");
-      // Setting tabindex to -1 allows the modal to be focusable programmatically
-      // and to receive keydown events, especially if no interactive elements are initially focused.
-      // However, we will focus the button directly.
-      modal.setAttribute("tabindex", "-1");
-
-      const titleElement = document.createElement("h4");
-      titleElement.id = "custom-alert-title";
-      titleElement.textContent = "アラート"; // "Alert"
-      modal.appendChild(titleElement);
-      modal.setAttribute("aria-labelledby", titleElement.id);
-
-      const messageP = document.createElement("p");
-      messageP.id = "custom-alert-message-content"; // Ensure this ID is unique
-      messageP.classList.add("custom-alert-message");
-      messageP.textContent = message;
-      modal.appendChild(messageP);
-      modal.setAttribute("aria-describedby", messageP.id);
-
-      const closeButton = document.createElement("button");
-      closeButton.textContent = "OK";
-      closeButton.classList.add("custom-alert-button");
-
-      // Centralized modal closing function
-      const closeCustomAlertModal = () => {
-        modal.removeEventListener("keydown", handleModalKeyDown);
-        if (modal.parentNode) {
-          modal.parentNode.removeChild(modal);
-        }
-        if (
-          lastFocusedElement &&
-          typeof lastFocusedElement.focus === "function"
-        ) {
-          lastFocusedElement.focus();
-        }
-      };
-
-      // Keyboard event handler for the modal
-      const handleModalKeyDown = (event) => {
-        if (event.key === "Escape") {
-          closeCustomAlertModal();
-        } else if (event.key === "Tab") {
-          event.preventDefault(); // Keep focus within the modal
-          closeButton.focus(); // Explicitly focus the button
-        }
-      };
-
-      closeButton.onclick = closeCustomAlertModal;
-      modal.appendChild(closeButton);
-      document.body.appendChild(modal);
-
-      modal.addEventListener("keydown", handleModalKeyDown);
-
-      // Set initial focus on the button.
-      // Using requestAnimationFrame to ensure the modal is rendered and focusable.
-      requestAnimationFrame(() => {
-        closeButton.focus();
-      });
-
-      // modal.style.display = "block"; // This is handled by appending to body and CSS rules.
+      uiManager.showCustomAlert(message);
     },
 
     // --- Google Drive Methods ---
@@ -879,7 +599,7 @@ const app = createApp({
         this.currentImageIndex = this.character.images.length - 1;
       } catch (error) {
         console.error("Error loading image:", error);
-        this.showCustomAlert("画像の読み込みに失敗しました：" + error.message);
+        uiManager.showCustomAlert("画像の読み込みに失敗しました：" + error.message);
       } finally {
         event.target.value = null;
       }
@@ -951,7 +671,8 @@ const app = createApp({
       navigator.msMaxTouchPoints > 0
     );
     this.$nextTick(() => {
-      document.addEventListener("click", this.handleClickOutside);
+      // Updated to use uiManager for handleClickOutside
+      document.addEventListener("click", (event) => uiManager.handleClickOutside(this, event));
     });
 
     // Initialize Google Drive Manager
@@ -983,7 +704,8 @@ const app = createApp({
     }
   },
   beforeUnmount() {
-    document.removeEventListener("click", this.handleClickOutside);
+    // Updated to use uiManager for handleClickOutside
+    document.removeEventListener("click", (event) => uiManager.handleClickOutside(this, event));
     if (this.currentDriveMenuHandler)
       document.removeEventListener("click", this.currentDriveMenuHandler, true);
   },
