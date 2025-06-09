@@ -9,7 +9,7 @@ module.exports = [
         window: 'readonly'
       },
       ecmaVersion: 'latest',
-      sourceType: 'script'
+      sourceType: 'module' // Changed from 'script' to 'module'
     },
     plugins: {
       vue
