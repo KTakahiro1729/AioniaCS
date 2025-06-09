@@ -7,7 +7,11 @@
 ローカルで利用する場合は以下の手順を実行してください。
 
 1. このリポジトリをクローンするか ZIP をダウンロードします。
-2. `index.html` をブラウザで開きます。
+2. 依存関係をインストールして開発サーバーを起動します。
+   ```bash
+   npm install
+   npm run dev
+   ```
 3. 画面下部のボタンから「データ保存」「データ読込」「Cocofolia 出力」を利用できます。
 4. フッターの `?` アイコンにマウスを合わせると簡単なヘルプが表示されます。
 
@@ -36,9 +40,14 @@
    ```bash
    npm run lint
    ```
+4. 本番ビルド
+   ```bash
+   npm run build
+   npm run preview
+   ```
 
 ## Customization
 
 Status display colors can be adjusted by editing the CSS variables defined in
-`assets/css/style.css`. Look for variables starting with
+`src/assets/css/style.css`. Look for variables starting with
 `--color-status-` to tweak border, text, and background colors.

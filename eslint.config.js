@@ -1,22 +1,21 @@
-const vue = require('eslint-plugin-vue');
+const vue = require("eslint-plugin-vue");
 
 module.exports = [
   {
-    files: ['src/**/*.js', 'tests/**/*.js', './*.js'], // Updated line
+    files: ["src/**/*.js", "tests/**/*.js", "./*.js"],
     languageOptions: {
       globals: {
-        Vue: 'readonly',
-        window: 'readonly'
+        window: "readonly",
       },
-      ecmaVersion: 'latest',
-      sourceType: 'script'
+      ecmaVersion: "latest",
+      sourceType: "module",
     },
     plugins: {
-      vue
+      vue,
     },
     rules: {
-      semi: ['error', 'always'],
-      'no-unused-vars': 'warn'
-    }
-  }
+      semi: ["error", "always"],
+      "no-unused-vars": "warn",
+    },
+  },
 ];

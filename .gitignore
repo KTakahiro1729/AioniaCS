@@ -3,3 +3,5 @@ test-results/
 *.patch
 .VSCodeCounter/*
 .vscode/*
+dist/
+*.local
