@@ -1,10 +1,9 @@
 const { createApp } = Vue;
 // Global flags like window.gapiScriptLoaded are set by placeholder functions in index.html
 
-// Base character data copied from gameData with weaknesses initialized
-const baseChar = deepClone(window.AioniaGameData.defaultCharacterData);
-baseChar.weaknesses = createWeaknessArray(
-  window.AioniaGameData.config.maxWeaknesses,
+// Base character data created via service
+const baseChar = window.CharacterService.createBaseCharacter(
+  window.AioniaGameData,
 );
 
 const app = createApp({
@@ -78,74 +77,24 @@ const app = createApp({
       return this.helpState !== "closed";
     },
     maxExperiencePoints() {
-      const initialScarExp = Number(this.character.initialScar) || 0;
-      const creationWeaknessExp = this.character.weaknesses.reduce(
-        (sum, weakness) => {
-          return (
-            sum +
-            (weakness.text &&
-            weakness.text.trim() !== "" &&
-            weakness.acquired === "作成時"
-              ? this.gameData.experiencePointValues.weakness
-              : 0)
-          );
-        },
-        0,
-      );
-      const combinedInitialBonus = Math.min(
-        initialScarExp + creationWeaknessExp,
-        this.gameData.experiencePointValues.maxInitialBonus,
-      );
-      const historyExp = this.histories.reduce(
-        (sum, h) => sum + (Number(h.gotExperiments) || 0),
-        0,
-      );
-      return (
-        this.gameData.experiencePointValues.basePoints +
-        combinedInitialBonus +
-        historyExp
+      return window.ExperienceCalculator.calcMax(
+        this.character,
+        this.histories,
+        this.gameData,
       );
     },
     currentExperiencePoints() {
-      let skillExp = this.skills.reduce(
-        (sum, s) =>
-          sum + (s.checked ? this.gameData.experiencePointValues.skillBase : 0),
-        0,
+      return window.ExperienceCalculator.calcCurrent(
+        this.skills,
+        this.specialSkills,
+        this.gameData,
       );
-      let expertExp = this.skills.reduce((sum, s) => {
-        if (s.checked && s.canHaveExperts) {
-          return (
-            sum +
-            s.experts.reduce(
-              (expSum, exp) =>
-                expSum +
-                (exp.value && exp.value.trim() !== ""
-                  ? this.gameData.experiencePointValues.expertSkill
-                  : 0),
-              0,
-            )
-          );
-        }
-        return sum;
-      }, 0);
-      let specialSkillExp = this.specialSkills.reduce(
-        (sum, ss) =>
-          sum +
-          (ss.name && ss.name.trim() !== ""
-            ? this.gameData.experiencePointValues.specialSkill
-            : 0),
-        0,
-      );
-      return skillExp + expertExp + specialSkillExp;
     },
     currentWeight() {
-      const weaponWeights = this.gameData.equipmentWeights.weapon;
-      const armorWeights = this.gameData.equipmentWeights.armor;
-      let weight = 0;
-      weight += weaponWeights[this.equipments.weapon1.group] || 0;
-      weight += weaponWeights[this.equipments.weapon2.group] || 0;
-      weight += armorWeights[this.equipments.armor.group] || 0;
-      return weight;
+      return window.ExperienceCalculator.calcWeight(
+        this.equipments,
+        this.gameData,
+      );
     },
     experienceStatusClass() {
       return this.currentExperiencePoints > this.maxExperiencePoints
@@ -290,45 +239,8 @@ const app = createApp({
       }
     },
     // --- List Management Methods ---
-    _manageListItem({
-      list,
-      action,
-      index,
-      newItemFactory,
-      hasContentChecker,
-      maxLength,
-    }) {
-      if (action === "add") {
-        if (maxLength && list.length >= maxLength) {
-          return;
-        }
-        const newItem =
-          typeof newItemFactory === "function"
-            ? newItemFactory()
-            : newItemFactory;
-        list.push(
-          typeof newItem === "object" && newItem !== null
-            ? window.deepClone(newItem)
-            : newItem,
-        );
-      } else if (action === "remove") {
-        if (list.length > 1) {
-          list.splice(index, 1);
-        } else if (
-          list.length === 1 &&
-          hasContentChecker &&
-          hasContentChecker(list[index])
-        ) {
-          const emptyItem =
-            typeof newItemFactory === "function"
-              ? newItemFactory()
-              : newItemFactory;
-          list[index] =
-            typeof emptyItem === "object" && emptyItem !== null
-              ? window.deepClone(emptyItem)
-              : emptyItem;
-        }
-      }
+    _manageListItem(options) {
+      window.ListManager.manageListItem(options);
     },
     hasSpecialSkillContent(ss) {
       return !!(ss.group || ss.name || ss.note);
@@ -422,11 +334,11 @@ const app = createApp({
       }
     },
     availableSpecialSkillNames(index) {
-      if (this.specialSkills[index]) {
-        const group = this.specialSkills[index].group;
-        return this.gameData.specialSkillData[group] || [];
-      }
-      return [];
+      return window.SkillService.availableSpecialSkillNames(
+        this.specialSkills,
+        index,
+        this.gameData,
+      );
     },
     updateSpecialSkillOptions(index) {
       if (this.specialSkills[index]) {
@@ -436,9 +348,10 @@ const app = createApp({
     },
     updateSpecialSkillNoteVisibility(index) {
       if (this.specialSkills[index]) {
-        const skillName = this.specialSkills[index].name;
-        this.specialSkills[index].showNote =
-          this.gameData.specialSkillsRequiringNote.includes(skillName);
+        window.SkillService.updateSpecialSkillNoteVisibility(
+          this.specialSkills[index],
+          this.gameData,
+        );
       }
     },
     saveData() {
@@ -486,47 +399,16 @@ const app = createApp({
       this.copyToClipboard(textToCopy);
     },
     async copyToClipboard(text) {
-      if (!navigator.clipboard) {
-        this.fallbackCopyTextToClipboard(text);
-        return;
-      }
       try {
-        await navigator.clipboard.writeText(text);
+        await window.ClipboardUtils.copyText(text);
         this.playOutputAnimation();
       } catch (err) {
         console.error("Failed to copy: ", err);
-        this.fallbackCopyTextToClipboard(text);
-      }
-    },
-    fallbackCopyTextToClipboard(text) {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.top = "0";
-      textArea.style.left = "0";
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      try {
-        const successful = document.execCommand("copy");
-        if (successful) {
-          this.playOutputAnimation();
-        } else {
-          this.outputButtonText = this.gameData.uiMessages.outputButton.failed;
-          setTimeout(() => {
-            this.outputButtonText =
-              this.gameData.uiMessages.outputButton.default;
-          }, 3000);
-        }
-      } catch (err) {
-        console.error(err);
-        this.outputButtonText = this.gameData.uiMessages.outputButton.error;
+        this.outputButtonText = this.gameData.uiMessages.outputButton.failed;
         setTimeout(() => {
           this.outputButtonText = this.gameData.uiMessages.outputButton.default;
         }, 3000);
       }
-      document.body.removeChild(textArea);
     },
     playOutputAnimation() {
       const button = this.$refs.outputButton;
