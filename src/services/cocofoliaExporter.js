@@ -4,7 +4,7 @@
 class CocofoliaExporter {
   constructor() {
     this.MAX_MEMO_LENGTH = 200;
-    this.BREAK_CHARS = ['\n', '。', '．'];
+    this.BREAK_CHARS = ["\n", "。", "．"];
     this.MIN_BREAK_POSITION_RATIO = 0.5;
   }
 
@@ -15,13 +15,16 @@ class CocofoliaExporter {
     const lines = [];
 
     // 名前とプレイヤー名
-    lines.push(`名前：${character.name || '名無し'}${character.playerName ? `（${character.playerName}）` : ""}`);
+    lines.push(
+      `名前：${character.name || "名無し"}${character.playerName ? `（${character.playerName}）` : ""}`,
+    );
 
     // 種族情報
     const speciesText = speciesLabelMap[character.species] || character.species;
-    const speciesDisplay = character.species === 'other'
-      ? `${speciesText}（${character.rareSpecies || '未設定'}）`
-      : speciesText;
+    const speciesDisplay =
+      character.species === "other"
+        ? `${speciesText}（${character.rareSpecies || "未設定"}）`
+        : speciesText;
     lines.push(`種族：${speciesDisplay}`);
 
     // その他基本情報
@@ -42,8 +45,8 @@ class CocofoliaExporter {
   buildWeaknessesInfo(weaknesses) {
     const weaknessList = [];
 
-    weaknesses.forEach(w => {
-      if (w.text && w.text.trim() !== '') {
+    weaknesses.forEach((w) => {
+      if (w.text && w.text.trim() !== "") {
         // 獲得情報は省略し、弱点名のみを追加
         weaknessList.push(w.text);
       }
@@ -61,17 +64,20 @@ class CocofoliaExporter {
   buildSkillsInfo(skills) {
     const skillTexts = [];
 
-    skills.forEach(skill => {
+    skills.forEach((skill) => {
       if (skill.checked) {
         let skillText = `〈${skill.name}〉`;
 
-        if (skill.canHaveExperts && skill.experts.some(e => e.value && e.value.trim() !== '')) {
+        if (
+          skill.canHaveExperts &&
+          skill.experts.some((e) => e.value && e.value.trim() !== "")
+        ) {
           const expertTexts = skill.experts
-            .filter(e => e.value && e.value.trim() !== '')
-            .map(e => e.value);
+            .filter((e) => e.value && e.value.trim() !== "")
+            .map((e) => e.value);
 
           if (expertTexts.length > 0) {
-            skillText = `〈${skill.name}：${expertTexts.join('/')}〉`;
+            skillText = `〈${skill.name}：${expertTexts.join("/")}〉`;
           }
         }
         skillTexts.push(skillText);
@@ -79,7 +85,7 @@ class CocofoliaExporter {
     });
 
     if (skillTexts.length > 0) {
-      return ["\n【技能】", skillTexts.join(' ')];
+      return ["\n【技能】", skillTexts.join(" ")];
     }
     return [];
   }
@@ -87,13 +93,17 @@ class CocofoliaExporter {
   /**
    * 特技情報を構築
    */
-  buildSpecialSkillsInfo(specialSkills, specialSkillData, specialSkillsRequiringNote) {
+  buildSpecialSkillsInfo(
+    specialSkills,
+    specialSkillData,
+    specialSkillsRequiringNote,
+  ) {
     let specialSkillText = "";
 
-    specialSkills.forEach(ss => {
+    specialSkills.forEach((ss) => {
       if (ss.group && ss.name) {
         const groupOptions = specialSkillData[ss.group] || [];
-        const skillOption = groupOptions.find(opt => opt.value === ss.name);
+        const skillOption = groupOptions.find((opt) => opt.value === ss.name);
         const skillLabel = skillOption ? skillOption.label : ss.name;
 
         if (specialSkillsRequiringNote.includes(ss.name) && ss.note) {
@@ -118,20 +128,32 @@ class CocofoliaExporter {
 
     // 武器1
     if (equipments.weapon1.group || equipments.weapon1.name) {
-      const groupLabel = equipmentGroupLabelMap[equipments.weapon1.group] || equipments.weapon1.group;
-      equipmentLines.push(`${equipments.weapon1.name || '武器1'}（${groupLabel || '種別なし'}）`);
+      const groupLabel =
+        equipmentGroupLabelMap[equipments.weapon1.group] ||
+        equipments.weapon1.group;
+      equipmentLines.push(
+        `${equipments.weapon1.name || "武器1"}（${groupLabel || "種別なし"}）`,
+      );
     }
 
     // 武器2
     if (equipments.weapon2.group || equipments.weapon2.name) {
-      const groupLabel = equipmentGroupLabelMap[equipments.weapon2.group] || equipments.weapon2.group;
-      equipmentLines.push(`${equipments.weapon2.name || '武器2'}（${groupLabel || '種別なし'}）`);
+      const groupLabel =
+        equipmentGroupLabelMap[equipments.weapon2.group] ||
+        equipments.weapon2.group;
+      equipmentLines.push(
+        `${equipments.weapon2.name || "武器2"}（${groupLabel || "種別なし"}）`,
+      );
     }
 
     // 防具
     if (equipments.armor.group || equipments.armor.name) {
-      const groupLabel = equipmentGroupLabelMap[equipments.armor.group] || equipments.armor.group;
-      equipmentLines.push(`${equipments.armor.name || '防具'}（${groupLabel || '種別なし'}）`);
+      const groupLabel =
+        equipmentGroupLabelMap[equipments.armor.group] ||
+        equipments.armor.group;
+      equipmentLines.push(
+        `${equipments.armor.name || "防具"}（${groupLabel || "種別なし"}）`,
+      );
     }
 
     if (equipmentLines.length > 0) {
@@ -185,7 +207,10 @@ class CocofoliaExporter {
     }
 
     if (lastBreak !== -1) {
-      return memo.substring(0, lastBreak + 1) + (memo.length > lastBreak + 1 ? "…" : "");
+      return (
+        memo.substring(0, lastBreak + 1) +
+        (memo.length > lastBreak + 1 ? "…" : "")
+      );
     } else {
       return memo.substring(0, maxLength) + "…";
     }
@@ -199,19 +224,19 @@ class CocofoliaExporter {
     let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2 〈治癒①〉\n:ダメージ=0                 〈治癒②〉\n`;
 
     // 技能チェックコマンド
-    skills.forEach(skill => {
+    skills.forEach((skill) => {
       const dice = skill.checked ? "2d10" : "1d10";
       commands += `${dice} 〈${skill.name}〉\n`;
 
       // 防御技能の場合は防具ありバージョンも追加
-      if (skill.name === '防御') {
+      if (skill.name === "防御") {
         commands += `${dice}+2 〈${skill.name}（防具）〉\n`;
       }
 
       // 専門技能コマンド
       if (skill.checked && skill.canHaveExperts) {
-        skill.experts.forEach(expert => {
-          if (expert.value && expert.value.trim() !== '') {
+        skill.experts.forEach((expert) => {
+          if (expert.value && expert.value.trim() !== "") {
             commands += `3d10 〈${skill.name}：${expert.value}〉\n`;
           }
         });
@@ -220,11 +245,11 @@ class CocofoliaExporter {
 
     // 武器ダメージコマンド
     if (equipments.weapon1.group && weaponDamage[equipments.weapon1.group]) {
-      commands += `${weaponDamage[equipments.weapon1.group]} 〈ダメージ判定（${equipments.weapon1.name || '武器1'}）〉\n`;
+      commands += `${weaponDamage[equipments.weapon1.group]} 〈ダメージ判定（${equipments.weapon1.name || "武器1"}）〉\n`;
     }
 
     if (equipments.weapon2.group && weaponDamage[equipments.weapon2.group]) {
-      commands += `${weaponDamage[equipments.weapon2.group]} 〈ダメージ判定（${equipments.weapon2.name || '武器2'}）〉\n`;
+      commands += `${weaponDamage[equipments.weapon2.group]} 〈ダメージ判定（${equipments.weapon2.name || "武器2"}）〉\n`;
     }
 
     return commands.trim();
@@ -244,14 +269,14 @@ class CocofoliaExporter {
         status: [
           { label: "ダメージ", value: 0 },
           { label: "傷痕", value: scar },
-          { label: "ストレス", value: stress }
+          { label: "ストレス", value: stress },
         ],
-        name: character.name || '名無し',
+        name: character.name || "名無し",
         initiative: currentWeight * -1,
         memo: memo,
         externalUrl: "",
-        commands: commands
-      }
+        commands: commands,
+      },
     };
   }
 
@@ -269,7 +294,7 @@ class CocofoliaExporter {
       equipmentGroupLabelMap,
       specialSkillData,
       specialSkillsRequiringNote,
-      weaponDamage
+      weaponDamage,
     } = data;
 
     // 各セクションの情報を構築
@@ -277,17 +302,31 @@ class CocofoliaExporter {
       ...this.buildCharacterBasicInfo(character, speciesLabelMap),
       ...this.buildWeaknessesInfo(character.weaknesses),
       ...this.buildSkillsInfo(skills),
-      ...this.buildSpecialSkillsInfo(specialSkills, specialSkillData, specialSkillsRequiringNote),
+      ...this.buildSpecialSkillsInfo(
+        specialSkills,
+        specialSkillData,
+        specialSkillsRequiringNote,
+      ),
       ...this.buildEquipmentInfo(equipments, equipmentGroupLabelMap),
       ...this.buildOtherItemsInfo(character.otherItems),
-      ...this.buildCharacterMemoInfo(character.memo)
+      ...this.buildCharacterMemoInfo(character.memo),
     ];
 
     const finalMemo = memoSections.join("\n").trim();
 
-    const commands = this.buildCocofoliaCommands(character, skills, equipments, weaponDamage);
+    const commands = this.buildCocofoliaCommands(
+      character,
+      skills,
+      equipments,
+      weaponDamage,
+    );
 
-    const cocofoliaCharacter = this.buildCocofoliaCharacterObject(character, finalMemo, commands, currentWeight);
+    const cocofoliaCharacter = this.buildCocofoliaCharacterObject(
+      character,
+      finalMemo,
+      commands,
+      currentWeight,
+    );
 
     return cocofoliaCharacter;
   }

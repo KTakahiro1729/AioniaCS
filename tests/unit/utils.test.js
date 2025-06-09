@@ -1,7 +1,7 @@
-require('../../src/utils.js');
+require("../../src/utils/utils.js");
 
-describe('deepClone', () => {
-  test('returns a deep copy of objects', () => {
+describe("deepClone", () => {
+  test("returns a deep copy of objects", () => {
     const original = { a: 1, b: { c: 2 } };
     const clone = global.deepClone(original);
     clone.b.c = 3;
@@ -10,12 +10,12 @@ describe('deepClone', () => {
   });
 });
 
-describe('createWeaknessArray', () => {
-  test('creates array of specified length with default objects', () => {
+describe("createWeaknessArray", () => {
+  test("creates array of specified length with default objects", () => {
     const arr = global.createWeaknessArray(3);
     expect(arr).toHaveLength(3);
-    arr.forEach(item => {
-      expect(item).toEqual({ text: '', acquired: '--' });
+    arr.forEach((item) => {
+      expect(item).toEqual({ text: "", acquired: "--" });
     });
   });
 });
