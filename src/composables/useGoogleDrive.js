@@ -1,7 +1,8 @@
 import { ref, computed, onMounted } from "vue";
 import { GoogleDriveManager } from "../services/googleDriveManager.js";
 
-export function useGoogleDrive(allCharacterData, dataManager, showCustomAlert) {
+// showCustomAlert removed from parameters
+export function useGoogleDrive(allCharacterData, dataManager) {
   // リアクティブな状態
   const isSignedIn = ref(false);
   const driveFolderId = ref(
@@ -11,7 +12,7 @@ export function useGoogleDrive(allCharacterData, dataManager, showCustomAlert) {
     localStorage.getItem("aioniaDriveFolderName") || "",
   );
   const currentDriveFileId = ref(null);
-  const currentDriveFileName = ref("");
+  // const currentDriveFileName = ref(""); // Removed unused variable
   const driveStatusMessage = ref("Initializing...");
   const isGapiInitialized = ref(false);
   const isGisInitialized = ref(false);
