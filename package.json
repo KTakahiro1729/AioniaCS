@@ -11,7 +11,7 @@
     "lint:js": "eslint src/ tests/ --ext .js",
     "lint:css": "stylelint \"**/*.css\"",
     "lint:html": "htmlhint \"**/*.html\"",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "jest",
     "e2e": "playwright test",
     "pree2e": "playwright install",
     "prepare": "husky"
@@ -31,6 +31,7 @@
     "htmlhint": "^1.4.0",
     "husky": "^9.1.7",
     "jest": "^29.7.0",
+    "babel-jest": "^29.7.0",
     "lint-staged": "^16.1.0",
     "prettier": "^3.5.3",
     "stylelint": "^16.20.0",
@@ -44,7 +45,13 @@
     "roots": [
       "<rootDir>/tests/unit"
     ],
-    "testEnvironment": "jsdom"
+    "testEnvironment": "jsdom",
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    }
   },
   "lint-staged": {
     "*.js": [
