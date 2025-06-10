@@ -11,7 +11,7 @@
     "lint:js": "eslint src/ tests/ --ext .js",
     "lint:css": "stylelint \"**/*.css\"",
     "lint:html": "htmlhint \"**/*.html\"",
-    "test": "jest",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "e2e": "playwright test",
     "pree2e": "playwright install",
     "prepare": "husky"
@@ -22,8 +22,10 @@
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.24.7",
     "@playwright/test": "^1.52.0",
     "@vitejs/plugin-vue": "^5.2.3",
+    "cross-env": "^7.0.3",
     "eslint": "^9.28.0",
     "eslint-plugin-vue": "^10.1.0",
     "htmlhint": "^1.4.0",

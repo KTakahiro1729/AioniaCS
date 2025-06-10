@@ -1,30 +1,23 @@
 // tests/unit/dataManager.test.js
+import { jest } from "@jest/globals";
+import { DataManager } from "../../src/services/dataManager.js";
+import { AioniaGameData } from "../../src/data/gameData.js";
+import { deepClone } from "../../src/utils/utils.js";
+import JSZip from "jszip";
 
-// Set up global window object and load utilities
-global.window = {};
-require("../../src/utils/utils.js"); // Defines deepClone, createWeaknessArray on window
-require("../../src/data/gameData.js"); // Defines AioniaGameData on window
-global.deepClone = window.deepClone;
-global.createWeaknessArray = window.createWeaknessArray;
-
-// Mock JSZip
 const mockZipFile = jest.fn();
 const mockZipFolder = jest.fn().mockReturnValue({ file: mockZipFile });
-const mockZipGenerateAsync = jest
-  .fn()
-  .mockResolvedValue(new Blob(["zip_blob_content"]));
-global.JSZip = jest.fn().mockImplementation(() => ({
-  file: mockZipFile,
-  folder: mockZipFolder,
-  generateAsync: mockZipGenerateAsync,
+const mockZipGenerateAsync = jest.fn().mockResolvedValue({});
+
+jest.mock("jszip", () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    file: mockZipFile,
+    folder: mockZipFolder,
+    generateAsync: mockZipGenerateAsync,
+  })),
+  loadAsync: jest.fn(),
 }));
-global.JSZip.loadAsync = jest.fn();
-
-// Load DataManager after mocks for JSZip are set up
-require("../../src/services/dataManager.js");
-
-const DataManager = window.DataManager;
-const gameData = window.AioniaGameData;
 
 describe("DataManager", () => {
   let dm;
@@ -36,7 +29,7 @@ describe("DataManager", () => {
   let currentFileReaderInstance;
 
   beforeEach(() => {
-    dm = new DataManager(gameData);
+    dm = new DataManager(AioniaGameData);
 
     JSZip.mockClear();
     mockZipFile.mockClear();
@@ -44,9 +37,9 @@ describe("DataManager", () => {
     mockZipGenerateAsync.mockClear();
     JSZip.loadAsync.mockClear();
 
-    mockCharacter = deepClone(gameData.defaultCharacterData);
+    mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
     mockCharacter.name = "TestChar";
-    mockSkills = deepClone(gameData.baseSkills);
+    mockSkills = deepClone(AioniaGameData.baseSkills);
     mockSpecialSkills = [];
     mockEquipments = {
       weapon1: { group: "", name: "" },
@@ -59,6 +52,9 @@ describe("DataManager", () => {
       .fn()
       .mockReturnValue("blob:http://localhost/mock-url");
     global.URL.revokeObjectURL = jest.fn();
+    global.Blob = jest.fn(function (content, options) {
+      return { content, options };
+    });
     document.body.appendChild = jest.fn();
     document.body.removeChild = jest.fn();
     const mockAnchor = { click: jest.fn(), href: "", download: "" };
@@ -137,12 +133,12 @@ describe("DataManager", () => {
   test("_normalizeLoadedData fills defaults", () => {
     const result = dm._normalizeLoadedData({});
     expect(result.character.weaknesses).toHaveLength(
-      gameData.config.maxWeaknesses,
+      AioniaGameData.config.maxWeaknesses,
     );
     result.character.weaknesses.forEach((w) =>
       expect(w).toEqual({ text: "", acquired: "--" }),
     );
-    expect(result.skills).toHaveLength(gameData.baseSkills.length);
+    expect(result.skills).toHaveLength(AioniaGameData.baseSkills.length);
     expect(result.histories).toEqual([
       { sessionName: "", gotExperiments: null, memo: "" },
     ]);
@@ -210,8 +206,6 @@ describe("DataManager", () => {
         ["image_0.png", "mockimgdata1", { base64: true }], // Path is relative to the folder in the call
         ["image_1.jpeg", "mockimgdata2", { base64: true }], // Path is relative to the folder in the call
       ]);
-
-      // Check that character.images was deleted from the JSON data within the zip
       const jsonDataCall = mockZipFile.mock.calls.find(
         (call) => call[0] === "character_data.json",
       );
@@ -266,12 +260,13 @@ describe("DataManager", () => {
       const mockImageFileName = "image_0.png";
 
       const mockZipInstance = {
-        file: jest.fn().mockImplementation((filename) => {
-          if (filename === "character_data.json") {
-            return { async: jest.fn().mockResolvedValue(mockJsonStringInZip) };
-          }
-          return null;
-        }),
+        file: jest
+          .fn()
+          .mockImplementation((filename) =>
+            filename === "character_data.json"
+              ? { async: jest.fn().mockResolvedValue(mockJsonStringInZip) }
+              : null,
+          ),
         folder: jest.fn().mockImplementation((folderName) => {
           if (folderName === "images") {
             const imageFileEntry = {
@@ -280,35 +275,30 @@ describe("DataManager", () => {
               async: jest.fn().mockResolvedValue(mockImageBase64Data),
             };
             return {
-              forEach: (callback) => {
-                callback(mockImageFileName, imageFileEntry);
-              },
+              forEach: (callback) =>
+                callback(mockImageFileName, imageFileEntry),
             };
           }
           return { forEach: jest.fn() };
         }),
       };
       JSZip.loadAsync.mockResolvedValue(mockZipInstance);
-
       const mockZipFileObj = new File(
         ["zip_content_array_buffer"],
         "test.zip",
         { type: "application/zip" },
       );
       const mockEvent = { target: { files: [mockZipFileObj], value: "" } };
-
       await new Promise((resolve) => {
         onSuccessMock.mockImplementation(resolve);
         onErrorMock.mockImplementation(resolve);
         dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
       });
-
       expect(currentFileReaderInstance.readAsArrayBuffer).toHaveBeenCalledWith(
         mockZipFileObj,
       );
       expect(JSZip.loadAsync).toHaveBeenCalled();
       expect(onSuccessMock).toHaveBeenCalled();
-
       const resultData = onSuccessMock.mock.calls[0][0];
       expect(resultData.character.name).toBe("Zippy");
       expect(resultData.character.images).toHaveLength(1);
@@ -323,18 +313,15 @@ describe("DataManager", () => {
         folder: jest.fn().mockReturnValue({ forEach: jest.fn() }),
       };
       JSZip.loadAsync.mockResolvedValue(mockZipInstance);
-
       const mockZipFileObj = new File(["zip_content"], "test.zip", {
         type: "application/zip",
       });
       const mockEvent = { target: { files: [mockZipFileObj], value: "" } };
-
       await new Promise((resolve) => {
         onSuccessMock.mockImplementation(resolve);
         onErrorMock.mockImplementation(resolve);
         dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
       });
-
       expect(currentFileReaderInstance.readAsArrayBuffer).toHaveBeenCalledWith(
         mockZipFileObj,
       );

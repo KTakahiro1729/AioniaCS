@@ -1,7 +1,4 @@
-global.window = {};
-require("../../src/services/cocofoliaExporter.js");
-
-const CocofoliaExporter = window.CocofoliaExporter;
+import { CocofoliaExporter } from "../../src/services/cocofoliaExporter.js";
 
 describe("CocofoliaExporter", () => {
   let exporter;
