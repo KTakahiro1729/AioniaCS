@@ -119,96 +119,22 @@
   min-width: 65px;
 }
 
-/* フッター */
-.main-footer {
-  display: flex;
-  align-items: center;
-  padding: 15px 25px;
-  border-top: 1px solid var(--color-border-normal);
-  background-color: var(--color-background);
-  box-sizing: border-box;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 100;
-  box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 15px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border-normal) var(--color-background);
-}
+/* フッター STYLES MOVED TO AppFooter.vue */
+/* .main-footer { ... } */
+/* .main-footer::-webkit-scrollbar { ... } */
+/* .main-footer::-webkit-scrollbar-track { ... } */
+/* .main-footer::-webkit-scrollbar-thumb { ... } */
+/* .main-footer::-webkit-scrollbar-thumb:hover { ... } */
 
-.main-footer::-webkit-scrollbar {
-  height: 8px;
-}
 
-.main-footer::-webkit-scrollbar-track {
-  background: var(--color-background);
-  border-radius: 4px;
-}
+/* ヘルプ表示 STYLES MOVED TO HelpPanel.vue */
+/* .help-panel { ... } */
+/* .help-panel h4 { ... } */
+/* .help-panel ul { ... } */
+/* .help-panel li { ... } */
+/* .help-panel p { ... } */
+/* .help-close { ... } */
 
-.main-footer::-webkit-scrollbar-thumb {
-  background: var(--color-border-normal);
-  border-radius: 4px;
-}
-
-.main-footer::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
-}
-
-/* ヘルプ表示 */
-.help-panel {
-  position: fixed;
-  bottom: 92px;
-  left: 20px;
-  background-color: var(--color-panel-body);
-  border: 1px solid var(--color-border-normal);
-  padding: 20px;
-  border-radius: 4px;
-  box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
-  z-index: 1000;
-  max-width: 90%;
-  width: 420px;
-  font-size: 0.9em;
-  color: var(--color-text-normal);
-}
-
-.help-panel h4 {
-  font-family: "Noto Serif JP", serif;
-  color: var(--color-accent);
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.1em;
-}
-
-.help-panel ul {
-  padding-left: 20px;
-  margin-top: 5px;
-  margin-bottom: 15px;
-}
-
-.help-panel li {
-  margin-bottom: 5px;
-}
-
-.help-panel p {
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.help-close {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: transparent;
-  border: none;
-  color: var(--color-accent);
-  font-size: 1.2em;
-  cursor: pointer;
-}
 
 /* フッター（著作権表示） */
 .copyright-footer {
@@ -296,12 +222,9 @@
     width: 100%;
   }
 
-  .help-panel {
-    width: calc(100% - 40px);
-    max-width: none;
-    left: 10px;
-    bottom: 82px;
-  }
+  /* .help-panel responsive styles might need adjustment if its base moved */
+  /* For now, assuming they are general enough or will be handled within HelpPanel.vue if needed */
+
 
   .info-row {
     flex-direction: column;
@@ -326,42 +249,17 @@
     left: 5px;
   }
 
-  .icon-button {
-    width: 72px;
-    height: 72px;
-    padding: 12px;
-  }
+  /* .icon-button related responsive styles were part of .top-left-controls in _components.css, moved to GoogleDriveMenu.vue */
+  /* .floating-menu related responsive styles were part of .top-left-controls in _components.css, moved to GoogleDriveMenu.vue */
 
-  .icon-button img.icon-svg {
-    width: 40px;
-    height: 40px;
-  }
+  /* main-footer responsive styles MOVED to AppFooter.vue */
 
-  .floating-menu {
-    min-width: 180px;
-  }
-
-  .main-footer {
-    padding: 10px 15px;
-    gap: 10px;
-  }
-
-  .footer-button-container > .footer-button,
-  .footer-button--dropdown-arrow {
-    height: 42px;
-  }
-
-  .footer-button--save,
-  .footer-button--load {
-    width: 90px;
-  }
-
-  .footer-button--output {
-    width: 140px;
-  }
-
-  .footer-dropdown-menu {
-    min-width: 180px;
+  /* Responsive adjustments for HelpPanel moved to HelpPanel.vue */
+  .help-panel {
+    width: calc(100% - 40px);
+    max-width: none;
+    left: 10px;
+    bottom: 82px;
   }
 }
 
@@ -374,12 +272,6 @@
     width: 40%;
     min-width: 100px;
   }
-
-  .floating-menu {
-    font-size: 0.9em;
-  }
-
-  .footer-dropdown-menu {
-    font-size: 0.9em;
-  }
+  /* .floating-menu related responsive styles were part of .top-left-controls in _components.css, moved to GoogleDriveMenu.vue */
+  /* .footer-dropdown-menu related responsive styles were part of .main-footer in _layout.css, moved to AppFooter.vue */
 }

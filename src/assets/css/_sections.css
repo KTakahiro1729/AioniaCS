@@ -12,37 +12,9 @@
 
 /* アイテム用テキストエリア STYLES MOVED TO ItemsSection.vue */
 
-/* キャラクターメモ */
-.character-memo .box-content {
-  max-width: 100%;
-}
+/* キャラクターメモ STYLES MOVED TO CharacterMemo.vue */
 
-.character-memo-textarea {
-  width: 100%;
-  min-height: 180px;
-  resize: vertical;
-}
-
-/* 履歴セクション */
-.history-item-inputs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 5px;
-}
-
-.flex-history-name {
-  flex: 1 1 150px;
-  max-width: 150px;
-}
-
-.flex-history-exp {
-  flex: 0 1 80px;
-}
-
-.flex-history-memo {
-  flex: 3 2 220px;
-}
+/* 履歴セクション STYLES MOVED TO AdventureLog.vue */
 
 /* キャラクター画像表示 STYLES MOVED TO CharacterInfo.vue */
 /* Styles for .character-image-container and its descendants are now in CharacterInfo.vue */

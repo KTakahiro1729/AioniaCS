@@ -1,12 +1,12 @@
 <template>
-  <div class="character-memo"> <!-- id="character_memo" removed, class is used for grid -->
+  <div class="character-memo">
     <div class="box-title">キャラクターメモ</div>
     <div class="box-content">
       <textarea
-        id="character_text_cm" <!-- ID updated for potential uniqueness -->
+        id="character_text_cm"
         :placeholder="props.AioniaGameData.placeholderTexts.characterMemo"
         v-model="localMemo"
-        class="character-memo-textarea" <!-- Styled by _sections.css and _components.css -->
+        class="character-memo-textarea"
       ></textarea>
     </div>
   </div>
@@ -46,9 +46,19 @@ watch(localMemo, (newVal) => {
 </script>
 
 <style scoped>
-/* All styles are expected to come from global CSS files. */
 /* .character-memo (root) is styled by _layout.css (grid-area) */
-/* .box-title, .box-content are styled by _components.css */
-/* .character-memo-textarea is styled by _sections.css (min-height, width, resize) */
+/* .box-title, .box-content general styles are from _components.css */
 /* Base textarea properties (padding, border, font, colors, focus) are from _components.css */
+
+/* Styles moved from _sections.css */
+.character-memo .box-content { /* Applied to the direct .box-content child of .character-memo */
+  max-width: 100%;
+}
+
+.character-memo-textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  /* Other base styles like padding, border, font-size will come from global textarea style */
+}
 </style>

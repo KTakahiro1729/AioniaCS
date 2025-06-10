@@ -168,51 +168,11 @@ textarea.greyed-out {
   text-shadow: 0 0 2px var(--color-accent);
 }
 
-.footer-button--output.state-1 {
-  transition:
-    background-color 0.5s ease-in-out,
-    color 0.5s ease-in-out;
-  background-color: var(--color-accent-light);
-  color: var(--color-accent-light);
-}
-
-.footer-button--output.state-2 {
-  transition: color 0.1s ease-in;
-  background-color: var(--color-accent-light);
-  color: var(--color-background);
-}
-
-.footer-button--output.state-3 {
-  transition: color 0.5s ease-in-out;
-  background-color: var(--color-accent-light);
-  color: var(--color-accent-light);
-}
-
-.footer-button--output.state-4 {
-  transition:
-    background-color 0.7s ease-in-out,
-    color 0.2s ease-in-out 0.5s;
-  background-color: transparent;
-  color: var(--color-accent);
-}
-
-.footer-button--load > label {
-  color: inherit;
-  font-weight: 700;
-  padding: 10px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-.imagefile-button--add:hover:not(:disabled) {
+.imagefile-button--add:hover:not(:disabled) { /* This was related to image file buttons, but might be generic enough or specific to CharacterInfo */
   border-color: var(--color-accent);
 }
 
-.imagefile-button--delete {
+.imagefile-button--delete { /* This was related to image file buttons, CharacterInfo has this class */
   color: var(--color-delete-text);
   border-color: var(--color-delete-border);
 }
@@ -281,108 +241,27 @@ textarea.greyed-out {
   margin-top: 0;
 }
 
-/* ステータス表示 */
-.status-display {
-  padding: 7px 14px;
-  border-radius: 3px;
-  font-weight: bold;
-  font-size: 0.9em;
-  display: inline-block;
-  border-width: 2px;
-  border-style: solid;
-  box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset;
-  white-space: nowrap;
-}
 
-.status-display--experience-ok {
-  border-color: var(--color-status-experience-ok-border);
-  color: var(--color-status-experience-ok-text);
-  background-color: var(--color-status-experience-ok-bg);
-}
+/* ステータス表示 STYLES MOVED TO AppFooter.vue */
+/* .status-display { ... } */
+/* .status-display--experience-ok { ... } */
+/* .status-display--experience-over { ... } */
+/* .status-display--weight { ... } */
 
-.status-display--experience-over {
-  border-color: var(--color-status-experience-over-border);
-  color: var(--color-status-experience-over-text);
-  background-color: var(--color-status-experience-over-bg);
-}
+/* フッターボタン STYLES MOVED TO AppFooter.vue */
+/* .footer-help-icon { ... } */
+/* .footer-help-icon--fixed, .footer-help-icon--fixed:hover { ... } */
+/* .footer-button, .imagefile-button { ... } -> Note: .imagefile-button part might need to stay if used elsewhere or be component-specific */
+/* .footer-button--load { ... } */
+/* .footer-button--load > label { ... } */ /* This specific child selector should go with footer if label is only for footer load */
+/* .footer-button--output { ... } */
+/* .footer-button--output.state-1 { ... } etc. */
+/* .footer-button--output.is-animating { ... } */
+/* .footer-button-container { ... } */
+/* .footer-button--save, label.footer-button--load { ... } */
+/* .footer-button-container > .button-base:not(:last-child) { ... } */
+/* .footer-button--cloud { ... } */
 
-.status-display--weight {
-  border-color: var(--color-status-weight-border);
-  color: var(--color-status-weight-text);
-  background-color: var(--color-status-weight-bg);
-}
-
-/* フッターボタン */
-.footer-help-icon {
-  cursor: help;
-  height: 48px;
-  padding: 0 14px;
-  font-size: 1.1em;
-  font-weight: bold;
-  background-color: var(--color-panel-body);
-  color: var(--color-accent);
-  min-height: 42px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
-}
-
-.footer-help-icon--fixed,
-.footer-help-icon--fixed:hover {
-  background-color: var(--color-accent-dark);
-}
-
-.footer-button,
-.imagefile-button {
-  padding: 10px 18px;
-  font-size: 0.95em;
-  height: 48px;
-  font-weight: 700;
-  text-align: center;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
-  min-height: 42px;
-  box-sizing: border-box;
-  white-space: nowrap;
-}
-
-.footer-button--load {
-  padding: 0;
-}
-
-.footer-button--output {
-  width: 175px;
-  user-select: none;
-}
-
-.footer-button--output.is-animating {
-  pointer-events: none;
-}
-
-.footer-button-container {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-}
-
-.footer-button--save,
-label.footer-button--load {
-  width: 120px;
-  flex-shrink: 0;
-
-  /* ボタンの横幅を固定 */
-  justify-content: center;
-}
-
-/* クラウドボタンが隣にある場合、メインボタンの角を平らにする */
-.footer-button-container > .button-base:not(:last-child) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.footer-button--cloud {
-  padding: 0 12px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  margin-left: -1px;
-}
 
 /* ==========================================================================
    アイコンSVGのスタイル
@@ -414,101 +293,24 @@ label.footer-button--load {
   mask-image: url("../svg/medieval_cloud_download.svg");
 }
 
-.icon-svg--footer {
-  width: 35px;
-  height: 35px;
-}
+/* .icon-svg--footer STYLES MOVED TO AppFooter.vue */
+/* .footer-button--cloud:hover .icon-svg--footer STYLES MOVED TO AppFooter.vue */
 
-.footer-button--cloud:hover .icon-svg--footer {
-  background-color: var(--color-accent-light);
-}
 
+/* STYLES MOVED TO GoogleDriveMenu.vue:
 /* ==========================================================================
      トップ左コントロール (Google Drive Button)
      ========================================================================== */
-.top-left-controls {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 1050;
-}
-
-.google-drive-button-container {
-  position: relative;
-}
-
-.icon-button {
-  padding: 16px;
-  background-color: var(--color-panel-body);
-  border: 1px solid var(--color-border-normal);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
-}
-
-.icon-button:hover {
-  border-color: var(--color-accent);
-  background-color: var(--color-panel-header);
-}
-
-.icon-button .icon-svg {
-  width: 48px;
-  height: 48px;
-}
-
-.icon-button:hover .icon-svg {
-  border-color: var(--color-accent-light);
-  background-color: var(--color-accent-light);
-}
-
-.floating-menu {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  background-color: var(--color-panel-body);
-  border: 1px solid var(--color-border-normal);
-  border-radius: 4px;
-  padding: 8px;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
-  z-index: 100;
-  min-width: 200px;
-}
-
-.floating-menu .menu-item {
-  display: block;
-  width: 100%;
-  padding: 8px 12px;
-  margin-bottom: 4px;
-  text-align: left;
-  background-color: transparent;
-  color: var(--color-text-normal);
-  border: none;
-  border-radius: 3px;
-}
-
-.floating-menu .menu-item.button-base {
-  width: calc(100% - 0px);
-  margin-bottom: 4px;
-  justify-content: flex-start;
-}
-
-.floating-menu .menu-item:last-child {
-  margin-bottom: 0;
-}
-
-.floating-menu .menu-item:hover:not(.status-message) {
-  background-color: var(--color-panel-header);
-  color: var(--color-accent);
-}
-
-.floating-menu .status-message {
-  font-size: 0.85em;
-  color: var(--color-text-muted);
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--color-border-normal);
-  margin-bottom: 5px;
-}
+/* .top-left-controls { ... } */
+/* .google-drive-button-container { ... } */
+/* .icon-button { ... } */
+/* .icon-button:hover { ... } */
+/* .icon-button .icon-svg { ... } */
+/* .icon-button:hover .icon-svg { ... } */
+/* .floating-menu { ... } */
+/* .floating-menu .menu-item { ... } */
+/* .floating-menu .menu-item.button-base { ... } */
+/* .floating-menu .menu-item:last-child { ... } */
+/* .floating-menu .menu-item:hover:not(.status-message) { ... } */
+/* .floating-menu .status-message { ... } */
+*/

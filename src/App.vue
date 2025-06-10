@@ -1,29 +1,27 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import CharacterInfo from './components/CharacterInfo.vue'; // Import new component
-import ScarsWeaknesses from './components/ScarsWeaknesses.vue'; // Import new component
-import SkillsList from './components/SkillsList.vue'; // Import new component
-import SpecialSkills from './components/SpecialSkills.vue'; // Import new component
-import ItemsSection from './components/ItemsSection.vue'; // Import new component
-import CharacterMemo from './components/CharacterMemo.vue'; // Import new component
-import AdventureLog from './components/AdventureLog.vue'; // Import new component
-import GoogleDriveMenu from './components/GoogleDriveMenu.vue'; // Import new component
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'; // watch, nextTick removed
+import CharacterInfo from './components/CharacterInfo.vue';
+import ScarsWeaknesses from './components/ScarsWeaknesses.vue';
+import SkillsList from './components/SkillsList.vue';
+import SpecialSkills from './components/SpecialSkills.vue';
+import ItemsSection from './components/ItemsSection.vue';
+import CharacterMemo from './components/CharacterMemo.vue';
+import AdventureLog from './components/AdventureLog.vue';
+import GoogleDriveMenu from './components/GoogleDriveMenu.vue';
+import HelpPanel from './components/HelpPanel.vue';
+import AppFooter from './components/AppFooter.vue';
 
 // --- Module Imports ---
-// This approach is standard for Vite/ESM projects, making dependencies explicit.
 import { AioniaGameData } from './data/gameData.js';
 import { DataManager } from './services/dataManager.js';
 import { CocofoliaExporter } from './services/cocofoliaExporter.js';
-import { ImageManager } from './services/imageManager.js';
+// ImageManager is used by CharacterInfo.vue, not directly here.
 import { GoogleDriveManager } from './services/googleDriveManager.js';
-import { deepClone, createWeaknessArray } from './utils/utils.js';
+import { deepClone, createWeaknessArray } from './utils/utils.js'; // createWeaknessArray is used. deepClone for initial data.
 
 // --- Template Refs ---
-// These refs will be linked to elements in the template via `ref="..."`.
-// driveMenuToggleButton and driveMenu are now in GoogleDriveMenu.vue
-const helpIcon = ref(null);
-const helpPanel = ref(null);
-const outputButton = ref(null);
+const helpPanelRef = ref(null); // Renamed from helpPanel for clarity, references the HelpPanel component instance
+const appFooterRef = ref(null); // Ref for the AppFooter component instance
 
 // --- Reactive State (formerly `data`) ---
 
@@ -37,13 +35,13 @@ const imageManagerInstance = ref(null); // This might be used by CharacterInfo i
 const character = reactive(
   (() => {
     const baseChar = deepClone(AioniaGameData.defaultCharacterData);
-    baseChar.weaknesses = createWeaknessArray(AioniaGameData.config.maxWeaknesses);
+    baseChar.weaknesses = createWeaknessArray(AioniaGameData.config.maxWeaknesses); // createWeaknessArray is used
     return baseChar;
   })()
 );
 
 // Other primary data structures.
-const skills = reactive(deepClone(AioniaGameData.baseSkills));
+const skills = reactive(deepClone(AioniaGameData.baseSkills)); // deepClone is used
 const specialSkills = reactive(
   Array(AioniaGameData.config.initialSpecialSkillCount)
     .fill(null)
@@ -56,14 +54,15 @@ const equipments = reactive({
 });
 const histories = reactive([{ sessionName: '', gotExperiments: null, memo: '' }]);
 
-// UI state refs. Primitive values are wrapped in `ref()`.
+// UI state refs.
+// outputButtonText is now a prop for AppFooter, App.vue still holds its default value.
 const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
-const helpState = ref('closed'); // 'closed', 'hovered', 'fixed'
-const isDesktop = ref(false);
-// showDriveMenu is now in GoogleDriveMenu.vue
+const helpState = ref('closed'); // 'closed', 'hovered', 'fixed' - Controls HelpPanel visibility
+const isDesktop = ref(false); // Used for help panel behavior
+// isCloudSaveSuccess is a prop for AppFooter, App.vue still needs to manage this state.
 const isCloudSaveSuccess = ref(false);
 
-// Google Drive related state.
+// Google Drive related state (kept as they control Drive operations)
 const isSignedIn = ref(false);
 const googleUser = ref(null);
 const driveFolderId = ref(null);
@@ -78,7 +77,9 @@ const isGisInitialized = ref(false);
 // --- Computed Properties (formerly `computed`) ---
 
 // currentImageSrc is now in CharacterInfo.vue
-const isHelpVisible = computed(() => helpState.value !== 'closed');
+
+// isHelpVisible computed property is used to control v-if for HelpPanel
+const isHelpPanelVisible = computed(() => helpState.value !== 'closed');
 
 // sessionNamesForWeaknessDropdown is now in ScarsWeaknesses.vue
 const maxExperiencePoints = computed(() => { // This remains as it depends on App.vue state
@@ -243,14 +244,15 @@ const copyToClipboard = async (text) => {
   }
   try {
     await navigator.clipboard.writeText(text);
-    playOutputAnimation();
+    // playOutputAnimation(); // This will be called on the AppFooter component instance
+    appFooterRef.value?.playOutputAnimation();
   } catch (err) {
     console.error("Failed to copy: ", err);
-    fallbackCopyTextToClipboard(text);
+    fallbackCopyTextToClipboard(text); // Pass text here
   }
 };
 
-const fallbackCopyTextToClipboard = (text) => {
+const fallbackCopyTextToClipboard = (text) => { // Accept text
   const textArea = document.createElement("textarea");
   textArea.value = text;
   textArea.style.cssText = "position: fixed; top: 0; left: 0; opacity: 0;";
@@ -260,55 +262,26 @@ const fallbackCopyTextToClipboard = (text) => {
   try {
     const successful = document.execCommand("copy");
     if (successful) {
-      playOutputAnimation();
+      // playOutputAnimation(); // Call on AppFooter instance
+      appFooterRef.value?.playOutputAnimation();
     } else {
-      outputButtonText.value = AioniaGameData.uiMessages.outputButton.failed;
-      setTimeout(() => {
-        outputButtonText.value = AioniaGameData.uiMessages.outputButton.default;
-      }, 3000);
+      // outputButtonText.value should be updated via prop if AppFooter handles this text internally
+      // For now, App.vue still manages the outputButtonText state that is passed as a prop.
+      // If AppFooter needs to signal this change, it would emit an event.
+      // However, playOutputAnimation in AppFooter now handles its own text changes.
+      // So, App.vue doesn't need to set outputButtonText.value for failed/error states if AppFooter does it.
+      // Let's assume AppFooter's playOutputAnimation handles these text changes internally.
+      console.error("Fallback copy failed.");
     }
   } catch (err) {
-    console.error(err);
-    outputButtonText.value = AioniaGameData.uiMessages.outputButton.error;
-    setTimeout(() => {
-        outputButtonText.value = AioniaGameData.uiMessages.outputButton.default;
-    }, 3000);
+    console.error("Fallback copy error:", err);
   }
   document.body.removeChild(textArea);
 };
 
-const playOutputAnimation = () => {
-  const button = outputButton.value;
-  if (!button || button.classList.contains("is-animating")) return;
-  
-  const buttonMessages = AioniaGameData.uiMessages.outputButton;
-  const timings = buttonMessages.animationTimings;
-  
-  button.classList.add("is-animating", "state-1");
-  
-  setTimeout(() => {
-    button.classList.remove("state-1");
-    outputButtonText.value = buttonMessages.animating;
-    button.classList.add("state-2");
-  }, timings.state1_bgFill);
-  
-  setTimeout(() => {
-    button.classList.remove("state-2");
-    button.classList.add("state-3");
-  }, timings.state1_bgFill + timings.state2_textHold);
-  
-  setTimeout(() => {
-    button.classList.remove("state-3");
-    outputButtonText.value = buttonMessages.default;
-    button.classList.add("state-4");
-  }, timings.state1_bgFill + timings.state2_textHold + timings.state3_textFadeOut);
-  
-  setTimeout(() => {
-    button.classList.remove("is-animating", "state-4");
-  }, timings.state1_bgFill + timings.state2_textHold + timings.state3_textFadeOut + timings.state4_bgReset);
-};
+// playOutputAnimation is now in AppFooter.vue and exposed.
 
-const showCustomAlert = (message) => alert(message);
+const showCustomAlert = (message) => alert(message); // General utility, kept.
 
 // Image handling methods (handleImageUpload, nextImage, previousImage, removeCurrentImage) are now in CharacterInfo.vue
 
@@ -570,7 +543,6 @@ const handleLoadFromDriveClick = async () => {
 // --- Watchers (formerly `watch`) ---
 
 // Watcher for showDriveMenu (click outside) is now in GoogleDriveMenu.vue
-
 // Watchers for character.initialScar and character.linkCurrentToInitialScar are now in ScarsWeaknesses.vue
 
 // --- Lifecycle Hooks ---
@@ -585,15 +557,19 @@ onMounted(() => {
   isDesktop.value = !('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
   helpPanelClickListener = (event) => {
-    if (helpState.value === 'fixed') {
-      const helpPanelEl = helpPanel.value;
-      const helpIconEl = helpIcon.value;
-      if (helpPanelEl && helpIconEl && !helpPanelEl.contains(event.target) && !helpIconEl.contains(event.target)) {
-        helpState.value = 'closed';
+    if (helpState.value === 'fixed' && helpPanelRef.value?.$el) {
+      // Check if the click is outside the HelpPanel component's root element
+      // AND not on the help icon (which is inside AppFooter).
+      const helpIconElement = appFooterRef.value?.$el.querySelector('.footer-help-icon');
+      if (
+        !helpPanelRef.value.$el.contains(event.target) &&
+        !(helpIconElement && helpIconElement.contains(event.target))
+      ) {
+        closeHelpPanel(); // Use the existing method to set helpState to 'closed'
       }
     }
   };
-  document.addEventListener('click', helpPanelClickListener);
+  document.addEventListener('click', helpPanelClickListener, true); // Use capture for click-outside
 
   // Initialize Google Drive Manager and set up global callbacks for legacy script loading.
   if (window.GoogleDriveManager) {
@@ -663,7 +639,7 @@ onBeforeUnmount(() => {
   // Clean up global event listeners to prevent memory leaks.
   // driveMenuClickListener is removed as its logic is moved to GoogleDriveMenu.vue
   if (helpPanelClickListener) {
-    document.removeEventListener('click', helpPanelClickListener);
+    document.removeEventListener('click', helpPanelClickListener, true); // Use capture for click-outside
   }
 });
 </script>
@@ -695,85 +671,62 @@ onBeforeUnmount(() => {
       本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。
     </p>
   </div>
-  <div class="main-footer">
-    <div
-      class="button-base footer-help-icon"
-      ref="helpIcon"
-      :class="{ 'footer-help-icon--fixed': helpState === 'fixed' }"
-      @mouseover="handleHelpIconMouseOver"
-      @mouseleave="handleHelpIconMouseLeave"
-      @click="handleHelpIconClick"
-      tabindex="0"
-    >
-      ？
-    </div>
-    <div :class="['status-display', experienceStatusClass]">
-      経験点 {{ currentExperiencePoints }} / {{ maxExperiencePoints }}
-    </div>
-    <div class="status-display status-display--weight">
-      荷重: {{ currentWeight }}
-    </div>
-    <div class="footer-button-container">
-      <button
-        class="button-base footer-button footer-button--save"
-        @click="saveData"
-      >
-        データ保存
-      </button>
-      <button
-        v-if="isSignedIn"
-        class="button-base footer-button footer-button--cloud"
-        @click="handleSaveToDriveClick"
-        :disabled="!canOperateDrive"
-        title="Google Driveに保存"
-      >
-          <span v-if="isCloudSaveSuccess" class="icon-svg icon-svg--footer icon-svg-success" aria-label="Save Succeeded"></span>
-          <span v-else class="icon-svg icon-svg--footer icon-svg-upload" aria-label="Save to Drive"></span>
-      </button>
-    </div>
-    <div class="footer-button-container">
-      <label for="load_input_vue" class="button-base footer-button footer-button--load">データ読込</label>
-      <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
-      <button
-        v-if="isSignedIn"
-        class="button-base footer-button footer-button--cloud"
-        @click="handleLoadFromDriveClick"
-        :disabled="!isSignedIn"
-        title="Google Driveから読込"
-      >
-          <span class="icon-svg icon-svg--footer icon-svg-download" aria-label="Load from Drive"></span>
-      </button>
-    </div>
-    <div class="button-base footer-button footer-button--output" @click="outputToCocofolia" ref="outputButton">
-      {{ outputButtonText }}
-    </div>
-    <transition name="fade">
-      <div class="help-panel" ref="helpPanel" v-if="isHelpVisible">
-        <button class="help-close" @click="closeHelpPanel">×</button>
-        <div v-html="AioniaGameData.helpText"></div>
-      </div>
-    </transition>
-  </div>
+
+  <!-- AppFooter component placeholder -->
+  <AppFooter
+    ref="appFooterRef"
+    :currentExperiencePoints="currentExperiencePoints"
+    :maxExperiencePoints="maxExperiencePoints"
+    :experienceStatusClass="experienceStatusClass"
+    :currentWeight="currentWeight"
+    :isSignedIn="isSignedIn"
+    :canOperateDrive="canOperateDrive"
+    :isCloudSaveSuccess="isCloudSaveSuccess"
+    :outputButtonText="outputButtonText"
+    :helpState="helpState"
+    :AioniaGameData="AioniaGameData"
+    @help-icon-mouseover="handleHelpIconMouseOver"
+    @help-icon-mouseleave="handleHelpIconMouseLeave"
+    @help-icon-click="handleHelpIconClick"
+    @save-data-local="saveData"
+    @save-data-drive="handleSaveToDriveClick"
+    @trigger-load-data-local="() => document.getElementById('load_input_vue')?.click()"
+    @load-data-drive="handleLoadFromDriveClick"
+    @output-cocofolia="outputToCocofolia"
+  />
+  <!-- Hidden file input, triggered by AppFooter event -->
+  <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
+
+  <transition name="fade">
+    <HelpPanel
+      v-if="isHelpPanelVisible"
+      :isVisible="isHelpPanelVisible"
+      :helpText="AioniaGameData.helpText"
+      @close="closeHelpPanel"
+      ref="helpPanelRef"
+    />
+  </transition>
 </template>
 
 <style scoped>
-/*
-  It is recommended to use Vite's asset handling.
-  You can either @import your main CSS file here or manage it
-  in your main.js/main.ts entry file.
-*/
-@import './assets/css/style.css';
+/* Global styles should be imported in main.js */
 
-/* Additional component-specific styles can go here */
-/* Styles that were specific to #character_info and its children have been moved to CharacterInfo.vue */
-/* Styles for #scar_weakness_section and its children are now in ScarsWeaknesses.vue */
-/* Styles for #skills and its children are now in SkillsList.vue */
-/* Styles for #special_skills and its children are now in SpecialSkills.vue */
-/* Styles for #items_section and its children are now in ItemsSection.vue */
-/* Styles for #character_memo and its children are now in CharacterMemo.vue */
-/* Styles for #adventure_log_section and its children are now in AdventureLog.vue */
-/* Styles for .top-left-controls and Google Drive Menu are now in GoogleDriveMenu.vue */
+/* Utility class, can remain if used by App.vue template directly, or moved to global if not already. */
 .hidden {
   display: none !important;
 }
+
+/* Fade transition styles - these are often global or App-level */
+/* If these are not defined globally, they should be here or in a global CSS file. */
+/* For now, assuming they are global or will be added if missing. */
+/*
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+*/
 </style>
