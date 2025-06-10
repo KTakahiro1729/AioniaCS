@@ -1,5 +1,5 @@
-(function (global) {
-  global.ListManager = {
-    manage() {},
-  };
-})(window);
+export const ListManager = {
+  manage() {
+    // 実装内容
+  },
+};

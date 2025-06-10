@@ -1,5 +1,5 @@
 // Aionia RPG ゲームデータ
-window.AioniaGameData = {
+export const AioniaGameData = {
   // 特技データ
   specialSkillData: {
     tactics: [

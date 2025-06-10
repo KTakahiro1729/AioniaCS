@@ -1,7 +1,7 @@
 /**
  * Manages interactions with Google Drive and Google Sign-In.
  */
-class GoogleDriveManager {
+export class GoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
     this.clientId = clientId;
