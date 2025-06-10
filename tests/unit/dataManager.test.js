@@ -1,11 +1,10 @@
-// tests/unit/dataManager.test.js
 import { jest } from "@jest/globals";
 import { DataManager } from "../../src/services/dataManager.js";
 import { AioniaGameData } from "../../src/data/gameData.js";
 import { deepClone } from "../../src/utils/utils.js";
 import JSZip from "jszip";
 
-// Mock JSZip using jest.mock
+// DataManager内で 'jszip' がimportされているため、ここでモック化します。
 const mockZipFile = jest.fn();
 const mockZipFolder = jest.fn().mockReturnValue({ file: mockZipFile });
 const mockZipGenerateAsync = jest
@@ -32,17 +31,11 @@ describe("DataManager", () => {
   let currentFileReaderInstance;
 
   beforeEach(() => {
-    // DataManagerはgameDataをコンストラクタで受け取る
     dm = new DataManager(AioniaGameData);
 
-    // モックをリセット
-    JSZip.mockClear();
-    mockZipFile.mockClear();
-    mockZipFolder.mockClear();
-    mockZipGenerateAsync.mockClear();
-    JSZip.loadAsync.mockClear();
+    // 各テストの前にモックをクリアします
+    jest.clearAllMocks();
 
-    // テスト用のモックデータを初期化
     mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
     mockCharacter.name = "TestChar";
     mockSkills = deepClone(AioniaGameData.baseSkills);
@@ -54,14 +47,24 @@ describe("DataManager", () => {
     };
     mockHistories = [{ sessionName: "", gotExperiments: null, memo: "" }];
 
-    // ブラウザAPIのモック
+    // ブラウザAPIのモック（jsdom環境で提供されるものもありますが、念のため定義します）
     global.URL.createObjectURL = jest
       .fn()
       .mockReturnValue("blob:http://localhost/mock-url");
     global.URL.revokeObjectURL = jest.fn();
-    global.Blob = jest.fn(function (content, options) {
-      return { content, options };
-    });
+    global.File = class MockFile {
+      constructor(parts, name, options) {
+        this.parts = parts;
+        this.name = name;
+        this.options = options;
+      }
+    };
+    global.Blob = class MockBlob {
+      constructor(parts, options) {
+        this.parts = parts;
+        this.options = options;
+      }
+    };
     document.body.appendChild = jest.fn();
     document.body.removeChild = jest.fn();
     const mockAnchor = { click: jest.fn(), href: "", download: "" };
@@ -214,7 +217,7 @@ describe("DataManager", () => {
       expect(jsonDataInZip.character.images).toBeUndefined();
       expect(mockZipGenerateAsync).toHaveBeenCalledWith({ type: "blob" });
       const mockAnchor = document.createElement.mock.results[0].value;
-      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\\.zip$/);
+      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
       expect(mockAnchor.click).toHaveBeenCalled();
     });
   });
