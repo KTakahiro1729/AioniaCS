@@ -5,7 +5,7 @@ import { deepClone } from "../../src/utils/utils.js";
 import JSZip from "jszip";
 
 // jest.mock をファイルのトップレベルに記述します。
-// これにより、Jestは 'jszip' のすべてのエクスポートを自動的にモックします。
+// これにより、Jestは 'tests/unit/__mocks__/jszip.js' を自動的に読み込みます。
 jest.mock("jszip");
 
 describe("DataManager", () => {
@@ -17,31 +17,11 @@ describe("DataManager", () => {
   let mockHistories;
   let currentFileReaderInstance;
 
-  // モック関数を describe ブロック内で定義します
-  const mockZipFile = jest.fn();
-  const mockZipFolder = jest.fn().mockReturnValue({ file: mockZipFile });
-  const mockZipGenerateAsync = jest.fn();
-
   beforeEach(() => {
-    dm = new DataManager(AioniaGameData);
-
-    // 各テストの前に、すべてのモックをクリアし、再設定します
+    // 各テストの前に、すべてのモックの状態をリセットします
     jest.clearAllMocks();
 
-    // モックされた JSZip の動作を定義します
-    // constructor (default export) のモック
-    JSZip.mockImplementation(() => ({
-      file: mockZipFile,
-      folder: mockZipFolder,
-      generateAsync: mockZipGenerateAsync,
-    }));
-    // 静的メソッド `loadAsync` のモック
-    JSZip.loadAsync = jest.fn();
-
-    // generateAsync のデフォルトの戻り値を設定します
-    mockZipGenerateAsync.mockResolvedValue(new Blob(["zip_blob_content"]));
-
-    // テストデータの準備
+    dm = new DataManager(AioniaGameData);
     mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
     mockCharacter.name = "TestChar";
     mockSkills = deepClone(AioniaGameData.baseSkills);
@@ -201,6 +181,16 @@ describe("DataManager", () => {
         "data:image/png;base64,mockimgdata1",
         "data:image/jpeg;base64,mockimgdata2",
       ];
+      // `new JSZip()`が呼び出されたときのインスタンスの振る舞いを定義
+      const mockZipInstance = {
+        file: jest.fn(),
+        folder: jest.fn().mockReturnThis(),
+        generateAsync: jest
+          .fn()
+          .mockResolvedValue(new Blob(["zip_blob_content"])),
+      };
+      JSZip.mockImplementation(() => mockZipInstance);
+
       await dm.saveData(
         mockCharacter,
         mockSkills,
@@ -209,19 +199,32 @@ describe("DataManager", () => {
         mockHistories,
       );
       expect(JSZip).toHaveBeenCalledTimes(1);
-      expect(mockZipFolder).toHaveBeenCalledWith("images");
-      expect(mockZipFile.mock.calls.length).toBe(3);
-      expect(mockZipFile.mock.calls).toEqual([
-        ["character_data.json", expect.any(String)],
-        ["image_0.png", "mockimgdata1", { base64: true }],
-        ["image_1.jpeg", "mockimgdata2", { base64: true }],
-      ]);
-      const jsonDataCall = mockZipFile.mock.calls.find(
+      expect(mockZipInstance.folder).toHaveBeenCalledWith("images");
+
+      // fileメソッドの呼び出しを検証
+      expect(mockZipInstance.file).toHaveBeenCalledWith(
+        "character_data.json",
+        expect.any(String),
+      );
+      expect(mockZipInstance.file).toHaveBeenCalledWith(
+        "image_0.png",
+        "mockimgdata1",
+        { base64: true },
+      );
+      expect(mockZipInstance.file).toHaveBeenCalledWith(
+        "image_1.jpeg",
+        "mockimgdata2",
+        { base64: true },
+      );
+
+      const jsonDataCall = mockZipInstance.file.mock.calls.find(
         (call) => call[0] === "character_data.json",
       );
       const jsonDataInZip = JSON.parse(jsonDataCall[1]);
       expect(jsonDataInZip.character.images).toBeUndefined();
-      expect(mockZipGenerateAsync).toHaveBeenCalledWith({ type: "blob" });
+      expect(mockZipInstance.generateAsync).toHaveBeenCalledWith({
+        type: "blob",
+      });
       const mockAnchor = document.createElement.mock.results[0].value;
       expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
       expect(mockAnchor.click).toHaveBeenCalled();
