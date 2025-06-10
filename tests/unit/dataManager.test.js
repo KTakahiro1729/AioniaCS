@@ -2,12 +2,15 @@
 import { jest } from "@jest/globals";
 import { DataManager } from "../../src/services/dataManager.js";
 import { AioniaGameData } from "../../src/data/gameData.js";
-import { deepClone } from "../../src/utils/utils.js";
+import { deepClone, createWeaknessArray } from "../../src/utils/utils.js";
 import JSZip from "jszip";
 
+// Mock JSZip using jest.mock
 const mockZipFile = jest.fn();
 const mockZipFolder = jest.fn().mockReturnValue({ file: mockZipFile });
-const mockZipGenerateAsync = jest.fn().mockResolvedValue({});
+const mockZipGenerateAsync = jest
+  .fn()
+  .mockResolvedValue(new Blob(["zip_blob_content"]));
 
 jest.mock("jszip", () => ({
   __esModule: true,
@@ -18,6 +21,12 @@ jest.mock("jszip", () => ({
   })),
   loadAsync: jest.fn(),
 }));
+
+// Mock gameData dependencies which are originally loaded via require
+global.window = {};
+global.window.AioniaGameData = AioniaGameData;
+global.window.deepClone = deepClone;
+global.window.createWeaknessArray = createWeaknessArray;
 
 describe("DataManager", () => {
   let dm;
@@ -31,6 +40,7 @@ describe("DataManager", () => {
   beforeEach(() => {
     dm = new DataManager(AioniaGameData);
 
+    // Reset mocks
     JSZip.mockClear();
     mockZipFile.mockClear();
     mockZipFolder.mockClear();
@@ -48,6 +58,7 @@ describe("DataManager", () => {
     };
     mockHistories = [{ sessionName: "", gotExperiments: null, memo: "" }];
 
+    // Mock browser APIs
     global.URL.createObjectURL = jest
       .fn()
       .mockReturnValue("blob:http://localhost/mock-url");
@@ -63,16 +74,14 @@ describe("DataManager", () => {
     // Global FileReader mock
     global.FileReader = jest.fn().mockImplementation(() => {
       const readerInstance = {
-        onload: null, // This will be set by DataManager
-        onerror: null, // This will be set by DataManager
+        onload: null,
+        onerror: null,
         result: null,
         readAsText: jest.fn(function (file) {
-          // 'this' refers to readerInstance
           this.result = JSON.stringify({
             character: { name: "Loaded Char via readAsText" },
           });
           process.nextTick(() => {
-            // Simulate async
             if (file && file.name === "error.json" && this.onerror) {
               this.onerror(new Error("Mock JSON Read Error"));
             } else if (this.onload) {
@@ -81,10 +90,8 @@ describe("DataManager", () => {
           });
         }),
         readAsArrayBuffer: jest.fn(function (file) {
-          // 'this' refers to readerInstance
-          this.result = new ArrayBuffer(8); // Represents some zip content
+          this.result = new ArrayBuffer(8);
           process.nextTick(() => {
-            // Simulate async
             if (file && file.name === "error.zip" && this.onerror) {
               this.onerror(new Error("Mock ZIP Read Error"));
             } else if (this.onload) {
@@ -93,7 +100,7 @@ describe("DataManager", () => {
           });
         }),
       };
-      currentFileReaderInstance = readerInstance; // So tests can assert calls on its methods
+      currentFileReaderInstance = readerInstance;
       return readerInstance;
     });
   });
@@ -180,7 +187,9 @@ describe("DataManager", () => {
         mockHistories,
       );
       const mockAnchor = document.createElement.mock.results[0].value;
-      const regex = new RegExp(`^${sanitized}_\\d{14}\\.json$`);
+      const regex = new RegExp(
+        `^<span class="math-inline">\{sanitized\}\_\\\\d\{14\}\\\\\.json</span>`,
+      );
       expect(mockAnchor.download).toMatch(regex);
     });
 
@@ -197,21 +206,18 @@ describe("DataManager", () => {
         mockHistories,
       );
       expect(JSZip).toHaveBeenCalledTimes(1);
-      expect(mockZipFolder).toHaveBeenCalledWith("images"); // Ensure folder('images') was called
-
-      // Verify all calls to zip.file() and imageFolder.file() which share mockZipFile
+      expect(mockZipFolder).toHaveBeenCalledWith("images");
       expect(mockZipFile.mock.calls.length).toBe(3);
       expect(mockZipFile.mock.calls).toEqual([
-        ["character_data.json", expect.any(String)], // Call for character_data.json (no options)
-        ["image_0.png", "mockimgdata1", { base64: true }], // Path is relative to the folder in the call
-        ["image_1.jpeg", "mockimgdata2", { base64: true }], // Path is relative to the folder in the call
+        ["character_data.json", expect.any(String)],
+        ["image_0.png", "mockimgdata1", { base64: true }],
+        ["image_1.jpeg", "mockimgdata2", { base64: true }],
       ]);
       const jsonDataCall = mockZipFile.mock.calls.find(
         (call) => call[0] === "character_data.json",
       );
       const jsonDataInZip = JSON.parse(jsonDataCall[1]);
       expect(jsonDataInZip.character.images).toBeUndefined();
-
       expect(mockZipGenerateAsync).toHaveBeenCalledWith({ type: "blob" });
       const mockAnchor = document.createElement.mock.results[0].value;
       expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
@@ -235,13 +241,11 @@ describe("DataManager", () => {
         { type: "application/json" },
       );
       const mockEvent = { target: { files: [mockFile], value: "" } };
-
       await new Promise((resolve) => {
         onSuccessMock.mockImplementation(resolve);
-        onErrorMock.mockImplementation(resolve); // Also resolve on error for test to finish
+        onErrorMock.mockImplementation(resolve);
         dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
       });
-
       expect(currentFileReaderInstance.readAsText).toHaveBeenCalledWith(
         mockFile,
       );
@@ -254,11 +258,10 @@ describe("DataManager", () => {
     it("should process ZIP file correctly", async () => {
       const mockJsonDataInZip = {
         character: { name: "Zippy", playerName: "PlayerZippy" },
-      }; // images will be added
+      };
       const mockJsonStringInZip = JSON.stringify(mockJsonDataInZip);
       const mockImageBase64Data = "mockimagedatafromzip";
       const mockImageFileName = "image_0.png";
-
       const mockZipInstance = {
         file: jest
           .fn()
