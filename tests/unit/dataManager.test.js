@@ -4,7 +4,8 @@ import { AioniaGameData } from "../../src/data/gameData.js";
 import { deepClone } from "../../src/utils/utils.js";
 import JSZip from "jszip";
 
-// Hoist the mock for the 'jszip' module, which is the correct pattern for ES Modules.
+// jest.mock をファイルのトップレベルに記述します。
+// これにより、Jestは 'jszip' のすべてのエクスポートを自動的にモックします。
 jest.mock("jszip");
 
 describe("DataManager", () => {
@@ -16,31 +17,31 @@ describe("DataManager", () => {
   let mockHistories;
   let currentFileReaderInstance;
 
-  // Define mock functions for reuse within the test suite.
+  // モック関数を describe ブロック内で定義します
   const mockZipFile = jest.fn();
   const mockZipFolder = jest.fn().mockReturnValue({ file: mockZipFile });
   const mockZipGenerateAsync = jest.fn();
 
   beforeEach(() => {
-    // Instantiate DataManager for each test.
     dm = new DataManager(AioniaGameData);
 
-    // Clear all previous mock data and implementations to ensure test isolation.
+    // 各テストの前に、すべてのモックをクリアし、再設定します
     jest.clearAllMocks();
 
-    // Set up the mock implementation for the JSZip constructor (default export).
+    // モックされた JSZip の動作を定義します
+    // constructor (default export) のモック
     JSZip.mockImplementation(() => ({
       file: mockZipFile,
       folder: mockZipFolder,
       generateAsync: mockZipGenerateAsync,
     }));
-
-    // Set up the mock for the static `loadAsync` method.
+    // 静的メソッド `loadAsync` のモック
     JSZip.loadAsync = jest.fn();
 
-    // Provide a default resolved value for the async mock function.
+    // generateAsync のデフォルトの戻り値を設定します
     mockZipGenerateAsync.mockResolvedValue(new Blob(["zip_blob_content"]));
 
+    // テストデータの準備
     mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
     mockCharacter.name = "TestChar";
     mockSkills = deepClone(AioniaGameData.baseSkills);
@@ -52,7 +53,7 @@ describe("DataManager", () => {
     };
     mockHistories = [{ sessionName: "", gotExperiments: null, memo: "" }];
 
-    // Mock browser APIs.
+    // ブラウザAPIのモック
     global.URL.createObjectURL = jest
       .fn()
       .mockReturnValue("blob:http://localhost/mock-url");
@@ -75,7 +76,7 @@ describe("DataManager", () => {
     const mockAnchor = { click: jest.fn(), href: "", download: "" };
     document.createElement = jest.fn().mockReturnValue(mockAnchor);
 
-    // Mock FileReader.
+    // FileReaderのモック
     global.FileReader = jest.fn().mockImplementation(() => {
       const readerInstance = {
         onload: null,
