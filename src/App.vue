@@ -1,5 +1,13 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import CharacterInfo from './components/CharacterInfo.vue'; // Import new component
+import ScarsWeaknesses from './components/ScarsWeaknesses.vue'; // Import new component
+import SkillsList from './components/SkillsList.vue'; // Import new component
+import SpecialSkills from './components/SpecialSkills.vue'; // Import new component
+import ItemsSection from './components/ItemsSection.vue'; // Import new component
+import CharacterMemo from './components/CharacterMemo.vue'; // Import new component
+import AdventureLog from './components/AdventureLog.vue'; // Import new component
+import GoogleDriveMenu from './components/GoogleDriveMenu.vue'; // Import new component
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -12,8 +20,7 @@ import { deepClone, createWeaknessArray } from './utils/utils.js';
 
 // --- Template Refs ---
 // These refs will be linked to elements in the template via `ref="..."`.
-const driveMenuToggleButton = ref(null);
-const driveMenu = ref(null);
+// driveMenuToggleButton and driveMenu are now in GoogleDriveMenu.vue
 const helpIcon = ref(null);
 const helpPanel = ref(null);
 const outputButton = ref(null);
@@ -24,7 +31,7 @@ const outputButton = ref(null);
 const dataManager = ref(null);
 const cocofoliaExporter = ref(null);
 const googleDriveManager = ref(null);
-const imageManagerInstance = ref(null);
+const imageManagerInstance = ref(null); // This might be used by CharacterInfo if passed as prop or provided
 
 // Main character data object, deeply reactive using `reactive()`.
 const character = reactive(
@@ -53,8 +60,7 @@ const histories = reactive([{ sessionName: '', gotExperiments: null, memo: '' }]
 const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
 const helpState = ref('closed'); // 'closed', 'hovered', 'fixed'
 const isDesktop = ref(false);
-const showDriveMenu = ref(false);
-const currentImageIndex = ref(0); // Start with -1 to indicate no image selected
+// showDriveMenu is now in GoogleDriveMenu.vue
 const isCloudSaveSuccess = ref(false);
 
 // Google Drive related state.
@@ -71,21 +77,11 @@ const isGisInitialized = ref(false);
 
 // --- Computed Properties (formerly `computed`) ---
 
-const currentImageSrc = computed(() => {
-  if (
-    character.images &&
-    character.images.length > 0 &&
-    currentImageIndex.value >= 0 &&
-    currentImageIndex.value < character.images.length
-  ) {
-    return character.images[currentImageIndex.value];
-  }
-  return null;
-});
-
+// currentImageSrc is now in CharacterInfo.vue
 const isHelpVisible = computed(() => helpState.value !== 'closed');
 
-const maxExperiencePoints = computed(() => {
+// sessionNamesForWeaknessDropdown is now in ScarsWeaknesses.vue
+const maxExperiencePoints = computed(() => { // This remains as it depends on App.vue state
   const initialScarExp = Number(character.initialScar) || 0;
   const creationWeaknessExp = character.weaknesses.reduce(
     (sum, weakness) =>
@@ -132,7 +128,7 @@ const currentExperiencePoints = computed(() => {
   return skillExp + expertExp + specialSkillExp;
 });
 
-const currentWeight = computed(() => {
+const currentWeight = computed(() => { // This remains
   const weaponWeights = AioniaGameData.equipmentWeights.weapon;
   const armorWeights = AioniaGameData.equipmentWeights.armor;
   let weight = 0;
@@ -142,53 +138,21 @@ const currentWeight = computed(() => {
   return weight;
 });
 
-const experienceStatusClass = computed(() =>
+const experienceStatusClass = computed(() => // This remains
   currentExperiencePoints.value > maxExperiencePoints.value
     ? 'status-display--experience-over'
     : 'status-display--experience-ok'
 );
 
-const sessionNamesForWeaknessDropdown = computed(() => {
-  const defaultOptions = [...AioniaGameData.weaknessAcquisitionOptions];
-  const sessionOptions = histories
-    .map((h) => h.sessionName)
-    .filter((name) => name && name.trim() !== '')
-    .map((name) => ({ value: name, text: name, disabled: false }));
-  const helpOption = {
-    value: 'help-text',
-    text: AioniaGameData.uiMessages.weaknessDropdownHelp,
-    disabled: true,
-  };
-  return defaultOptions.concat(sessionOptions, helpOption);
-});
-
-const canSignInToGoogle = computed(() => isGapiInitialized.value && isGisInitialized.value && !isSignedIn.value);
-const canOperateDrive = computed(() => isSignedIn.value && driveFolderId.value);
+// canSignInToGoogle is now in GoogleDriveMenu.vue (computed based on props)
+const canOperateDrive = computed(() => isSignedIn.value && driveFolderId.value); // This remains as it depends on App.vue state (driveFolderId)
 
 
 // --- Methods (formerly `methods`) ---
 
-const toggleDriveMenu = () => {
-  showDriveMenu.value = !showDriveMenu.value;
-};
+// toggleDriveMenu is now internal to GoogleDriveMenu.vue
 
-const handleCurrentScarInput = (event) => {
-  const enteredValue = parseInt(event.target.value, 10);
-  if (isNaN(enteredValue)) {
-    if (character.linkCurrentToInitialScar) {
-      nextTick(() => {
-        character.currentScar = character.initialScar;
-      });
-    }
-    return;
-  }
-  if (character.linkCurrentToInitialScar) {
-    if (enteredValue !== character.initialScar) {
-      character.linkCurrentToInitialScar = false;
-      character.currentScar = enteredValue;
-    }
-  }
-};
+// handleCurrentScarInput is now in ScarsWeaknesses.vue
 
 const handleHelpIconMouseOver = () => {
   if (isDesktop.value && helpState.value === "closed") {
@@ -229,60 +193,12 @@ const _manageListItem = ({ list, action, index, newItemFactory, hasContentChecke
   }
 };
 
-const hasSpecialSkillContent = (ss) => !!(ss.group || ss.name || ss.note);
-const hasHistoryContent = (h) => !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== "") || h.memo);
+// All special skill methods (...) are now in SpecialSkills.vue.
+// addExpert and removeExpert are now in SkillsList.vue
+// All history methods (hasHistoryContent, addHistoryItem, removeHistoryItem) are now in AdventureLog.vue.
 
-const addSpecialSkillItem = () => _manageListItem({
-  list: specialSkills,
-  action: "add",
-  newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
-  maxLength: AioniaGameData.config.maxSpecialSkills,
-});
-const removeSpecialSkill = (index) => _manageListItem({
-  list: specialSkills,
-  action: "remove",
-  index,
-  newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
-  hasContentChecker: hasSpecialSkillContent,
-});
-const addExpert = (skill) => {
-  if (skill.canHaveExperts) _manageListItem({ list: skill.experts, action: "add", newItemFactory: () => ({ value: "" }) });
-};
-const removeExpert = (skill, expertIndex) => _manageListItem({
-  list: skill.experts,
-  action: "remove",
-  index: expertIndex,
-  newItemFactory: () => ({ value: "" }),
-  hasContentChecker: (expert) => expert.value && expert.value.trim() !== "",
-});
-const addHistoryItem = () => _manageListItem({
-  list: histories,
-  action: "add",
-  newItemFactory: () => ({ sessionName: "", gotExperiments: null, memo: "" }),
-});
-const removeHistoryItem = (index) => _manageListItem({
-  list: histories,
-  action: "remove",
-  index,
-  newItemFactory: () => ({ sessionName: "", gotExperiments: null, memo: "" }),
-  hasContentChecker: hasHistoryContent,
-});
-
-const expertPlaceholder = (skill) => skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
-const handleSpeciesChange = () => { if (character.species !== "other") character.rareSpecies = ""; };
-const availableSpecialSkillNames = (index) => specialSkills[index] ? (AioniaGameData.specialSkillData[specialSkills[index].group] || []) : [];
-const updateSpecialSkillOptions = (index) => {
-  if (specialSkills[index]) {
-    specialSkills[index].name = "";
-    updateSpecialSkillNoteVisibility(index);
-  }
-};
-const updateSpecialSkillNoteVisibility = (index) => {
-  if (specialSkills[index]) {
-    const skillName = specialSkills[index].name;
-    specialSkills[index].showNote = AioniaGameData.specialSkillsRequiringNote.includes(skillName);
-  }
-};
+// expertPlaceholder is now in SkillsList.vue
+// handleSpeciesChange is now in CharacterInfo.vue
 
 const saveData = () => {
   dataManager.value.saveData(character, skills, specialSkills, equipments, histories);
@@ -394,51 +310,7 @@ const playOutputAnimation = () => {
 
 const showCustomAlert = (message) => alert(message);
 
-const handleImageUpload = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  if (!imageManagerInstance.value) {
-    console.error("ImageManager not initialized");
-    return;
-  }
-  try {
-    const imageData = await imageManagerInstance.value.loadImage(file);
-    if (!character.images) {
-      character.images = [];
-    }
-    character.images.push(imageData);
-    currentImageIndex.value = character.images.length - 1;
-  } catch (error) {
-    console.error("Error loading image:", error);
-    showCustomAlert("画像の読み込みに失敗しました：" + error.message);
-  } finally {
-    event.target.value = null;
-  }
-};
-
-const nextImage = () => {
-  if (character.images && character.images.length > 0) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % character.images.length;
-  }
-};
-
-const previousImage = () => {
-  if (character.images && character.images.length > 0) {
-    currentImageIndex.value = (currentImageIndex.value - 1 + character.images.length) % character.images.length;
-  }
-};
-
-const removeCurrentImage = () => {
-  if (character.images && character.images.length > 0 && currentImageIndex.value >= 0) {
-    character.images.splice(currentImageIndex.value, 1);
-    if (character.images.length === 0) {
-      currentImageIndex.value = -1;
-    } else if (currentImageIndex.value >= character.images.length) {
-      currentImageIndex.value = character.images.length - 1;
-    }
-  }
-};
-
+// Image handling methods (handleImageUpload, nextImage, previousImage, removeCurrentImage) are now in CharacterInfo.vue
 
 const _checkDriveReadiness = (actionContext = "operate") => {
   if (!googleDriveManager.value) {
@@ -538,6 +410,89 @@ const promptForDriveFolder = async (isDirectClick = true) => {
   });
 };
 
+// Method to update character data from CharacterInfo component
+const updateCharacterData = (updatedCharacter) => {
+  Object.assign(character, updatedCharacter);
+  // If specific fields need special handling, do it here.
+  // For example, if character.images was directly a ref in App.vue,
+  // you might need to update it like:
+  // character.images = updatedCharacter.images;
+};
+
+// Method to update skills data from SkillsList component
+const updateSkillsData = (updatedSkills) => {
+  // skills is a reactive array of objects. We need to update it carefully.
+  // Simple assignment skills.value = updatedSkills won't work if skills is reactive().
+  // Instead, modify the array contents.
+  skills.length = 0; // Clear current skills
+  updatedSkills.forEach(skill => skills.push(skill)); // Add new skills
+  // This ensures the original reactive array reference is maintained.
+  // Call saveData or other necessary functions if skills changes affect overall state
+  saveData();
+};
+
+const handleSkillsChanged = () => {
+  // This function can be used if specific actions beyond data update/save are needed
+  // when skills change, for example, re-calculating dependent computed properties
+  // not automatically covered by Vue's reactivity.
+  // For now, experience points are computed, so this might just call saveData.
+  saveData();
+};
+
+// Method to update special skills data from SpecialSkills component
+const updateSpecialSkillsData = (updatedData) => {
+  specialSkills.length = 0;
+  updatedData.forEach(item => specialSkills.push(item));
+  saveData();
+};
+
+const handleSpecialSkillsChanged = () => {
+  saveData();
+};
+
+// Method to update equipments data from ItemsSection component
+const updateEquipments = (updatedData) => {
+  Object.assign(equipments, updatedData);
+  // currentWeight computed property will update automatically.
+  saveData();
+};
+
+const updateCharacterOtherItems = (newValue) => {
+  character.otherItems = newValue;
+  saveData();
+};
+
+const handleItemsChanged = () => {
+  // This primarily ensures saveData is called if not covered by specific updates.
+  // Also, currentWeight will recalculate due to reactivity on `equipments`.
+  saveData();
+};
+
+// Method to update character memo from CharacterMemo component
+const updateCharacterMemo = (newValue) => {
+  character.memo = newValue;
+  saveData(); // Assuming changes to memo should be saved immediately
+};
+
+const handleMemoChanged = () => {
+  // This could trigger other actions if needed, for now, covered by updateCharacterMemo
+  saveData();
+};
+
+// Method to update histories data from AdventureLog component
+const updateHistories = (updatedData) => {
+  histories.length = 0;
+  updatedData.forEach(item => histories.push(item));
+  // maxExperiencePoints computed property will update automatically if histories affect it.
+  saveData();
+};
+
+const handleHistoriesChanged = () => {
+  // This ensures saveData is called and experience points are recalculated.
+  saveData();
+};
+
+
 const handleSaveToDriveClick = async () => {
   if (!_checkDriveReadiness("save")) return;
   if (!driveFolderId.value) {
@@ -614,39 +569,9 @@ const handleLoadFromDriveClick = async () => {
 
 // --- Watchers (formerly `watch`) ---
 
-let driveMenuClickListener = null;
-watch(showDriveMenu, (newValue) => {
-  if (driveMenuClickListener) {
-    document.removeEventListener('click', driveMenuClickListener, true);
-    driveMenuClickListener = null;
-  }
-  if (newValue) {
-    nextTick(() => {
-      const menuEl = driveMenu.value;
-      const toggleButtonEl = driveMenuToggleButton.value;
-      if (menuEl && toggleButtonEl) {
-        driveMenuClickListener = (event) => {
-          if (!menuEl.contains(event.target) && !toggleButtonEl.contains(event.target)) {
-            showDriveMenu.value = false;
-          }
-        };
-        document.addEventListener('click', driveMenuClickListener, true);
-      }
-    });
-  }
-});
+// Watcher for showDriveMenu (click outside) is now in GoogleDriveMenu.vue
 
-watch(() => character.initialScar, (newVal) => {
-  if (character.linkCurrentToInitialScar) {
-    character.currentScar = newVal;
-  }
-});
-
-watch(() => character.linkCurrentToInitialScar, (isLinked) => {
-  if (isLinked) {
-    character.currentScar = character.initialScar;
-  }
-});
+// Watchers for character.initialScar and character.linkCurrentToInitialScar are now in ScarsWeaknesses.vue
 
 // --- Lifecycle Hooks ---
 let helpPanelClickListener = null;
@@ -736,9 +661,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   // Clean up global event listeners to prevent memory leaks.
-  if (driveMenuClickListener) {
-    document.removeEventListener('click', driveMenuClickListener, true);
-  }
+  // driveMenuClickListener is removed as its logic is moved to GoogleDriveMenu.vue
   if (helpPanelClickListener) {
     document.removeEventListener('click', helpPanelClickListener);
   }
@@ -746,404 +669,25 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="top-left-controls">
-    <div class="google-drive-button-container">
-      <button
-        class="button-base icon-button"
-        title="Google Drive Menu"
-        v-if="isGapiInitialized && isGisInitialized"
-        @click="toggleDriveMenu"
-        ref="driveMenuToggleButton"
-      >
-        <span class="icon-svg icon-svg-cloud" aria-label="Google Drive"></span>
-      </button>
-      <div class="floating-menu" v-if="showDriveMenu" ref="driveMenu">
-        <div class="menu-item status-message" id="floating_drive_status_message">
-          {{ driveStatusMessage }}
-        </div>
-        <button class="menu-item button-base" v-if="canSignInToGoogle" @click="handleSignInClick">
-          Sign In with Google
-        </button>
-        <button class="menu-item button-base" v-if="isSignedIn" @click="handleSignOutClick">
-          Sign Out
-        </button>
-        <button class="menu-item button-base" v-if="isSignedIn" @click="promptForDriveFolder(true)" :disabled="!isSignedIn">
-          Choose Drive Folder
-        </button>
-      </div>
-    </div>
-  </div>
+  <GoogleDriveMenu
+    :isGapiInitialized="isGapiInitialized"
+    :isGisInitialized="isGisInitialized"
+    :isSignedIn="isSignedIn"
+    :driveStatusMessage="driveStatusMessage"
+    @sign-in="handleSignInClick"
+    @sign-out="handleSignOutClick"
+    @choose-folder="promptForDriveFolder(true)"
+  />
   <div class="tool-title">Aionia TRPG Character Sheet</div>
   <div class="main-grid">
-    <div id="character_info" class="character-info">
-      <div class="box-title">基本情報</div>
-      <div class="box-content">
-        <div class="character-image-container">
-          <div class="image-display-area">
-            <div class="image-display-wrapper" v-if="character.images && character.images.length > 0">
-              <img
-                v-if="currentImageSrc"
-                :src="currentImageSrc"
-                class="character-image-display"
-                alt="Character Image"
-              />
-              <button
-                @click="previousImage"
-                class="button-base button-imagenav button-imagenav--prev"
-                :disabled="character.images.length <= 1"
-                aria-label="前の画像"
-              >&lt;</button>
-              <button
-                @click="nextImage"
-                class="button-base button-imagenav button-imagenav--next"
-                :disabled="character.images.length <= 1"
-                aria-label="次の画像"
-              >&gt;</button>
-              <div class="image-count-display">{{ currentImageIndex + 1 }} / {{ character.images.length }}</div>
-            </div>
-            <div class="character-image-placeholder" v-else>No Image</div>
-          </div>
-          <div class="image-controls">
-            <input
-              type="file"
-              id="character_image_upload"
-              @change="handleImageUpload"
-              accept="image/*"
-              style="display: none"
-            />
-            <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">画像を追加</label>
-            <button
-              :disabled="!currentImageSrc"
-              @click="removeCurrentImage"
-              class="button-base imagefile-button imagefile-button--delete"
-              aria-label="現在の画像を削除"
-            >削除</button>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item info-item--double">
-            <label for="name">キャラクター名</label>
-            <input type="text" id="name" v-model="character.name" />
-          </div>
-          <div class="info-item info-item--double">
-            <label for="player_name">プレイヤー名</label>
-            <input type="text" id="player_name" v-model="character.playerName"/>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item" :class="{'info-item--full': character.species !== 'other', 'info-item--double': character.species === 'other'}">
-            <label for="species">種族</label>
-            <select id="species" v-model="character.species" @change="handleSpeciesChange">
-              <option
-                v-for="option in AioniaGameData.speciesOptions"
-                :key="option.value"
-                :value="option.value"
-                :disabled="option.disabled"
-              >{{ option.label }}</option>
-            </select>
-          </div>
-          <div class="info-item info-item--double" v-if="character.species === 'other'">
-            <label for="rare_species">種族名（希少人種）</label>
-            <input type="text" id="rare_species" v-model="character.rareSpecies"/>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item info-item--quadruple">
-            <label for="gender">性別</label>
-            <input type="text" id="gender" v-model="character.gender" />
-          </div>
-          <div class="info-item info-item--quadruple">
-            <label for="age">年齢</label>
-            <input type="number" id="age" v-model.number="character.age" min="0"/>
-          </div>
-          <div class="info-item info-item--quadruple">
-            <label for="height">身長</label>
-            <input type="text" id="height" v-model="character.height" />
-          </div>
-          <div class="info-item info-item--quadruple">
-            <label for="weight_char">体重</label>
-            <input type="text" id="weight_char" v-model="character.weight"/>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item info-item--triple">
-            <label for="origin">出身地</label>
-            <input type="text" id="origin" v-model="character.origin" />
-          </div>
-          <div class="info-item info-item--triple">
-            <label for="occupation">職業</label>
-            <input type="text" id="occupation" v-model="character.occupation"/>
-          </div>
-          <div class="info-item info-item--triple">
-            <label for="faith">信仰</label>
-            <input type="text" id="faith" v-model="character.faith" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <CharacterInfo :character="character" @update:character="updateCharacterData" @image-updated="saveData" />
+    <ScarsWeaknesses :character="character" :histories="histories" :AioniaGameData="AioniaGameData" @update:character="updateCharacterData" />
+    <SkillsList :skills="skills" :AioniaGameData="AioniaGameData" :manageListItemUtil="_manageListItem" @update:skills="updateSkillsData" @skills-changed="handleSkillsChanged" />
+    <SpecialSkills :specialSkills="specialSkills" :AioniaGameData="AioniaGameData" :manageListItemUtil="_manageListItem" @update:specialSkills="updateSpecialSkillsData" @special-skills-changed="handleSpecialSkillsChanged" />
+    <ItemsSection :equipments="equipments" :characterOtherItems="character.otherItems" :AioniaGameData="AioniaGameData" @update:equipments="updateEquipments" @update:characterOtherItems="updateCharacterOtherItems" @items-changed="handleItemsChanged" />
+    <CharacterMemo :characterMemo="character.memo" :AioniaGameData="AioniaGameData" @update:characterMemo="updateCharacterMemo" @memo-changed="handleMemoChanged" />
+    <AdventureLog :histories="histories" :manageListItemUtil="_manageListItem" @update:histories="updateHistories" @histories-changed="handleHistoriesChanged" />
 
-    <div id="scar_weakness_section" class="scar-weakness">
-      <div class="box-title">傷痕と弱点</div>
-      <div class="box-content">
-        <div class="scar-section">
-          <div class="sub-box-title sub-box-title--scar">傷痕</div>
-          <div class="info-row">
-            <div class="info-item info-item--double">
-              <div class="link-checkbox-container">
-                <label for="current_scar" class="link-checkbox-main-label">現在値</label>
-                <input
-                  type="checkbox"
-                  id="link_current_to_initial_scar_checkbox"
-                  v-model="character.linkCurrentToInitialScar"
-                  class="link-checkbox"
-                />
-                <label for="link_current_to_initial_scar_checkbox" class="link-checkbox-label">連動</label>
-              </div>
-              <input
-                type="number"
-                id="current_scar"
-                v-model.number="character.currentScar"
-                @input="handleCurrentScarInput"
-                :class="{'greyed-out': character.linkCurrentToInitialScar}"
-                min="0"
-                class="scar-section__current-input"
-              />
-            </div>
-            <div class="info-item info-item--double">
-              <label for="initial_scar">初期値</label>
-              <input type="number" id="initial_scar" v-model.number="character.initialScar" min="0"/>
-            </div>
-          </div>
-        </div>
-        <div class="weakness-section">
-          <div class="sub-box-title sub-box-title--weakness">弱点</div>
-          <ul class="weakness-list list-reset">
-            <li class="base-list-header">
-              <div class="flex-weakness-number base-list-header-placeholder"></div>
-              <div class="flex-weakness-text"><label>弱点</label></div>
-              <div class="flex-weakness-acquired"><label>獲得</label></div>
-            </li>
-            <li v-for="(weakness, index) in character.weaknesses" :key="index" class="base-list-item">
-              <div class="flex-weakness-number">{{ index + 1 }}</div>
-              <div class="flex-weakness-text">
-                <input type="text" v-model="weakness.text" />
-              </div>
-              <div class="flex-weakness-acquired">
-                <select v-model="weakness.acquired">
-                  <option
-                    v-for="option in sessionNamesForWeaknessDropdown"
-                    :key="option.value"
-                    :value="option.value"
-                    :disabled="option.disabled"
-                  >{{ option.text }}</option>
-                </select>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <div id="skills" class="skills">
-      <div class="box-title">技能</div>
-      <ul class="skills-list box-content list-reset">
-        <li v-for="(skill) in skills" :key="skill.id" class="skill-list">
-          <div class="skill-header">
-            <input type="checkbox" :id="skill.id" v-model="skill.checked" />
-            <label :for="skill.id" class="skill-name">{{ skill.name }}</label>
-          </div>
-          <div v-if="skill.canHaveExperts && skill.checked" class="experts-section">
-            <ul class="expert-list list-reset">
-              <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="base-list-item">
-                <div class="delete-button-wrapper">
-                  <button
-                    type="button"
-                    class="button-base list-button list-button--delete"
-                    @click="removeExpert(skill, expIndex)"
-                    :disabled="skill.experts.length <= 1 && expert.value===''"
-                    aria-label="専門技能を削除"
-                  >－</button>
-                </div>
-                <input
-                  type="text"
-                  v-model="expert.value"
-                  :placeholder="expertPlaceholder(skill)"
-                  :disabled="!skill.checked"
-                  class="flex-grow"
-                />
-              </li>
-            </ul>
-            <div class="add-button-container-left">
-              <button
-                type="button"
-                class="button-base list-button list-button--add"
-                @click="addExpert(skill)"
-                aria-label="専門技能を追加"
-              >＋</button>
-            </div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <div id="special_skills" class="special-skills">
-        <div class="box-title">特技</div>
-        <div class="box-content">
-            <ul class="list-reset special-skills-list">
-              <li v-for="(specialSkill, index) in specialSkills" :key="index" class="base-list-item special-skill-item">
-                <div class="delete-button-wrapper">
-                  <button
-                    type="button"
-                    class="button-base list-button list-button--delete"
-                    @click="removeSpecialSkill(index)"
-                    :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)"
-                    aria-label="特技を削除"
-                  >－</button>
-                </div>
-                <div class="flex-grow">
-                  <div class="flex-group">
-                    <select
-                      v-model="specialSkill.group"
-                      @change="updateSpecialSkillOptions(index)"
-                      class="flex-item-1"
-                    >
-                      <option
-                        v-for="option in AioniaGameData.specialSkillGroupOptions"
-                        :key="option.value"
-                        :value="option.value"
-                      >{{ option.label }}</option>
-                    </select>
-                    <select
-                      v-model="specialSkill.name"
-                      @change="updateSpecialSkillNoteVisibility(index)"
-                      :disabled="!specialSkill.group"
-                      class="flex-item-2"
-                    >
-                      <option value="">---</option>
-                      <option
-                        v-for="opt in availableSpecialSkillNames(index)"
-                        :key="opt.value"
-                        :value="opt.value"
-                      >{{ opt.label }}</option>
-                    </select>
-                  </div>
-                  <input
-                    type="text"
-                    v-model="specialSkill.note"
-                    v-show="specialSkill.showNote"
-                    class="special-skill-note-input"
-                    :placeholder="AioniaGameData.placeholderTexts.specialSkillNote"
-                  />
-                </div>
-              </li>
-            </ul>
-            <div class="add-button-container-left" v-if="specialSkills.length < AioniaGameData.config.maxSpecialSkills">
-              <button
-                type="button"
-                class="button-base list-button list-button--add"
-                @click="addSpecialSkillItem()"
-                aria-label="特技を追加"
-              >＋</button>
-            </div>
-        </div>
-    </div>
-    <div id="items_section" class="items">
-        <div class="box-title">所持品</div>
-        <div class="box-content">
-            <div class="equipment-wrapper">
-              <div class="equipment-container">
-                <div class="equipment-section">
-                  <div class="equipment-item">
-                    <label for="weapon1">武器1</label>
-                    <div class="flex-group">
-                      <select id="weapon1" v-model="equipments.weapon1.group" class="flex-item-1">
-                        <option v-for="option in AioniaGameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                      </select>
-                      <input type="text" id="weapon1_name" v-model="equipments.weapon1.name" :placeholder="AioniaGameData.placeholderTexts.weaponName" class="flex-item-2"/>
-                    </div>
-                  </div>
-                  <div class="equipment-item">
-                    <label for="weapon2">武器2</label>
-                    <div class="flex-group">
-                      <select id="weapon2" v-model="equipments.weapon2.group" class="flex-item-1">
-                        <option v-for="option in AioniaGameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                      </select>
-                      <input type="text" id="weapon2_name" v-model="equipments.weapon2.name" :placeholder="AioniaGameData.placeholderTexts.weaponName" class="flex-item-2"/>
-                    </div>
-                  </div>
-                  <div class="equipment-item">
-                    <label for="armor">防具</label>
-                    <div class="flex-group">
-                      <select id="armor" v-model="equipments.armor.group" class="flex-item-1">
-                        <option v-for="option in AioniaGameData.armorOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                      </select>
-                      <input type="text" id="armor_name" v-model="equipments.armor.name" :placeholder="AioniaGameData.placeholderTexts.armorName" class="flex-item-2"/>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label for="other_items" class="block-label">その他所持品</label>
-              <textarea id="other_items" class="items-textarea" v-model="character.otherItems"></textarea>
-            </div>
-        </div>
-    </div>
-    <div id="character_memo" class="character-memo">
-        <div class="box-title">キャラクターメモ</div>
-        <div class="box-content">
-            <textarea id="character_text" :placeholder="AioniaGameData.placeholderTexts.characterMemo" v-model="character.memo" class="character-memo-textarea"></textarea>
-        </div>
-    </div>
-    <div id="adventure_log_section" class="adventure-log-section">
-        <div class="box-title">冒険の記録</div>
-        <div class="box-content">
-            <div class="base-list-header">
-              <div class="delete-button-wrapper base-list-header-placeholder"></div>
-              <div class="flex-grow">
-                <div class="history-item-inputs">
-                  <div class="flex-history-name"><label>シナリオ名</label></div>
-                  <div class="flex-history-exp"><label>経験点</label></div>
-                  <div class="flex-history-memo"><label>メモ</label></div>
-                </div>
-              </div>
-            </div>
-            <ul id="histories" class="list-reset">
-              <li v-for="(history, index) in histories" :key="index" class="base-list-item">
-                <div class="delete-button-wrapper">
-                  <button
-                    type="button"
-                    class="button-base list-button list-button--delete"
-                    @click="removeHistoryItem(index)"
-                    :disabled="histories.length <= 1 && !hasHistoryContent(history)"
-                    aria-label="冒険記録を削除"
-                  >－</button>
-                </div>
-                <div class="flex-grow">
-                  <div class="history-item-inputs">
-                    <div class="flex-history-name">
-                      <input type="text" v-model="history.sessionName" />
-                    </div>
-                    <div class="flex-history-exp">
-                      <input type="number" v-model.number="history.gotExperiments" min="0"/>
-                    </div>
-                    <div class="flex-history-memo">
-                      <input type="text" v-model="history.memo" />
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ul>
-            <div class="add-button-container-left">
-              <button
-                type="button"
-                class="button-base list-button list-button--add"
-                @click="addHistoryItem()"
-                aria-label="冒険記録を追加"
-              >＋</button>
-            </div>
-        </div>
-    </div>
   </div>
   <div class="copyright-footer">
     <p>
@@ -1221,6 +765,14 @@ onBeforeUnmount(() => {
 @import './assets/css/style.css';
 
 /* Additional component-specific styles can go here */
+/* Styles that were specific to #character_info and its children have been moved to CharacterInfo.vue */
+/* Styles for #scar_weakness_section and its children are now in ScarsWeaknesses.vue */
+/* Styles for #skills and its children are now in SkillsList.vue */
+/* Styles for #special_skills and its children are now in SpecialSkills.vue */
+/* Styles for #items_section and its children are now in ItemsSection.vue */
+/* Styles for #character_memo and its children are now in CharacterMemo.vue */
+/* Styles for #adventure_log_section and its children are now in AdventureLog.vue */
+/* Styles for .top-left-controls and Google Drive Menu are now in GoogleDriveMenu.vue */
 .hidden {
   display: none !important;
 }
