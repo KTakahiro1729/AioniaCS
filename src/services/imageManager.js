@@ -1,6 +1,6 @@
 // src/imageManager.js
 
-window.ImageManager = {
+export const ImageManager = {
   /**
    * Loads an image file and returns a promise that resolves with the image data.
    * @param {File} file - The image file to load.

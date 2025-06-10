@@ -1,7 +1,7 @@
 /**
  * ココフォリア出力機能を管理するクラス
  */
-class CocofoliaExporter {
+export class CocofoliaExporter {
   constructor() {
     this.MAX_MEMO_LENGTH = 200;
     this.BREAK_CHARS = ["\n", "。", "．"];

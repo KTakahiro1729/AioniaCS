@@ -1,7 +1,10 @@
+import { createWeaknessArray, deepClone } from "../utils/utils.js";
+import JSZip from "jszip";
+
 /**
  * データ管理系の機能を担当するクラス
  */
-class DataManager {
+export class DataManager {
   constructor(gameData) {
     this.gameData = gameData;
     this.googleDriveManager = null;
