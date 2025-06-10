@@ -2,7 +2,7 @@
 import { jest } from "@jest/globals";
 import { DataManager } from "../../src/services/dataManager.js";
 import { AioniaGameData } from "../../src/data/gameData.js";
-import { deepClone, createWeaknessArray } from "../../src/utils/utils.js";
+import { deepClone } from "../../src/utils/utils.js";
 import JSZip from "jszip";
 
 // Mock JSZip using jest.mock
@@ -22,12 +22,6 @@ jest.mock("jszip", () => ({
   loadAsync: jest.fn(),
 }));
 
-// Mock gameData dependencies which are originally loaded via require
-global.window = {};
-global.window.AioniaGameData = AioniaGameData;
-global.window.deepClone = deepClone;
-global.window.createWeaknessArray = createWeaknessArray;
-
 describe("DataManager", () => {
   let dm;
   let mockCharacter;
@@ -38,15 +32,17 @@ describe("DataManager", () => {
   let currentFileReaderInstance;
 
   beforeEach(() => {
+    // DataManagerはgameDataをコンストラクタで受け取る
     dm = new DataManager(AioniaGameData);
 
-    // Reset mocks
+    // モックをリセット
     JSZip.mockClear();
     mockZipFile.mockClear();
     mockZipFolder.mockClear();
     mockZipGenerateAsync.mockClear();
     JSZip.loadAsync.mockClear();
 
+    // テスト用のモックデータを初期化
     mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
     mockCharacter.name = "TestChar";
     mockSkills = deepClone(AioniaGameData.baseSkills);
@@ -58,7 +54,7 @@ describe("DataManager", () => {
     };
     mockHistories = [{ sessionName: "", gotExperiments: null, memo: "" }];
 
-    // Mock browser APIs
+    // ブラウザAPIのモック
     global.URL.createObjectURL = jest
       .fn()
       .mockReturnValue("blob:http://localhost/mock-url");
@@ -71,7 +67,7 @@ describe("DataManager", () => {
     const mockAnchor = { click: jest.fn(), href: "", download: "" };
     document.createElement = jest.fn().mockReturnValue(mockAnchor);
 
-    // Global FileReader mock
+    // FileReaderのモック
     global.FileReader = jest.fn().mockImplementation(() => {
       const readerInstance = {
         onload: null,
@@ -187,9 +183,7 @@ describe("DataManager", () => {
         mockHistories,
       );
       const mockAnchor = document.createElement.mock.results[0].value;
-      const regex = new RegExp(
-        `^<span class="math-inline">\{sanitized\}\_\\\\d\{14\}\\\\\.json</span>`,
-      );
+      const regex = new RegExp(`^${sanitized}_\\d{14}\\.json$`);
       expect(mockAnchor.download).toMatch(regex);
     });
 
@@ -220,7 +214,7 @@ describe("DataManager", () => {
       expect(jsonDataInZip.character.images).toBeUndefined();
       expect(mockZipGenerateAsync).toHaveBeenCalledWith({ type: "blob" });
       const mockAnchor = document.createElement.mock.results[0].value;
-      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
+      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\\.zip$/);
       expect(mockAnchor.click).toHaveBeenCalled();
     });
   });
