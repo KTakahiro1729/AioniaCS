@@ -1,5 +1,5 @@
 <template>
-  <div id="character_info" class="character-info">
+  <div class="character-info">
     <div class="box-title">基本情報</div>
     <div class="box-content">
       <div class="character-image-container">
@@ -109,19 +109,17 @@
 
 <script setup>
 import { ref, reactive, computed, defineProps, defineEmits } from 'vue';
-import { AioniaGameData } from '../data/gameData.js'; // Adjusted path
-import { ImageManager } from '../services/imageManager.js'; // Adjusted path
+import { AioniaGameData } from '../data/gameData.js';
+import { ImageManager } from '../services/imageManager.js';
 
 const props = defineProps({
-  character: Object, // Main character data object
-  // AioniaGameData will be imported directly, not passed as a prop initially
+  character: Object,
 });
 
-const emit = defineEmits(['update:character', 'image-updated']); // Example emits
+const emit = defineEmits(['update:character', 'image-updated']);
 
-const currentImageIndex = ref(0); // Start with 0, assuming images array won't be empty if used
+const currentImageIndex = ref(0);
 
-// Computed property for the current image source
 const currentImageSrc = computed(() => {
   if (
     props.character.images &&
@@ -134,7 +132,6 @@ const currentImageSrc = computed(() => {
   return null;
 });
 
-// Methods related to character info
 const handleSpeciesChange = () => {
   const newCharacter = { ...props.character };
   if (newCharacter.species !== "other") {
@@ -143,12 +140,11 @@ const handleSpeciesChange = () => {
   emit('update:character', newCharacter);
 };
 
-const showCustomAlert = (message) => alert(message); // Placeholder for now
+const showCustomAlert = (message) => alert(message);
 
 const handleImageUpload = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
-  // Assuming ImageManager is correctly imported and available
   if (!ImageManager) {
     console.error("ImageManager not initialized");
     return;
@@ -162,12 +158,12 @@ const handleImageUpload = async (event) => {
     newCharacter.images.push(imageData);
     currentImageIndex.value = newCharacter.images.length - 1;
     emit('update:character', newCharacter);
-    emit('image-updated'); // Inform parent about image changes if needed
+    emit('image-updated');
   } catch (error) {
     console.error("Error loading image:", error);
     showCustomAlert("画像の読み込みに失敗しました：" + error.message);
   } finally {
-    event.target.value = null; // Reset file input
+    event.target.value = null;
   }
 };
 
@@ -188,7 +184,7 @@ const removeCurrentImage = () => {
     const newCharacter = { ...props.character };
     newCharacter.images.splice(currentImageIndex.value, 1);
     if (newCharacter.images.length === 0) {
-      currentImageIndex.value = -1; // Or 0, depending on desired behavior for no images
+      currentImageIndex.value = -1;
     } else if (currentImageIndex.value >= newCharacter.images.length) {
       currentImageIndex.value = newCharacter.images.length - 1;
     }
@@ -197,184 +193,155 @@ const removeCurrentImage = () => {
   }
 };
 
-// Watch for changes in character.images from parent to reset index if needed
-// This might be necessary if images are modified externally
-// watch(() => props.character.images, (newImages) => {
-//   if (newImages && newImages.length > 0 && currentImageIndex.value >= newImages.length) {
-//     currentImageIndex.value = newImages.length - 1;
-//   } else if (!newImages || newImages.length === 0) {
-//     currentImageIndex.value = 0; // Or -1
-//   }
-// }, { deep: true });
-
 </script>
 
 <style scoped>
-/* Copied from App.vue - specific to #character_info */
-.character-info {
-  grid-area: character-info; /* Assigns this component to the 'character-info' grid area */
-  /* Styles specific to the character info box itself */
-}
+/* .character-info, .box-title, .box-content are styled by global _components.css and _layout.css */
+/* .info-row and .info-item variants are styled by global _layout.css */
+/* General label, input, select styles are from global _components.css */
 
+/* Styles moved from _sections.css */
 .character-image-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: var(--spacing-medium);
-  width: 100%; /* Ensure it takes full width of its parent */
+  margin-bottom: 15px; /* var(--spacing-medium) was 15px */
+  padding: 0;
+  border: 1px solid var(--color-border-normal);
+  border-radius: 3px;
+  background-color: var(--color-input-bg); /* from _sections.css */
 }
 
 .image-display-area {
-  width: var(--image-display-width, 200px); /* Default width, can be overridden by CSS variables */
-  height: var(--image-display-height, 200px); /* Default height */
-  background-color: var(--color-background-image-placeholder);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--border-radius-default);
   display: flex;
-  justify-content: center;
   align-items: center;
-  position: relative; /* For positioning navigation buttons */
-  overflow: hidden; /* Ensures image doesn't spill out */
-  margin-bottom: var(--spacing-small);
-}
-
-.image-display-wrapper {
-  width: 100%;
-  height: 100%;
+  justify-content: center;
+  margin-bottom: 0; /* from _sections.css, was var(--spacing-small) */
+  width: 100%; /* from _sections.css */
+  height: 350px; /* from _sections.css */
+  background-color: var(--color-background); /* from _sections.css */
+  border: 1px solid var(--color-border-normal); /* from _sections.css */
+  border-radius: 2px; /* from _sections.css */
   position: relative;
+  overflow: hidden;
 }
 
+/* .character-image-container img.character-image-display in _sections.css */
+/* Assuming .character-image-display is on the img tag directly */
 .character-image-display {
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* Scales image to fit within bounds, maintaining aspect ratio */
+  max-width: 100%; /* from _sections.css */
+  max-height: 100%; /* from _sections.css */
+  height: auto; /* from _sections.css */
+  object-fit: contain; /* from _sections.css, was already here */
+  display: block; /* from _sections.css for .image-display-wrapper .character-image-display */
 }
 
 .character-image-placeholder {
-  color: var(--color-text-placeholder);
-  font-size: var(--font-size-small);
+  width: 100%; /* from _sections.css */
+  height: 100%; /* from _sections.css */
+  display: flex; /* from _sections.css */
+  align-items: center; /* from _sections.css */
+  justify-content: center; /* from _sections.css */
+  color: var(--color-text-input-disabled); /* from _sections.css */
+  font-size: var(--font-size-small); /* was already here */
 }
+
+.image-display-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex; /* from _sections.css */
+  align-items: center; /* from _sections.css */
+  justify-content: center; /* from _sections.css */
+}
+
+.image-display-wrapper:hover .button-imagenav:not(:disabled) {
+  opacity: 1; /* from _sections.css */
+}
+
+.image-display-wrapper:hover .image-count-display {
+  opacity: 0.7; /* from _sections.css */
+}
+.image-display-wrapper:hover .image-count-display:hover { /* Added from _sections.css for specificity */
+  opacity: 1;
+}
+
 
 .button-imagenav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background-color: rgba(0, 0, 0, 0.3);
-  color: white;
-  border: none;
-  padding: var(--spacing-small) var(--spacing-xsmall);
-  cursor: pointer;
-  z-index: 10;
-  border-radius: var(--border-radius-small);
-  font-size: var(--font-size-large);
+  z-index: 10; /* from _sections.css, was already here */
+  background-color: var(--color-panel-header); /* from _sections.css */
+  border: none; /* from _sections.css, was already here */
+  padding: 6px 10px; /* from _sections.css, was var(--spacing-small) var(--spacing-xsmall) */
+  font-size: 1.2em; /* from _sections.css, was var(--font-size-large) */
+  line-height: 1; /* from _sections.css */
+  min-width: auto; /* from _sections.css */
+  height: auto; /* from _sections.css */
+  font-weight: bold; /* from _sections.css */
+  border-radius: 4px; /* from _sections.css, was var(--border-radius-small) */
+  opacity: 0.6; /* from _sections.css */
+  transition: opacity 0.3s ease; /* from _sections.css */
+  cursor: pointer; /* was already here */
+  color: white; /* was already here, ensure it's not overridden by .button-base if it has a different color */
 }
 .button-imagenav:hover {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-panel-sub-header); /* from _sections.css, was rgba(0,0,0,0.5) */
 }
 .button-imagenav:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.5; /* was already here, _sections.css uses cursor: default */
+  cursor: default; /* from _sections.css */
 }
 
 .button-imagenav--prev {
-  left: var(--spacing-xsmall);
+  left: 10px; /* from _sections.css, was var(--spacing-xsmall) */
 }
 
 .button-imagenav--next {
-  right: var(--spacing-xsmall);
+  right: 10px; /* from _sections.css, was var(--spacing-xsmall) */
 }
 
 .image-count-display {
   position: absolute;
-  bottom: var(--spacing-xsmall);
-  right: var(--spacing-xsmall);
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 2px var(--spacing-xsmall);
-  border-radius: var(--border-radius-small);
-  font-size: var(--font-size-xsmall);
+  top: 10px; /* from _sections.css, was bottom: var(--spacing-xsmall) */
+  right: 10px; /* from _sections.css, was var(--spacing-xsmall) */
+  z-index: 10; /* from _sections.css */
+  background-color: var(--color-panel-header); /* from _sections.css, was rgba(0,0,0,0.6) */
+  color: white; /* was already here */
+  padding: 3px 8px; /* from _sections.css, was 2px var(--spacing-xsmall) */
+  font-size: 0.9em; /* from _sections.css, was var(--font-size-xsmall) */
+  border-radius: 3px; /* from _sections.css, was var(--border-radius-small) */
+  opacity: 0.3; /* from _sections.css */
+  transition: opacity 0.3s ease; /* from _sections.css */
+  cursor: default; /* from _sections.css */
 }
-
 
 .image-controls {
   display: flex;
+  gap: 10px; /* from _sections.css, was var(--spacing-small) */
+  align-items: center; /* from _sections.css */
+  flex-wrap: wrap; /* from _sections.css */
   justify-content: center; /* Center buttons horizontally */
-  gap: var(--spacing-small); /* Space between buttons */
-  width: 100%; /* Make control bar take full width */
-  margin-top: var(--spacing-xsmall);
+  padding: 10px 0; /* from _sections.css */
+  width: 100%;
+  /* margin-top: var(--spacing-xsmall); was here, now padding handles spacing */
 }
+/* End of styles moved from _sections.css */
 
+
+/* Specific styles for .imagefile-button that might not be covered by .button-base or global styles */
 .imagefile-button {
-  padding: var(--spacing-xsmall) var(--spacing-small);
-  font-size: var(--font-size-xsmall);
-  /* Additional styling for upload/delete buttons if needed */
-}
-.imagefile-button--upload {
-  /* Specific styles for upload */
-}
-.imagefile-button--delete {
-  /* Specific styles for delete */
-  background-color: var(--color-button-danger-bg);
-}
-.imagefile-button--delete:hover {
-  background-color: var(--color-button-danger-hover-bg);
-}
-.imagefile-button--delete:disabled {
-  background-color: var(--color-button-disabled-bg);
-  border-color: var(--color-button-disabled-border);
-  color: var(--color-button-disabled-text);
-  cursor: not-allowed;
+  /* font-size from _components.css footer-button is 0.95em. */
+  /* padding from _components.css footer-button is 10px 18px. */
+  /* The original scoped style had:
+     padding: var(--spacing-xsmall) var(--spacing-small);
+     font-size: var(--font-size-xsmall);
+     These are smaller than footer-button. If this distinction is important, these need to be uncommented.
+     For now, relying on .button-base and global .imagefile-button from _components.css (if any)
+  */
 }
 
-
-/* General info layout */
-.info-row {
-  display: flex;
-  gap: var(--spacing-medium); /* Spacing between items in a row */
-  margin-bottom: var(--spacing-medium);
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xsmall); /* Spacing between label and input */
-}
-
-/* Variations for item widths */
-.info-item--full { flex-basis: 100%; }
-.info-item--double { flex-basis: calc(50% - var(--spacing-medium) / 2); }
-.info-item--triple { flex-basis: calc(33.333% - var(--spacing-medium) * 2 / 3); }
-.info-item--quadruple { flex-basis: calc(25% - var(--spacing-medium) * 3 / 4); }
-
-.info-item label {
-  font-size: var(--font-size-small);
-  color: var(--color-text-label);
-  margin-bottom: 0; /* Adjust if needed */
-}
-
-.info-item input[type="text"],
-.info-item input[type="number"],
-.info-item select {
-  width: 100%; /* Make inputs fill their container */
-  padding: var(--input-padding-vertical) var(--input-padding-horizontal);
-  border: 1px solid var(--color-border-input);
-  border-radius: var(--border-radius-input);
-  background-color: var(--color-background-input);
-  color: var(--color-text-input);
-  font-size: var(--font-size-input);
-  box-sizing: border-box; /* Include padding and border in element's total width and height */
-}
-.info-item input:focus, .info-item select:focus {
-  border-color: var(--color-border-input-focus);
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-outline-focus);
-}
-
-/* Ensure consistent height for inputs and selects if they are side-by-side */
-.info-row input[type="text"],
-.info-row input[type="number"],
-.info-row select {
-  height: var(--input-height-base); /* Define this in _variables.css */
-}
+/* .imagefile-button--delete is styled in _components.css */
 
 </style>

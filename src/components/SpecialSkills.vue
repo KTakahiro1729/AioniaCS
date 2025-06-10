@@ -1,5 +1,5 @@
 <template>
-  <div id="special_skills" class="special-skills">
+  <div class="special-skills">
     <div class="box-title">特技</div>
     <div class="box-content">
       <ul class="list-reset special-skills-list">
@@ -75,7 +75,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  manageListItemUtil: { // For _manageListItem from App.vue
+  manageListItemUtil: {
     type: Function,
     required: true,
   }
@@ -99,23 +99,23 @@ const hasSpecialSkillContent = (ss) => !!(ss.group || ss.name || ss.note);
 
 const addSpecialSkillItem = () => {
   props.manageListItemUtil({
-    list: localSpecialSkills, // Operate on local copy
+    list: localSpecialSkills,
     action: "add",
     newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
     maxLength: props.AioniaGameData.config.maxSpecialSkills,
   });
-  emitSpecialSkillsUpdate(); // Notify parent
+  emitSpecialSkillsUpdate();
 };
 
 const removeSpecialSkill = (index) => {
   props.manageListItemUtil({
-    list: localSpecialSkills, // Operate on local copy
+    list: localSpecialSkills,
     action: "remove",
     index,
     newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
-    hasContentChecker: hasSpecialSkillContent, // This method is now local
+    hasContentChecker: hasSpecialSkillContent,
   });
-  emitSpecialSkillsUpdate(); // Notify parent
+  emitSpecialSkillsUpdate();
 };
 
 const availableSpecialSkillNames = computed(() => (index) => {
@@ -126,8 +126,8 @@ const availableSpecialSkillNames = computed(() => (index) => {
 const updateSpecialSkillOptions = (index) => {
   const skill = localSpecialSkills[index];
   if (skill) {
-    skill.name = ""; // Reset name when group changes
-    updateSpecialSkillNoteVisibility(index); // Update note visibility based on new (empty) name
+    skill.name = "";
+    updateSpecialSkillNoteVisibility(index);
   }
   emitSpecialSkillsUpdate();
 };
@@ -138,14 +138,10 @@ const updateSpecialSkillNoteVisibility = (index) => {
     const skillName = skill.name;
     skill.showNote = props.AioniaGameData.specialSkillsRequiringNote.includes(skillName);
   }
-  // No direct emit here, assuming this is called before a name change emit or group change emit
 };
 
-
-// Specific handlers for @change to ensure updates are emitted
 const handleSpecialSkillGroupChange = (index) => {
-  updateSpecialSkillOptions(index); // This will also call updateSpecialSkillNoteVisibility
-  // emitSpecialSkillsUpdate() is called by updateSpecialSkillOptions
+  updateSpecialSkillOptions(index);
 };
 
 const handleSpecialSkillNameChange = (index) => {
@@ -153,8 +149,6 @@ const handleSpecialSkillNameChange = (index) => {
   emitSpecialSkillsUpdate();
 };
 
-
-// Fallback watcher for any deep changes not caught by explicit @change
 watch(localSpecialSkills, () => {
   emitSpecialSkillsUpdate();
 }, { deep: true });
@@ -162,116 +156,28 @@ watch(localSpecialSkills, () => {
 </script>
 
 <style scoped>
-/* Styles specific to #special_skills */
-.special-skills {
-  grid-area: special-skills; /* Assigns this component to the 'special-skills' grid area */
-}
+/* .special-skills is styled by _layout.css (grid-area) */
+/* .box-title, .box-content are styled by _components.css */
+/* .list-reset is from _base.css */
+/* .base-list-item and button styles (.delete-button-wrapper, .list-button, etc.) are from _components.css */
+/* .flex-group, .flex-item-1, .flex-item-2, .flex-grow (general) are from _layout.css */
+/* select, input[type="text"] general styling is from _components.css */
+/* .add-button-container-left is from _components.css */
 
-/* .box-title and .box-content are assumed to be global or styled by parent grid item */
-
-.special-skills-list {
-  /* Uses base-list-item defined globally or locally */
-}
-
-/* Copied from App.vue - base-list-item and related styles if not global */
-.base-list-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: var(--spacing-small);
-  gap: var(--spacing-small);
-}
-.base-list-item:last-child {
-    margin-bottom: 0;
-}
-
+/* This specific layout for the content of a special skill item is unique. */
 .special-skill-item .flex-grow {
   display: flex;
   flex-direction: column; /* Stack select group and note input vertically */
   gap: var(--spacing-xsmall); /* Space between select group and note input */
 }
 
-.delete-button-wrapper {
-  flex-shrink: 0;
-}
-
-.list-button { /* Assuming this is a global style or defined in a base sheet */
-  padding: var(--button-padding-small);
-  font-size: var(--font-size-small);
-  line-height: 1;
-  min-width: var(--button-min-width-small);
-  height: var(--button-min-width-small);
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-}
-.list-button--delete {
-  background-color: var(--color-button-danger-bg);
-}
-.list-button--delete:hover {
-  background-color: var(--color-button-danger-hover-bg);
-}
-.list-button--delete:disabled {
-  background-color: var(--color-button-disabled-bg);
-  border-color: var(--color-button-disabled-border);
-  color: var(--color-button-disabled-text);
-}
-
-.list-button--add {
-   background-color: var(--color-button-primary-bg);
-}
-.list-button--add:hover {
-   background-color: var(--color-button-primary-hover-bg);
-}
-/* End copied button styles */
-
-.flex-group {
-  display: flex;
-  gap: var(--spacing-small); /* Space between the two select elements */
-}
-
-.flex-item-1 {
-  flex: 1; /* Adjust flex ratio as needed */
-}
-
-.flex-item-2 {
-  flex: 2; /* Adjust flex ratio as needed */
-}
-
-.special-skills select,
+/* Style moved from _sections.css */
 .special-skill-note-input {
-  width: 100%;
-  padding: var(--input-padding-vertical) var(--input-padding-horizontal);
-  border: 1px solid var(--color-border-input);
-  border-radius: var(--border-radius-input);
-  background-color: var(--color-background-input);
-  color: var(--color-text-input);
-  font-size: var(--font-size-input);
-  box-sizing: border-box;
-  height: var(--input-height-base);
+  margin-top: 3px;
 }
 
-.special-skills select:focus,
-.special-skill-note-input:focus {
-  border-color: var(--color-border-input-focus);
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-outline-focus);
-}
-
-.special-skills select:disabled {
-  background-color: var(--color-background-input-disabled);
-  color: var(--color-text-input-disabled);
-}
-
-.special-skill-note-input {
-  /* Height might be different if it's a text input vs select, adjust if necessary */
-  /* Or set a specific class for textareas if they differ more significantly */
-}
-
-.add-button-container-left {
-  margin-top: var(--spacing-small);
-}
-
-.flex-grow { /* Define if not global */
-    flex-grow: 1;
-}
+/*
+  The .special-skills-list class on the UL doesn't have specific global styles other than what .box-content provides.
+  It's kept for semantic clarity or future specific targeting.
+*/
 </style>
