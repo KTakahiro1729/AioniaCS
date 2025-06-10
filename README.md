@@ -1,5 +1,15 @@
-# Vue 3 + Vite
+# AioniaCS
+慈悲なきアイオニアのための非公式キャラクターシート作成ツールです
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## 使い方
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+最新版は [GitHub Pages](https://ktakahiro1729.github.io/AioniaCS/) で公開しています。
+
+## クレジット
+
+本サイトは [TRPG **「慈悲なきアイオニア」**](https://www.aioniatrpg.com/)（作者: **イチ（フシギ製作所）**）の二次創作であり、bright‑trpg さんの[「慈悲なきアイオニア キャラクター作成用ツール（β）」](https://bright-trpg.github.io/aionia_character_maker/)をもとに **あろすてりっく** が作成したものです。
+
+## ライセンス
+
+本リポジトリは **MIT License** の下で公開しています。
+公式とは関係のない非公式ツールです。
