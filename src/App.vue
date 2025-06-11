@@ -6,18 +6,11 @@ import { useGoogleDrive } from './composables/useGoogleDrive.js';
 import { useHelp } from './composables/useHelp.js';
 import { useDataExport } from './composables/useDataExport.js';
 import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
-import AdventureLogSection from './components/sections/AdventureLogSection.vue';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
 import { AioniaGameData } from './data/gameData.js';
-import ScarWeaknessSection from './components/sections/ScarWeaknessSection.vue';
-import CharacterBasicInfo from './components/sections/CharacterBasicInfo.vue';
-import SkillsSection from './components/sections/SkillsSection.vue';
-import ItemsSection from './components/sections/ItemsSection.vue';
-import CharacterMemoSection from './components/sections/CharacterMemoSection.vue';
-
-import SpecialSkillsSection from './components/sections/SpecialSkillsSection.vue';
+import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
@@ -63,7 +56,6 @@ const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
 const currentExperiencePoints = computed(() => characterStore.currentExperiencePoints);
 const currentWeight = computed(() => characterStore.currentWeight);
 const experienceStatusClass = computed(() => uiStore.experienceStatusClass);
-const sessionNamesForWeaknessDropdown = computed(() => characterStore.sessionNamesForWeaknessDropdown);
 
 
 
@@ -96,35 +88,7 @@ watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
     @sign-out="handleSignOutClick"
     @choose-folder="promptForDriveFolder(true)"
   />
-  <div class="tool-title">Aionia TRPG Character Sheet</div>
-  <div class="main-grid">
-    <CharacterBasicInfo v-model:character="characterStore.character" />
-
-    <ScarWeaknessSection
-      v-model:character="characterStore.character"
-      :session-names="sessionNamesForWeaknessDropdown"
-    />
-
-    <SkillsSection v-model:skills="characterStore.skills" />
-    <SpecialSkillsSection v-model:specialSkills="characterStore.specialSkills" />
-    <ItemsSection
-      v-model:equipments="characterStore.equipments"
-      v-model:otherItems="characterStore.character.otherItems"
-    />
-    <CharacterMemoSection v-model="characterStore.character.memo" />
-    <AdventureLogSection
-      :histories="characterStore.histories"
-      @add-item="characterStore.addHistoryItem()"
-      @remove-item="characterStore.removeHistoryItem"
-      @update:history="characterStore.updateHistoryItem"
-    />
-  </div>
-  <div class="copyright-footer">
-    <p>
-      本サイトは<a href="https://www.aioniatrpg.com/" target="_blank" rel="noopener noreferrer">「イチ（フシギ製作所）」様が権利を有する「慈悲なきアイオニア」</a>の二次創作物です(Ver 1.2対応)。<br />
-      本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。
-    </p>
-  </div>
+  <CharacterSheetLayout />
   <MainFooter
     ref="mainFooter"
     :help-state="helpState"
