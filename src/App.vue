@@ -6,9 +6,9 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } 
 import { AioniaGameData } from './data/gameData.js';
 import { DataManager } from './services/dataManager.js';
 import { CocofoliaExporter } from './services/cocofoliaExporter.js';
-import { ImageManager } from './services/imageManager.js';
 import { GoogleDriveManager } from './services/googleDriveManager.js';
 import { deepClone, createWeaknessArray } from './utils/utils.js';
+import CharacterBasicInfo from './components/sections/CharacterBasicInfo.vue';
 
 // --- Template Refs ---
 // These refs will be linked to elements in the template via `ref="..."`.
@@ -24,7 +24,6 @@ const outputButton = ref(null);
 const dataManager = ref(null);
 const cocofoliaExporter = ref(null);
 const googleDriveManager = ref(null);
-const imageManagerInstance = ref(null);
 
 // Main character data object, deeply reactive using `reactive()`.
 const character = reactive(
@@ -54,7 +53,6 @@ const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
 const helpState = ref('closed'); // 'closed', 'hovered', 'fixed'
 const isDesktop = ref(false);
 const showDriveMenu = ref(false);
-const currentImageIndex = ref(0); // Start with -1 to indicate no image selected
 const isCloudSaveSuccess = ref(false);
 
 // Google Drive related state.
@@ -70,18 +68,6 @@ const isGisInitialized = ref(false);
 
 
 // --- Computed Properties (formerly `computed`) ---
-
-const currentImageSrc = computed(() => {
-  if (
-    character.images &&
-    character.images.length > 0 &&
-    currentImageIndex.value >= 0 &&
-    currentImageIndex.value < character.images.length
-  ) {
-    return character.images[currentImageIndex.value];
-  }
-  return null;
-});
 
 const isHelpVisible = computed(() => helpState.value !== 'closed');
 
@@ -269,7 +255,6 @@ const removeHistoryItem = (index) => _manageListItem({
 });
 
 const expertPlaceholder = (skill) => skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
-const handleSpeciesChange = () => { if (character.species !== "other") character.rareSpecies = ""; };
 const availableSpecialSkillNames = (index) => specialSkills[index] ? (AioniaGameData.specialSkillData[specialSkills[index].group] || []) : [];
 const updateSpecialSkillOptions = (index) => {
   if (specialSkills[index]) {
@@ -393,51 +378,6 @@ const playOutputAnimation = () => {
 };
 
 const showCustomAlert = (message) => alert(message);
-
-const handleImageUpload = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  if (!imageManagerInstance.value) {
-    console.error("ImageManager not initialized");
-    return;
-  }
-  try {
-    const imageData = await imageManagerInstance.value.loadImage(file);
-    if (!character.images) {
-      character.images = [];
-    }
-    character.images.push(imageData);
-    currentImageIndex.value = character.images.length - 1;
-  } catch (error) {
-    console.error("Error loading image:", error);
-    showCustomAlert("画像の読み込みに失敗しました：" + error.message);
-  } finally {
-    event.target.value = null;
-  }
-};
-
-const nextImage = () => {
-  if (character.images && character.images.length > 0) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % character.images.length;
-  }
-};
-
-const previousImage = () => {
-  if (character.images && character.images.length > 0) {
-    currentImageIndex.value = (currentImageIndex.value - 1 + character.images.length) % character.images.length;
-  }
-};
-
-const removeCurrentImage = () => {
-  if (character.images && character.images.length > 0 && currentImageIndex.value >= 0) {
-    character.images.splice(currentImageIndex.value, 1);
-    if (character.images.length === 0) {
-      currentImageIndex.value = -1;
-    } else if (currentImageIndex.value >= character.images.length) {
-      currentImageIndex.value = character.images.length - 1;
-    }
-  }
-};
 
 
 const _checkDriveReadiness = (actionContext = "operate") => {
@@ -654,7 +594,6 @@ onMounted(() => {
   // Initialize services
   cocofoliaExporter.value = new CocofoliaExporter();
   dataManager.value = new DataManager(AioniaGameData);
-  imageManagerInstance.value = ImageManager;
 
   // Setup UI logic
   isDesktop.value = !('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -775,112 +714,7 @@ onBeforeUnmount(() => {
   </div>
   <div class="tool-title">Aionia TRPG Character Sheet</div>
   <div class="main-grid">
-    <div id="character_info" class="character-info">
-      <div class="box-title">基本情報</div>
-      <div class="box-content">
-        <div class="character-image-container">
-          <div class="image-display-area">
-            <div class="image-display-wrapper" v-if="character.images && character.images.length > 0">
-              <img
-                v-if="currentImageSrc"
-                :src="currentImageSrc"
-                class="character-image-display"
-                alt="Character Image"
-              />
-              <button
-                @click="previousImage"
-                class="button-base button-imagenav button-imagenav--prev"
-                :disabled="character.images.length <= 1"
-                aria-label="前の画像"
-              >&lt;</button>
-              <button
-                @click="nextImage"
-                class="button-base button-imagenav button-imagenav--next"
-                :disabled="character.images.length <= 1"
-                aria-label="次の画像"
-              >&gt;</button>
-              <div class="image-count-display">{{ currentImageIndex + 1 }} / {{ character.images.length }}</div>
-            </div>
-            <div class="character-image-placeholder" v-else>No Image</div>
-          </div>
-          <div class="image-controls">
-            <input
-              type="file"
-              id="character_image_upload"
-              @change="handleImageUpload"
-              accept="image/*"
-              style="display: none"
-            />
-            <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">画像を追加</label>
-            <button
-              :disabled="!currentImageSrc"
-              @click="removeCurrentImage"
-              class="button-base imagefile-button imagefile-button--delete"
-              aria-label="現在の画像を削除"
-            >削除</button>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item info-item--double">
-            <label for="name">キャラクター名</label>
-            <input type="text" id="name" v-model="character.name" />
-          </div>
-          <div class="info-item info-item--double">
-            <label for="player_name">プレイヤー名</label>
-            <input type="text" id="player_name" v-model="character.playerName"/>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item" :class="{'info-item--full': character.species !== 'other', 'info-item--double': character.species === 'other'}">
-            <label for="species">種族</label>
-            <select id="species" v-model="character.species" @change="handleSpeciesChange">
-              <option
-                v-for="option in AioniaGameData.speciesOptions"
-                :key="option.value"
-                :value="option.value"
-                :disabled="option.disabled"
-              >{{ option.label }}</option>
-            </select>
-          </div>
-          <div class="info-item info-item--double" v-if="character.species === 'other'">
-            <label for="rare_species">種族名（希少人種）</label>
-            <input type="text" id="rare_species" v-model="character.rareSpecies"/>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item info-item--quadruple">
-            <label for="gender">性別</label>
-            <input type="text" id="gender" v-model="character.gender" />
-          </div>
-          <div class="info-item info-item--quadruple">
-            <label for="age">年齢</label>
-            <input type="number" id="age" v-model.number="character.age" min="0"/>
-          </div>
-          <div class="info-item info-item--quadruple">
-            <label for="height">身長</label>
-            <input type="text" id="height" v-model="character.height" />
-          </div>
-          <div class="info-item info-item--quadruple">
-            <label for="weight_char">体重</label>
-            <input type="text" id="weight_char" v-model="character.weight"/>
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-item info-item--triple">
-            <label for="origin">出身地</label>
-            <input type="text" id="origin" v-model="character.origin" />
-          </div>
-          <div class="info-item info-item--triple">
-            <label for="occupation">職業</label>
-            <input type="text" id="occupation" v-model="character.occupation"/>
-          </div>
-          <div class="info-item info-item--triple">
-            <label for="faith">信仰</label>
-            <input type="text" id="faith" v-model="character.faith" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <CharacterBasicInfo v-model:character="character" />
 
     <div id="scar_weakness_section" class="scar-weakness">
       <div class="box-title">傷痕と弱点</div>
