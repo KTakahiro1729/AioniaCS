@@ -9,6 +9,7 @@ import { CocofoliaExporter } from './services/cocofoliaExporter.js';
 import { ImageManager } from './services/imageManager.js';
 import { GoogleDriveManager } from './services/googleDriveManager.js';
 import { deepClone, createWeaknessArray } from './utils/utils.js';
+import SkillsSection from './components/sections/SkillsSection.vue';
 import ItemsSection from './components/sections/ItemsSection.vue';
 import { useEquipmentManagement } from './composables/features/useEquipmentManagement.js';
 import CharacterMemoSection from './components/sections/CharacterMemoSection.vue';
@@ -225,17 +226,21 @@ const _manageListItem = ({ list, action, index, newItemFactory, hasContentChecke
   }
 };
 
-const hasHistoryContent = (h) =>
-  !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== "") || h.memo);
-const addExpert = (skill) => {
-  if (skill.canHaveExperts) _manageListItem({ list: skill.experts, action: "add", newItemFactory: () => ({ value: "" }) });
-};
-const removeExpert = (skill, expertIndex) => _manageListItem({
-  list: skill.experts,
+const hasSpecialSkillContent = (ss) => !!(ss.group || ss.name || ss.note);
+const hasHistoryContent = (h) => !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== "") || h.memo);
+
+const addSpecialSkillItem = () => _manageListItem({
+  list: specialSkills,
+  action: "add",
+  newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
+  maxLength: AioniaGameData.config.maxSpecialSkills,
+});
+const removeSpecialSkill = (index) => _manageListItem({
+  list: specialSkills,
   action: "remove",
-  index: expertIndex,
-  newItemFactory: () => ({ value: "" }),
-  hasContentChecker: (expert) => expert.value && expert.value.trim() !== "",
+  index,
+  newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
+  hasContentChecker: hasSpecialSkillContent,
 });
 const addHistoryItem = () => _manageListItem({
   list: histories,
@@ -249,8 +254,6 @@ const removeHistoryItem = (index) => _manageListItem({
   newItemFactory: () => ({ sessionName: "", gotExperiments: null, memo: "" }),
   hasContentChecker: hasHistoryContent,
 });
-
-const expertPlaceholder = (skill) => skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
 const handleSpeciesChange = () => { if (character.species !== "other") character.rareSpecies = ""; };
 
 const saveData = () => {
@@ -913,47 +916,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div id="skills" class="skills">
-      <div class="box-title">技能</div>
-      <ul class="skills-list box-content list-reset">
-        <li v-for="(skill) in skills" :key="skill.id" class="skill-list">
-          <div class="skill-header">
-            <input type="checkbox" :id="skill.id" v-model="skill.checked" />
-            <label :for="skill.id" class="skill-name">{{ skill.name }}</label>
-          </div>
-          <div v-if="skill.canHaveExperts && skill.checked" class="experts-section">
-            <ul class="expert-list list-reset">
-              <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="base-list-item">
-                <div class="delete-button-wrapper">
-                  <button
-                    type="button"
-                    class="button-base list-button list-button--delete"
-                    @click="removeExpert(skill, expIndex)"
-                    :disabled="skill.experts.length <= 1 && expert.value===''"
-                    aria-label="専門技能を削除"
-                  >－</button>
-                </div>
-                <input
-                  type="text"
-                  v-model="expert.value"
-                  :placeholder="expertPlaceholder(skill)"
-                  :disabled="!skill.checked"
-                  class="flex-grow"
-                />
-              </li>
-            </ul>
-            <div class="add-button-container-left">
-              <button
-                type="button"
-                class="button-base list-button list-button--add"
-                @click="addExpert(skill)"
-                aria-label="専門技能を追加"
-              >＋</button>
-            </div>
-          </div>
-        </li>
-      </ul>
-    </div>
+    <SkillsSection v-model:skills="skills" />
 
     <SpecialSkillsSection v-model:specialSkills="specialSkills" />
     <ItemsSection
