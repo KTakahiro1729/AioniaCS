@@ -24,7 +24,7 @@
       </div>
       <div class="character-image-placeholder" v-else>No Image</div>
     </div>
-    <div class="image-controls">
+    <div class="image-controls" v-if="!uiStore.isViewingShared">
       <input
         type="file"
         id="character_image_upload"
@@ -46,6 +46,7 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
 import { ImageManager } from '../../services/imageManager.js';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const props = defineProps({
   images: {
@@ -54,6 +55,7 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['update:images']);
+const uiStore = useUiStore();
 
 const imagesInternal = ref([...props.images]);
 let updatingFromParent = false;

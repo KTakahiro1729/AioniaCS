@@ -128,6 +128,7 @@ onMounted(async () => {
         characterStore.histories.length,
         ...parsed.histories,
       );
+      uiStore.isViewingShared = true;
     } catch (err) {
       console.error('Error loading shared data:', err);
     }
@@ -146,6 +147,7 @@ onMounted(async () => {
     @sign-out="handleSignOutClick"
     @choose-folder="promptForDriveFolder(true)"
   />
+  <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
   <CharacterSheetLayout />
   <MainFooter
     ref="mainFooter"
@@ -192,5 +194,11 @@ onMounted(async () => {
 /* Additional component-specific styles can go here */
 .hidden {
   display: none !important;
+}
+.view-mode-banner {
+  background: #333;
+  color: #fff;
+  text-align: center;
+  padding: 0.5rem;
 }
 </style>

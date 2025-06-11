@@ -13,6 +13,7 @@
                 id="link_current_to_initial_scar_checkbox"
                 v-model="characterStore.character.linkCurrentToInitialScar"
                 class="link-checkbox"
+                :disabled="uiStore.isViewingShared"
               />
               <label for="link_current_to_initial_scar_checkbox" class="link-checkbox-label">連動</label>
             </div>
@@ -24,11 +25,18 @@
               :class="{ 'greyed-out': characterStore.character.linkCurrentToInitialScar }"
               min="0"
               class="scar-section__current-input"
+              :disabled="uiStore.isViewingShared"
             />
           </div>
           <div class="info-item info-item--double">
             <label for="initial_scar">初期値</label>
-            <input type="number" id="initial_scar" v-model.number="characterStore.character.initialScar" min="0" />
+            <input
+              type="number"
+              id="initial_scar"
+              v-model.number="characterStore.character.initialScar"
+              min="0"
+              :disabled="uiStore.isViewingShared"
+            />
           </div>
         </div>
       </div>
@@ -43,10 +51,10 @@
           <li v-for="(weakness, index) in characterStore.character.weaknesses" :key="index" class="base-list-item">
             <div class="flex-weakness-number">{{ index + 1 }}</div>
             <div class="flex-weakness-text">
-              <input type="text" v-model="weakness.text" />
+              <input type="text" v-model="weakness.text" :disabled="uiStore.isViewingShared" />
             </div>
             <div class="flex-weakness-acquired">
-              <select v-model="weakness.acquired">
+              <select v-model="weakness.acquired" :disabled="uiStore.isViewingShared">
                 <option
                   v-for="option in sessionNames"
                   :key="option.value"
@@ -65,8 +73,10 @@
 <script setup>
 import { computed } from 'vue';
 import { useCharacterStore } from '../../stores/characterStore.js';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 const sessionNames = computed(() => characterStore.sessionNamesForWeaknessDropdown);
 
 function handleCurrentScarInput(event) {
