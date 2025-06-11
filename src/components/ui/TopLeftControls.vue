@@ -3,12 +3,13 @@
     <div class="google-drive-button-container">
       <button
         class="button-base icon-button"
-        title="Google Drive Menu"
+        :title="isSignedIn ? driveMessages.ui.driveMenuTitleSignedIn : driveMessages.ui.driveMenuTitle"
+        :aria-label="isSignedIn ? driveMessages.ui.driveMenuAriaLabelSignedIn : driveMessages.ui.driveMenuAriaLabel"
         v-if="isGapiInitialized && isGisInitialized"
         @click="toggleMenu"
         ref="driveMenuToggleButton"
       >
-        <span class="icon-svg icon-svg-cloud" aria-label="Google Drive"></span>
+        <span class="icon-svg icon-svg-cloud" aria-hidden="true"></span>
       </button>
       <div class="floating-menu" v-if="showMenu" ref="driveMenu">
         <div class="menu-item status-message" id="floating_drive_status_message">
@@ -19,14 +20,14 @@
           v-if="canSignInToGoogle"
           @click="handleSignIn"
         >
-          Sign In with Google
+          {{ driveMessages.ui.signIn }}
         </button>
         <button
           class="menu-item button-base"
           v-if="isSignedIn"
           @click="handleSignOut"
         >
-          Sign Out
+          {{ driveMessages.ui.signOut }}
         </button>
         <button
           class="menu-item button-base"
@@ -34,7 +35,7 @@
           @click="handleChooseFolder"
           :disabled="!isSignedIn"
         >
-          Choose Drive Folder
+          {{ driveMessages.ui.chooseFolder }}
         </button>
       </div>
     </div>
@@ -43,6 +44,7 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue';
+import { DriveMessages as driveMessages } from '../../data/driveMessages.js';
 
 const props = defineProps({
   isGapiInitialized: Boolean,

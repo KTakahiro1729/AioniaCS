@@ -27,16 +27,17 @@
         @click="$emit('save-to-drive')"
         :disabled="!canOperateDrive"
         title="Google Driveに保存"
+        aria-label="Google Driveに保存"
       >
         <span
           v-if="isCloudSaveSuccess"
           class="icon-svg icon-svg--footer icon-svg-success"
-          aria-label="Save Succeeded"
+          aria-hidden="true"
         ></span>
         <span
           v-else
           class="icon-svg icon-svg--footer icon-svg-upload"
-          aria-label="Save to Drive"
+          aria-hidden="true"
         ></span>
       </button>
     </div>
@@ -49,8 +50,9 @@
         @click="$emit('load-from-drive')"
         :disabled="!isSignedIn"
         title="Google Driveから読込"
+        aria-label="Google Driveから読込"
       >
-        <span class="icon-svg icon-svg--footer icon-svg-download" aria-label="Load from Drive"></span>
+        <span class="icon-svg icon-svg--footer icon-svg-download" aria-hidden="true"></span>
       </button>
     </div>
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
