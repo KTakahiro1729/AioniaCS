@@ -1,5 +1,7 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useCharacterStore } from './stores/characterStore.js';
+import { useUiStore } from './stores/uiStore.js';
 import AdventureLogSection from './components/sections/AdventureLogSection.vue';
 
 // --- Module Imports ---
@@ -8,13 +10,10 @@ import { AioniaGameData } from './data/gameData.js';
 import { DataManager } from './services/dataManager.js';
 import { CocofoliaExporter } from './services/cocofoliaExporter.js';
 import { GoogleDriveManager } from './services/googleDriveManager.js';
-import { deepClone, createWeaknessArray } from './utils/utils.js';
 import ScarWeaknessSection from './components/sections/ScarWeaknessSection.vue';
-import { useWeaknessManagement } from './composables/features/useWeaknessManagement.js';
 import CharacterBasicInfo from './components/sections/CharacterBasicInfo.vue';
 import SkillsSection from './components/sections/SkillsSection.vue';
 import ItemsSection from './components/sections/ItemsSection.vue';
-import { useEquipmentManagement } from './composables/features/useEquipmentManagement.js';
 import CharacterMemoSection from './components/sections/CharacterMemoSection.vue';
 
 import SpecialSkillsSection from './components/sections/SpecialSkillsSection.vue';
@@ -32,110 +31,21 @@ const dataManager = ref(null);
 const cocofoliaExporter = ref(null);
 const googleDriveManager = ref(null);
 
-// Main character data object, deeply reactive using `reactive()`.
-const character = reactive(
-  (() => {
-    const baseChar = deepClone(AioniaGameData.defaultCharacterData);
-    baseChar.weaknesses = createWeaknessArray(AioniaGameData.config.maxWeaknesses);
-    return baseChar;
-  })()
-);
-
-// Other primary data structures.
-const skills = reactive(deepClone(AioniaGameData.baseSkills));
-const specialSkills = reactive(
-  Array(AioniaGameData.config.initialSpecialSkillCount)
-    .fill(null)
-    .map(() => ({ group: '', name: '', note: '', showNote: false }))
-);
-const equipments = reactive({
-  weapon1: { group: '', name: '' },
-  weapon2: { group: '', name: '' },
-  armor: { group: '', name: '' },
-});
-const histories = reactive([{ sessionName: '', gotExperiments: null, memo: '' }]);
-
-// UI state refs. Primitive values are wrapped in `ref()`.
-const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
-const helpState = ref('closed'); // 'closed', 'hovered', 'fixed'
-const isDesktop = ref(false);
-const isCloudSaveSuccess = ref(false);
-
-// Google Drive related state.
-const isSignedIn = ref(false);
+const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 const googleUser = ref(null);
-const driveFolderId = ref(null);
-const driveFolderName = ref('');
-const currentDriveFileId = ref(null);
-const currentDriveFileName = ref('');
-const driveStatusMessage = ref('');
-const isGapiInitialized = ref(false);
-const isGisInitialized = ref(false);
 
 
 // --- Computed Properties (formerly `computed`) ---
 
-const isHelpVisible = computed(() => helpState.value !== 'closed');
-
-const maxExperiencePoints = computed(() => {
-  const initialScarExp = Number(character.initialScar) || 0;
-  const creationWeaknessExp = character.weaknesses.reduce(
-    (sum, weakness) =>
-      sum +
-      (weakness.text && weakness.text.trim() !== '' && weakness.acquired === '作成時'
-        ? AioniaGameData.experiencePointValues.weakness
-        : 0),
-    0
-  );
-  const combinedInitialBonus = Math.min(
-    initialScarExp + creationWeaknessExp,
-    AioniaGameData.experiencePointValues.maxInitialBonus
-  );
-  const historyExp = histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
-  return AioniaGameData.experiencePointValues.basePoints + combinedInitialBonus + historyExp;
-});
-
-const currentExperiencePoints = computed(() => {
-  const skillExp = skills.reduce(
-    (sum, s) => sum + (s.checked ? AioniaGameData.experiencePointValues.skillBase : 0),
-    0
-  );
-  const expertExp = skills.reduce((sum, s) => {
-    if (s.checked && s.canHaveExperts) {
-      return (
-        sum +
-        s.experts.reduce(
-          (expSum, exp) =>
-            expSum +
-            (exp.value && exp.value.trim() !== ''
-              ? AioniaGameData.experiencePointValues.expertSkill
-              : 0),
-          0
-        )
-      );
-    }
-    return sum;
-  }, 0);
-  const specialSkillExp = specialSkills.reduce(
-    (sum, ss) =>
-      sum + (ss.name && ss.name.trim() !== '' ? AioniaGameData.experiencePointValues.specialSkill : 0),
-    0
-  );
-  return skillExp + expertExp + specialSkillExp;
-});
-
-const { currentWeight } = useEquipmentManagement(ref(equipments));
-
-const experienceStatusClass = computed(() =>
-  currentExperiencePoints.value > maxExperiencePoints.value
-    ? 'status-display--experience-over'
-    : 'status-display--experience-ok'
-);
-
-const { sessionNamesForWeaknessDropdown } = useWeaknessManagement(ref(histories));
-
-const canSignInToGoogle = computed(() => isGapiInitialized.value && isGisInitialized.value && !isSignedIn.value);
-const canOperateDrive = computed(() => isSignedIn.value && driveFolderId.value);
+const isHelpVisible = computed(() => uiStore.isHelpVisible);
+const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
+const currentExperiencePoints = computed(() => characterStore.currentExperiencePoints);
+const currentWeight = computed(() => characterStore.currentWeight);
+const experienceStatusClass = computed(() => uiStore.experienceStatusClass);
+const sessionNamesForWeaknessDropdown = computed(() => characterStore.sessionNamesForWeaknessDropdown);
+const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
+const canOperateDrive = computed(() => uiStore.canOperateDrive);
 
 
 // --- Methods (formerly `methods`) ---
@@ -143,93 +53,48 @@ const canOperateDrive = computed(() => isSignedIn.value && driveFolderId.value);
 
 
 const handleHelpIconMouseOver = () => {
-  if (isDesktop.value && helpState.value === "closed") {
-    helpState.value = "hovered";
+  if (uiStore.isDesktop && uiStore.helpState === "closed") {
+    uiStore.helpState = "hovered";
   }
 };
 
 const handleHelpIconMouseLeave = () => {
-  if (isDesktop.value && helpState.value === "hovered") {
-    helpState.value = "closed";
+  if (uiStore.isDesktop && uiStore.helpState === "hovered") {
+    uiStore.helpState = "closed";
   }
 };
 
 const handleHelpIconClick = () => {
-  if (isDesktop.value) {
-    helpState.value = helpState.value === "fixed" ? "closed" : "fixed";
+  if (uiStore.isDesktop) {
+    uiStore.helpState = uiStore.helpState === "fixed" ? "closed" : "fixed";
   } else {
-    helpState.value = helpState.value === "closed" ? "fixed" : "closed";
+    uiStore.helpState = uiStore.helpState === "closed" ? "fixed" : "closed";
   }
 };
 
 const closeHelpPanel = () => {
-  helpState.value = "closed";
+  uiStore.helpState = "closed";
 };
-
-const _manageListItem = ({ list, action, index, newItemFactory, hasContentChecker, maxLength }) => {
-  if (action === "add") {
-    if (maxLength && list.length >= maxLength) return;
-    const newItem = typeof newItemFactory === "function" ? newItemFactory() : newItemFactory;
-    list.push(typeof newItem === 'object' && newItem !== null ? deepClone(newItem) : newItem);
-  } else if (action === "remove") {
-    if (list.length > 1) {
-      list.splice(index, 1);
-    } else if (list.length === 1 && hasContentChecker && hasContentChecker(list[index])) {
-      const emptyItem = typeof newItemFactory === "function" ? newItemFactory() : newItemFactory;
-      list[index] = typeof emptyItem === 'object' && emptyItem !== null ? deepClone(emptyItem) : emptyItem;
-    }
-  }
-};
-
-const hasSpecialSkillContent = (ss) => !!(ss.group || ss.name || ss.note);
-const hasHistoryContent = (h) => !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== "") || h.memo);
-
-const addSpecialSkillItem = () => _manageListItem({
-  list: specialSkills,
-  action: "add",
-  newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
-  maxLength: AioniaGameData.config.maxSpecialSkills,
-});
-const removeSpecialSkill = (index) => _manageListItem({
-  list: specialSkills,
-  action: "remove",
-  index,
-  newItemFactory: () => ({ group: "", name: "", note: "", showNote: false }),
-  hasContentChecker: hasSpecialSkillContent,
-});
-const addHistoryItem = () => _manageListItem({
-  list: histories,
-  action: "add",
-  newItemFactory: () => ({ sessionName: "", gotExperiments: null, memo: "" }),
-});
-const removeHistoryItem = (index) => _manageListItem({
-  list: histories,
-  action: "remove",
-  index,
-  newItemFactory: () => ({ sessionName: "", gotExperiments: null, memo: "" }),
-  hasContentChecker: hasHistoryContent,
-});
-const updateHistoryItem = (index, field, value) => {
-  if (histories[index]) {
-    histories[index][field] = field === 'gotExperiments' && value !== '' && value !== null ? Number(value) : value;
-  }
-};
-
-const handleSpeciesChange = () => { if (character.species !== "other") character.rareSpecies = ""; };
 
 const saveData = () => {
-  dataManager.value.saveData(character, skills, specialSkills, equipments, histories);
+  dataManager.value.saveData(
+    characterStore.character,
+    characterStore.skills,
+    characterStore.specialSkills,
+    characterStore.equipments,
+    characterStore.histories
+  );
 };
 
 const handleFileUpload = (event) => {
   dataManager.value.handleFileUpload(
     event,
     (parsedData) => {
-      Object.assign(character, parsedData.character);
-      skills.splice(0, skills.length, ...parsedData.skills);
-      specialSkills.splice(0, specialSkills.length, ...parsedData.specialSkills);
-      Object.assign(equipments, parsedData.equipments);
-      histories.splice(0, histories.length, ...parsedData.histories);
+      Object.assign(characterStore.character, parsedData.character);
+      characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
+      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
+      Object.assign(characterStore.equipments, parsedData.equipments);
+      characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
     },
     (errorMessage) => showCustomAlert(errorMessage)
   );
@@ -237,10 +102,10 @@ const handleFileUpload = (event) => {
 
 const outputToCocofolia = () => {
   const exportData = {
-    character,
-    skills,
-    specialSkills,
-    equipments,
+    character: characterStore.character,
+    skills: characterStore.skills,
+    specialSkills: characterStore.specialSkills,
+    equipments: characterStore.equipments,
     currentWeight: currentWeight.value,
     speciesLabelMap: AioniaGameData.speciesLabelMap,
     equipmentGroupLabelMap: AioniaGameData.equipmentGroupLabelMap,
@@ -279,16 +144,16 @@ const fallbackCopyTextToClipboard = (text) => {
     if (successful) {
       playOutputAnimation();
     } else {
-      outputButtonText.value = AioniaGameData.uiMessages.outputButton.failed;
+      uiStore.outputButtonText = AioniaGameData.uiMessages.outputButton.failed;
       setTimeout(() => {
-        outputButtonText.value = AioniaGameData.uiMessages.outputButton.default;
+        uiStore.outputButtonText = AioniaGameData.uiMessages.outputButton.default;
       }, 3000);
     }
   } catch (err) {
     console.error(err);
-    outputButtonText.value = AioniaGameData.uiMessages.outputButton.error;
+    uiStore.outputButtonText = AioniaGameData.uiMessages.outputButton.error;
     setTimeout(() => {
-        outputButtonText.value = AioniaGameData.uiMessages.outputButton.default;
+        uiStore.outputButtonText = AioniaGameData.uiMessages.outputButton.default;
     }, 3000);
   }
   document.body.removeChild(textArea);
@@ -305,7 +170,7 @@ const playOutputAnimation = () => {
   
   setTimeout(() => {
     button.classList.remove("state-1");
-    outputButtonText.value = buttonMessages.animating;
+    uiStore.outputButtonText = buttonMessages.animating;
     button.classList.add("state-2");
   }, timings.state1_bgFill);
   
@@ -316,7 +181,7 @@ const playOutputAnimation = () => {
   
   setTimeout(() => {
     button.classList.remove("state-3");
-    outputButtonText.value = buttonMessages.default;
+    uiStore.outputButtonText = buttonMessages.default;
     button.classList.add("state-4");
   }, timings.state1_bgFill + timings.state2_textHold + timings.state3_textFadeOut);
   
@@ -330,11 +195,11 @@ const showCustomAlert = (message) => alert(message);
 
 const _checkDriveReadiness = (actionContext = "operate") => {
   if (!googleDriveManager.value) {
-    driveStatusMessage.value = "Error: Drive Manager is not available.";
+    uiStore.driveStatusMessage = "Error: Drive Manager is not available.";
     return false;
   }
-  if (!isSignedIn.value && actionContext !== "sign in") {
-    driveStatusMessage.value = `Error: Please sign in to ${actionContext}.`;
+  if (!uiStore.isSignedIn && actionContext !== "sign in") {
+    uiStore.driveStatusMessage = `Error: Please sign in to ${actionContext}.`;
     return false;
   }
   return true;
@@ -342,120 +207,120 @@ const _checkDriveReadiness = (actionContext = "operate") => {
 
 const handleSignInClick = () => {
   if (!googleDriveManager.value) {
-      driveStatusMessage.value = "Error: Drive Manager not available.";
+      uiStore.driveStatusMessage = "Error: Drive Manager not available.";
       return;
   }
-  driveStatusMessage.value = "Signing in... Please wait.";
+  uiStore.driveStatusMessage = "Signing in... Please wait.";
   try {
     googleDriveManager.value.handleSignIn((error, authResult) => {
       if (error || !authResult || !authResult.signedIn) {
-        isSignedIn.value = false;
+        uiStore.isSignedIn = false;
         googleUser.value = null;
-        driveStatusMessage.value = "Sign-in failed. " + (error ? error.message || error.details || "Please try again." : "Ensure pop-ups are enabled.");
+        uiStore.driveStatusMessage = "Sign-in failed. " + (error ? error.message || error.details || "Please try again." : "Ensure pop-ups are enabled.");
       } else {
-        isSignedIn.value = true;
+        uiStore.isSignedIn = true;
         googleUser.value = { displayName: "User" }; // Placeholder
-        driveStatusMessage.value = `Signed in. Folder: ${driveFolderName.value || "Not selected"}`;
-        if (!driveFolderId.value) {
+        uiStore.driveStatusMessage = `Signed in. Folder: ${uiStore.driveFolderName || "Not selected"}`;
+        if (!uiStore.driveFolderId) {
           getOrPromptForDriveFolder();
         }
       }
     });
   } catch (err) {
-    isSignedIn.value = false;
+    uiStore.isSignedIn = false;
     googleUser.value = null;
-    driveStatusMessage.value = "Sign-in error: " + (err.message || "An unexpected error occurred.");
+    uiStore.driveStatusMessage = "Sign-in error: " + (err.message || "An unexpected error occurred.");
   }
 };
 
 const handleSignOutClick = () => {
   if (!_checkDriveReadiness("sign out")) return;
-  driveStatusMessage.value = "Signing out...";
+  uiStore.driveStatusMessage = "Signing out...";
   googleDriveManager.value.handleSignOut(() => {
-    isSignedIn.value = false;
+    uiStore.isSignedIn = false;
     googleUser.value = null;
-    currentDriveFileId.value = null;
-    currentDriveFileName.value = "";
-    driveStatusMessage.value = "Signed out.";
+    uiStore.currentDriveFileId = null;
+    uiStore.currentDriveFileName = "";
+    uiStore.driveStatusMessage = "Signed out.";
   });
 };
 
 const getOrPromptForDriveFolder = async () => {
   if (!_checkDriveReadiness("set up a folder")) return;
-  driveStatusMessage.value = "Accessing Google Drive folder...";
+  uiStore.driveStatusMessage = "Accessing Google Drive folder...";
   const appFolderName = "AioniaCS_Data";
   try {
     const folderInfo = await googleDriveManager.value.getOrCreateAppFolder(appFolderName);
     if (folderInfo && folderInfo.id) {
-      driveFolderId.value = folderInfo.id;
-      driveFolderName.value = folderInfo.name;
+      uiStore.driveFolderId = folderInfo.id;
+      uiStore.driveFolderName = folderInfo.name;
       localStorage.setItem("aioniaDriveFolderId", folderInfo.id);
       localStorage.setItem("aioniaDriveFolderName", folderInfo.name);
-      driveStatusMessage.value = `Drive Folder: ${driveFolderName.value}`;
+      uiStore.driveStatusMessage = `Drive Folder: ${uiStore.driveFolderName}`;
     } else {
-      driveStatusMessage.value = "Could not auto-setup Drive folder. Please choose one.";
+      uiStore.driveStatusMessage = "Could not auto-setup Drive folder. Please choose one.";
       await promptForDriveFolder(false);
     }
   } catch (error) {
-    driveStatusMessage.value = `Folder setup error: ${error.message || "Please choose manually."}`;
+    uiStore.driveStatusMessage = `Folder setup error: ${error.message || "Please choose manually."}`;
     await promptForDriveFolder(false);
   }
 };
 
 const promptForDriveFolder = async (isDirectClick = true) => {
   if (!_checkDriveReadiness("select a folder")) return;
-  driveStatusMessage.value = "Opening Google Drive folder picker...";
+  uiStore.driveStatusMessage = "Opening Google Drive folder picker...";
   googleDriveManager.value.showFolderPicker((error, folder) => {
     if (error) {
-      driveStatusMessage.value = `Folder selection error: ${error.message || "Cancelled or failed."}`;
+      uiStore.driveStatusMessage = `Folder selection error: ${error.message || "Cancelled or failed."}`;
     } else if (folder && folder.id) {
-      driveFolderId.value = folder.id;
-      driveFolderName.value = folder.name;
+      uiStore.driveFolderId = folder.id;
+      uiStore.driveFolderName = folder.name;
       localStorage.setItem("aioniaDriveFolderId", folder.id);
       localStorage.setItem("aioniaDriveFolderName", folder.name);
-      driveStatusMessage.value = `Drive Folder: ${driveFolderName.value}`;
-      currentDriveFileId.value = null;
-      currentDriveFileName.value = "";
+      uiStore.driveStatusMessage = `Drive Folder: ${uiStore.driveFolderName}`;
+      uiStore.currentDriveFileId = null;
+      uiStore.currentDriveFileName = "";
     } else {
-      driveStatusMessage.value = driveFolderId.value ? `Drive Folder: ${driveFolderName.value}` : "Folder selection cancelled.";
+      uiStore.driveStatusMessage = uiStore.driveFolderId ? `Drive Folder: ${uiStore.driveFolderName}` : "Folder selection cancelled.";
     }
   });
 };
 
 const handleSaveToDriveClick = async () => {
   if (!_checkDriveReadiness("save")) return;
-  if (!driveFolderId.value) {
-    driveStatusMessage.value = "Drive folder not set. Please choose a folder first.";
+  if (!uiStore.driveFolderId) {
+    uiStore.driveStatusMessage = "Drive folder not set. Please choose a folder first.";
     await promptForDriveFolder(false);
-    if (!driveFolderId.value) {
-      driveStatusMessage.value = "Save cancelled: No Drive folder selected.";
+    if (!uiStore.driveFolderId) {
+      uiStore.driveStatusMessage = "Save cancelled: No Drive folder selected.";
       return;
     }
   }
-  driveStatusMessage.value = `Saving to "${driveFolderName.value}"...`;
-  const fileName = (character.name || "Aionia_Character_Sheet").replace(/[\\/:*?"<>|]/g, "_") + ".json";
+  uiStore.driveStatusMessage = `Saving to "${uiStore.driveFolderName}"...`;
+  const fileName = (characterStore.character.name || "Aionia_Character_Sheet").replace(/[\\/:*?"<>|]/g, "_") + ".json";
   try {
     const savedFile = await dataManager.value.saveDataToDrive(
-      character,
-      skills,
-      specialSkills,
-      equipments,
-      histories,
-      driveFolderId.value,
-      currentDriveFileId.value,
+      characterStore.character,
+      characterStore.skills,
+      characterStore.specialSkills,
+      characterStore.equipments,
+      characterStore.histories,
+      uiStore.driveFolderId,
+      uiStore.currentDriveFileId,
       fileName
     );
     if (savedFile && savedFile.id) {
-      currentDriveFileId.value = savedFile.id;
-      currentDriveFileName.value = savedFile.name;
-      driveStatusMessage.value = `Saved: ${currentDriveFileName.value} to "${driveFolderName.value}".`;
-      isCloudSaveSuccess.value = true;
-      setTimeout(() => { isCloudSaveSuccess.value = false; }, 2000);
+      uiStore.currentDriveFileId = savedFile.id;
+      uiStore.currentDriveFileName = savedFile.name;
+      uiStore.driveStatusMessage = `Saved: ${uiStore.currentDriveFileName} to "${uiStore.driveFolderName}".`;
+      uiStore.isCloudSaveSuccess = true;
+      setTimeout(() => { uiStore.isCloudSaveSuccess = false; }, 2000);
     } else {
       throw new Error("Save operation did not return expected file information.");
     }
   } catch (error) {
-    driveStatusMessage.value = `Save error: ${error.message || "Unknown error"}`;
+    uiStore.driveStatusMessage = `Save error: ${error.message || "Unknown error"}`;
   }
 };
 
@@ -465,33 +330,33 @@ const handleLoadFromDriveClick = async () => {
   googleDriveManager.value.showFilePicker(
     async (error, file) => {
       if (error) {
-        driveStatusMessage.value = `File selection error: ${error.message || "Cancelled or failed."}`;
+        uiStore.driveStatusMessage = `File selection error: ${error.message || "Cancelled or failed."}`;
         return;
       }
       if (!file || !file.id) {
-        driveStatusMessage.value = "File selection cancelled or no file chosen.";
+        uiStore.driveStatusMessage = "File selection cancelled or no file chosen.";
         return;
       }
-      driveStatusMessage.value = `Loading ${file.name} from Drive...`;
+      uiStore.driveStatusMessage = `Loading ${file.name} from Drive...`;
       try {
         const parsedData = await dataManager.value.loadDataFromDrive(file.id);
         if (parsedData) {
-          Object.assign(character, parsedData.character);
-          skills.splice(0, skills.length, ...parsedData.skills);
-          specialSkills.splice(0, specialSkills.length, ...parsedData.specialSkills);
-          Object.assign(equipments, parsedData.equipments);
-          histories.splice(0, histories.length, ...parsedData.histories);
-          currentDriveFileId.value = file.id;
-          currentDriveFileName.value = file.name;
-          driveStatusMessage.value = `Loaded: ${currentDriveFileName.value} from Drive.`;
+          Object.assign(characterStore.character, parsedData.character);
+          characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
+          characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
+          Object.assign(characterStore.equipments, parsedData.equipments);
+          characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+          uiStore.currentDriveFileId = file.id;
+          uiStore.currentDriveFileName = file.name;
+          uiStore.driveStatusMessage = `Loaded: ${uiStore.currentDriveFileName} from Drive.`;
         } else {
           throw new Error("Load operation did not return data.");
         }
       } catch (err) {
-        driveStatusMessage.value = `Load error for ${file.name || "file"}: ${err.message || "Unknown error"}`;
+        uiStore.driveStatusMessage = `Load error for ${file.name || "file"}: ${err.message || "Unknown error"}`;
       }
     },
-    driveFolderId.value || null,
+    uiStore.driveFolderId || null,
     ["application/json"]
   );
 };
@@ -499,15 +364,15 @@ const handleLoadFromDriveClick = async () => {
 // --- Watchers (formerly `watch`) ---
 
 
-watch(() => character.initialScar, (newVal) => {
-  if (character.linkCurrentToInitialScar) {
-    character.currentScar = newVal;
+watch(() => characterStore.character.initialScar, (newVal) => {
+  if (characterStore.character.linkCurrentToInitialScar) {
+    characterStore.character.currentScar = newVal;
   }
 });
 
-watch(() => character.linkCurrentToInitialScar, (isLinked) => {
+watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
   if (isLinked) {
-    character.currentScar = character.initialScar;
+    characterStore.character.currentScar = characterStore.character.initialScar;
   }
 });
 
@@ -519,14 +384,14 @@ onMounted(() => {
   dataManager.value = new DataManager(AioniaGameData);
 
   // Setup UI logic
-  isDesktop.value = !('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  uiStore.isDesktop = !('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
   helpPanelClickListener = (event) => {
-    if (helpState.value === 'fixed') {
+    if (uiStore.helpState === 'fixed') {
       const helpPanelEl = helpPanelRef.value?.panelEl;
       const helpIconEl = mainFooter.value?.helpIcon;
       if (helpPanelEl && helpIconEl && !helpPanelEl.contains(event.target) && !helpIconEl.contains(event.target)) {
-        helpState.value = 'closed';
+        uiStore.helpState = 'closed';
       }
     }
   };
@@ -542,31 +407,31 @@ onMounted(() => {
       dataManager.value.setGoogleDriveManager(googleDriveManager.value);
 
       const handleGapiLoaded = async () => {
-        if (isGapiInitialized.value || !googleDriveManager.value) return;
-        isGapiInitialized.value = true;
-        driveStatusMessage.value = "Google API Client: Loading...";
+        if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
+        uiStore.isGapiInitialized = true;
+        uiStore.driveStatusMessage = "Google API Client: Loading...";
         try {
           await googleDriveManager.value.onGapiLoad();
-          driveStatusMessage.value = isSignedIn.value
-            ? `Signed in. Folder: ${driveFolderName.value || "Not selected"}`
+          uiStore.driveStatusMessage = uiStore.isSignedIn
+            ? `Signed in. Folder: ${uiStore.driveFolderName || "Not selected"}`
             : "Google API Client: Ready. Please sign in.";
         } catch (err) {
-          driveStatusMessage.value = "Google API Client: Error initializing.";
+          uiStore.driveStatusMessage = "Google API Client: Error initializing.";
           console.error("GAPI client init error:", err);
         }
       };
 
       const handleGisLoaded = async () => {
-        if (isGisInitialized.value || !googleDriveManager.value) return;
-        isGisInitialized.value = true;
-        driveStatusMessage.value = "Google Sign-In: Loading...";
+        if (uiStore.isGisInitialized || !googleDriveManager.value) return;
+        uiStore.isGisInitialized = true;
+        uiStore.driveStatusMessage = "Google Sign-In: Loading...";
         try {
           await googleDriveManager.value.onGisLoad();
-          driveStatusMessage.value = isSignedIn.value
-            ? `Signed in. Folder: ${driveFolderName.value || "Not selected"}`
+          uiStore.driveStatusMessage = uiStore.isSignedIn
+            ? `Signed in. Folder: ${uiStore.driveFolderName || "Not selected"}`
             : "Google Sign-In: Ready. Please sign in.";
         } catch (err) {
-          driveStatusMessage.value = "Google Sign-In: Error initializing.";
+          uiStore.driveStatusMessage = "Google Sign-In: Error initializing.";
           console.error("GIS client init error:", err);
         }
       };
@@ -591,8 +456,8 @@ onMounted(() => {
   const savedFolderId = localStorage.getItem('aioniaDriveFolderId');
   const savedFolderName = localStorage.getItem('aioniaDriveFolderName');
   if (savedFolderId) {
-      driveFolderId.value = savedFolderId;
-      driveFolderName.value = savedFolderName || "Previously Selected";
+      uiStore.driveFolderId = savedFolderId;
+      uiStore.driveFolderName = savedFolderName || "Previously Selected";
   }
 });
 
@@ -606,36 +471,36 @@ onBeforeUnmount(() => {
 
 <template>
   <TopLeftControls
-    :is-gapi-initialized="isGapiInitialized"
-    :is-gis-initialized="isGisInitialized"
-    :drive-status-message="driveStatusMessage"
+    :is-gapi-initialized="uiStore.isGapiInitialized"
+    :is-gis-initialized="uiStore.isGisInitialized"
+    :drive-status-message="uiStore.driveStatusMessage"
     :can-sign-in-to-google="canSignInToGoogle"
-    :is-signed-in="isSignedIn"
+    :is-signed-in="uiStore.isSignedIn"
     @sign-in="handleSignInClick"
     @sign-out="handleSignOutClick"
     @choose-folder="promptForDriveFolder(true)"
   />
   <div class="tool-title">Aionia TRPG Character Sheet</div>
   <div class="main-grid">
-    <CharacterBasicInfo v-model:character="character" />
+    <CharacterBasicInfo v-model:character="characterStore.character" />
 
     <ScarWeaknessSection
-      v-model:character="character"
+      v-model:character="characterStore.character"
       :session-names="sessionNamesForWeaknessDropdown"
     />
 
-    <SkillsSection v-model:skills="skills" />
-    <SpecialSkillsSection v-model:specialSkills="specialSkills" />
+    <SkillsSection v-model:skills="characterStore.skills" />
+    <SpecialSkillsSection v-model:specialSkills="characterStore.specialSkills" />
     <ItemsSection
-      v-model:equipments="equipments"
-      v-model:otherItems="character.otherItems"
+      v-model:equipments="characterStore.equipments"
+      v-model:otherItems="characterStore.character.otherItems"
     />
-    <CharacterMemoSection v-model="character.memo" />
+    <CharacterMemoSection v-model="characterStore.character.memo" />
     <AdventureLogSection
-      :histories="histories"
-      @add-item="addHistoryItem"
-      @remove-item="removeHistoryItem"
-      @update:history="updateHistoryItem"
+      :histories="characterStore.histories"
+      @add-item="characterStore.addHistoryItem()"
+      @remove-item="characterStore.removeHistoryItem"
+      @update:history="characterStore.updateHistoryItem"
     />
   </div>
   <div class="copyright-footer">
@@ -646,15 +511,15 @@ onBeforeUnmount(() => {
   </div>
   <MainFooter
     ref="mainFooter"
-    :help-state="helpState"
+    :help-state="uiStore.helpState"
     :experience-status-class="experienceStatusClass"
     :current-experience-points="currentExperiencePoints"
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
-    :is-signed-in="isSignedIn"
+    :is-signed-in="uiStore.isSignedIn"
     :can-operate-drive="canOperateDrive"
-    :output-button-text="outputButtonText"
-    :is-cloud-save-success="isCloudSaveSuccess"
+    :output-button-text="uiStore.outputButtonText"
+    :is-cloud-save-success="uiStore.isCloudSaveSuccess"
     @save="saveData"
     @file-upload="handleFileUpload"
     @save-to-drive="handleSaveToDriveClick"
