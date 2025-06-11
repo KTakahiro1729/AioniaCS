@@ -1,7 +1,6 @@
 const { test, expect } = require("@playwright/test");
 const path = require("path");
 
-const INDEX_HTML_PATH = "http://localhost:4173/AioniaCS/";
 const SAMPLE_IMAGE_PATH = path.resolve(__dirname, "../fixtures/sample.png");
 const SAMPLE_IMAGE_PATH_2 = path.resolve(__dirname, "../fixtures/sample2.png"); // Assume another sample image for multi-image tests
 const TEST_ZIP_PATH = path.resolve(__dirname, "../fixtures/test_char.zip");
@@ -14,49 +13,58 @@ if (!fs.existsSync(SAMPLE_IMAGE_PATH_2)) {
 
 test.describe("Character Sheet E2E Tests", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(INDEX_HTML_PATH);
+    await page.goto("/");
+    await expect(page.locator("#app")).toHaveAttribute("data-e2e-ready", "true");
+    await expect(page.locator(".main-grid")).toBeVisible();
+    await expect(page.evaluate(() => window.__E2E_MODE__ === true)).resolves.toBe(true);
+    await expect(page.locator("#name")).toBeVisible();
+    await expect(page.locator(".google-drive-button-container")).toHaveCount(0);
   });
 
   test("can input character name", async ({ page }) => {
-    const nameInput = page.locator("#name");
-    await nameInput.fill("テストキャラ");
-    await expect(nameInput).toHaveValue("テストキャラ");
+    await test.step("fill name", async () => {
+      const nameInput = page.locator("#name");
+      await nameInput.fill("テストキャラ");
+      await expect(nameInput).toHaveValue("テストキャラ");
+    });
+  });
+
+  test('google drive is disabled in e2e mode', async ({ page }) => {
+    await test.step('drive button absent', async () => {
+      await expect(page.locator('.google-drive-button-container')).toHaveCount(0);
+    });
   });
 
   test.describe("Image Handling", () => {
-    test("uploads, displays image, and saves JSON (no images initially, then one image)", async ({
-      page,
-    }) => {
-      const characterNameInput = page.locator("#name");
-      await characterNameInput.fill("JsonSaveChar");
+    test(
+      "uploads, displays image, and saves JSON (no images initially, then one image)",
+      async ({ page }) => {
+        const characterNameInput = page.locator("#name");
+        await characterNameInput.fill("JsonSaveChar");
 
-      // 1. Save with no images (JSON)
-      // Intercept downloads
-      const [jsonDownload] = await Promise.all([
-        page.waitForEvent("download"),
-        page
-          .locator('button.footer-button--save:has-text("データ保存")')
-          .click(),
-      ]);
-      // expect(jsonDownload.suggestedFilename()).toBe('JsonSaveChar_AioniaSheet.json');
-      expect(jsonDownload.suggestedFilename()).toMatch(
-        /^JsonSaveChar_\d{14}\.json$/,
-      );
+        await test.step("save without image", async () => {
+          const [jsonDownload] = await Promise.all([
+            page.waitForEvent("download"),
+            page.locator('button.footer-button--save:has-text("データ保存")').click(),
+          ]);
+          expect(jsonDownload.suggestedFilename()).toMatch(/^JsonSaveChar_\d{14}\.json$/);
+        });
 
-      // 2. Upload image
-      const imageUploadInput = page.locator("#character_image_upload");
-      await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
+        await test.step("upload image", async () => {
+          const imageUploadInput = page.locator("#character_image_upload");
+          await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
+        });
 
-      // 3. Verify image display
-      const imageDisplay = page.locator(".character-image-display");
-      await expect(imageDisplay).toBeVisible();
-      const imageSrc = await imageDisplay.getAttribute("src");
-      expect(imageSrc).toMatch(/^data:image\/png;base64,/); // Or whatever type sample.png is if specific
-
-      // 4. Verify image count
-      const imageCountDisplay = page.locator(".image-count-display");
-      await expect(imageCountDisplay).toHaveText("1 / 1");
-    });
+        await test.step("verify image", async () => {
+          const imageDisplay = page.locator(".character-image-display");
+          await expect(imageDisplay).toBeVisible();
+          const imageSrc = await imageDisplay.getAttribute("src");
+          expect(imageSrc).toMatch(/^data:image\/png;base64,/);
+          const imageCountDisplay = page.locator(".image-count-display");
+          await expect(imageCountDisplay).toHaveText("1 / 1");
+        });
+      },
+    );
 
     test("image navigation and removal", async ({ page }) => {
       const imageUploadInput = page.locator("#character_image_upload");

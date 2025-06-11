@@ -30,6 +30,12 @@ import { useHelpPanel } from './composables/ui/useHelpPanel.js';
 import { useImageManagement } from './composables/ui/useImageManagement.js';
 import { useClipboard } from './composables/ui/useClipboard.js';
 
+const isE2ETesting = import.meta.env.VITE_E2E_TESTING === 'true';
+if (isE2ETesting) {
+  console.log('E2E testing mode');
+  window.__E2E_MODE__ = true;
+}
+
 const outputButton = ref(null);
 const dataManager = ref(null);
 
@@ -79,22 +85,61 @@ const {
   removeCurrentImage,
 } = useImageManagement(character, showCustomAlert);
 
-const {
-  driveMenuToggleButton,
-  driveMenu,
-  isSignedIn,
-  canSignInToGoogle,
-  canOperateDrive,
-  showDriveMenu,
-  driveStatusMessage,
-  isCloudSaveSuccess,
-  toggleDriveMenu,
-  handleSignInClick,
-  handleSignOutClick,
-  promptForDriveFolder,
-  handleSaveToDriveClick,
-  handleLoadFromDriveClick,
-} = useGoogleDrive(character, skills, specialSkills, equipments, histories, dataManager);
+let driveMenuToggleButton;
+let driveMenu;
+let isSignedIn;
+let canSignInToGoogle;
+let canOperateDrive;
+let showDriveMenu;
+let driveStatusMessage;
+let isCloudSaveSuccess;
+let toggleDriveMenu;
+let handleSignInClick;
+let handleSignOutClick;
+let promptForDriveFolder;
+let handleSaveToDriveClick;
+let handleLoadFromDriveClick;
+
+if (!isE2ETesting) {
+  ({
+    driveMenuToggleButton,
+    driveMenu,
+    isSignedIn,
+    canSignInToGoogle,
+    canOperateDrive,
+    showDriveMenu,
+    driveStatusMessage,
+    isCloudSaveSuccess,
+    toggleDriveMenu,
+    handleSignInClick,
+    handleSignOutClick,
+    promptForDriveFolder,
+    handleSaveToDriveClick,
+    handleLoadFromDriveClick,
+  } = useGoogleDrive(
+    character,
+    skills,
+    specialSkills,
+    equipments,
+    histories,
+    dataManager,
+  ));
+} else {
+  driveMenuToggleButton = ref(null);
+  driveMenu = ref(null);
+  isSignedIn = ref(false);
+  canSignInToGoogle = ref(false);
+  canOperateDrive = ref(false);
+  showDriveMenu = ref(false);
+  driveStatusMessage = ref('');
+  isCloudSaveSuccess = ref(false);
+  toggleDriveMenu = () => {};
+  handleSignInClick = () => {};
+  handleSignOutClick = () => {};
+  promptForDriveFolder = () => {};
+  handleSaveToDriveClick = () => {};
+  handleLoadFromDriveClick = () => {};
+}
 
 const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
 const { copyToClipboard } = useClipboard(outputButtonText, outputButton);
@@ -173,11 +218,15 @@ const { outputToCocofolia } = useCocofoliaOutput(copyToClipboard, currentWeight)
 const showCustomAlert = (message) => alert(message);
 onMounted(() => {
   dataManager.value = new DataManager(AioniaGameData);
+  if (isE2ETesting) {
+    document.getElementById('app')?.setAttribute('data-e2e-ready', 'true');
+  }
 });
 </script>
 
 <template>
   <TopLeftControls
+    v-if="!isE2ETesting"
     :showDriveMenu="showDriveMenu"
     :driveStatusMessage="driveStatusMessage"
     :canSignInToGoogle="canSignInToGoogle"
