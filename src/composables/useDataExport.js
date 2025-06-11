@@ -3,6 +3,7 @@ import { DataManager } from "../services/dataManager.js";
 import { CocofoliaExporter } from "../services/cocofoliaExporter.js";
 import { AioniaGameData } from "../data/gameData.js";
 import { useCharacterStore } from "../stores/characterStore.js";
+import { generateShareKey, exportKeyToString } from "../utils/crypto.js";
 
 export function useDataExport(footerRef) {
   const characterStore = useCharacterStore();
@@ -149,11 +150,38 @@ export function useDataExport(footerRef) {
     copyToClipboard(textToCopy);
   }
 
+  async function generateShareLink(expiresIn) {
+    let key = await generateShareKey();
+    const encrypted = await dataManager.createEncryptedShareableZip(
+      characterStore.character,
+      characterStore.skills,
+      characterStore.specialSkills,
+      characterStore.equipments,
+      characterStore.histories,
+      key,
+    );
+    const payload = JSON.stringify({
+      ciphertext: Buffer.from(encrypted.ciphertext).toString("base64"),
+      iv: Buffer.from(encrypted.iv).toString("base64"),
+    });
+    const fileId = await dataManager.googleDriveManager.uploadAndShareFile(
+      payload,
+      "shared_data.enc",
+      "application/json",
+    );
+    const keyString = await exportKeyToString(key);
+    const expires = expiresIn ? Date.now() + expiresIn : 0;
+    const url = `${window.location.origin}/s?fileId=${fileId}&expires=${expires}#${keyString}`;
+    key = null;
+    return url;
+  }
+
   return {
     dataManager,
     outputButtonText,
     saveData,
     handleFileUpload,
     outputToCocofolia,
+    generateShareLink,
   };
 }

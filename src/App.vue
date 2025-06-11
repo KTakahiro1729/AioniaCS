@@ -30,6 +30,7 @@ const {
   saveData,
   handleFileUpload,
   outputToCocofolia,
+  generateShareLink,
 } = useDataExport(mainFooter);
 
 const {
@@ -120,6 +121,7 @@ watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
   />
   <ShareDialog
     v-if="isShareDialogVisible"
+    :generate-share-link="generateShareLink"
     @close="isShareDialogVisible = false"
   />
 </template>
