@@ -1,10 +1,11 @@
 # AGENT Instructions
-
-- When creating a pull request, include a Githack link so reviewers can preview the HTML after changes.
-  Example:
-  `https://raw.githack.com/KTakahiro1729/AioniaCS/<branch>/index.html`
-  Replace `<branch>` with the branch name containing your changes. For example, `https://raw.githack.com/KTakahiro1729/AioniaCS/codex/add-slider/index.html`
+- Follow the following steps during development.
+  1. run npm lint, test, e2e
+  2. evaluate the goal given to AGENT and assess whether they are met.
+  3. change code
+  4. run npm lint, test, e2e. If they raise any errors, revert to step 3.
+  5. evaluate goal accomplishment. if not accomplished, move to step 3.
+  6. commit changes and make PRs.
 - Use branch names that only contain ASCII characters (letters, numbers, hyphens, underscores).
 - When creating designs, keep in mind that the theme is 'DarkFantasy'
 - comments should be minimal. especially do not include comments with change logs.
-
