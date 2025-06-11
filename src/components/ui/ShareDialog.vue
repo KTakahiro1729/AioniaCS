@@ -1,7 +1,7 @@
 <template>
-  <div class="share-dialog-overlay">
-    <div class="share-dialog">
-      <h2>共有</h2>
+  <div class="share-dialog-overlay" @keydown.esc="emit('close')" tabindex="0">
+    <div class="share-dialog" role="dialog" aria-modal="true" aria-labelledby="share-dialog-title">
+      <h2 id="share-dialog-title">共有</h2>
       <div v-if="!shareUrl && !isLoading">
         <div class="expiration-options">
           <label
@@ -19,17 +19,17 @@
             />無期限</label
           >
         </div>
-        <button class="button-base" @click="generate">共有リンクを生成</button>
+        <button class="button-base" @click="generate" aria-label="共有リンクを生成">共有リンクを生成</button>
       </div>
       <div v-else-if="isLoading" class="loading">生成中...</div>
       <div v-else class="result">
         <textarea class="share-url" v-model="shareUrl" readonly />
-        <button class="button-base" @click="copyUrl">コピー</button>
+        <button class="button-base" @click="copyUrl" aria-label="コピー">コピー</button>
         <div class="share-security-warning">
           共有リンクは第三者に渡さないでください。
         </div>
       </div>
-      <button class="button-base" @click="emit('close')">閉じる</button>
+      <button class="button-base" @click="emit('close')" aria-label="閉じる">閉じる</button>
     </div>
   </div>
 </template>

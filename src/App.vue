@@ -86,11 +86,11 @@ onMounted(async () => {
     const expires = Number(url.searchParams.get('expires')) || 0;
     const keyFragment = url.hash.slice(1);
     if (!keyFragment) {
-      console.error('Share key missing in URL');
+      alert('共有リンクが不正です（鍵がありません）');
       return;
     }
     if (expires && Date.now() > expires) {
-      console.error('Share link expired');
+      alert('共有リンクの有効期限が切れています');
       return;
     }
     try {
@@ -99,7 +99,7 @@ onMounted(async () => {
         fileId,
       );
       if (!content) {
-        console.error('Failed to load shared file');
+        alert('共有データを取得できませんでした');
         return;
       }
       const { ciphertext, iv } = JSON.parse(content);
@@ -130,6 +130,13 @@ onMounted(async () => {
       );
       uiStore.isViewingShared = true;
     } catch (err) {
+      if (err.message && err.message.includes('OperationError')) {
+        alert('暗号鍵が正しくありません');
+      } else if (err.message && err.message.includes('character_data.json')) {
+        alert('共有データが破損しています');
+      } else {
+        alert('共有データの読み込みに失敗しました');
+      }
       console.error('Error loading shared data:', err);
     }
   }
@@ -160,6 +167,7 @@ onMounted(async () => {
     :can-operate-drive="canOperateDrive"
     :output-button-text="outputButtonText"
     :is-cloud-save-success="uiStore.isCloudSaveSuccess"
+    :is-viewing-shared="uiStore.isViewingShared"
     @save="saveData"
     @file-upload="handleFileUpload"
     @save-to-drive="handleSaveToDriveClick"
@@ -169,6 +177,7 @@ onMounted(async () => {
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
     @share="isShareDialogVisible = true"
+    @copy-edit="uiStore.isViewingShared = false"
   />
   <HelpPanel
     ref="helpPanelRef"
