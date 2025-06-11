@@ -9,6 +9,7 @@ import { CocofoliaExporter } from './services/cocofoliaExporter.js';
 import { ImageManager } from './services/imageManager.js';
 import { GoogleDriveManager } from './services/googleDriveManager.js';
 import { deepClone, createWeaknessArray } from './utils/utils.js';
+import CharacterMemoSection from './components/sections/CharacterMemoSection.vue';
 
 // --- Template Refs ---
 // These refs will be linked to elements in the template via `ref="..."`.
@@ -1089,12 +1090,7 @@ onBeforeUnmount(() => {
             </div>
         </div>
     </div>
-    <div id="character_memo" class="character-memo">
-        <div class="box-title">キャラクターメモ</div>
-        <div class="box-content">
-            <textarea id="character_text" :placeholder="AioniaGameData.placeholderTexts.characterMemo" v-model="character.memo" class="character-memo-textarea"></textarea>
-        </div>
-    </div>
+    <CharacterMemoSection v-model="character.memo" />
     <div id="adventure_log_section" class="adventure-log-section">
         <div class="box-title">冒険の記録</div>
         <div class="box-content">
