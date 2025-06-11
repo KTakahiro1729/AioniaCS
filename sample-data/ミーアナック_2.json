@@ -1,0 +1,166 @@
+{
+  "character": {
+    "images": [],
+    "name": "ミーアナック",
+    "playerName": "あろすてりっく",
+    "species": "therianthropy",
+    "rareSpecies": "",
+    "occupation": "",
+    "age": null,
+    "gender": "",
+    "height": "",
+    "weight": "",
+    "origin": "",
+    "faith": "",
+    "otherItems": "",
+    "currentScar": 0,
+    "initialScar": 0,
+    "linkCurrentToInitialScar": true,
+    "memo": "ミーマレットという獣人族の一人。白壁山脈北部の町に住む",
+    "weaknesses": [
+      {
+        "text": "ことあるごとに嘘をつこうとする",
+        "acquired": "作成時"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      },
+      {
+        "text": "",
+        "acquired": "--"
+      }
+    ]
+  },
+  "skills": [
+    {
+      "id": "motion",
+      "checked": false,
+      "canHaveExperts": true,
+      "experts": []
+    },
+    {
+      "id": "avoidance",
+      "checked": false,
+      "canHaveExperts": false,
+      "experts": []
+    },
+    {
+      "id": "sense",
+      "checked": true,
+      "canHaveExperts": true,
+      "experts": []
+    },
+    {
+      "id": "observation",
+      "checked": true,
+      "canHaveExperts": true,
+      "experts": [
+        {
+          "value": "目利き"
+        }
+      ]
+    },
+    {
+      "id": "technique",
+      "checked": false,
+      "canHaveExperts": true,
+      "experts": []
+    },
+    {
+      "id": "shooting",
+      "checked": false,
+      "canHaveExperts": true,
+      "experts": []
+    },
+    {
+      "id": "sociality",
+      "checked": true,
+      "canHaveExperts": true,
+      "experts": [
+        {
+          "value": "取引"
+        }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "checked": true,
+      "canHaveExperts": true,
+      "experts": [
+        {
+          "value": "経理"
+        }
+      ]
+    },
+    {
+      "id": "combat",
+      "checked": false,
+      "canHaveExperts": true,
+      "experts": []
+    },
+    {
+      "id": "defense",
+      "checked": false,
+      "canHaveExperts": false,
+      "experts": []
+    }
+  ],
+  "specialSkills": [
+    {
+      "group": "features",
+      "name": "cajolery",
+      "note": "",
+      "showNote": false
+    },
+    {
+      "group": "features",
+      "name": "adaptability",
+      "note": "",
+      "showNote": false
+    }
+  ],
+  "equipments": {
+    "weapon1": {
+      "group": "",
+      "name": ""
+    },
+    "weapon2": {
+      "group": "",
+      "name": ""
+    },
+    "armor": {
+      "group": "",
+      "name": ""
+    }
+  },
+  "histories": []
+}
