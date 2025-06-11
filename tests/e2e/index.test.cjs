@@ -1,7 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const path = require("path");
 
-const INDEX_HTML_PATH = "http://localhost:4173/AioniaCS/";
+const INDEX_HTML_PATH = "/";
 const SAMPLE_IMAGE_PATH = path.resolve(__dirname, "../fixtures/sample.png");
 const SAMPLE_IMAGE_PATH_2 = path.resolve(__dirname, "../fixtures/sample2.png"); // Assume another sample image for multi-image tests
 const TEST_ZIP_PATH = path.resolve(__dirname, "../fixtures/test_char.zip");
