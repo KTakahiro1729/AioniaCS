@@ -8,7 +8,7 @@
             <div class="equipment-item">
               <label for="weapon1">武器1</label>
               <div class="flex-group">
-                <select id="weapon1" v-model="localEquipments.weapon1.group" class="flex-item-1">
+                <select id="weapon1" v-model="characterStore.equipments.weapon1.group" class="flex-item-1">
                   <option
                     v-for="option in gameData.weaponOptions"
                     :key="option.value"
@@ -18,7 +18,7 @@
                 <input
                   type="text"
                   id="weapon1_name"
-                  v-model="localEquipments.weapon1.name"
+                  v-model="characterStore.equipments.weapon1.name"
                   :placeholder="gameData.placeholderTexts.weaponName"
                   class="flex-item-2"
                 />
@@ -27,7 +27,7 @@
             <div class="equipment-item">
               <label for="weapon2">武器2</label>
               <div class="flex-group">
-                <select id="weapon2" v-model="localEquipments.weapon2.group" class="flex-item-1">
+                <select id="weapon2" v-model="characterStore.equipments.weapon2.group" class="flex-item-1">
                   <option
                     v-for="option in gameData.weaponOptions"
                     :key="option.value"
@@ -37,7 +37,7 @@
                 <input
                   type="text"
                   id="weapon2_name"
-                  v-model="localEquipments.weapon2.name"
+                  v-model="characterStore.equipments.weapon2.name"
                   :placeholder="gameData.placeholderTexts.weaponName"
                   class="flex-item-2"
                 />
@@ -46,7 +46,7 @@
             <div class="equipment-item">
               <label for="armor">防具</label>
               <div class="flex-group">
-                <select id="armor" v-model="localEquipments.armor.group" class="flex-item-1">
+                <select id="armor" v-model="characterStore.equipments.armor.group" class="flex-item-1">
                   <option
                     v-for="option in gameData.armorOptions"
                     :key="option.value"
@@ -56,7 +56,7 @@
                 <input
                   type="text"
                   id="armor_name"
-                  v-model="localEquipments.armor.name"
+                  v-model="characterStore.equipments.armor.name"
                   :placeholder="gameData.placeholderTexts.armorName"
                   class="flex-item-2"
                 />
@@ -67,57 +67,15 @@
       </div>
       <div>
         <label for="other_items" class="block-label">その他所持品</label>
-        <textarea id="other_items" class="items-textarea" v-model="localOtherItems"></textarea>
+        <textarea id="other_items" class="items-textarea" v-model="characterStore.character.otherItems"></textarea>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { watch, reactive, ref } from 'vue'
 import { AioniaGameData as gameData } from '../../data/gameData.js'
+import { useCharacterStore } from '../../stores/characterStore.js'
 
-const props = defineProps({
-  equipments: Object,
-  otherItems: String
-})
-
-const emit = defineEmits(['update:equipments', 'update:otherItems'])
-
-const localEquipments = reactive({
-  weapon1: { group: '', name: '' },
-  weapon2: { group: '', name: '' },
-  armor: { group: '', name: '' }
-})
-
-Object.assign(localEquipments, props.equipments)
-const localOtherItems = ref(props.otherItems)
-
-watch(
-  () => props.equipments,
-  (val) => {
-    Object.assign(localEquipments, val)
-  }
-)
-watch(
-  () => props.otherItems,
-  (val) => {
-    localOtherItems.value = val
-  }
-)
-
-watch(
-  localEquipments,
-  (val) => {
-    emit('update:equipments', val)
-  },
-  { deep: true }
-)
-
-watch(
-  localOtherItems,
-  (val) => {
-    emit('update:otherItems', val)
-  }
-)
+const characterStore = useCharacterStore()
 </script>

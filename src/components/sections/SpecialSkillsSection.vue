@@ -70,44 +70,23 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
 import { AioniaGameData } from '../../data/gameData.js';
-import { deepClone } from "../../utils/utils.js";
+import { useCharacterStore } from '../../stores/characterStore.js';
 
-const props = defineProps({
-  specialSkills: { type: Array, default: () => [] },
-});
-const emit = defineEmits(['update:specialSkills']);
-
-const localSpecialSkills = ref(deepClone(props.specialSkills));
-
-watch(
-  () => props.specialSkills,
-  (val) => {
-    localSpecialSkills.value = deepClone(val);
-  },
-  { deep: true }
-);
-
-watch(
-  localSpecialSkills,
-  (val) => {
-    emit('update:specialSkills', deepClone(val));
-  },
-  { deep: true }
-);
+const characterStore = useCharacterStore();
+const localSpecialSkills = characterStore.specialSkills;
 
 function hasSpecialSkillContent(ss) {
   return !!(ss.group || ss.name || ss.note);
 }
 
 function addSpecialSkillItem() {
-  if (localSpecialSkills.value.length >= AioniaGameData.config.maxSpecialSkills) return;
-  localSpecialSkills.value.push({ group: '', name: '', note: '', showNote: false });
+  if (localSpecialSkills.length >= AioniaGameData.config.maxSpecialSkills) return;
+  localSpecialSkills.push({ group: '', name: '', note: '', showNote: false });
 }
 
 function removeSpecialSkill(index) {
-  const list = localSpecialSkills.value;
+  const list = localSpecialSkills;
   if (list.length > 1) {
     list.splice(index, 1);
   } else if (hasSpecialSkillContent(list[index])) {
@@ -116,12 +95,12 @@ function removeSpecialSkill(index) {
 }
 
 function availableSpecialSkillNames(index) {
-  const item = localSpecialSkills.value[index];
+  const item = localSpecialSkills[index];
   return item ? AioniaGameData.specialSkillData[item.group] || [] : [];
 }
 
 function updateSpecialSkillOptions(index) {
-  const item = localSpecialSkills.value[index];
+  const item = localSpecialSkills[index];
   if (item) {
     item.name = '';
     updateSpecialSkillNoteVisibility(index);
@@ -129,7 +108,7 @@ function updateSpecialSkillOptions(index) {
 }
 
 function updateSpecialSkillNoteVisibility(index) {
-  const item = localSpecialSkills.value[index];
+  const item = localSpecialSkills[index];
   if (item) {
     const skillName = item.name;
     item.showNote = AioniaGameData.specialSkillsRequiringNote.includes(skillName);

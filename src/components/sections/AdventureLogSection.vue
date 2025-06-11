@@ -14,10 +14,10 @@
       </div>
       <ul id="histories" class="list-reset">
         <BaseListItem
-          v-for="(history, index) in histories"
+          v-for="(history, index) in characterStore.histories"
           :key="index"
           :show-delete-button="true"
-          :can-delete="!(histories.length <= 1 && !hasHistoryContent(history))"
+          :can-delete="!(characterStore.histories.length <= 1 && !hasHistoryContent(history))"
           @delete-item="removeItem(index)"
         >
           <div class="flex-grow">
@@ -63,23 +63,20 @@
 <script setup>
 import BaseInput from '../common/BaseInput.vue';
 import BaseListItem from '../common/BaseListItem.vue';
+import { useCharacterStore } from '../../stores/characterStore.js';
 
-const props = defineProps({
-  histories: { type: Array, default: () => [] },
-});
-
-const emit = defineEmits(['add-item', 'remove-item', 'update:history']);
+const characterStore = useCharacterStore();
 
 function addItem() {
-  emit('add-item');
+  characterStore.addHistoryItem();
 }
 
 function removeItem(index) {
-  emit('remove-item', index);
+  characterStore.removeHistoryItem(index);
 }
 
 function updateField(index, field, value) {
-  emit('update:history', index, field, value);
+  characterStore.updateHistoryItem(index, field, value);
 }
 
 function hasHistoryContent(h) {

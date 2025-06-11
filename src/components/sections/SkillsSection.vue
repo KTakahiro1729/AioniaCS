@@ -47,49 +47,25 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { deepClone } from '../../utils/utils.js';
 import { useListManagement } from '../../composables/core/useListManagement.js';
 import { useSkillsManagement } from '../../composables/features/useSkillsManagement.js';
+import { useCharacterStore } from '../../stores/characterStore.js';
 
-const props = defineProps({
-  skills: {
-    type: Array,
-    required: true,
-  },
-});
-
-const emit = defineEmits(['update:skills']);
-const localSkills = ref(deepClone(props.skills));
-
-watch(
-  () => props.skills,
-  (val) => {
-    localSkills.value = deepClone(val);
-  },
-  { deep: true }
-);
-
-watch(
-  localSkills,
-  (val) => {
-    emit('update:skills', deepClone(val));
-  },
-  { deep: true }
-);
+const characterStore = useCharacterStore();
+const localSkills = characterStore.skills;
 
 const { addItem, removeItem } = useListManagement();
 const { expertPlaceholder } = useSkillsManagement();
 
 function addExpert(skillIndex) {
-  const skill = localSkills.value[skillIndex];
+  const skill = localSkills[skillIndex];
   if (skill && skill.canHaveExperts) {
     addItem(skill.experts, () => ({ value: '' }));
   }
 }
 
 function removeExpert(skillIndex, expertIndex) {
-  const skill = localSkills.value[skillIndex];
+  const skill = localSkills[skillIndex];
   if (skill) {
     removeItem(
       skill.experts,
