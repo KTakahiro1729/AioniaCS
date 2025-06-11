@@ -173,8 +173,8 @@ export function useGoogleDrive(dataManager) {
       if (savedFile && savedFile.id) {
         uiStore.currentDriveFileId = savedFile.id;
         uiStore.currentDriveFileName = savedFile.name;
-        uiStore.driveStatusMessage = DriveMessages.notifications.saveSuccess(
-          uiStore.currentDriveFileName,
+        uiStore.driveStatusMessage = DriveMessages.status.signedIn(
+          uiStore.driveFolderName,
         );
         notificationStore.addNotification({
           type: "success",
@@ -232,10 +232,9 @@ export function useGoogleDrive(dataManager) {
             );
             uiStore.currentDriveFileId = file.id;
             uiStore.currentDriveFileName = file.name;
-            uiStore.driveStatusMessage =
-              DriveMessages.notifications.loadSuccess(
-                uiStore.currentDriveFileName,
-              );
+            uiStore.driveStatusMessage = DriveMessages.status.signedIn(
+              uiStore.driveFolderName,
+            );
             notificationStore.addNotification({
               type: "success",
               message: DriveMessages.notifications.loadSuccess(
