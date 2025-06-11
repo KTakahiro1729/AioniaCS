@@ -389,6 +389,53 @@ export class GoogleDriveManager {
   }
 
   /**
+   * Uploads a file and sets sharing permissions.
+   * @param {string|ArrayBuffer} fileContent
+   * @param {string} fileName
+   * @param {string} mimeType
+   * @returns {Promise<string|null>} Uploaded file ID
+   */
+  async uploadAndShareFile(fileContent, fileName, mimeType) {
+    if (!gapi.client || !gapi.client.drive) {
+      console.error(
+        "GAPI client or Drive API not loaded for uploadAndShareFile.",
+      );
+      return null;
+    }
+    try {
+      const boundary = "-------314159265358979323846";
+      const delimiter = `\r\n--${boundary}\r\n`;
+      const closeDelim = `\r\n--${boundary}--`;
+      const metadata = { name: fileName, mimeType };
+      const multipartRequestBody =
+        delimiter +
+        "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+        JSON.stringify(metadata) +
+        delimiter +
+        `Content-Type: ${mimeType}\r\n\r\n` +
+        fileContent +
+        closeDelim;
+
+      const res = await gapi.client.request({
+        path: "/upload/drive/v3/files",
+        method: "POST",
+        params: { uploadType: "multipart", fields: "id" },
+        headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+        body: multipartRequestBody,
+      });
+
+      await gapi.client.drive.permissions.create({
+        fileId: res.result.id,
+        resource: { role: "reader", type: "anyone" },
+      });
+      return res.result.id;
+    } catch (error) {
+      console.error("Error uploading and sharing file:", error);
+      return null;
+    }
+  }
+
+  /**
    * Shows the Google File Picker to select a file.
    * @param {function} callback - Function to call with the result (error, {id, name}).
    * @param {string|null} parentFolderId - Optional ID of the folder to start in.

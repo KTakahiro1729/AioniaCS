@@ -56,6 +56,9 @@
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
       {{ outputButtonText }}
     </div>
+    <button class="button-base footer-button footer-button--share" @click="$emit('share')">
+      共有
+    </button>
   </div>
 </template>
 

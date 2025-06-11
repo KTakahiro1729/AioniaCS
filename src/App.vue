@@ -14,9 +14,11 @@ import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
+import ShareDialog from './components/ui/ShareDialog.vue';
 // --- Template Refs ---
 const mainFooter = ref(null);
 const helpPanelRef = ref(null);
+const isShareDialogVisible = ref(false);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
@@ -108,12 +110,17 @@ watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
+    @share="isShareDialogVisible = true"
   />
   <HelpPanel
     ref="helpPanelRef"
     :is-visible="isHelpVisible"
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
+  />
+  <ShareDialog
+    v-if="isShareDialogVisible"
+    @close="isShareDialogVisible = false"
   />
 </template>
 
