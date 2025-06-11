@@ -10,6 +10,9 @@ import { CocofoliaExporter } from './services/cocofoliaExporter.js';
 import { ImageManager } from './services/imageManager.js';
 import { GoogleDriveManager } from './services/googleDriveManager.js';
 import { deepClone, createWeaknessArray } from './utils/utils.js';
+import ItemsSection from './components/sections/ItemsSection.vue';
+import { useEquipmentManagement } from './composables/features/useEquipmentManagement.js';
+import CharacterMemoSection from './components/sections/CharacterMemoSection.vue';
 
 // --- Template Refs ---
 // These refs will be linked to elements in the template via `ref="..."`.
@@ -133,15 +136,7 @@ const currentExperiencePoints = computed(() => {
   return skillExp + expertExp + specialSkillExp;
 });
 
-const currentWeight = computed(() => {
-  const weaponWeights = AioniaGameData.equipmentWeights.weapon;
-  const armorWeights = AioniaGameData.equipmentWeights.armor;
-  let weight = 0;
-  weight += weaponWeights[equipments.weapon1.group] || 0;
-  weight += weaponWeights[equipments.weapon2.group] || 0;
-  weight += armorWeights[equipments.armor.group] || 0;
-  return weight;
-});
+const { currentWeight } = useEquipmentManagement(ref(equipments));
 
 const experienceStatusClass = computed(() =>
   currentExperiencePoints.value > maxExperiencePoints.value
@@ -1054,54 +1049,12 @@ onBeforeUnmount(() => {
             </div>
         </div>
     </div>
-    <div id="items_section" class="items">
-        <div class="box-title">所持品</div>
-        <div class="box-content">
-            <div class="equipment-wrapper">
-              <div class="equipment-container">
-                <div class="equipment-section">
-                  <div class="equipment-item">
-                    <label for="weapon1">武器1</label>
-                    <div class="flex-group">
-                      <select id="weapon1" v-model="equipments.weapon1.group" class="flex-item-1">
-                        <option v-for="option in AioniaGameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                      </select>
-                      <input type="text" id="weapon1_name" v-model="equipments.weapon1.name" :placeholder="AioniaGameData.placeholderTexts.weaponName" class="flex-item-2"/>
-                    </div>
-                  </div>
-                  <div class="equipment-item">
-                    <label for="weapon2">武器2</label>
-                    <div class="flex-group">
-                      <select id="weapon2" v-model="equipments.weapon2.group" class="flex-item-1">
-                        <option v-for="option in AioniaGameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                      </select>
-                      <input type="text" id="weapon2_name" v-model="equipments.weapon2.name" :placeholder="AioniaGameData.placeholderTexts.weaponName" class="flex-item-2"/>
-                    </div>
-                  </div>
-                  <div class="equipment-item">
-                    <label for="armor">防具</label>
-                    <div class="flex-group">
-                      <select id="armor" v-model="equipments.armor.group" class="flex-item-1">
-                        <option v-for="option in AioniaGameData.armorOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                      </select>
-                      <input type="text" id="armor_name" v-model="equipments.armor.name" :placeholder="AioniaGameData.placeholderTexts.armorName" class="flex-item-2"/>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label for="other_items" class="block-label">その他所持品</label>
-              <textarea id="other_items" class="items-textarea" v-model="character.otherItems"></textarea>
-            </div>
-        </div>
-    </div>
-    <div id="character_memo" class="character-memo">
-        <div class="box-title">キャラクターメモ</div>
-        <div class="box-content">
-            <textarea id="character_text" :placeholder="AioniaGameData.placeholderTexts.characterMemo" v-model="character.memo" class="character-memo-textarea"></textarea>
-        </div>
-    </div>
+
+    <ItemsSection
+      v-model:equipments="equipments"
+      v-model:otherItems="character.otherItems"
+    />
+    <CharacterMemoSection v-model="character.memo" />
     <AdventureLogSection
       :histories="histories"
       @add-item="addHistoryItem"
