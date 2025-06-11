@@ -14,6 +14,7 @@ import ItemsSection from './components/sections/ItemsSection.vue';
 import { useEquipmentManagement } from './composables/features/useEquipmentManagement.js';
 import CharacterMemoSection from './components/sections/CharacterMemoSection.vue';
 
+import SpecialSkillsSection from './components/sections/SpecialSkillsSection.vue';
 // --- Template Refs ---
 // These refs will be linked to elements in the template via `ref="..."`.
 const driveMenuToggleButton = ref(null);
@@ -242,19 +243,6 @@ const removeHistoryItem = (index) => _manageListItem({
 
 const expertPlaceholder = (skill) => skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
 const handleSpeciesChange = () => { if (character.species !== "other") character.rareSpecies = ""; };
-const availableSpecialSkillNames = (index) => specialSkills[index] ? (AioniaGameData.specialSkillData[specialSkills[index].group] || []) : [];
-const updateSpecialSkillOptions = (index) => {
-  if (specialSkills[index]) {
-    specialSkills[index].name = "";
-    updateSpecialSkillNoteVisibility(index);
-  }
-};
-const updateSpecialSkillNoteVisibility = (index) => {
-  if (specialSkills[index]) {
-    const skillName = specialSkills[index].name;
-    specialSkills[index].showNote = AioniaGameData.specialSkillsRequiringNote.includes(skillName);
-  }
-};
 
 const saveData = () => {
   dataManager.value.saveData(character, skills, specialSkills, equipments, histories);
@@ -767,67 +755,7 @@ onBeforeUnmount(() => {
 
     <SkillsSection v-model:skills="skills" />
 
-    <div id="special_skills" class="special-skills">
-        <div class="box-title">特技</div>
-        <div class="box-content">
-            <ul class="list-reset special-skills-list">
-              <li v-for="(specialSkill, index) in specialSkills" :key="index" class="base-list-item special-skill-item">
-                <div class="delete-button-wrapper">
-                  <button
-                    type="button"
-                    class="button-base list-button list-button--delete"
-                    @click="removeSpecialSkill(index)"
-                    :disabled="specialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)"
-                    aria-label="特技を削除"
-                  >－</button>
-                </div>
-                <div class="flex-grow">
-                  <div class="flex-group">
-                    <select
-                      v-model="specialSkill.group"
-                      @change="updateSpecialSkillOptions(index)"
-                      class="flex-item-1"
-                    >
-                      <option
-                        v-for="option in AioniaGameData.specialSkillGroupOptions"
-                        :key="option.value"
-                        :value="option.value"
-                      >{{ option.label }}</option>
-                    </select>
-                    <select
-                      v-model="specialSkill.name"
-                      @change="updateSpecialSkillNoteVisibility(index)"
-                      :disabled="!specialSkill.group"
-                      class="flex-item-2"
-                    >
-                      <option value="">---</option>
-                      <option
-                        v-for="opt in availableSpecialSkillNames(index)"
-                        :key="opt.value"
-                        :value="opt.value"
-                      >{{ opt.label }}</option>
-                    </select>
-                  </div>
-                  <input
-                    type="text"
-                    v-model="specialSkill.note"
-                    v-show="specialSkill.showNote"
-                    class="special-skill-note-input"
-                    :placeholder="AioniaGameData.placeholderTexts.specialSkillNote"
-                  />
-                </div>
-              </li>
-            </ul>
-            <div class="add-button-container-left" v-if="specialSkills.length < AioniaGameData.config.maxSpecialSkills">
-              <button
-                type="button"
-                class="button-base list-button list-button--add"
-                @click="addSpecialSkillItem()"
-                aria-label="特技を追加"
-              >＋</button>
-            </div>
-        </div>
-    </div>
+    <SpecialSkillsSection v-model:specialSkills="specialSkills" />
     <ItemsSection
       v-model:equipments="equipments"
       v-model:otherItems="character.otherItems"
