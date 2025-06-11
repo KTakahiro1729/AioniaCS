@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import AdventureLogSection from './components/sections/AdventureLogSection.vue';
 
 // --- Module Imports ---
@@ -18,13 +18,12 @@ import { useEquipmentManagement } from './composables/features/useEquipmentManag
 import CharacterMemoSection from './components/sections/CharacterMemoSection.vue';
 
 import SpecialSkillsSection from './components/sections/SpecialSkillsSection.vue';
+import TopLeftControls from './components/ui/TopLeftControls.vue';
+import MainFooter from './components/ui/MainFooter.vue';
+import HelpPanel from './components/ui/HelpPanel.vue';
 // --- Template Refs ---
-// These refs will be linked to elements in the template via `ref="..."`.
-const driveMenuToggleButton = ref(null);
-const driveMenu = ref(null);
-const helpIcon = ref(null);
-const helpPanel = ref(null);
-const outputButton = ref(null);
+const mainFooter = ref(null);
+const helpPanelRef = ref(null);
 
 // --- Reactive State (formerly `data`) ---
 
@@ -60,7 +59,6 @@ const histories = reactive([{ sessionName: '', gotExperiments: null, memo: '' }]
 const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
 const helpState = ref('closed'); // 'closed', 'hovered', 'fixed'
 const isDesktop = ref(false);
-const showDriveMenu = ref(false);
 const isCloudSaveSuccess = ref(false);
 
 // Google Drive related state.
@@ -142,9 +140,6 @@ const canOperateDrive = computed(() => isSignedIn.value && driveFolderId.value);
 
 // --- Methods (formerly `methods`) ---
 
-const toggleDriveMenu = () => {
-  showDriveMenu.value = !showDriveMenu.value;
-};
 
 
 const handleHelpIconMouseOver = () => {
@@ -300,7 +295,7 @@ const fallbackCopyTextToClipboard = (text) => {
 };
 
 const playOutputAnimation = () => {
-  const button = outputButton.value;
+  const button = mainFooter.value?.outputButton;
   if (!button || button.classList.contains("is-animating")) return;
   
   const buttonMessages = AioniaGameData.uiMessages.outputButton;
@@ -346,7 +341,6 @@ const _checkDriveReadiness = (actionContext = "operate") => {
 };
 
 const handleSignInClick = () => {
-  showDriveMenu.value = false;
   if (!googleDriveManager.value) {
       driveStatusMessage.value = "Error: Drive Manager not available.";
       return;
@@ -375,7 +369,6 @@ const handleSignInClick = () => {
 };
 
 const handleSignOutClick = () => {
-  showDriveMenu.value = false;
   if (!_checkDriveReadiness("sign out")) return;
   driveStatusMessage.value = "Signing out...";
   googleDriveManager.value.handleSignOut(() => {
@@ -388,7 +381,6 @@ const handleSignOutClick = () => {
 };
 
 const getOrPromptForDriveFolder = async () => {
-  showDriveMenu.value = false;
   if (!_checkDriveReadiness("set up a folder")) return;
   driveStatusMessage.value = "Accessing Google Drive folder...";
   const appFolderName = "AioniaCS_Data";
@@ -411,7 +403,6 @@ const getOrPromptForDriveFolder = async () => {
 };
 
 const promptForDriveFolder = async (isDirectClick = true) => {
-  if (isDirectClick) showDriveMenu.value = false;
   if (!_checkDriveReadiness("select a folder")) return;
   driveStatusMessage.value = "Opening Google Drive folder picker...";
   googleDriveManager.value.showFolderPicker((error, folder) => {
@@ -507,27 +498,6 @@ const handleLoadFromDriveClick = async () => {
 
 // --- Watchers (formerly `watch`) ---
 
-let driveMenuClickListener = null;
-watch(showDriveMenu, (newValue) => {
-  if (driveMenuClickListener) {
-    document.removeEventListener('click', driveMenuClickListener, true);
-    driveMenuClickListener = null;
-  }
-  if (newValue) {
-    nextTick(() => {
-      const menuEl = driveMenu.value;
-      const toggleButtonEl = driveMenuToggleButton.value;
-      if (menuEl && toggleButtonEl) {
-        driveMenuClickListener = (event) => {
-          if (!menuEl.contains(event.target) && !toggleButtonEl.contains(event.target)) {
-            showDriveMenu.value = false;
-          }
-        };
-        document.addEventListener('click', driveMenuClickListener, true);
-      }
-    });
-  }
-});
 
 watch(() => character.initialScar, (newVal) => {
   if (character.linkCurrentToInitialScar) {
@@ -553,8 +523,8 @@ onMounted(() => {
 
   helpPanelClickListener = (event) => {
     if (helpState.value === 'fixed') {
-      const helpPanelEl = helpPanel.value;
-      const helpIconEl = helpIcon.value;
+      const helpPanelEl = helpPanelRef.value?.panelEl;
+      const helpIconEl = mainFooter.value?.helpIcon;
       if (helpPanelEl && helpIconEl && !helpPanelEl.contains(event.target) && !helpIconEl.contains(event.target)) {
         helpState.value = 'closed';
       }
@@ -628,9 +598,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   // Clean up global event listeners to prevent memory leaks.
-  if (driveMenuClickListener) {
-    document.removeEventListener('click', driveMenuClickListener, true);
-  }
   if (helpPanelClickListener) {
     document.removeEventListener('click', helpPanelClickListener);
   }
@@ -638,33 +605,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="top-left-controls">
-    <div class="google-drive-button-container">
-      <button
-        class="button-base icon-button"
-        title="Google Drive Menu"
-        v-if="isGapiInitialized && isGisInitialized"
-        @click="toggleDriveMenu"
-        ref="driveMenuToggleButton"
-      >
-        <span class="icon-svg icon-svg-cloud" aria-label="Google Drive"></span>
-      </button>
-      <div class="floating-menu" v-if="showDriveMenu" ref="driveMenu">
-        <div class="menu-item status-message" id="floating_drive_status_message">
-          {{ driveStatusMessage }}
-        </div>
-        <button class="menu-item button-base" v-if="canSignInToGoogle" @click="handleSignInClick">
-          Sign In with Google
-        </button>
-        <button class="menu-item button-base" v-if="isSignedIn" @click="handleSignOutClick">
-          Sign Out
-        </button>
-        <button class="menu-item button-base" v-if="isSignedIn" @click="promptForDriveFolder(true)" :disabled="!isSignedIn">
-          Choose Drive Folder
-        </button>
-      </div>
-    </div>
-  </div>
+  <TopLeftControls
+    :is-gapi-initialized="isGapiInitialized"
+    :is-gis-initialized="isGisInitialized"
+    :drive-status-message="driveStatusMessage"
+    :can-sign-in-to-google="canSignInToGoogle"
+    :is-signed-in="isSignedIn"
+    @sign-in="handleSignInClick"
+    @sign-out="handleSignOutClick"
+    @choose-folder="promptForDriveFolder(true)"
+  />
   <div class="tool-title">Aionia TRPG Character Sheet</div>
   <div class="main-grid">
     <CharacterBasicInfo v-model:character="character" />
@@ -694,65 +644,32 @@ onBeforeUnmount(() => {
       本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。
     </p>
   </div>
-  <div class="main-footer">
-    <div
-      class="button-base footer-help-icon"
-      ref="helpIcon"
-      :class="{ 'footer-help-icon--fixed': helpState === 'fixed' }"
-      @mouseover="handleHelpIconMouseOver"
-      @mouseleave="handleHelpIconMouseLeave"
-      @click="handleHelpIconClick"
-      tabindex="0"
-    >
-      ？
-    </div>
-    <div :class="['status-display', experienceStatusClass]">
-      経験点 {{ currentExperiencePoints }} / {{ maxExperiencePoints }}
-    </div>
-    <div class="status-display status-display--weight">
-      荷重: {{ currentWeight }}
-    </div>
-    <div class="footer-button-container">
-      <button
-        class="button-base footer-button footer-button--save"
-        @click="saveData"
-      >
-        データ保存
-      </button>
-      <button
-        v-if="isSignedIn"
-        class="button-base footer-button footer-button--cloud"
-        @click="handleSaveToDriveClick"
-        :disabled="!canOperateDrive"
-        title="Google Driveに保存"
-      >
-          <span v-if="isCloudSaveSuccess" class="icon-svg icon-svg--footer icon-svg-success" aria-label="Save Succeeded"></span>
-          <span v-else class="icon-svg icon-svg--footer icon-svg-upload" aria-label="Save to Drive"></span>
-      </button>
-    </div>
-    <div class="footer-button-container">
-      <label for="load_input_vue" class="button-base footer-button footer-button--load">データ読込</label>
-      <input type="file" id="load_input_vue" @change="handleFileUpload" accept=".json,.txt,.zip" class="hidden" />
-      <button
-        v-if="isSignedIn"
-        class="button-base footer-button footer-button--cloud"
-        @click="handleLoadFromDriveClick"
-        :disabled="!isSignedIn"
-        title="Google Driveから読込"
-      >
-          <span class="icon-svg icon-svg--footer icon-svg-download" aria-label="Load from Drive"></span>
-      </button>
-    </div>
-    <div class="button-base footer-button footer-button--output" @click="outputToCocofolia" ref="outputButton">
-      {{ outputButtonText }}
-    </div>
-    <transition name="fade">
-      <div class="help-panel" ref="helpPanel" v-if="isHelpVisible">
-        <button class="help-close" @click="closeHelpPanel">×</button>
-        <div v-html="AioniaGameData.helpText"></div>
-      </div>
-    </transition>
-  </div>
+  <MainFooter
+    ref="mainFooter"
+    :help-state="helpState"
+    :experience-status-class="experienceStatusClass"
+    :current-experience-points="currentExperiencePoints"
+    :max-experience-points="maxExperiencePoints"
+    :current-weight="currentWeight"
+    :is-signed-in="isSignedIn"
+    :can-operate-drive="canOperateDrive"
+    :output-button-text="outputButtonText"
+    :is-cloud-save-success="isCloudSaveSuccess"
+    @save="saveData"
+    @file-upload="handleFileUpload"
+    @save-to-drive="handleSaveToDriveClick"
+    @load-from-drive="handleLoadFromDriveClick"
+    @output="outputToCocofolia"
+    @help-mouseover="handleHelpIconMouseOver"
+    @help-mouseleave="handleHelpIconMouseLeave"
+    @help-click="handleHelpIconClick"
+  />
+  <HelpPanel
+    ref="helpPanelRef"
+    :is-visible="isHelpVisible"
+    :help-text="AioniaGameData.helpText"
+    @close="closeHelpPanel"
+  />
 </template>
 
 <style scoped>
