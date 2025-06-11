@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useCharacterStore } from './stores/characterStore.js';
 import { useUiStore } from './stores/uiStore.js';
 import { useGoogleDrive } from './composables/useGoogleDrive.js';
 import { useHelp } from './composables/useHelp.js';
 import { useDataExport } from './composables/useDataExport.js';
 import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
+import { importKeyFromString } from './utils/crypto.js';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -78,6 +79,60 @@ watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
 });
 
 // --- Lifecycle Hooks ---
+onMounted(async () => {
+  const url = new URL(window.location.href);
+  if (url.pathname === '/s' && url.searchParams.get('fileId')) {
+    const fileId = url.searchParams.get('fileId');
+    const expires = Number(url.searchParams.get('expires')) || 0;
+    const keyFragment = url.hash.slice(1);
+    if (!keyFragment) {
+      console.error('Share key missing in URL');
+      return;
+    }
+    if (expires && Date.now() > expires) {
+      console.error('Share link expired');
+      return;
+    }
+    try {
+      const key = await importKeyFromString(keyFragment);
+      const content = await dataManager.googleDriveManager.loadFileContent(
+        fileId,
+      );
+      if (!content) {
+        console.error('Failed to load shared file');
+        return;
+      }
+      const { ciphertext, iv } = JSON.parse(content);
+      const encrypted = {
+        ciphertext: Buffer.from(ciphertext, 'base64'),
+        iv: Uint8Array.from(Buffer.from(iv, 'base64')),
+      };
+      const parsed = await dataManager.parseEncryptedShareableZip(
+        encrypted,
+        key,
+      );
+      Object.assign(characterStore.character, parsed.character);
+      characterStore.skills.splice(
+        0,
+        characterStore.skills.length,
+        ...parsed.skills,
+      );
+      characterStore.specialSkills.splice(
+        0,
+        characterStore.specialSkills.length,
+        ...parsed.specialSkills,
+      );
+      Object.assign(characterStore.equipments, parsed.equipments);
+      characterStore.histories.splice(
+        0,
+        characterStore.histories.length,
+        ...parsed.histories,
+      );
+    } catch (err) {
+      console.error('Error loading shared data:', err);
+    }
+  }
+});
 </script>
 
 <template>
