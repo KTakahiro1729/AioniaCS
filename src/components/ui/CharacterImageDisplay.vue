@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { ImageManager } from '../../services/imageManager.js';
 
 const props = defineProps({
@@ -56,11 +56,16 @@ const props = defineProps({
 const emit = defineEmits(['update:images']);
 
 const imagesInternal = ref([...props.images]);
+let updatingFromParent = false;
 
 watch(
   () => props.images,
   (val) => {
+    updatingFromParent = true;
     imagesInternal.value = [...val];
+    nextTick(() => {
+      updatingFromParent = false;
+    });
   },
   { deep: true }
 );
@@ -68,7 +73,9 @@ watch(
 watch(
   imagesInternal,
   (val) => {
-    emit('update:images', val);
+    if (!updatingFromParent) {
+      emit('update:images', val);
+    }
   },
   { deep: true }
 );
