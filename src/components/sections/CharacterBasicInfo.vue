@@ -43,7 +43,18 @@
         </div>
         <div class="info-item info-item--quadruple">
           <label for="age">年齢</label>
-          <input type="number" id="age" v-model.number="characterStore.character.age" min="0" />
+          <input
+            type="number"
+            id="age"
+            :value="characterStore.character.age"
+            @input="
+              (e) => {
+                const v = e.target.value;
+                characterStore.character.age = v === '' ? null : parseInt(v, 10);
+              }
+            "
+            min="0"
+          />
         </div>
         <div class="info-item info-item--quadruple">
           <label for="height">身長</label>

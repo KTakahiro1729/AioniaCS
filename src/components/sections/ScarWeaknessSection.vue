@@ -19,8 +19,13 @@
             <input
               type="number"
               id="current_scar"
-              v-model.number="characterStore.character.currentScar"
-              @input="handleCurrentScarInput"
+              :value="characterStore.character.currentScar"
+              @input="(e) => {
+                const val = e.target.value;
+                characterStore.character.currentScar =
+                  val === '' ? '' : parseInt(val, 10);
+                handleCurrentScarInput(e);
+              }"
               :class="{ 'greyed-out': characterStore.character.linkCurrentToInitialScar }"
               min="0"
               class="scar-section__current-input"
@@ -28,7 +33,17 @@
           </div>
           <div class="info-item info-item--double">
             <label for="initial_scar">初期値</label>
-            <input type="number" id="initial_scar" v-model.number="characterStore.character.initialScar" min="0" />
+            <input
+              type="number"
+              id="initial_scar"
+              :value="characterStore.character.initialScar"
+              @input="(e) => {
+                const val = e.target.value;
+                characterStore.character.initialScar =
+                  val === '' ? '' : parseInt(val, 10);
+              }"
+              min="0"
+            />
           </div>
         </div>
       </div>
