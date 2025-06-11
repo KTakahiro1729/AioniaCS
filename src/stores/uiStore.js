@@ -1,12 +1,8 @@
 import { defineStore } from "pinia";
-import { AioniaGameData } from "../data/gameData.js";
 import { useCharacterStore } from "./characterStore.js";
 
 export const useUiStore = defineStore("ui", {
   state: () => ({
-    outputButtonText: AioniaGameData.uiMessages.outputButton.default,
-    helpState: "closed",
-    isDesktop: false,
     isCloudSaveSuccess: false,
     isSignedIn: false,
     driveStatusMessage: "",
@@ -32,9 +28,6 @@ export const useUiStore = defineStore("ui", {
     },
     canOperateDrive(state) {
       return state.isSignedIn && state.driveFolderId;
-    },
-    isHelpVisible(state) {
-      return state.helpState !== "closed";
     },
   },
 });

@@ -1,23 +1,23 @@
 import { ref } from "vue";
+import { DataManager } from "../services/dataManager.js";
+import { CocofoliaExporter } from "../services/cocofoliaExporter.js";
+import { AioniaGameData } from "../data/gameData.js";
+import { useCharacterStore } from "../stores/characterStore.js";
 
-export function useDataExport(
-  characterData,
-  dataManager,
-  cocofoliaExporter,
-  outputButton,
-  showCustomAlert,
-) {
-  const outputButtonText = ref(
-    characterData.gameData.uiMessages.outputButton.default,
-  );
+export function useDataExport(footerRef) {
+  const characterStore = useCharacterStore();
+  const dataManager = new DataManager(AioniaGameData);
+  const cocofoliaExporter = new CocofoliaExporter();
+
+  const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
 
   function saveData() {
     dataManager.saveData(
-      characterData.character.value,
-      characterData.skills.value,
-      characterData.specialSkills.value,
-      characterData.equipments.value,
-      characterData.histories.value,
+      characterStore.character,
+      characterStore.skills,
+      characterStore.specialSkills,
+      characterStore.equipments,
+      characterStore.histories,
     );
   }
 
@@ -25,45 +25,52 @@ export function useDataExport(
     dataManager.handleFileUpload(
       event,
       (parsedData) => {
-        characterData.character.value = parsedData.character;
-        characterData.skills.value = parsedData.skills;
-        characterData.specialSkills.value = parsedData.specialSkills;
-        characterData.equipments.value = parsedData.equipments;
-        characterData.histories.value = parsedData.histories;
+        Object.assign(characterStore.character, parsedData.character);
+        characterStore.skills.splice(
+          0,
+          characterStore.skills.length,
+          ...parsedData.skills,
+        );
+        characterStore.specialSkills.splice(
+          0,
+          characterStore.specialSkills.length,
+          ...parsedData.specialSkills,
+        );
+        Object.assign(characterStore.equipments, parsedData.equipments);
+        characterStore.histories.splice(
+          0,
+          characterStore.histories.length,
+          ...parsedData.histories,
+        );
       },
-      (errorMessage) => {
-        showCustomAlert(errorMessage);
-      },
+      (errorMessage) => alert(errorMessage),
     );
   }
 
   function playOutputAnimation() {
-    const buttonEl = outputButton.value;
-    if (!buttonEl || buttonEl.classList.contains("is-animating")) return;
-
-    const buttonMessages = characterData.gameData.uiMessages.outputButton;
+    const button = footerRef.value?.outputButton;
+    if (!button || button.classList.contains("is-animating")) return;
+    const buttonMessages = AioniaGameData.uiMessages.outputButton;
     const timings = buttonMessages.animationTimings;
-    const originalText = buttonMessages.default;
-    const newText = buttonMessages.animating;
 
-    buttonEl.classList.add("is-animating", "state-1");
+    button.classList.add("is-animating", "state-1");
 
     setTimeout(() => {
-      buttonEl.classList.remove("state-1");
-      outputButtonText.value = newText;
-      buttonEl.classList.add("state-2");
+      button.classList.remove("state-1");
+      outputButtonText.value = buttonMessages.animating;
+      button.classList.add("state-2");
     }, timings.state1_bgFill);
 
     setTimeout(() => {
-      buttonEl.classList.remove("state-2");
-      buttonEl.classList.add("state-3");
+      button.classList.remove("state-2");
+      button.classList.add("state-3");
     }, timings.state1_bgFill + timings.state2_textHold);
 
     setTimeout(
       () => {
-        buttonEl.classList.remove("state-3");
-        outputButtonText.value = originalText;
-        buttonEl.classList.add("state-4");
+        button.classList.remove("state-3");
+        outputButtonText.value = buttonMessages.default;
+        button.classList.add("state-4");
       },
       timings.state1_bgFill +
         timings.state2_textHold +
@@ -72,7 +79,7 @@ export function useDataExport(
 
     setTimeout(
       () => {
-        buttonEl.classList.remove("is-animating", "state-4");
+        button.classList.remove("is-animating", "state-4");
       },
       timings.state1_bgFill +
         timings.state2_textHold +
@@ -83,22 +90,58 @@ export function useDataExport(
 
   async function copyToClipboard(text) {
     if (!navigator.clipboard) {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-    } else {
+      fallbackCopyTextToClipboard(text);
+      return;
+    }
+    try {
       await navigator.clipboard.writeText(text);
       playOutputAnimation();
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+      fallbackCopyTextToClipboard(text);
     }
+  }
+
+  function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.cssText = "position: fixed; top: 0; left: 0; opacity: 0;";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const successful = document.execCommand("copy");
+      if (successful) {
+        playOutputAnimation();
+      } else {
+        outputButtonText.value = AioniaGameData.uiMessages.outputButton.failed;
+        setTimeout(() => {
+          outputButtonText.value =
+            AioniaGameData.uiMessages.outputButton.default;
+        }, 3000);
+      }
+    } catch (err) {
+      console.error(err);
+      outputButtonText.value = AioniaGameData.uiMessages.outputButton.error;
+      setTimeout(() => {
+        outputButtonText.value = AioniaGameData.uiMessages.outputButton.default;
+      }, 3000);
+    }
+    document.body.removeChild(textArea);
   }
 
   function outputToCocofolia() {
     const exportData = {
-      character: characterData.character.value,
-      skills: characterData.skills.value,
-      specialSkills: characterData.specialSkills.value,
-      equipments: characterData.equipments.value,
-      currentWeight: characterData.currentWeight.value,
-      ...characterData.gameData,
+      character: characterStore.character,
+      skills: characterStore.skills,
+      specialSkills: characterStore.specialSkills,
+      equipments: characterStore.equipments,
+      currentWeight: characterStore.currentWeight,
+      speciesLabelMap: AioniaGameData.speciesLabelMap,
+      equipmentGroupLabelMap: AioniaGameData.equipmentGroupLabelMap,
+      specialSkillData: AioniaGameData.specialSkillData,
+      specialSkillsRequiringNote: AioniaGameData.specialSkillsRequiringNote,
+      weaponDamage: AioniaGameData.weaponDamage,
     };
     const cocofoliaCharacter =
       cocofoliaExporter.generateCocofoliaData(exportData);
@@ -107,6 +150,7 @@ export function useDataExport(
   }
 
   return {
+    dataManager,
     outputButtonText,
     saveData,
     handleFileUpload,
