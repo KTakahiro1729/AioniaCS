@@ -144,7 +144,7 @@ test.describe("Character Sheet E2E Tests", () => {
 
     // Skipping this test as it requires a pre-made ZIP file with specific internal structure,
     // which cannot be dynamically created with current tooling.
-    test.skip("loads character data and image from ZIP file", async ({
+  test.skip("loads character data and image from ZIP file", async ({
       page,
     }) => {
       // This test assumes `tests/fixtures/test_char.zip` is structured correctly:
@@ -171,5 +171,25 @@ test.describe("Character Sheet E2E Tests", () => {
       const imageCountDisplay = page.locator(".image-count-display");
       await expect(imageCountDisplay).toHaveText("1 / 1"); // Assuming one image in the test zip
     });
+  });
+
+  test.describe("Sample data loading", () => {
+    const sampleDir = path.resolve(__dirname, "../../sample-data");
+    const sampleFiles = fs
+      .readdirSync(sampleDir)
+      .filter((f) => f.endsWith(".json"));
+
+    for (const file of sampleFiles) {
+      test(`loads ${file} without errors`, async ({ page }) => {
+        const filePath = path.join(sampleDir, file);
+        const fileUploadInput = page.locator("#load_input_vue");
+        await fileUploadInput.setInputFiles(filePath);
+
+        const loaded = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+        await expect(page.locator("#name")).toHaveValue(
+          loaded.character.name || "",
+        );
+      });
+    }
   });
 });
