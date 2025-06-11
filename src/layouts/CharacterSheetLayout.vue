@@ -1,5 +1,4 @@
 <script setup>
-import { computed } from 'vue';
 import { useCharacterStore } from '../stores/characterStore.js';
 
 import CharacterBasicInfo from '../components/sections/CharacterBasicInfo.vue';
@@ -11,32 +10,18 @@ import CharacterMemoSection from '../components/sections/CharacterMemoSection.vu
 import AdventureLogSection from '../components/sections/AdventureLogSection.vue';
 
 const characterStore = useCharacterStore();
-const sessionNamesForWeaknessDropdown = computed(
-  () => characterStore.sessionNamesForWeaknessDropdown,
-);
 </script>
 
 <template>
   <div class="tool-title">Aionia TRPG Character Sheet</div>
   <div class="main-grid">
-    <CharacterBasicInfo v-model:character="characterStore.character" />
-    <ScarWeaknessSection
-      v-model:character="characterStore.character"
-      :session-names="sessionNamesForWeaknessDropdown"
-    />
-    <SkillsSection v-model:skills="characterStore.skills" />
-    <SpecialSkillsSection v-model:specialSkills="characterStore.specialSkills" />
-    <ItemsSection
-      v-model:equipments="characterStore.equipments"
-      v-model:otherItems="characterStore.character.otherItems"
-    />
-    <CharacterMemoSection v-model="characterStore.character.memo" />
-    <AdventureLogSection
-      :histories="characterStore.histories"
-      @add-item="characterStore.addHistoryItem()"
-      @remove-item="characterStore.removeHistoryItem"
-      @update:history="characterStore.updateHistoryItem"
-    />
+    <CharacterBasicInfo />
+    <ScarWeaknessSection />
+    <SkillsSection />
+    <SpecialSkillsSection />
+    <ItemsSection />
+    <CharacterMemoSection />
+    <AdventureLogSection />
   </div>
   <div class="copyright-footer">
     <p>

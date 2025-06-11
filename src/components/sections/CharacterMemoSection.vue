@@ -15,15 +15,14 @@
 <script setup>
 import { computed } from 'vue';
 import { AioniaGameData } from '../../data/gameData.js';
+import { useCharacterStore } from '../../stores/characterStore.js';
 
-const props = defineProps({
-  modelValue: { type: String, default: '' },
-});
-const emit = defineEmits(['update:modelValue']);
-
+const characterStore = useCharacterStore();
 const localValue = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val),
+  get: () => characterStore.character.memo,
+  set: (val) => {
+    characterStore.character.memo = val;
+  },
 });
 </script>
 
