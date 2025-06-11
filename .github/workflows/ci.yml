@@ -58,7 +58,9 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run e2e tests
-        run: npm run e2e
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:5173 --timeout 60000 && npm run e2e
 
   deploy_production:
     name: Deploy to Production
