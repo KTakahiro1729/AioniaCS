@@ -1,9 +1,8 @@
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 
-export function useHelp(helpPanel, helpIcon) {
-  const helpState = ref("closed"); // 'closed', 'hovered', 'fixed'
+export function useHelp(helpPanelRef, footerRef) {
+  const helpState = ref("closed");
   const isDesktop = ref(false);
-
   const isHelpVisible = computed(() => helpState.value !== "closed");
 
   function handleHelpIconMouseOver() {
@@ -11,11 +10,13 @@ export function useHelp(helpPanel, helpIcon) {
       helpState.value = "hovered";
     }
   }
+
   function handleHelpIconMouseLeave() {
     if (isDesktop.value && helpState.value === "hovered") {
       helpState.value = "closed";
     }
   }
+
   function handleHelpIconClick() {
     if (isDesktop.value) {
       helpState.value = helpState.value === "fixed" ? "closed" : "fixed";
@@ -23,18 +24,22 @@ export function useHelp(helpPanel, helpIcon) {
       helpState.value = helpState.value === "closed" ? "fixed" : "closed";
     }
   }
+
   function closeHelpPanel() {
     helpState.value = "closed";
   }
 
   function handleClickOutside(event) {
-    if (helpState.value === "fixed" && helpPanel.value && helpIcon.value) {
-      if (
-        !helpPanel.value.contains(event.target) &&
-        !helpIcon.value.contains(event.target)
-      ) {
-        helpState.value = "closed";
-      }
+    if (helpState.value !== "fixed") return;
+    const panelEl = helpPanelRef.value?.panelEl || helpPanelRef.value;
+    const iconEl = footerRef.value?.helpIcon;
+    if (
+      panelEl &&
+      iconEl &&
+      !panelEl.contains(event.target) &&
+      !iconEl.contains(event.target)
+    ) {
+      helpState.value = "closed";
     }
   }
 
