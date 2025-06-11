@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import AdventureLogSection from './components/sections/AdventureLogSection.vue';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -213,8 +214,12 @@ const removeHistoryItem = (index) => _manageListItem({
   newItemFactory: () => ({ sessionName: "", gotExperiments: null, memo: "" }),
   hasContentChecker: hasHistoryContent,
 });
+const updateHistoryItem = (index, field, value) => {
+  if (histories[index]) {
+    histories[index][field] = field === 'gotExperiments' && value !== '' && value !== null ? Number(value) : value;
+  }
+};
 
-const expertPlaceholder = (skill) => skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
 const handleSpeciesChange = () => { if (character.species !== "other") character.rareSpecies = ""; };
 
 const saveData = () => {
@@ -670,62 +675,18 @@ onBeforeUnmount(() => {
     />
 
     <SkillsSection v-model:skills="skills" />
-
     <SpecialSkillsSection v-model:specialSkills="specialSkills" />
     <ItemsSection
       v-model:equipments="equipments"
       v-model:otherItems="character.otherItems"
     />
     <CharacterMemoSection v-model="character.memo" />
-    <div id="adventure_log_section" class="adventure-log-section">
-        <div class="box-title">冒険の記録</div>
-        <div class="box-content">
-            <div class="base-list-header">
-              <div class="delete-button-wrapper base-list-header-placeholder"></div>
-              <div class="flex-grow">
-                <div class="history-item-inputs">
-                  <div class="flex-history-name"><label>シナリオ名</label></div>
-                  <div class="flex-history-exp"><label>経験点</label></div>
-                  <div class="flex-history-memo"><label>メモ</label></div>
-                </div>
-              </div>
-            </div>
-            <ul id="histories" class="list-reset">
-              <li v-for="(history, index) in histories" :key="index" class="base-list-item">
-                <div class="delete-button-wrapper">
-                  <button
-                    type="button"
-                    class="button-base list-button list-button--delete"
-                    @click="removeHistoryItem(index)"
-                    :disabled="histories.length <= 1 && !hasHistoryContent(history)"
-                    aria-label="冒険記録を削除"
-                  >－</button>
-                </div>
-                <div class="flex-grow">
-                  <div class="history-item-inputs">
-                    <div class="flex-history-name">
-                      <input type="text" v-model="history.sessionName" />
-                    </div>
-                    <div class="flex-history-exp">
-                      <input type="number" v-model.number="history.gotExperiments" min="0"/>
-                    </div>
-                    <div class="flex-history-memo">
-                      <input type="text" v-model="history.memo" />
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ul>
-            <div class="add-button-container-left">
-              <button
-                type="button"
-                class="button-base list-button list-button--add"
-                @click="addHistoryItem()"
-                aria-label="冒険記録を追加"
-              >＋</button>
-            </div>
-        </div>
-    </div>
+    <AdventureLogSection
+      :histories="histories"
+      @add-item="addHistoryItem"
+      @remove-item="removeHistoryItem"
+      @update:history="updateHistoryItem"
+    />
   </div>
   <div class="copyright-footer">
     <p>
