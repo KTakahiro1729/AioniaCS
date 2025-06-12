@@ -3,7 +3,11 @@ import { DataManager } from "../services/dataManager.js";
 import { CocofoliaExporter } from "../services/cocofoliaExporter.js";
 import { AioniaGameData } from "../data/gameData.js";
 import { useCharacterStore } from "../stores/characterStore.js";
-import { generateShareKey, exportKeyToString } from "../utils/crypto.js";
+import {
+  generateShareKey,
+  exportKeyToString,
+  arrayBufferToBase64,
+} from "../utils/crypto.js";
 
 export function useDataExport(footerRef) {
   const characterStore = useCharacterStore();
@@ -161,8 +165,8 @@ export function useDataExport(footerRef) {
       key,
     );
     const payload = JSON.stringify({
-      ciphertext: Buffer.from(encrypted.ciphertext).toString("base64"),
-      iv: Buffer.from(encrypted.iv).toString("base64"),
+      ciphertext: arrayBufferToBase64(encrypted.ciphertext),
+      iv: arrayBufferToBase64(encrypted.iv),
     });
     const fileId = await dataManager.googleDriveManager.uploadAndShareFile(
       payload,

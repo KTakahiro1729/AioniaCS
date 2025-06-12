@@ -6,7 +6,10 @@ import { useGoogleDrive } from './composables/useGoogleDrive.js';
 import { useHelp } from './composables/useHelp.js';
 import { useDataExport } from './composables/useDataExport.js';
 import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
-import { importKeyFromString } from './utils/crypto.js';
+import {
+  importKeyFromString,
+  base64ToArrayBuffer,
+} from './utils/crypto.js';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -104,8 +107,8 @@ onMounted(async () => {
       }
       const { ciphertext, iv } = JSON.parse(content);
       const encrypted = {
-        ciphertext: Buffer.from(ciphertext, 'base64'),
-        iv: Uint8Array.from(Buffer.from(iv, 'base64')),
+        ciphertext: base64ToArrayBuffer(ciphertext),
+        iv: new Uint8Array(base64ToArrayBuffer(iv)),
       };
       const parsed = await dataManager.parseEncryptedShareableZip(
         encrypted,
