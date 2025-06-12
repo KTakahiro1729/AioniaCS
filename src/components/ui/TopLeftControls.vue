@@ -11,9 +11,6 @@
         <span class="icon-svg icon-svg-cloud" aria-label="Google Drive"></span>
       </button>
       <div class="floating-menu" v-if="showMenu" ref="driveMenu">
-        <div class="menu-item status-message" id="floating_drive_status_message">
-          {{ driveStatusMessage }}
-        </div>
         <button
           class="menu-item button-base"
           v-if="canSignInToGoogle"
@@ -47,7 +44,6 @@ import { ref, watch, nextTick } from 'vue';
 const props = defineProps({
   isGapiInitialized: Boolean,
   isGisInitialized: Boolean,
-  driveStatusMessage: String,
   canSignInToGoogle: Boolean,
   isSignedIn: Boolean,
 });

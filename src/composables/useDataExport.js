@@ -8,11 +8,13 @@ import {
   exportKeyToString,
   arrayBufferToBase64,
 } from "../utils/crypto.js";
+import { useNotifications } from "./useNotifications.js";
 
 export function useDataExport(footerRef) {
   const characterStore = useCharacterStore();
   const dataManager = new DataManager(AioniaGameData);
   const cocofoliaExporter = new CocofoliaExporter();
+  const { showToast } = useNotifications();
 
   const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
 
@@ -48,7 +50,12 @@ export function useDataExport(footerRef) {
           ...parsedData.histories,
         );
       },
-      (errorMessage) => alert(errorMessage),
+      (errorMessage) =>
+        showToast({
+          type: "error",
+          title: "読み込み失敗",
+          message: errorMessage,
+        }),
     );
   }
 
@@ -154,7 +161,7 @@ export function useDataExport(footerRef) {
     copyToClipboard(textToCopy);
   }
 
-  async function generateShareLink(expiresIn) {
+  async function generateShareLink(expiration) {
     let key = await generateShareKey();
     const encrypted = await dataManager.createEncryptedShareableZip(
       characterStore.character,
@@ -174,12 +181,32 @@ export function useDataExport(footerRef) {
       "application/json",
     );
     const keyString = await exportKeyToString(key);
-    const expires = expiresIn ? Date.now() + expiresIn : 0;
+    const expires = expiration ? Date.now() + expiration : 0;
     const currentPath = window.location.pathname;
     const basePath = currentPath.substring(0, currentPath.lastIndexOf("/"));
     const url = `${window.location.origin}${basePath}/s?fileId=${fileId}&expires=${expires}#${keyString}`;
     key = null;
     return url;
+  }
+
+  async function createAndCopyShareLink(expiration) {
+    try {
+      const url = await generateShareLink(expiration);
+      await copyToClipboard(url);
+      showToast({
+        type: "success",
+        title: "共有リンクをコピーしました",
+        message: url,
+      });
+      return url;
+    } catch (err) {
+      showToast({
+        type: "error",
+        title: "共有リンク生成失敗",
+        message: err.message || "リンク生成に失敗しました",
+      });
+      throw err;
+    }
   }
 
   return {
@@ -189,5 +216,6 @@ export function useDataExport(footerRef) {
     handleFileUpload,
     outputToCocofolia,
     generateShareLink,
+    createAndCopyShareLink,
   };
 }

@@ -5,7 +5,6 @@ export const useUiStore = defineStore("ui", {
   state: () => ({
     isCloudSaveSuccess: false,
     isSignedIn: false,
-    driveStatusMessage: "",
     isGapiInitialized: false,
     isGisInitialized: false,
     driveFolderId: null,

@@ -18,11 +18,12 @@ import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
-import ShareDialog from './components/ui/ShareDialog.vue';
+import NotificationContainer from './components/notifications/NotificationContainer.vue';
+import ExpirationOptions from './components/notifications/ExpirationOptions.vue';
+import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
 const mainFooter = ref(null);
 const helpPanelRef = ref(null);
-const isShareDialogVisible = ref(false);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
@@ -35,6 +36,7 @@ const {
   handleFileUpload,
   outputToCocofolia,
   generateShareLink,
+  createAndCopyShareLink,
 } = useDataExport(mainFooter);
 
 const {
@@ -55,6 +57,24 @@ const {
   handleHelpIconClick,
   closeHelpPanel,
 } = useHelp(helpPanelRef, mainFooter);
+
+const { showModal, showToast } = useNotifications();
+
+async function handleShare() {
+  const result = await showModal({
+    title: '共有',
+    component: ExpirationOptions,
+    buttons: [
+      { label: '生成', value: 'generate', variant: 'primary' },
+      { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
+    ],
+  });
+  if (result.value === 'generate' && result.component) {
+    const map = { '24h': 86400000, '7d': 604800000, never: 0 };
+    const expiration = map[result.component.selected] || 0;
+    await createAndCopyShareLink(expiration);
+  }
+}
 
 
 // --- Computed Properties (formerly `computed`) ---
@@ -89,11 +109,11 @@ onMounted(async () => {
     const expires = Number(url.searchParams.get('expires')) || 0;
     const keyFragment = url.hash.slice(1);
     if (!keyFragment) {
-      alert('共有リンクが不正です（鍵がありません）');
+      showToast({ type: 'error', title: '共有リンクエラー', message: '鍵がありません' });
       return;
     }
     if (expires && Date.now() > expires) {
-      alert('共有リンクの有効期限が切れています');
+      showToast({ type: 'error', title: '共有リンクエラー', message: '有効期限切れ' });
       return;
     }
     try {
@@ -102,7 +122,7 @@ onMounted(async () => {
         fileId,
       );
       if (!content) {
-        alert('共有データを取得できませんでした');
+        showToast({ type: 'error', title: '共有データ取得失敗', message: '' });
         return;
       }
       const { ciphertext, iv } = JSON.parse(content);
@@ -134,11 +154,11 @@ onMounted(async () => {
       uiStore.isViewingShared = true;
     } catch (err) {
       if (err.message && err.message.includes('OperationError')) {
-        alert('暗号鍵が正しくありません');
+        showToast({ type: 'error', title: '共有データエラー', message: '暗号鍵が正しくありません' });
       } else if (err.message && err.message.includes('character_data.json')) {
-        alert('共有データが破損しています');
+        showToast({ type: 'error', title: '共有データエラー', message: 'データが破損しています' });
       } else {
-        alert('共有データの読み込みに失敗しました');
+        showToast({ type: 'error', title: '共有データ読み込み失敗', message: '' });
       }
       console.error('Error loading shared data:', err);
     }
@@ -150,7 +170,6 @@ onMounted(async () => {
   <TopLeftControls
     :is-gapi-initialized="uiStore.isGapiInitialized"
     :is-gis-initialized="uiStore.isGisInitialized"
-    :drive-status-message="uiStore.driveStatusMessage"
     :can-sign-in-to-google="canSignInToGoogle"
     :is-signed-in="uiStore.isSignedIn"
     @sign-in="handleSignInClick"
@@ -179,7 +198,7 @@ onMounted(async () => {
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
-    @share="isShareDialogVisible = true"
+    @share="handleShare"
     @copy-edit="uiStore.isViewingShared = false"
   />
   <HelpPanel
@@ -188,11 +207,7 @@ onMounted(async () => {
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
   />
-  <ShareDialog
-    v-if="isShareDialogVisible"
-    :generate-share-link="generateShareLink"
-    @close="isShareDialogVisible = false"
-  />
+  <NotificationContainer />
 </template>
 
 <style scoped>
