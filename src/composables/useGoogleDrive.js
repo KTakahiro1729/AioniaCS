@@ -2,19 +2,29 @@ import { ref, computed, onMounted } from "vue";
 import { GoogleDriveManager } from "../services/googleDriveManager.js";
 import { useUiStore } from "../stores/uiStore.js";
 import { useCharacterStore } from "../stores/characterStore.js";
+import { useNotifications } from "./useNotifications.js";
 
 export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
   const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
+  const { showToast } = useNotifications();
 
   function _checkDriveReadiness(actionContext = "operate") {
     if (!googleDriveManager.value) {
-      uiStore.driveStatusMessage = "Error: Drive Manager is not available.";
+      showToast({
+        type: "error",
+        title: "Drive エラー",
+        message: "Drive Manager is not available.",
+      });
       return false;
     }
     if (!uiStore.isSignedIn && actionContext !== "sign in") {
-      uiStore.driveStatusMessage = `Error: Please sign in to ${actionContext}.`;
+      showToast({
+        type: "error",
+        title: "未サインイン",
+        message: `Please sign in to ${actionContext}.`,
+      });
       return false;
     }
     return true;
@@ -25,22 +35,37 @@ export function useGoogleDrive(dataManager) {
 
   function handleSignInClick() {
     if (!googleDriveManager.value) {
-      uiStore.driveStatusMessage = "Error: Drive Manager not available.";
+      showToast({
+        type: "error",
+        title: "Drive エラー",
+        message: "Manager not available.",
+      });
       return;
     }
-    uiStore.driveStatusMessage = "Signing in... Please wait.";
+    showToast({
+      type: "info",
+      title: "Google Drive",
+      message: "Signing in...",
+    });
     try {
       googleDriveManager.value.handleSignIn((error, authResult) => {
         if (error || !authResult || !authResult.signedIn) {
           uiStore.isSignedIn = false;
-          uiStore.driveStatusMessage =
-            "Sign-in failed. " +
-            (error
-              ? error.message || error.details || "Please try again."
-              : "Ensure pop-ups are enabled.");
+          showToast({
+            type: "error",
+            title: "Sign-in failed",
+            message:
+              (error
+                ? error.message || error.details
+                : "Ensure pop-ups are enabled.") || "Please try again.",
+          });
         } else {
           uiStore.isSignedIn = true;
-          uiStore.driveStatusMessage = `Signed in. Folder: ${uiStore.driveFolderName || "Not selected"}`;
+          showToast({
+            type: "success",
+            title: "Signed in",
+            message: `Folder: ${uiStore.driveFolderName || "Not selected"}`,
+          });
           if (!uiStore.driveFolderId) {
             getOrPromptForDriveFolder();
           }
@@ -48,25 +73,36 @@ export function useGoogleDrive(dataManager) {
       });
     } catch (err) {
       uiStore.isSignedIn = false;
-      uiStore.driveStatusMessage =
-        "Sign-in error: " + (err.message || "An unexpected error occurred.");
+      showToast({
+        type: "error",
+        title: "Sign-in error",
+        message: err.message || "An unexpected error occurred.",
+      });
     }
   }
 
   function handleSignOutClick() {
     if (!_checkDriveReadiness("sign out")) return;
-    uiStore.driveStatusMessage = "Signing out...";
+    showToast({
+      type: "info",
+      title: "Google Drive",
+      message: "Signing out...",
+    });
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
       uiStore.currentDriveFileId = null;
       uiStore.currentDriveFileName = "";
-      uiStore.driveStatusMessage = "Signed out.";
+      showToast({ type: "success", title: "Signed out", message: "" });
     });
   }
 
   async function getOrPromptForDriveFolder() {
     if (!_checkDriveReadiness("set up a folder")) return;
-    uiStore.driveStatusMessage = "Accessing Google Drive folder...";
+    showToast({
+      type: "info",
+      title: "Google Drive",
+      message: "Accessing folder...",
+    });
     const appFolderName = "AioniaCS_Data";
     try {
       const folderInfo =
@@ -76,36 +112,63 @@ export function useGoogleDrive(dataManager) {
         uiStore.driveFolderName = folderInfo.name;
         localStorage.setItem("aioniaDriveFolderId", folderInfo.id);
         localStorage.setItem("aioniaDriveFolderName", folderInfo.name);
-        uiStore.driveStatusMessage = `Drive Folder: ${uiStore.driveFolderName}`;
+        showToast({
+          type: "success",
+          title: "Folder ready",
+          message: uiStore.driveFolderName,
+        });
       } else {
-        uiStore.driveStatusMessage =
-          "Could not auto-setup Drive folder. Please choose one.";
+        showToast({
+          type: "warning",
+          title: "Drive",
+          message: "Choose a folder.",
+        });
         await promptForDriveFolder(false);
       }
     } catch (error) {
-      uiStore.driveStatusMessage = `Folder setup error: ${error.message || "Please choose manually."}`;
+      showToast({
+        type: "error",
+        title: "Folder setup error",
+        message: error.message || "Please choose manually.",
+      });
       await promptForDriveFolder(false);
     }
   }
 
   function promptForDriveFolder() {
     if (!_checkDriveReadiness("select a folder")) return;
-    uiStore.driveStatusMessage = "Opening Google Drive folder picker...";
+    showToast({
+      type: "info",
+      title: "Google Drive",
+      message: "Opening folder picker...",
+    });
     googleDriveManager.value.showFolderPicker((error, folder) => {
       if (error) {
-        uiStore.driveStatusMessage = `Folder selection error: ${error.message || "Cancelled or failed."}`;
+        showToast({
+          type: "error",
+          title: "Folder selection error",
+          message: error.message || "Cancelled or failed.",
+        });
       } else if (folder && folder.id) {
         uiStore.driveFolderId = folder.id;
         uiStore.driveFolderName = folder.name;
         localStorage.setItem("aioniaDriveFolderId", folder.id);
         localStorage.setItem("aioniaDriveFolderName", folder.name);
-        uiStore.driveStatusMessage = `Drive Folder: ${uiStore.driveFolderName}`;
+        showToast({
+          type: "success",
+          title: "Folder selected",
+          message: uiStore.driveFolderName,
+        });
         uiStore.currentDriveFileId = null;
         uiStore.currentDriveFileName = "";
       } else {
-        uiStore.driveStatusMessage = uiStore.driveFolderId
-          ? `Drive Folder: ${uiStore.driveFolderName}`
-          : "Folder selection cancelled.";
+        if (!uiStore.driveFolderId) {
+          showToast({
+            type: "warning",
+            title: "Folder selection cancelled",
+            message: "",
+          });
+        }
       }
     });
   }
@@ -113,16 +176,26 @@ export function useGoogleDrive(dataManager) {
   async function handleSaveToDriveClick() {
     if (!_checkDriveReadiness("save")) return;
     if (!uiStore.driveFolderId) {
-      uiStore.driveStatusMessage =
-        "Drive folder not set. Please choose a folder first.";
+      showToast({
+        type: "warning",
+        title: "Drive",
+        message: "Select folder first.",
+      });
       await promptForDriveFolder(false);
       if (!uiStore.driveFolderId) {
-        uiStore.driveStatusMessage =
-          "Save cancelled: No Drive folder selected.";
+        showToast({
+          type: "error",
+          title: "Save cancelled",
+          message: "No folder selected.",
+        });
         return;
       }
     }
-    uiStore.driveStatusMessage = `Saving to "${uiStore.driveFolderName}"...`;
+    showToast({
+      type: "info",
+      title: "Google Drive",
+      message: `Saving to "${uiStore.driveFolderName}"`,
+    });
     const fileName =
       (characterStore.character.name || "Aionia_Character_Sheet").replace(
         /[\\/:*?"<>|]/g,
@@ -142,7 +215,7 @@ export function useGoogleDrive(dataManager) {
       if (savedFile && savedFile.id) {
         uiStore.currentDriveFileId = savedFile.id;
         uiStore.currentDriveFileName = savedFile.name;
-        uiStore.driveStatusMessage = `Saved: ${uiStore.currentDriveFileName} to "${uiStore.driveFolderName}".`;
+        showToast({ type: "success", title: "Saved", message: savedFile.name });
         uiStore.isCloudSaveSuccess = true;
         setTimeout(() => {
           uiStore.isCloudSaveSuccess = false;
@@ -153,25 +226,44 @@ export function useGoogleDrive(dataManager) {
         );
       }
     } catch (error) {
-      uiStore.driveStatusMessage = `Save error: ${error.message || "Unknown error"}`;
+      showToast({
+        type: "error",
+        title: "Save error",
+        message: error.message || "Unknown error",
+      });
     }
   }
 
   async function handleLoadFromDriveClick() {
     if (!_checkDriveReadiness("load")) return;
-    uiStore.driveStatusMessage = "Opening Google Drive file picker...";
+    showToast({
+      type: "info",
+      title: "Google Drive",
+      message: "Opening file picker...",
+    });
     googleDriveManager.value.showFilePicker(
       async (error, file) => {
         if (error) {
-          uiStore.driveStatusMessage = `File selection error: ${error.message || "Cancelled or failed."}`;
+          showToast({
+            type: "error",
+            title: "File selection error",
+            message: error.message || "Cancelled or failed.",
+          });
           return;
         }
         if (!file || !file.id) {
-          uiStore.driveStatusMessage =
-            "File selection cancelled or no file chosen.";
+          showToast({
+            type: "warning",
+            title: "File selection cancelled",
+            message: "",
+          });
           return;
         }
-        uiStore.driveStatusMessage = `Loading ${file.name} from Drive...`;
+        showToast({
+          type: "info",
+          title: "Google Drive",
+          message: `Loading ${file.name}...`,
+        });
         try {
           const parsedData = await dataManager.loadDataFromDrive(file.id);
           if (parsedData) {
@@ -194,12 +286,20 @@ export function useGoogleDrive(dataManager) {
             );
             uiStore.currentDriveFileId = file.id;
             uiStore.currentDriveFileName = file.name;
-            uiStore.driveStatusMessage = `Loaded: ${uiStore.currentDriveFileName} from Drive.`;
+            showToast({
+              type: "success",
+              title: "Loaded",
+              message: `${file.name} from Drive`,
+            });
           } else {
             throw new Error("Load operation did not return data.");
           }
         } catch (err) {
-          uiStore.driveStatusMessage = `Load error for ${file.name || "file"}: ${err.message || "Unknown error"}`;
+          showToast({
+            type: "error",
+            title: "Load error",
+            message: err.message || "Unknown error",
+          });
         }
       },
       uiStore.driveFolderId || null,
@@ -217,14 +317,16 @@ export function useGoogleDrive(dataManager) {
     const handleGapiLoaded = async () => {
       if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
       uiStore.isGapiInitialized = true;
-      uiStore.driveStatusMessage = "Google API Client: Loading...";
+      showToast({ type: "info", title: "Google API", message: "Loading..." });
       try {
         await googleDriveManager.value.onGapiLoad();
-        uiStore.driveStatusMessage = uiStore.isSignedIn
-          ? `Signed in. Folder: ${uiStore.driveFolderName || "Not selected"}`
-          : "Google API Client: Ready. Please sign in.";
+        showToast({ type: "success", title: "Google API Ready", message: "" });
       } catch (err) {
-        uiStore.driveStatusMessage = "Google API Client: Error initializing.";
+        showToast({
+          type: "error",
+          title: "Google API Error",
+          message: "Initializing failed",
+        });
         console.error("GAPI client init error:", err);
       }
     };
@@ -232,14 +334,24 @@ export function useGoogleDrive(dataManager) {
     const handleGisLoaded = async () => {
       if (uiStore.isGisInitialized || !googleDriveManager.value) return;
       uiStore.isGisInitialized = true;
-      uiStore.driveStatusMessage = "Google Sign-In: Loading...";
+      showToast({
+        type: "info",
+        title: "Google Sign-In",
+        message: "Loading...",
+      });
       try {
         await googleDriveManager.value.onGisLoad();
-        uiStore.driveStatusMessage = uiStore.isSignedIn
-          ? `Signed in. Folder: ${uiStore.driveFolderName || "Not selected"}`
-          : "Google Sign-In: Ready. Please sign in.";
+        showToast({
+          type: "success",
+          title: "Google Sign-In Ready",
+          message: "",
+        });
       } catch (err) {
-        uiStore.driveStatusMessage = "Google Sign-In: Error initializing.";
+        showToast({
+          type: "error",
+          title: "Google Sign-In Error",
+          message: "Initializing failed",
+        });
         console.error("GIS client init error:", err);
       }
     };
