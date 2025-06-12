@@ -7,6 +7,7 @@
         class="character-memo-textarea"
         :placeholder="AioniaGameData.placeholderTexts.characterMemo"
         v-model="localValue"
+        :readonly="uiStore.isViewingShared"
       ></textarea>
     </div>
   </div>
@@ -16,8 +17,10 @@
 import { computed } from 'vue';
 import { AioniaGameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 const localValue = computed({
   get: () => characterStore.character.memo,
   set: (val) => {

@@ -16,7 +16,7 @@
         <BaseListItem
           v-for="(history, index) in characterStore.histories"
           :key="index"
-          :show-delete-button="true"
+          :show-delete-button="!uiStore.isViewingShared"
           :can-delete="!(characterStore.histories.length <= 1 && !hasHistoryContent(history))"
           @delete-item="removeItem(index)"
         >
@@ -27,6 +27,7 @@
                   type="text"
                   :model-value="history.sessionName"
                   @update:model-value="v => updateField(index, 'sessionName', v)"
+                  :disabled="uiStore.isViewingShared"
                 />
               </div>
               <div class="flex-history-exp">
@@ -35,6 +36,7 @@
                   min="0"
                   :model-value="history.gotExperiments"
                   @update:model-value="v => updateField(index, 'gotExperiments', v)"
+                  :disabled="uiStore.isViewingShared"
                 />
               </div>
               <div class="flex-history-memo">
@@ -42,13 +44,14 @@
                   type="text"
                   :model-value="history.memo"
                   @update:model-value="v => updateField(index, 'memo', v)"
+                  :disabled="uiStore.isViewingShared"
                 />
               </div>
             </div>
           </div>
         </BaseListItem>
       </ul>
-      <div class="add-button-container-left">
+      <div class="add-button-container-left" v-if="!uiStore.isViewingShared">
         <button
           type="button"
           class="button-base list-button list-button--add"
@@ -64,8 +67,10 @@
 import BaseInput from '../common/BaseInput.vue';
 import BaseListItem from '../common/BaseListItem.vue';
 import { useCharacterStore } from '../../stores/characterStore.js';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 
 function addItem() {
   characterStore.addHistoryItem();

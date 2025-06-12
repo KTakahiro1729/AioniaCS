@@ -12,6 +12,7 @@ export const useUiStore = defineStore("ui", {
     driveFolderName: "",
     currentDriveFileId: null,
     currentDriveFileName: "",
+    isViewingShared: false,
   }),
   getters: {
     experienceStatusClass() {

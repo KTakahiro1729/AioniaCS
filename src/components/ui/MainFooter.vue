@@ -58,11 +58,18 @@
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
       {{ outputButtonText }}
     </div>
+    <button
+      class="button-base footer-button footer-button--share"
+      :aria-label="isViewingShared ? '自分用にコピーして編集' : '共有'"
+      @click="handleShareClick"
+    >
+      {{ isViewingShared ? '自分用にコピーして編集' : '共有' }}
+    </button>
   </div>
 </template>
 
 <script setup>
-import { ref, defineExpose } from 'vue';
+import { ref, defineExpose, defineEmits } from 'vue';
 
 const props = defineProps({
   helpState: String,
@@ -74,12 +81,33 @@ const props = defineProps({
   canOperateDrive: Boolean,
   outputButtonText: String,
   isCloudSaveSuccess: Boolean,
+  isViewingShared: Boolean,
 });
 
+const emit = defineEmits([
+  'help-mouseover',
+  'help-mouseleave',
+  'help-click',
+  'save',
+  'save-to-drive',
+  'file-upload',
+  'load-from-drive',
+  'output',
+  'share',
+  'copy-edit',
+]);
 const outputButton = ref(null);
 const helpIcon = ref(null);
 
 defineExpose({ outputButton, helpIcon });
+
+function handleShareClick() {
+  if (props.isViewingShared) {
+    emit('copy-edit');
+  } else {
+    emit('share');
+  }
+}
 </script>
 
 <style scoped>

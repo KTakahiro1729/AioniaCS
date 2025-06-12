@@ -4,7 +4,12 @@
     <ul class="skills-list box-content list-reset">
       <li v-for="(skill, index) in localSkills" :key="skill.id" class="skill-list">
         <div class="skill-header">
-          <input type="checkbox" :id="skill.id" v-model="skill.checked" />
+          <input
+            type="checkbox"
+            :id="skill.id"
+            v-model="skill.checked"
+            :disabled="uiStore.isViewingShared"
+          />
           <label :for="skill.id" class="skill-name">{{ skill.name }}</label>
         </div>
         <div v-if="skill.canHaveExperts && skill.checked" class="experts-section">
@@ -14,7 +19,7 @@
               :key="expIndex"
               class="base-list-item"
             >
-              <div class="delete-button-wrapper">
+              <div class="delete-button-wrapper" v-if="!uiStore.isViewingShared">
                 <button
                   type="button"
                   class="button-base list-button list-button--delete"
@@ -27,12 +32,12 @@
                 type="text"
                 v-model="expert.value"
                 :placeholder="expertPlaceholder(skill)"
-                :disabled="!skill.checked"
+                :disabled="!skill.checked || uiStore.isViewingShared"
                 class="flex-grow"
               />
             </li>
           </ul>
-          <div class="add-button-container-left">
+          <div class="add-button-container-left" v-if="!uiStore.isViewingShared">
             <button
               type="button"
               class="button-base list-button list-button--add"
@@ -50,8 +55,10 @@
 import { useListManagement } from '../../composables/core/useListManagement.js';
 import { useSkillsManagement } from '../../composables/features/useSkillsManagement.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 const localSkills = characterStore.skills;
 
 const { addItem, removeItem } = useListManagement();

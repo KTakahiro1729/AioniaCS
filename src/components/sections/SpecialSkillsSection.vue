@@ -8,7 +8,7 @@
           :key="index"
           class="base-list-item special-skill-item"
         >
-          <div class="delete-button-wrapper">
+          <div class="delete-button-wrapper" v-if="!uiStore.isViewingShared">
             <button
               type="button"
               class="button-base list-button list-button--delete"
@@ -23,6 +23,7 @@
                 v-model="specialSkill.group"
                 @change="updateSpecialSkillOptions(index)"
                 class="flex-item-1"
+                :disabled="uiStore.isViewingShared"
               >
                 <option
                   v-for="option in AioniaGameData.specialSkillGroupOptions"
@@ -33,7 +34,7 @@
               <select
                 v-model="specialSkill.name"
                 @change="updateSpecialSkillNoteVisibility(index)"
-                :disabled="!specialSkill.group"
+                :disabled="!specialSkill.group || uiStore.isViewingShared"
                 class="flex-item-2"
               >
                 <option value="">---</option>
@@ -50,13 +51,14 @@
               v-show="specialSkill.showNote"
               class="special-skill-note-input"
               :placeholder="AioniaGameData.placeholderTexts.specialSkillNote"
+              :disabled="uiStore.isViewingShared"
             />
           </div>
         </li>
       </ul>
       <div
         class="add-button-container-left"
-        v-if="localSpecialSkills.length < AioniaGameData.config.maxSpecialSkills"
+        v-if="!uiStore.isViewingShared && localSpecialSkills.length < AioniaGameData.config.maxSpecialSkills"
       >
         <button
           type="button"
@@ -72,8 +74,10 @@
 <script setup>
 import { AioniaGameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 const localSpecialSkills = characterStore.specialSkills;
 
 function hasSpecialSkillContent(ss) {

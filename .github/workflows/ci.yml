@@ -113,3 +113,31 @@ jobs:
           publish_dir: ./dist
           publish_branch: gh-pages-dev
           force_orphan: true
+
+  deploy_manual_preview:
+    name: Deploy Manual Preview
+    # 手動実行（workflow_dispatch）であり、かつmain/devブランチ以外の場合に実行
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev'
+    needs: [lint, test, e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Deploy to gh-pages-manual branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages-manual # デプロイ先ブランチを指定
+          force_orphan: true
