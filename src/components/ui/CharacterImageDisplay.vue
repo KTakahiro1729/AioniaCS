@@ -46,6 +46,7 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
 import { ImageManager } from '../../services/imageManager.js';
+import { useNotifications } from '../../composables/useNotifications.js';
 
 const props = defineProps({
   images: {
@@ -54,6 +55,7 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['update:images']);
+const { showToast } = useNotifications();
 
 const imagesInternal = ref([...props.images]);
 let updatingFromParent = false;
@@ -128,7 +130,7 @@ const handleImageUpload = async (event) => {
     currentImageIndex.value = imagesInternal.value.length - 1;
   } catch (error) {
     console.error('Error loading image:', error);
-    alert('画像の読み込みに失敗しました：' + error.message);
+    showToast({ type: 'error', message: '画像の読み込みに失敗しました：' + error.message });
   } finally {
     event.target.value = null;
   }

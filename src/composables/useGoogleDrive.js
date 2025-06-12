@@ -3,13 +3,13 @@ import { GoogleDriveManager } from "../services/googleDriveManager.js";
 import { useUiStore } from "../stores/uiStore.js";
 import { useCharacterStore } from "../stores/characterStore.js";
 import { DriveMessages } from "../data/driveMessages.js";
-import { useNotificationStore } from "../stores/notificationStore.js";
+import { useNotifications } from "./useNotifications.js";
 
 export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
   const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
-  const notificationStore = useNotificationStore();
+  const { showToast } = useNotifications();
 
   function _checkDriveReadiness(actionContext = "operate") {
     if (!googleDriveManager.value) {
@@ -41,7 +41,7 @@ export function useGoogleDrive(dataManager) {
         if (error || !authResult || !authResult.signedIn) {
           uiStore.isSignedIn = false;
           uiStore.driveStatusMessage = DriveMessages.errors.signInFailed;
-          notificationStore.addNotification({
+          showToast({
             type: "error",
             message: DriveMessages.errors.signInFailed,
           });
@@ -50,7 +50,7 @@ export function useGoogleDrive(dataManager) {
           uiStore.driveStatusMessage = DriveMessages.status.signedIn(
             uiStore.driveFolderName,
           );
-          notificationStore.addNotification({
+          showToast({
             type: "success",
             message: DriveMessages.notifications.signInSuccess,
           });
@@ -73,7 +73,7 @@ export function useGoogleDrive(dataManager) {
       uiStore.currentDriveFileId = null;
       uiStore.currentDriveFileName = "";
       uiStore.driveStatusMessage = DriveMessages.status.signInPrompt;
-      notificationStore.addNotification({
+      showToast({
         type: "success",
         message: DriveMessages.notifications.signOutSuccess,
       });
@@ -95,7 +95,7 @@ export function useGoogleDrive(dataManager) {
         uiStore.driveStatusMessage = DriveMessages.status.signedIn(
           uiStore.driveFolderName,
         );
-        notificationStore.addNotification({
+        showToast({
           type: "success",
           message: DriveMessages.notifications.folderSelected(
             uiStore.driveFolderName,
@@ -125,7 +125,7 @@ export function useGoogleDrive(dataManager) {
         uiStore.driveStatusMessage = DriveMessages.status.signedIn(
           uiStore.driveFolderName,
         );
-        notificationStore.addNotification({
+        showToast({
           type: "success",
           message: DriveMessages.notifications.folderSelected(
             uiStore.driveFolderName,
@@ -176,7 +176,7 @@ export function useGoogleDrive(dataManager) {
         uiStore.driveStatusMessage = DriveMessages.status.signedIn(
           uiStore.driveFolderName,
         );
-        notificationStore.addNotification({
+        showToast({
           type: "success",
           message: DriveMessages.notifications.saveSuccess(
             uiStore.currentDriveFileName,
@@ -235,7 +235,7 @@ export function useGoogleDrive(dataManager) {
             uiStore.driveStatusMessage = DriveMessages.status.signedIn(
               uiStore.driveFolderName,
             );
-            notificationStore.addNotification({
+            showToast({
               type: "success",
               message: DriveMessages.notifications.loadSuccess(
                 uiStore.currentDriveFileName,
@@ -267,7 +267,7 @@ export function useGoogleDrive(dataManager) {
       message = DriveMessages.errors.unknown(error);
     }
     uiStore.driveStatusMessage = message;
-    notificationStore.addNotification({ type: "error", message });
+    showToast({ type: "error", message });
   }
 
   function initializeGoogleDrive() {

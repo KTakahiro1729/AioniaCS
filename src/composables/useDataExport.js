@@ -3,6 +3,7 @@ import { DataManager } from "../services/dataManager.js";
 import { CocofoliaExporter } from "../services/cocofoliaExporter.js";
 import { AioniaGameData } from "../data/gameData.js";
 import { useCharacterStore } from "../stores/characterStore.js";
+import { useNotifications } from "./useNotifications.js";
 
 export function useDataExport(footerRef) {
   const characterStore = useCharacterStore();
@@ -10,6 +11,7 @@ export function useDataExport(footerRef) {
   const cocofoliaExporter = new CocofoliaExporter();
 
   const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
+  const { showToast } = useNotifications();
 
   function saveData() {
     dataManager.saveData(
@@ -43,7 +45,7 @@ export function useDataExport(footerRef) {
           ...parsedData.histories,
         );
       },
-      (errorMessage) => alert(errorMessage),
+      (errorMessage) => showToast({ type: "error", message: errorMessage }),
     );
   }
 

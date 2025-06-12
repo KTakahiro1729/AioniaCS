@@ -14,7 +14,7 @@ import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
-import ToastNotification from './components/ui/ToastNotification.vue';
+import NotificationContainer from './components/notifications/NotificationContainer.vue';
 // --- Template Refs ---
 const mainFooter = ref(null);
 const helpPanelRef = ref(null);
@@ -116,7 +116,7 @@ watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
   />
-  <ToastNotification />
+  <NotificationContainer />
 </template>
 
 <style scoped>

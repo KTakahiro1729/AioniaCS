@@ -1,5 +1,6 @@
 import { createWeaknessArray, deepClone } from "../utils/utils.js";
 import JSZip from "jszip";
+import { useNotificationStore } from "../stores/notificationStore.js";
 
 /**
  * データ管理系の機能を担当するクラス
@@ -106,17 +107,10 @@ export class DataManager {
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error("Error saving ZIP file:", error);
-        // Consider showing an error to the user via main.js's alert
-        if (
-          this.gameData &&
-          this.gameData.uiMessages &&
-          this.gameData.uiMessages.fileLoadError
-        ) {
-          // This is a bit of a hack, ideally main.js would expose an alert function
-          alert("ZIPファイルの保存に失敗しました: " + error.message);
-        } else {
-          alert("ZIPファイルの保存に失敗しました: " + error.message);
-        }
+        useNotificationStore().addToast({
+          type: "error",
+          message: `ZIPファイルの保存に失敗しました: ${error.message}`,
+        });
       }
     } else {
       // Save as JSON (original behavior)

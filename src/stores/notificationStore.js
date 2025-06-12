@@ -2,24 +2,60 @@ import { defineStore } from "pinia";
 
 export const useNotificationStore = defineStore("notification", {
   state: () => ({
-    notifications: [],
+    toasts: [],
+    modal: {
+      isVisible: false,
+      title: "",
+      message: "",
+      buttons: [],
+      type: "",
+      resolve: null,
+    },
   }),
   actions: {
-    addNotification(notification) {
+    addToast({ title = "", message = "", type = "info", duration = 5000 }) {
       const id = Date.now() + Math.random();
-      const duration = notification.duration || 5000;
-      const timeoutId = setTimeout(() => {
-        this.removeNotification(id);
+      this.toasts.push({ id, title, message, type });
+      setTimeout(() => {
+        this.removeToast(id);
       }, duration);
-      this.notifications.push({ id, timeoutId, ...notification });
       return id;
     },
-    removeNotification(id) {
-      const index = this.notifications.findIndex((n) => n.id === id);
+    removeToast(id) {
+      const index = this.toasts.findIndex((t) => t.id === id);
       if (index !== -1) {
-        clearTimeout(this.notifications[index].timeoutId);
-        this.notifications.splice(index, 1);
+        this.toasts.splice(index, 1);
       }
+    },
+    showModal({
+      title = "",
+      message = "",
+      buttons = [{ label: "OK", value: "ok", variant: "primary" }],
+      type = "",
+    } = {}) {
+      return new Promise((resolve) => {
+        this.modal = {
+          isVisible: true,
+          title,
+          message,
+          buttons,
+          type,
+          resolve,
+        };
+      });
+    },
+    hideModal(result) {
+      if (this.modal.resolve) {
+        this.modal.resolve(result);
+      }
+      this.modal = {
+        isVisible: false,
+        title: "",
+        message: "",
+        buttons: [],
+        type: "",
+        resolve: null,
+      };
     },
   },
 });
