@@ -144,7 +144,7 @@ test.describe("Character Sheet E2E Tests", () => {
 
     // Skipping this test as it requires a pre-made ZIP file with specific internal structure,
     // which cannot be dynamically created with current tooling.
-    test.skip("loads character data and image from ZIP file", async ({
+  test.skip("loads character data and image from ZIP file", async ({
       page,
     }) => {
       // This test assumes `tests/fixtures/test_char.zip` is structured correctly:
@@ -171,5 +171,21 @@ test.describe("Character Sheet E2E Tests", () => {
       const imageCountDisplay = page.locator(".image-count-display");
       await expect(imageCountDisplay).toHaveText("1 / 1"); // Assuming one image in the test zip
     });
+  });
+
+  test("help panel opens and closes", async ({ page }) => {
+    await page.locator(".footer-help-icon").click();
+    const panel = page.locator(".help-panel");
+    await expect(panel).toBeVisible();
+    await page.locator(".help-close").click();
+    await expect(panel).not.toBeVisible();
+  });
+
+  test("share dialog opens and closes", async ({ page }) => {
+    await page.locator(".footer-button--share").click();
+    const overlay = page.locator(".share-dialog-overlay");
+    await expect(overlay).toBeVisible();
+    await page.locator('.share-dialog button:has-text("閉じる")').click();
+    await expect(overlay).not.toBeVisible();
   });
 });
