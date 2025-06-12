@@ -175,7 +175,9 @@ export function useDataExport(footerRef) {
     );
     const keyString = await exportKeyToString(key);
     const expires = expiresIn ? Date.now() + expiresIn : 0;
-    const url = `${window.location.origin}/s?fileId=${fileId}&expires=${expires}#${keyString}`;
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.substring(0, currentPath.lastIndexOf("/"));
+    const url = `${window.location.origin}${basePath}/s?fileId=${fileId}&expires=${expires}#${keyString}`;
     key = null;
     return url;
   }
