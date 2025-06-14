@@ -42,12 +42,10 @@ const {
 
 const {
   canSignInToGoogle,
-  canOperateDrive,
   handleSignInClick,
   handleSignOutClick,
   promptForDriveFolder,
   handleSaveToDriveClick,
-  handleLoadFromDriveClick,
 } = useGoogleDrive(dataManager);
 
 const {
@@ -216,16 +214,13 @@ onMounted(async () => {
     :current-experience-points="currentExperiencePoints"
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
-    :is-signed-in="uiStore.isSignedIn"
-    :can-operate-drive="canOperateDrive"
     :output-button-text="outputButtonText"
-    :is-cloud-save-success="uiStore.isCloudSaveSuccess"
     :is-viewing-shared="uiStore.isViewingShared"
     @save="saveData"
     @file-upload="handleFileUpload"
     @save-to-drive="handleSaveToDriveClick"
-    @load-from-drive="handleLoadFromDriveClick"
     @output="outputToCocofolia"
+    @open-hub="openHub"
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
