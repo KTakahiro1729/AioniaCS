@@ -19,7 +19,8 @@ import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
-import ExpirationOptions from './components/notifications/ExpirationOptions.vue';
+import ShareOptions from './components/notifications/ShareOptions.vue';
+import { useShare } from './composables/useShare.js';
 import CharacterHub from './components/ui/CharacterHub.vue';
 import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
@@ -36,9 +37,9 @@ const {
   saveData,
   handleFileUpload,
   outputToCocofolia,
-  generateShareLink,
-  createAndCopyShareLink,
 } = useDataExport(mainFooter);
+
+const { generateShare, copyLink, isLongData } = useShare(dataManager);
 
 const {
   canSignInToGoogle,
@@ -89,19 +90,34 @@ async function loadCharacterById(id, name) {
 }
 
 async function handleShare() {
+  window.__driveSignIn = handleSignInClick;
   const result = await showModal({
     title: '共有',
-    component: ExpirationOptions,
+    component: ShareOptions,
     buttons: [
       { label: '生成', value: 'generate', variant: 'primary' },
       { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
     ],
   });
   if (result.value === 'generate' && result.component) {
-    const map = { '24h': 86400000, '7d': 604800000, never: 0 };
-    const expiration = map[result.component.selected] || 0;
-    await createAndCopyShareLink(expiration);
+    const opts = {
+      type: result.component.type.value,
+      includeFull: result.component.includeFull.value,
+      password: result.component.password.value || '',
+      expiresInDays: Number(result.component.expires.value) || 0,
+    };
+    if ((opts.type === 'dynamic' || opts.includeFull) && !uiStore.isSignedIn) {
+      showToast({ type: 'error', title: 'Drive', message: 'サインインしてください' });
+      return;
+    }
+    try {
+      const link = await generateShare(opts);
+      await copyLink(link);
+    } catch (err) {
+      showToast({ type: 'error', title: '共有リンク生成失敗', message: err.message });
+    }
   }
+  delete window.__driveSignIn;
 }
 
 
