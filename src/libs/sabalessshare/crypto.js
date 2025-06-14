@@ -131,7 +131,7 @@ export async function decryptData(key, { ciphertext, iv, additionalData }) {
       algorithm.additionalData = additionalData;
     }
     return await cryptoObj.subtle.decrypt(algorithm, key, ciphertext);
-  } catch (error) {
+  } catch {
     throw new DecryptionError(
       "Failed to decrypt data. The key may be incorrect or the data may be corrupted.",
     );

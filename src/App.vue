@@ -6,10 +6,11 @@ import { useGoogleDrive } from './composables/useGoogleDrive.js';
 import { useHelp } from './composables/useHelp.js';
 import { useDataExport } from './composables/useDataExport.js';
 import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
-import {
-  importKeyFromString,
-  base64ToArrayBuffer,
-} from './utils/crypto.js';
+import { base64ToArrayBuffer } from './libs/sabalessshare/crypto.js';
+import { receiveSharedData } from './libs/sabalessshare/index.js';
+import { receiveDynamicData } from './libs/sabalessshare/dynamic.js';
+import { parseShareUrl } from './libs/sabalessshare/url.js';
+import { DriveStorageAdapter } from './services/driveStorageAdapter.js';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -147,65 +148,53 @@ watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
 
 // --- Lifecycle Hooks ---
 onMounted(async () => {
-  const url = new URL(window.location.href);
-  if (url.pathname === '/s' && url.searchParams.get('fileId')) {
-    const fileId = url.searchParams.get('fileId');
-    const expires = Number(url.searchParams.get('expires')) || 0;
-    const keyFragment = url.hash.slice(1);
-    if (!keyFragment) {
-      showToast({ type: 'error', title: '共有リンクエラー', message: '鍵がありません' });
-      return;
+  const params = parseShareUrl(window.location);
+  if (!params) return;
+  try {
+    let buffer;
+    if (params.mode === 'dynamic') {
+      const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
+      buffer = await receiveDynamicData({
+        location: window.location,
+        adapter,
+        passwordPromptHandler: async () =>
+          Promise.resolve(window.prompt('共有データのパスワードを入力してください') || null),
+      });
+    } else {
+      buffer = await receiveSharedData({
+        location: window.location,
+        downloadHandler: async (id) => {
+          const text = await dataManager.googleDriveManager.loadFileContent(id);
+          if (!text) throw new Error('no data');
+          const { ciphertext, iv } = JSON.parse(text);
+          return {
+            ciphertext: base64ToArrayBuffer(ciphertext),
+            iv: new Uint8Array(base64ToArrayBuffer(iv)),
+          };
+        },
+        passwordPromptHandler: async () =>
+          Promise.resolve(window.prompt('共有データのパスワードを入力してください') || null),
+      });
     }
-    if (expires && Date.now() > expires) {
-      showToast({ type: 'error', title: '共有リンクエラー', message: '有効期限切れ' });
-      return;
-    }
-    try {
-      const key = await importKeyFromString(keyFragment);
-      const content = await dataManager.googleDriveManager.loadFileContent(
-        fileId,
-      );
-      if (!content) {
-        showToast({ type: 'error', title: '共有データ取得失敗', message: '' });
-        return;
-      }
-      const { ciphertext, iv } = JSON.parse(content);
-      const encrypted = {
-        ciphertext: base64ToArrayBuffer(ciphertext),
-        iv: new Uint8Array(base64ToArrayBuffer(iv)),
-      };
-      const parsed = await dataManager.parseEncryptedShareableZip(
-        encrypted,
-        key,
-      );
-      Object.assign(characterStore.character, parsed.character);
-      characterStore.skills.splice(
-        0,
-        characterStore.skills.length,
-        ...parsed.skills,
-      );
-      characterStore.specialSkills.splice(
-        0,
-        characterStore.specialSkills.length,
-        ...parsed.specialSkills,
-      );
-      Object.assign(characterStore.equipments, parsed.equipments);
-      characterStore.histories.splice(
-        0,
-        characterStore.histories.length,
-        ...parsed.histories,
-      );
-      uiStore.isViewingShared = true;
-    } catch (err) {
-      if (err.message && err.message.includes('OperationError')) {
-        showToast({ type: 'error', title: '共有データエラー', message: '暗号鍵が正しくありません' });
-      } else if (err.message && err.message.includes('character_data.json')) {
-        showToast({ type: 'error', title: '共有データエラー', message: 'データが破損しています' });
-      } else {
-        showToast({ type: 'error', title: '共有データ読み込み失敗', message: '' });
-      }
-      console.error('Error loading shared data:', err);
-    }
+    const parsed = JSON.parse(new TextDecoder().decode(buffer));
+    Object.assign(characterStore.character, parsed.character);
+    characterStore.skills.splice(0, characterStore.skills.length, ...parsed.skills);
+    characterStore.specialSkills.splice(
+      0,
+      characterStore.specialSkills.length,
+      ...parsed.specialSkills,
+    );
+    Object.assign(characterStore.equipments, parsed.equipments);
+    characterStore.histories.splice(0, characterStore.histories.length, ...parsed.histories);
+    uiStore.isViewingShared = true;
+  } catch (err) {
+    let msg = '共有データ読み込み失敗';
+    if (err.name === 'InvalidLinkError') msg = '共有リンクが不正です';
+    else if (err.name === 'ExpiredLinkError') msg = '共有リンクの有効期限が切れています';
+    else if (err.name === 'PasswordRequiredError') msg = 'パスワードが必要です';
+    else if (err.name === 'DecryptionError') msg = '復号に失敗しました';
+    showToast({ type: 'error', title: '共有データエラー', message: msg });
+    console.error('Error loading shared data:', err);
   }
 });
 </script>
