@@ -3,12 +3,10 @@ import { createDynamicLink } from "../libs/sabalessshare/dynamic.js";
 import { arrayBufferToBase64 } from "../libs/sabalessshare/crypto.js";
 import { DriveStorageAdapter } from "../services/driveStorageAdapter.js";
 import { useCharacterStore } from "../stores/characterStore.js";
-import { useUiStore } from "../stores/uiStore.js";
 import { useNotifications } from "./useNotifications.js";
 
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
-  const uiStore = useUiStore();
   const { showToast } = useNotifications();
 
   function _collectData(includeFull) {
