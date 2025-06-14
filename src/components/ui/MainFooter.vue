@@ -18,40 +18,60 @@
       荷重: {{ currentWeight }}
     </div>
     <div class="footer-button-container">
-      <button class="button-base footer-button footer-button--save" @click="$emit('save')">
+      <button
+        class="button-base footer-button footer-button--save"
+        @click="handleSaveMain"
+        :title="saveMainTitle"
+      >
         データ保存
       </button>
       <button
-        v-if="isSignedIn"
+        v-if="config.saveAlt"
         class="button-base footer-button footer-button--cloud"
-        @click="$emit('save-to-drive')"
-        :disabled="!canOperateDrive"
-        title="Google Driveに保存"
+        @click="handleSaveAlt"
+        :disabled="config.saveAlt === 'cloudSave' && !canOperateDrive"
+        :title="saveAltTitle"
       >
         <span
-          v-if="isCloudSaveSuccess"
-          class="icon-svg icon-svg--footer icon-svg-success"
-          aria-label="Save Succeeded"
+          v-if="config.saveAlt === 'cloudSave'"
+          :class="['icon-svg', 'icon-svg--footer', isCloudSaveSuccess ? 'icon-svg-success' : 'icon-svg-upload']"
+          aria-label="Cloud Save"
         ></span>
-        <span
-          v-else
-          class="icon-svg icon-svg--footer icon-svg-upload"
-          aria-label="Save to Drive"
-        ></span>
+        <span v-else>📥</span>
       </button>
     </div>
     <div class="footer-button-container">
-      <label for="load_input_vue" class="button-base footer-button footer-button--load">データ読込</label>
-      <input type="file" id="load_input_vue" @change="(e) => $emit('file-upload', e)" accept=".json,.txt,.zip" class="hidden" />
-      <button
-        v-if="isSignedIn"
-        class="button-base footer-button footer-button--cloud"
-        @click="$emit('load-from-drive')"
-        :disabled="!isSignedIn"
-        title="Google Driveから読込"
+      <component
+        :is="loadMainIsLabel ? 'label' : 'button'"
+        class="button-base footer-button footer-button--load"
+        :for="loadMainIsLabel ? 'load_input_vue' : null"
+        @click="loadMainIsLabel ? null : handleLoadHub"
+        :title="loadMainTitle"
       >
-        <span class="icon-svg icon-svg--footer icon-svg-download" aria-label="Load from Drive"></span>
-      </button>
+        データ読込
+      </component>
+      <input
+        type="file"
+        id="load_input_vue"
+        @change="(e) => $emit('file-upload', e)"
+        accept=".json,.txt,.zip"
+        class="hidden"
+      />
+      <component
+        v-if="config.loadAlt"
+        :is="loadAltIsLabel ? 'label' : 'button'"
+        class="button-base footer-button footer-button--cloud"
+        :for="loadAltIsLabel ? 'load_input_vue' : null"
+        @click="loadAltIsLabel ? null : handleLoadHub"
+        :title="loadAltTitle"
+      >
+        <span
+          v-if="config.loadAlt === 'openHub'"
+          class="icon-svg icon-svg--footer icon-svg-download"
+          aria-label="Cloud Hub"
+        ></span>
+        <span v-else>📤</span>
+      </component>
     </div>
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
       {{ outputButtonText }}
@@ -67,7 +87,8 @@
 </template>
 
 <script setup>
-import { ref, defineExpose, defineEmits } from 'vue';
+import { ref, defineExpose, defineEmits, computed } from 'vue';
+import { useFooterState } from '../../composables/useFooterState.js';
 
 const props = defineProps({
   helpState: String,
@@ -75,10 +96,7 @@ const props = defineProps({
   currentExperiencePoints: Number,
   maxExperiencePoints: Number,
   currentWeight: Number,
-  isSignedIn: Boolean,
-  canOperateDrive: Boolean,
   outputButtonText: String,
-  isCloudSaveSuccess: Boolean,
   isViewingShared: Boolean,
 });
 
@@ -89,7 +107,7 @@ const emit = defineEmits([
   'save',
   'save-to-drive',
   'file-upload',
-  'load-from-drive',
+  'open-hub',
   'output',
   'share',
   'copy-edit',
@@ -98,6 +116,47 @@ const outputButton = ref(null);
 const helpIcon = ref(null);
 
 defineExpose({ outputButton, helpIcon });
+
+const { config, canOperateDrive, isCloudSaveSuccess } = useFooterState();
+
+const saveMainTitle = computed(() =>
+  config.value.saveMain === 'cloudSave' ? 'Google Driveに保存' : 'ローカルに保存',
+);
+const saveAltTitle = computed(() => {
+  if (config.value.saveAlt === 'cloudSave') return 'Google Driveに保存';
+  if (config.value.saveAlt === 'localSave') return 'ローカルに保存';
+  return '';
+});
+const loadMainTitle = computed(() =>
+  config.value.loadMain === 'openHub' ? 'クラウド管理ハブ' : 'ローカルファイルを読み込む',
+);
+const loadAltTitle = computed(() => {
+  if (config.value.loadAlt === 'openHub') return 'クラウド管理ハブ';
+  if (config.value.loadAlt === 'localLoad') return 'ローカルファイルを読み込む';
+  return '';
+});
+const loadMainIsLabel = computed(() => config.value.loadMain === 'localLoad');
+const loadAltIsLabel = computed(() => config.value.loadAlt === 'localLoad');
+
+function handleSaveMain() {
+  if (config.value.saveMain === 'cloudSave') {
+    emit('save-to-drive');
+  } else {
+    emit('save');
+  }
+}
+
+function handleSaveAlt() {
+  if (config.value.saveAlt === 'cloudSave') {
+    emit('save-to-drive');
+  } else if (config.value.saveAlt === 'localSave') {
+    emit('save');
+  }
+}
+
+function handleLoadHub() {
+  emit('open-hub');
+}
 
 function handleShareClick() {
   if (props.isViewingShared) {
