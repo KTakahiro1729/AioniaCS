@@ -12,6 +12,9 @@ export const useUiStore = defineStore("ui", {
     currentDriveFileId: null,
     currentDriveFileName: "",
     isViewingShared: false,
+    defaultSaveToCloud: JSON.parse(
+      localStorage.getItem("aioniaDefaultSaveToCloud") || "false",
+    ),
   }),
   getters: {
     experienceStatusClass() {
@@ -28,6 +31,12 @@ export const useUiStore = defineStore("ui", {
     },
     canOperateDrive(state) {
       return state.isSignedIn && state.driveFolderId;
+    },
+  },
+  actions: {
+    setDefaultSaveToCloud(value) {
+      this.defaultSaveToCloud = value;
+      localStorage.setItem("aioniaDefaultSaveToCloud", JSON.stringify(value));
     },
   },
 });
