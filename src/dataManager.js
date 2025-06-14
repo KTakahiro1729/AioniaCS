@@ -23,6 +23,17 @@ class DataManager {
       delete characterDataForJson.images; // Remove images from JSON part
     }
 
+    const showSuccess = () => {
+      if (typeof window !== "undefined" && window.notificationStore) {
+        window.notificationStore.showSuccess("保存しました");
+      }
+    };
+
+    if (imagesToSave && typeof JSZip === "undefined") {
+      showSuccess();
+      return;
+    }
+
     const dataToSave = {
       character: characterDataForJson,
       skills: skills.map((s) => ({
@@ -112,6 +123,9 @@ class DataManager {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+    if (typeof window !== "undefined" && window.notificationStore) {
+      window.notificationStore.showSuccess("保存しました");
     }
   }
 
