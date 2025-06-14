@@ -34,6 +34,14 @@
           Choose Drive Folder
         </button>
       </div>
+      <button
+        class="button-base icon-button"
+        v-if="isSignedIn"
+        @click="$emit('open-hub')"
+        title="クラウド管理ハブ"
+      >
+        <span class="icon-svg icon-svg-cloud" aria-label="Hub"></span>
+      </button>
     </div>
   </div>
 </template>
@@ -48,7 +56,7 @@ const props = defineProps({
   isSignedIn: Boolean,
 });
 
-const emit = defineEmits(['sign-in', 'sign-out', 'choose-folder']);
+const emit = defineEmits(['sign-in', 'sign-out', 'choose-folder', 'open-hub']);
 
 const showMenu = ref(false);
 const driveMenuToggleButton = ref(null);

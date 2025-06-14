@@ -20,6 +20,7 @@ import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import ExpirationOptions from './components/notifications/ExpirationOptions.vue';
+import CharacterHub from './components/ui/CharacterHub.vue';
 import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
 const mainFooter = ref(null);
@@ -59,6 +60,35 @@ const {
 } = useHelp(helpPanelRef, mainFooter);
 
 const { showModal, showToast } = useNotifications();
+
+const isHubVisible = ref(false);
+
+function openHub() {
+  isHubVisible.value = true;
+}
+
+function closeHub() {
+  isHubVisible.value = false;
+}
+
+async function loadCharacterById(id, name) {
+  showToast({ type: 'info', title: 'Google Drive', message: `Loading ${name}...` });
+  try {
+    const parsedData = await dataManager.loadDataFromDrive(id);
+    if (parsedData) {
+      Object.assign(characterStore.character, parsedData.character);
+      characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
+      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
+      Object.assign(characterStore.equipments, parsedData.equipments);
+      characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+      uiStore.currentDriveFileId = id;
+      uiStore.currentDriveFileName = name;
+      showToast({ type: 'success', title: 'Loaded', message: `${name} from Drive` });
+    }
+  } catch (err) {
+    showToast({ type: 'error', title: 'Load error', message: err.message || 'Unknown error' });
+  }
+}
 
 async function handleShare() {
   const result = await showModal({
@@ -175,6 +205,7 @@ onMounted(async () => {
     @sign-in="handleSignInClick"
     @sign-out="handleSignOutClick"
     @choose-folder="promptForDriveFolder(true)"
+    @open-hub="openHub"
   />
   <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
   <CharacterSheetLayout />
@@ -206,6 +237,12 @@ onMounted(async () => {
     :is-visible="isHelpVisible"
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
+  />
+  <CharacterHub
+    v-if="isHubVisible"
+    :data-manager="dataManager"
+    :load-character="loadCharacterById"
+    @close="closeHub"
   />
   <NotificationContainer />
 </template>
