@@ -4,7 +4,7 @@
       <div class="modal character-hub">
         <button class="modal-close" @click="$emit('close')">×</button>
         <template v-if="uiStore.isSignedIn">
-          <h2 class="character-hub__title">クラウドキャラクター</h2>
+          <h2 class="character-hub__title">キャラクター管理</h2>
           <button class="button-base character-hub__signout" @click="$emit('sign-out')">サインアウト</button>
           <button class="button-base character-hub__refresh" @click="refreshList">更新</button>
           <button class="button-base character-hub__new" @click="saveNew">新規保存</button>
@@ -28,11 +28,11 @@
           </ul>
         </template>
         <template v-else>
-          <h2 class="character-hub__title">クラウド管理ハブ</h2>
+          <h2 class="character-hub__title">Google Drive キャラクター管理</h2>
           <p class="character-hub__description">
             Google Drive 連携でキャラクターを保存・共有できます。
           </p>
-          <button class="button-base" @click="$emit('sign-in')">サインイン</button>
+          <button class="button-base button-" @click="$emit('sign-in')">サインイン</button>
         </template>
       </div>
     </div>

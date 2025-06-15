@@ -23,7 +23,8 @@
         @click="$emit('save')"
         title="ローカルに保存"
       >
-        [↓] 端末に保存
+        <span class="icon-svg icon-svg--footer icon-svg-local-download"></span>
+        端末に保存
       </button>
     </div>
     <div class="footer-button-container">
@@ -32,7 +33,8 @@
         for="load_input_vue"
         title="ローカルファイルを読み込む"
       >
-        [↑] 読み込み
+        <span class="icon-svg icon-svg--footer icon-svg-local-upload"></span>
+        読み込み
       </label>
       <input
         type="file"
