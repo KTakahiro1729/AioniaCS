@@ -1,4 +1,5 @@
 // Mock global objects and functions expected by main.js methods
+import { jest } from "@jest/globals";
 global.window = {
   AioniaGameData: {
     config: {

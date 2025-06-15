@@ -1,11 +1,14 @@
-name: CI
+name: CI/CD
 
 on:
+  push:
+    branches:
+      - main
+      - dev
   pull_request:
   workflow_dispatch:
 
 jobs:
-  # Lintジョブ (JavaScript, CSS, HTMLの静的解析)
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -13,16 +16,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm' # NPMのキャッシュを有効化
-
+          node-version: '20'
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
-
       - name: Run lint
         run: npm run lint
 
-  # Testジョブ (Jestによるユニットテスト)
   test:
     runs-on: ubuntu-latest
     steps:
@@ -30,16 +30,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm' # NPMのキャッシュを有効化
-
+          node-version: '20'
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
-
       - name: Run tests
         run: npm test
 
-  # E2Eジョブ (PlaywrightによるE2Eテスト)
   e2e:
     runs-on: ubuntu-latest
     steps:
@@ -47,10 +44,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm' # NPMのキャッシュを有効化
-
-      # Playwrightのブラウザをキャッシュ
+          node-version: '20'
+          cache: 'npm'
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
@@ -59,14 +54,89 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
-
       - name: Install dependencies
         run: npm ci
-
-      # キャッシュがない場合のみブラウザをインストール
       - name: Install Playwright Browsers
-        # npx playwright install --with-deps を使うと依存関係もインストールしてくれます
         run: npx playwright install --with-deps
-
       - name: Run e2e tests
         run: npm run e2e
+  deploy_production:
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main'
+    needs: [lint, test, e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+
+  deploy_dev_preview:
+    name: Deploy to Dev Preview
+    if: github.ref == 'refs/heads/dev'
+    needs: [lint, test, e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Deploy to gh-pages-dev branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages-dev
+          force_orphan: true
+
+  deploy_manual_preview:
+    name: Deploy Manual Preview
+    # 手動実行（workflow_dispatch）であり、かつmain/devブランチ以外の場合に実行
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev'
+    needs: [lint, test, e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
+      - name: Deploy to gh-pages-manual branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages-manual # デプロイ先ブランチを指定
+          force_orphan: true
