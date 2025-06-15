@@ -10,7 +10,7 @@
           <ul class="character-hub__list">
             <li v-for="ch in characters" :key="ch.id" class="character-hub__item">
               <button class="character-hub__name" @click="confirmLoad(ch)">
-                {{ ch.name }}
+                {{ ch.characterName || ch.name }}
               </button>
               <span class="character-hub__date">{{ formatDate(ch.updatedAt) }}</span>
               <div class="character-hub__actions">
@@ -83,7 +83,7 @@ function toggleMenu(ch) {
 async function confirmLoad(ch) {
   const result = await showModal({
     title: '読込確認',
-    message: `${ch.name} を読み込みますか？`,
+    message: `${ch.characterName || ch.name} を読み込みますか？`,
     buttons: [
       { label: '読込', value: 'load', variant: 'primary' },
       { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
@@ -98,7 +98,7 @@ async function renameChar(ch) {
   const inputComp = {
     template: '<input type="text" v-model="name" />',
     setup() {
-      const name = ref(ch.name);
+      const name = ref(ch.characterName || ch.name);
       return { name };
     },
   };
@@ -115,7 +115,7 @@ async function renameChar(ch) {
     if (newName && props.dataManager.googleDriveManager) {
       await props.dataManager.googleDriveManager.renameIndexEntry(ch.id, newName);
       const idx = uiStore.driveCharacters.findIndex((c) => c.id === ch.id);
-      if (idx !== -1) uiStore.driveCharacters[idx].name = newName;
+      if (idx !== -1) uiStore.driveCharacters[idx].characterName = newName;
     }
   }
   ch.showMenu = false;
@@ -124,7 +124,7 @@ async function renameChar(ch) {
 async function deleteChar(ch) {
   const result = await showModal({
     title: '削除確認',
-    message: `${ch.name} を削除しますか？`,
+    message: `${ch.characterName || ch.name} を削除しますか？`,
     buttons: [
       { label: '削除', value: 'delete', variant: 'primary' },
       { label: 'キャンセル', value: 'cancel', variant: 'secondary' },

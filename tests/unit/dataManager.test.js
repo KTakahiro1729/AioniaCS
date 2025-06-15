@@ -369,6 +369,7 @@ describe("DataManager", () => {
       expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
         id: "1",
         name: "c.json",
+        characterName: "TestChar",
       });
       expect(res.id).toBe("1");
     });

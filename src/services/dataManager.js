@@ -378,6 +378,7 @@ export class DataManager {
       await this.googleDriveManager.addIndexEntry({
         id: created.id,
         name: created.name,
+        characterName: character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
       });
     }
     return created;
