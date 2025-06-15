@@ -41,15 +41,13 @@
       </button>
     </div>
     <div class="footer-button-container">
-      <component
-        :is="loadMainIsLabel ? 'label' : 'button'"
+      <label
         class="button-base footer-button footer-button--load"
-        :for="loadMainIsLabel ? 'load_input_vue' : null"
-        @click="loadMainIsLabel ? null : handleLoadHub"
-        :title="loadMainTitle"
+        for="load_input_vue"
+        title="ローカルファイルを読み込む"
       >
         データ読込
-      </component>
+      </label>
       <input
         type="file"
         id="load_input_vue"
@@ -57,21 +55,6 @@
         accept=".json,.txt,.zip"
         class="hidden"
       />
-      <component
-        v-if="config.loadAlt"
-        :is="loadAltIsLabel ? 'label' : 'button'"
-        class="button-base footer-button footer-button--cloud"
-        :for="loadAltIsLabel ? 'load_input_vue' : null"
-        @click="loadAltIsLabel ? null : handleLoadHub"
-        :title="loadAltTitle"
-      >
-        <span
-          v-if="config.loadAlt === 'openHub'"
-          class="icon-svg icon-svg--footer icon-svg-download"
-          aria-label="Cloud Hub"
-        ></span>
-        <span v-else>📤</span>
-      </component>
     </div>
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
       {{ outputButtonText }}
@@ -107,7 +90,6 @@ const emit = defineEmits([
   'save',
   'save-to-drive',
   'file-upload',
-  'open-hub',
   'output',
   'share',
   'copy-edit',
@@ -127,16 +109,6 @@ const saveAltTitle = computed(() => {
   if (config.value.saveAlt === 'localSave') return 'ローカルに保存';
   return '';
 });
-const loadMainTitle = computed(() =>
-  config.value.loadMain === 'openHub' ? 'クラウド管理ハブ' : 'ローカルファイルを読み込む',
-);
-const loadAltTitle = computed(() => {
-  if (config.value.loadAlt === 'openHub') return 'クラウド管理ハブ';
-  if (config.value.loadAlt === 'localLoad') return 'ローカルファイルを読み込む';
-  return '';
-});
-const loadMainIsLabel = computed(() => config.value.loadMain === 'localLoad');
-const loadAltIsLabel = computed(() => config.value.loadAlt === 'localLoad');
 
 function handleSaveMain() {
   if (config.value.saveMain === 'cloudSave') {
@@ -152,10 +124,6 @@ function handleSaveAlt() {
   } else if (config.value.saveAlt === 'localSave') {
     emit('save');
   }
-}
-
-function handleLoadHub() {
-  emit('open-hub');
 }
 
 function handleShareClick() {

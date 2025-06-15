@@ -16,8 +16,8 @@ describe("getFooterState", () => {
     expect(state).toEqual({
       saveMain: "cloudSave",
       saveAlt: "localSave",
-      loadMain: "openHub",
-      loadAlt: "localLoad",
+      loadMain: "localLoad",
+      loadAlt: null,
     });
   });
 
@@ -27,7 +27,7 @@ describe("getFooterState", () => {
       saveMain: "localSave",
       saveAlt: "cloudSave",
       loadMain: "localLoad",
-      loadAlt: "openHub",
+      loadAlt: null,
     });
   });
 });

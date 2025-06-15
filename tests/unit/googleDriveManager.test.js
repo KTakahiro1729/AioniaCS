@@ -68,4 +68,11 @@ describe("GoogleDriveManager appDataFolder", () => {
     });
     expect(gdm.removeIndexEntry).toHaveBeenCalledWith("d1");
   });
+
+  test("onGapiLoad rejects when gapi.load is missing", async () => {
+    delete gapi.load;
+    await expect(gdm.onGapiLoad()).rejects.toThrow(
+      "GAPI core script not available for gapi.load.",
+    );
+  });
 });

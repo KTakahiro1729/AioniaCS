@@ -12,6 +12,8 @@ export const useUiStore = defineStore("ui", {
     currentDriveFileId: null,
     currentDriveFileName: "",
     isViewingShared: false,
+    isHubVisible: false,
+    driveCharacters: [],
     defaultSaveToCloud: JSON.parse(
       localStorage.getItem("aioniaDefaultSaveToCloud") || "false",
     ),
@@ -37,6 +39,19 @@ export const useUiStore = defineStore("ui", {
     setDefaultSaveToCloud(value) {
       this.defaultSaveToCloud = value;
       localStorage.setItem("aioniaDefaultSaveToCloud", JSON.stringify(value));
+    },
+    async refreshDriveCharacters(gdm) {
+      if (!gdm) return;
+      this.driveCharacters = await gdm.readIndexFile();
+    },
+    clearDriveCharacters() {
+      this.driveCharacters = [];
+    },
+    openHub() {
+      this.isHubVisible = true;
+    },
+    closeHub() {
+      this.isHubVisible = false;
     },
   },
 });

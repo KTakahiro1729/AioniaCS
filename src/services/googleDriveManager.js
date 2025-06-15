@@ -9,7 +9,7 @@ export class GoogleDriveManager {
       "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
     ];
     this.scope =
-      "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
+      "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file";
     this.gapiLoadedCallback = null;
     this.gisLoadedCallback = null;
     this.tokenClient = null;

@@ -12,7 +12,11 @@ export function useGoogleDrive(dataManager) {
 
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
-    showToast({ type: "info", title: "Google Drive", message: "Signing in..." });
+    showToast({
+      type: "info",
+      title: "Google Drive",
+      message: "Signing in...",
+    });
     googleDriveManager.value.handleSignIn((error, authResult) => {
       if (error || !authResult || !authResult.signedIn) {
         uiStore.isSignedIn = false;
@@ -20,11 +24,13 @@ export function useGoogleDrive(dataManager) {
           type: "error",
           title: "Sign-in failed",
           message:
-            (error ? error.message || error.details : "Ensure pop-ups are enabled.") ||
-            "Please try again.",
+            (error
+              ? error.message || error.details
+              : "Ensure pop-ups are enabled.") || "Please try again.",
         });
       } else {
         uiStore.isSignedIn = true;
+        uiStore.refreshDriveCharacters(googleDriveManager.value);
         showToast({ type: "success", title: "Signed in", message: "" });
       }
     });
@@ -34,6 +40,7 @@ export function useGoogleDrive(dataManager) {
     if (!googleDriveManager.value) return;
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
+      uiStore.clearDriveCharacters();
       showToast({ type: "success", title: "Signed out", message: "" });
     });
   }
@@ -53,19 +60,35 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGapiLoad();
         showToast({ type: "success", title: "Google API Ready", message: "" });
       } catch {
-        showToast({ type: "error", title: "Google API Error", message: "Initializing failed" });
+        showToast({
+          type: "error",
+          title: "Google API Error",
+          message: "Initializing failed",
+        });
       }
     };
 
     const handleGisLoaded = async () => {
       if (uiStore.isGisInitialized || !googleDriveManager.value) return;
       uiStore.isGisInitialized = true;
-      showToast({ type: "info", title: "Google Sign-In", message: "Loading..." });
+      showToast({
+        type: "info",
+        title: "Google Sign-In",
+        message: "Loading...",
+      });
       try {
         await googleDriveManager.value.onGisLoad();
-        showToast({ type: "success", title: "Google Sign-In Ready", message: "" });
+        showToast({
+          type: "success",
+          title: "Google Sign-In Ready",
+          message: "",
+        });
       } catch {
-        showToast({ type: "error", title: "Google Sign-In Error", message: "Initializing failed" });
+        showToast({
+          type: "error",
+          title: "Google Sign-In Error",
+          message: "Initializing failed",
+        });
       }
     };
 
