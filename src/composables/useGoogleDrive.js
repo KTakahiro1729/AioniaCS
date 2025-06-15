@@ -1,10 +1,12 @@
 import { ref, computed, onMounted } from "vue";
 import { GoogleDriveManager } from "../services/googleDriveManager.js";
 import { useUiStore } from "../stores/uiStore.js";
+import { useCharacterStore } from "../stores/characterStore.js";
 import { useNotifications } from "./useNotifications.js";
 
 export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
+  const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
   const { showToast } = useNotifications();
 
@@ -43,6 +45,60 @@ export function useGoogleDrive(dataManager) {
       uiStore.clearDriveCharacters();
       showToast({ type: "success", title: "Signed out", message: "" });
     });
+  }
+
+  function promptForDriveFolder() {
+    const gdm = dataManager.googleDriveManager;
+    if (!gdm) return;
+    gdm.showFolderPicker((err, folder) => {
+      if (err || !folder) {
+        showToast({
+          type: "error",
+          title: "Drive",
+          message: err?.message || "フォルダ選択をキャンセルしました",
+        });
+        return;
+      }
+      uiStore.driveFolderId = folder.id;
+      uiStore.driveFolderName = folder.name;
+    });
+  }
+
+  async function saveCharacterToDrive(fileId, fileName) {
+    if (!dataManager.googleDriveManager) return;
+    uiStore.isCloudSaveSuccess = false;
+    showToast({ type: "info", title: "Google Drive", message: "Saving..." });
+    try {
+      const result = await dataManager.saveDataToAppData(
+        characterStore.character,
+        characterStore.skills,
+        characterStore.specialSkills,
+        characterStore.equipments,
+        characterStore.histories,
+        fileId,
+        fileName,
+      );
+      if (result) {
+        uiStore.currentDriveFileId = result.id;
+        uiStore.currentDriveFileName = result.name;
+        uiStore.isCloudSaveSuccess = true;
+        await uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
+        showToast({ type: "success", title: "Saved", message: "" });
+      }
+    } catch (error) {
+      showToast({
+        type: "error",
+        title: "Save failed",
+        message: error.message || "",
+      });
+    }
+  }
+
+  function handleSaveToDriveClick() {
+    return saveCharacterToDrive(
+      uiStore.currentDriveFileId,
+      uiStore.currentDriveFileName,
+    );
   }
 
   function initializeGoogleDrive() {
@@ -113,5 +169,12 @@ export function useGoogleDrive(dataManager) {
     }
   });
 
-  return { canSignInToGoogle, handleSignInClick, handleSignOutClick };
+  return {
+    canSignInToGoogle,
+    handleSignInClick,
+    handleSignOutClick,
+    promptForDriveFolder,
+    saveCharacterToDrive,
+    handleSaveToDriveClick,
+  };
 }

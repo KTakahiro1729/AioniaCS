@@ -156,6 +156,7 @@ textarea.greyed-out {
   background-color: transparent;
   color: var(--color-accent);
   text-decoration: none;
+  padding: 0;
 }
 
 .button-base:hover {
@@ -332,7 +333,7 @@ textarea.greyed-out {
 
 .footer-button,
 .imagefile-button {
-  padding: 10px 18px;
+  /* padding: 10px 18px; */
   font-size: 0.95em;
   height: 48px;
   font-weight: 700;
@@ -363,18 +364,13 @@ textarea.greyed-out {
 }
 
 .footer-button--save,
-label.footer-button--load {
+.footer-button--load,
+.footer-button--share {
   width: 120px;
   flex-shrink: 0;
 
   /* ボタンの横幅を固定 */
   justify-content: center;
-}
-
-/* クラウドボタンが隣にある場合、メインボタンの角を平らにする */
-.footer-button-container > .button-base:not(:last-child) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
 }
 
 .footer-button--cloud {
@@ -406,20 +402,29 @@ label.footer-button--load {
   mask-image: url("../svg/medieval_check.svg");
 }
 
-.icon-svg-upload {
+.icon-svg-cloud-upload {
   mask-image: url("../svg/medieval_cloud_upload.svg");
 }
 
-.icon-svg-download {
+.icon-svg-cloud-download {
   mask-image: url("../svg/medieval_cloud_download.svg");
 }
 
-.icon-svg--footer {
-  width: 35px;
-  height: 35px;
+.icon-svg-local-upload {
+  mask-image: url("../svg/medieval_local_upload.svg");
 }
 
-.footer-button--cloud:hover .icon-svg--footer {
+.icon-svg-local-download {
+  mask-image: url("../svg/medieval_local_download.svg");
+}
+
+.icon-svg--footer {
+  width: 30px;
+  height: 30px;
+  margin-right: 3px;
+}
+
+.icon-svg--footer:hover .icon-svg--footer {
   background-color: var(--color-accent-light);
 }
 

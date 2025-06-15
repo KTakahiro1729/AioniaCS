@@ -609,7 +609,7 @@ export class GoogleDriveManager {
   async renameIndexEntry(id, newName) {
     const index = await this.readIndexFile();
     index.forEach((e) => {
-      if (e.id === id) e.name = newName;
+      if (e.id === id) e.characterName = newName;
     });
     await this.writeIndexFile(index);
   }

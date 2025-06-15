@@ -243,7 +243,7 @@ export class DataManager {
   }
 
   /**
-   * Saves character data to Google Drive.
+   * Exports character data to a user selected Drive folder.
    * @param {object} character - The character data.
    * @param {Array} skills - The skills data.
    * @param {Array} specialSkills - The special skills data.
@@ -254,7 +254,7 @@ export class DataManager {
    * @param {string} fileName - The desired name for the file.
    * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
    */
-  async saveDataToDrive(
+  async exportDataToDriveFolder(
     character,
     skills,
     specialSkills,
@@ -315,6 +315,76 @@ export class DataManager {
   }
 
   /**
+   * Saves character data to the user's appDataFolder.
+   * Adds an index entry when creating a new file.
+   */
+  async saveDataToAppData(
+    character,
+    skills,
+    specialSkills,
+    equipments,
+    histories,
+    currentFileId,
+    fileName,
+  ) {
+    if (!this.googleDriveManager) {
+      console.error("GoogleDriveManager not set in DataManager.");
+      throw new Error(
+        "GoogleDriveManager not configured. Please sign in or initialize the Drive manager.",
+      );
+    }
+
+    const dataToSave = {
+      character: character,
+      skills: skills.map((s) => ({
+        id: s.id,
+        checked: s.checked,
+        canHaveExperts: s.canHaveExperts,
+        experts: s.canHaveExperts
+          ? s.experts
+              .filter((e) => e.value && e.value.trim() !== "")
+              .map((e) => ({ value: e.value }))
+          : [],
+      })),
+      specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
+      equipments: equipments,
+      histories: histories.filter(
+        (h) =>
+          h.sessionName ||
+          (h.gotExperiments !== null && h.gotExperiments !== "") ||
+          h.memo,
+      ),
+    };
+
+    const sanitizedFileName =
+      (fileName || character.name || "Aionia_Character_Sheet").replace(
+        /[\\/:*?"<>|]/g,
+        "_",
+      ) + ".json";
+
+    if (currentFileId) {
+      return this.googleDriveManager.updateCharacterFile(
+        currentFileId,
+        dataToSave,
+        sanitizedFileName,
+      );
+    }
+
+    const created = await this.googleDriveManager.createCharacterFile(
+      dataToSave,
+      sanitizedFileName,
+    );
+    if (created) {
+      await this.googleDriveManager.addIndexEntry({
+        id: created.id,
+        name: created.name,
+        characterName: character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
+      });
+    }
+    return created;
+  }
+
+  /**
    * Loads data from a file in Google Drive.
    * @param {string} fileId - The ID of the file to load.
    * @returns {Promise<object|null>} Parsed character data or null on error.
@@ -344,7 +414,6 @@ export class DataManager {
       throw error; // Re-throw other errors
     }
   }
-
 
   /**
    * 外部JSONフォーマットを内部フォーマットに変換

@@ -69,6 +69,17 @@ describe("GoogleDriveManager appDataFolder", () => {
     expect(gdm.removeIndexEntry).toHaveBeenCalledWith("d1");
   });
 
+  test("renameIndexEntry updates characterName", async () => {
+    jest
+      .spyOn(gdm, "readIndexFile")
+      .mockResolvedValue([{ id: "a", name: "a.json", characterName: "Old" }]);
+    jest.spyOn(gdm, "writeIndexFile").mockResolvedValue();
+    await gdm.renameIndexEntry("a", "New");
+    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
+      { id: "a", name: "a.json", characterName: "New" },
+    ]);
+  });
+
   test("onGapiLoad rejects when gapi.load is missing", async () => {
     delete gapi.load;
     await expect(gdm.onGapiLoad()).rejects.toThrow(
