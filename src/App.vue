@@ -61,14 +61,12 @@ const {
 
 const { showModal, showToast } = useNotifications();
 
-const isHubVisible = ref(false);
-
 function openHub() {
-  isHubVisible.value = true;
+  uiStore.openHub();
 }
 
 function closeHub() {
-  isHubVisible.value = false;
+  uiStore.closeHub();
 }
 
 async function loadCharacterById(id, name) {
@@ -203,11 +201,6 @@ onMounted(async () => {
   <TopLeftControls
     :is-gapi-initialized="uiStore.isGapiInitialized"
     :is-gis-initialized="uiStore.isGisInitialized"
-    :can-sign-in-to-google="canSignInToGoogle"
-    :is-signed-in="uiStore.isSignedIn"
-    @sign-in="handleSignInClick"
-    @sign-out="handleSignOutClick"
-    @choose-folder="promptForDriveFolder(true)"
     @open-hub="openHub"
   />
   <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
@@ -225,7 +218,6 @@ onMounted(async () => {
     @file-upload="handleFileUpload"
     @save-to-drive="handleSaveToDriveClick"
     @output="outputToCocofolia"
-    @open-hub="openHub"
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
@@ -239,9 +231,11 @@ onMounted(async () => {
     @close="closeHelpPanel"
   />
   <CharacterHub
-    v-if="isHubVisible"
+    v-if="uiStore.isHubVisible"
     :data-manager="dataManager"
     :load-character="loadCharacterById"
+    @sign-in="handleSignInClick"
+    @sign-out="handleSignOutClick"
     @close="closeHub"
   />
   <NotificationContainer />

@@ -11,15 +11,15 @@ export function getFooterState(isSignedIn, defaultSaveToCloud) {
     return {
       saveMain: "cloudSave",
       saveAlt: "localSave",
-      loadMain: "openHub",
-      loadAlt: "localLoad",
+      loadMain: "localLoad",
+      loadAlt: null,
     };
   }
   return {
     saveMain: "localSave",
     saveAlt: "cloudSave",
     loadMain: "localLoad",
-    loadAlt: "openHub",
+    loadAlt: null,
   };
 }
 

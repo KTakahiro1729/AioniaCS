@@ -3,41 +3,52 @@
     <div class="modal-overlay" v-if="true">
       <div class="modal character-hub">
         <button class="modal-close" @click="$emit('close')">×</button>
-        <h2 class="character-hub__title">クラウドキャラクター</h2>
-        <div class="character-hub__setting">
-          <label>
-            <input
-              type="checkbox"
-              v-model="uiStore.defaultSaveToCloud"
-              @change="updateSetting"
-            />
-            デフォルトの保存先をクラウドにする
-          </label>
-        </div>
-        <ul class="character-hub__list">
-          <li v-for="ch in characters" :key="ch.id" class="character-hub__item">
-            <button class="character-hub__name" @click="confirmLoad(ch)">
-              {{ ch.name }}
-            </button>
-            <span class="character-hub__date">{{ formatDate(ch.updatedAt) }}</span>
-            <div class="character-hub__actions">
-              <button class="button-base" @click="toggleMenu(ch)">⋮</button>
-              <div class="floating-menu" v-if="ch.showMenu">
-                <button class="menu-item button-base" @click="renameChar(ch)">名前変更</button>
-                <button class="menu-item button-base" @click="deleteChar(ch)">削除</button>
-                <button class="menu-item button-base" @click="exportLocal(ch)">ローカルにエクスポート</button>
-                <button class="menu-item button-base" @click="exportFolder(ch)">別フォルダにエクスポート</button>
+        <template v-if="uiStore.isSignedIn">
+          <h2 class="character-hub__title">クラウドキャラクター</h2>
+          <button class="button-base character-hub__signout" @click="$emit('sign-out')">サインアウト</button>
+          <button class="button-base character-hub__refresh" @click="refreshList">更新</button>
+          <div class="character-hub__setting">
+            <label>
+              <input
+                type="checkbox"
+                v-model="uiStore.defaultSaveToCloud"
+                @change="updateSetting"
+              />
+              デフォルトの保存先をクラウドにする
+            </label>
+          </div>
+          <ul class="character-hub__list">
+            <li v-for="ch in characters" :key="ch.id" class="character-hub__item">
+              <button class="character-hub__name" @click="confirmLoad(ch)">
+                {{ ch.name }}
+              </button>
+              <span class="character-hub__date">{{ formatDate(ch.updatedAt) }}</span>
+              <div class="character-hub__actions">
+                <button class="button-base" @click="toggleMenu(ch)">⋮</button>
+                <div class="floating-menu" v-if="ch.showMenu">
+                  <button class="menu-item button-base" @click="renameChar(ch)">名前変更</button>
+                  <button class="menu-item button-base" @click="deleteChar(ch)">削除</button>
+                  <button class="menu-item button-base" @click="exportLocal(ch)">ローカルにエクスポート</button>
+                  <button class="menu-item button-base" @click="exportFolder(ch)">別フォルダにエクスポート</button>
+                </div>
               </div>
-            </div>
-          </li>
-        </ul>
+            </li>
+          </ul>
+        </template>
+        <template v-else>
+          <h2 class="character-hub__title">クラウド管理ハブ</h2>
+          <p class="character-hub__description">
+            Google Drive 連携でキャラクターを保存・共有できます。
+          </p>
+          <button class="button-base" @click="$emit('sign-in')">サインイン</button>
+        </template>
       </div>
     </div>
   </transition>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 
@@ -46,18 +57,28 @@ const props = defineProps({
   loadCharacter: Function,
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'sign-in', 'sign-out']);
 
 const uiStore = useUiStore();
 const { showModal, showToast } = useNotifications();
-const characters = ref([]);
+const characters = computed(() => uiStore.driveCharacters);
 
-onMounted(async () => {
-  const gdm = props.dataManager.googleDriveManager;
-  if (gdm) {
-    characters.value = await gdm.readIndexFile();
+onMounted(ensureCharacters);
+
+
+async function ensureCharacters() {
+  if (
+    uiStore.isSignedIn &&
+    uiStore.driveCharacters.length === 0 &&
+    props.dataManager.googleDriveManager
+  ) {
+    await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
   }
-});
+}
+
+function refreshList() {
+  uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
+}
 
 function updateSetting() {
   uiStore.setDefaultSaveToCloud(uiStore.defaultSaveToCloud);
@@ -106,7 +127,8 @@ async function renameChar(ch) {
     const newName = result.component.name;
     if (newName && props.dataManager.googleDriveManager) {
       await props.dataManager.googleDriveManager.renameIndexEntry(ch.id, newName);
-      ch.name = newName;
+      const idx = uiStore.driveCharacters.findIndex((c) => c.id === ch.id);
+      if (idx !== -1) uiStore.driveCharacters[idx].name = newName;
     }
   }
   ch.showMenu = false;
@@ -123,7 +145,7 @@ async function deleteChar(ch) {
   });
   if (result.value === 'delete' && props.dataManager.googleDriveManager) {
     await props.dataManager.googleDriveManager.deleteCharacterFile(ch.id);
-    characters.value = characters.value.filter((c) => c.id !== ch.id);
+    uiStore.driveCharacters = uiStore.driveCharacters.filter((c) => c.id !== ch.id);
   }
   ch.showMenu = false;
 }
@@ -210,6 +232,10 @@ async function exportFolder(ch) {
 }
 .character-hub__setting {
   margin-bottom: 1rem;
+}
+.character-hub__signout,
+.character-hub__refresh {
+  margin-right: 0.5rem;
 }
 .modal-close {
   position: absolute;
