@@ -7,20 +7,22 @@
           <h2 class="character-hub__title">クラウドキャラクター</h2>
           <button class="button-base character-hub__signout" @click="$emit('sign-out')">サインアウト</button>
           <button class="button-base character-hub__refresh" @click="refreshList">更新</button>
+          <button class="button-base character-hub__new" @click="saveNew">新規保存</button>
           <ul class="character-hub__list">
-            <li v-for="ch in characters" :key="ch.id" class="character-hub__item">
+            <li
+              v-for="ch in characters"
+              :key="ch.id"
+              :class="['character-hub__item', { 'character-hub__item--highlighted': ch.id === uiStore.currentDriveFileId }]"
+            >
               <button class="character-hub__name" @click="confirmLoad(ch)">
                 {{ ch.characterName || ch.name }}
               </button>
               <span class="character-hub__date">{{ formatDate(ch.updatedAt) }}</span>
-              <div class="character-hub__actions">
-                <button class="button-base" @click="toggleMenu(ch)">⋮</button>
-                <div class="floating-menu" v-if="ch.showMenu">
-                  <button class="menu-item button-base" @click="renameChar(ch)">名前変更</button>
-                  <button class="menu-item button-base" @click="deleteChar(ch)">削除</button>
-                  <button class="menu-item button-base" @click="exportLocal(ch)">ローカルにエクスポート</button>
-                  <button class="menu-item button-base" @click="exportFolder(ch)">別フォルダにエクスポート</button>
-                </div>
+              <div class="character-hub__actions-inline">
+                <button class="button-base" @click="overwrite(ch)">上書き保存</button>
+                <button class="button-base" @click="exportLocal(ch)">端末に保存</button>
+                <button class="button-base" @click="renameChar(ch)">名称変更</button>
+                <button class="button-base" @click="deleteChar(ch)">削除</button>
               </div>
             </li>
           </ul>
@@ -40,16 +42,19 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useUiStore } from '../../stores/uiStore.js';
+import { useCharacterStore } from '../../stores/characterStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 
 const props = defineProps({
   dataManager: Object,
   loadCharacter: Function,
+  saveToDrive: Function,
 });
 
 const emit = defineEmits(['close', 'sign-in', 'sign-out']);
 
 const uiStore = useUiStore();
+const characterStore = useCharacterStore();
 const { showModal, showToast } = useNotifications();
 const characters = computed(() => uiStore.driveCharacters);
 
@@ -70,15 +75,24 @@ function refreshList() {
   uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
 }
 
+async function saveNew() {
+  if (props.saveToDrive) {
+    await props.saveToDrive(null, characterStore.character.name);
+  }
+}
+
+async function overwrite(ch) {
+  if (props.saveToDrive) {
+    await props.saveToDrive(ch.id, ch.name);
+  }
+}
+
 
 function formatDate(date) {
   if (!date) return '';
   return new Date(date).toLocaleString();
 }
 
-function toggleMenu(ch) {
-  ch.showMenu = !ch.showMenu;
-}
 
 async function confirmLoad(ch) {
   const result = await showModal({
@@ -118,7 +132,6 @@ async function renameChar(ch) {
       if (idx !== -1) uiStore.driveCharacters[idx].characterName = newName;
     }
   }
-  ch.showMenu = false;
 }
 
 async function deleteChar(ch) {
@@ -134,7 +147,6 @@ async function deleteChar(ch) {
     await props.dataManager.googleDriveManager.deleteCharacterFile(ch.id);
     uiStore.driveCharacters = uiStore.driveCharacters.filter((c) => c.id !== ch.id);
   }
-  ch.showMenu = false;
 }
 
 async function exportLocal(ch) {
@@ -156,32 +168,8 @@ async function exportLocal(ch) {
   } catch (error) {
     showToast({ type: 'error', title: 'エクスポート失敗', message: error.message || '' });
   }
-  ch.showMenu = false;
 }
 
-async function exportFolder(ch) {
-  const gdm = props.dataManager.googleDriveManager;
-  if (!gdm) return;
-  gdm.showFolderPicker(async (err, folder) => {
-    if (err || !folder) {
-      showToast({ type: 'error', title: 'エクスポート失敗', message: err?.message || 'キャンセルされました' });
-      ch.showMenu = false;
-      return;
-    }
-    showToast({ type: 'info', title: 'エクスポート', message: 'エクスポート中...' });
-    try {
-      const data = await gdm.loadCharacterFile(ch.id);
-      if (data) {
-        const fileName = `${(ch.name || 'Aionia').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-        await gdm.saveFile(folder.id, fileName, JSON.stringify(data, null, 2));
-        showToast({ type: 'success', title: 'エクスポート完了', message: '' });
-      }
-    } catch (error) {
-      showToast({ type: 'error', title: 'エクスポート失敗', message: error.message || '' });
-    }
-    ch.showMenu = false;
-  });
-}
 </script>
 
 <style scoped>
@@ -214,8 +202,14 @@ async function exportFolder(ch) {
   color: var(--color-text-muted);
   flex-grow: 1;
 }
-.character-hub__actions {
-  position: relative;
+.character-hub__actions-inline {
+  display: flex;
+  gap: 4px;
+}
+.character-hub__item--highlighted {
+  box-shadow:
+    inset 0 0 3px var(--color-accent),
+    0 0 6px var(--color-accent);
 }
 .character-hub__signout,
 .character-hub__refresh {

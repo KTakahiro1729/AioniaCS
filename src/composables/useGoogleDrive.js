@@ -64,7 +64,7 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
-  async function handleSaveToDriveClick() {
+  async function saveCharacterToDrive(fileId, fileName) {
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
     showToast({ type: "info", title: "Google Drive", message: "Saving..." });
@@ -75,8 +75,8 @@ export function useGoogleDrive(dataManager) {
         characterStore.specialSkills,
         characterStore.equipments,
         characterStore.histories,
-        uiStore.currentDriveFileId,
-        uiStore.currentDriveFileName,
+        fileId,
+        fileName,
       );
       if (result) {
         uiStore.currentDriveFileId = result.id;
@@ -92,6 +92,13 @@ export function useGoogleDrive(dataManager) {
         message: error.message || "",
       });
     }
+  }
+
+  function handleSaveToDriveClick() {
+    return saveCharacterToDrive(
+      uiStore.currentDriveFileId,
+      uiStore.currentDriveFileName,
+    );
   }
 
   function initializeGoogleDrive() {
@@ -167,6 +174,7 @@ export function useGoogleDrive(dataManager) {
     handleSignInClick,
     handleSignOutClick,
     promptForDriveFolder,
+    saveCharacterToDrive,
     handleSaveToDriveClick,
   };
 }

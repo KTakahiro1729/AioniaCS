@@ -36,4 +36,28 @@ describe("useGoogleDrive", () => {
       "c",
     );
   });
+
+  test("saveCharacterToDrive uses provided id and name", async () => {
+    const dataManager = {
+      saveDataToAppData: jest
+        .fn()
+        .mockResolvedValue({ id: "1", name: "a.json" }),
+      googleDriveManager: {},
+    };
+    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const charStore = useCharacterStore();
+    charStore.character.name = "Brave";
+
+    await saveCharacterToDrive("abc", "foo");
+
+    expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
+      charStore.character,
+      charStore.skills,
+      charStore.specialSkills,
+      charStore.equipments,
+      charStore.histories,
+      "abc",
+      "foo",
+    );
+  });
 });

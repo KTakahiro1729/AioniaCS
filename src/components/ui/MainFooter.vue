@@ -23,7 +23,7 @@
         @click="$emit('save')"
         title="ローカルに保存"
       >
-        デバイスに保存
+        [↓] 端末に保存
       </button>
     </div>
     <div class="footer-button-container">
@@ -32,7 +32,7 @@
         for="load_input_vue"
         title="ローカルファイルを読み込む"
       >
-        デバイスから読み込み
+        [↑] 読み込み
       </label>
       <input
         type="file"
@@ -41,15 +41,6 @@
         accept=".json,.txt,.zip"
         class="hidden"
       />
-    </div>
-    <div class="footer-button-container" v-if="uiStore.isSignedIn">
-      <button
-        class="button-base footer-button footer-button--cloud"
-        @click="$emit('save-to-drive')"
-        title="Google Driveに保存"
-      >
-        クラウドにアップロード
-      </button>
     </div>
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
       {{ outputButtonText }}
@@ -83,7 +74,6 @@ const emit = defineEmits([
   'help-mouseleave',
   'help-click',
   'save',
-  'save-to-drive',
   'file-upload',
   'output',
   'share',

@@ -47,7 +47,7 @@ const {
   handleSignInClick,
   handleSignOutClick,
   promptForDriveFolder,
-  handleSaveToDriveClick,
+  saveCharacterToDrive,
 } = useGoogleDrive(dataManager);
 
 const {
@@ -216,7 +216,6 @@ onMounted(async () => {
     :is-viewing-shared="uiStore.isViewingShared"
     @save="saveData"
     @file-upload="handleFileUpload"
-    @save-to-drive="handleSaveToDriveClick"
     @output="outputToCocofolia"
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
@@ -234,6 +233,7 @@ onMounted(async () => {
     v-if="uiStore.isHubVisible"
     :data-manager="dataManager"
     :load-character="loadCharacterById"
+    :save-to-drive="saveCharacterToDrive"
     @sign-in="handleSignInClick"
     @sign-out="handleSignOutClick"
     @close="closeHub"
