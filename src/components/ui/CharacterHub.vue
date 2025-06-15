@@ -7,16 +7,6 @@
           <h2 class="character-hub__title">クラウドキャラクター</h2>
           <button class="button-base character-hub__signout" @click="$emit('sign-out')">サインアウト</button>
           <button class="button-base character-hub__refresh" @click="refreshList">更新</button>
-          <div class="character-hub__setting">
-            <label>
-              <input
-                type="checkbox"
-                v-model="uiStore.defaultSaveToCloud"
-                @change="updateSetting"
-              />
-              デフォルトの保存先をクラウドにする
-            </label>
-          </div>
           <ul class="character-hub__list">
             <li v-for="ch in characters" :key="ch.id" class="character-hub__item">
               <button class="character-hub__name" @click="confirmLoad(ch)">
@@ -80,9 +70,6 @@ function refreshList() {
   uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
 }
 
-function updateSetting() {
-  uiStore.setDefaultSaveToCloud(uiStore.defaultSaveToCloud);
-}
 
 function formatDate(date) {
   if (!date) return '';
@@ -229,9 +216,6 @@ async function exportFolder(ch) {
 }
 .character-hub__actions {
   position: relative;
-}
-.character-hub__setting {
-  margin-bottom: 1rem;
 }
 .character-hub__signout,
 .character-hub__refresh {

@@ -14,9 +14,6 @@ export const useUiStore = defineStore("ui", {
     isViewingShared: false,
     isHubVisible: false,
     driveCharacters: [],
-    defaultSaveToCloud: JSON.parse(
-      localStorage.getItem("aioniaDefaultSaveToCloud") || "false",
-    ),
   }),
   getters: {
     experienceStatusClass() {
@@ -36,10 +33,6 @@ export const useUiStore = defineStore("ui", {
     },
   },
   actions: {
-    setDefaultSaveToCloud(value) {
-      this.defaultSaveToCloud = value;
-      localStorage.setItem("aioniaDefaultSaveToCloud", JSON.stringify(value));
-    },
     async refreshDriveCharacters(gdm) {
       if (!gdm) return;
       this.driveCharacters = await gdm.readIndexFile();

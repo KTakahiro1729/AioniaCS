@@ -20,24 +20,10 @@
     <div class="footer-button-container">
       <button
         class="button-base footer-button footer-button--save"
-        @click="handleSaveMain"
-        :title="saveMainTitle"
+        @click="$emit('save')"
+        title="ローカルに保存"
       >
-        データ保存
-      </button>
-      <button
-        v-if="config.saveAlt"
-        class="button-base footer-button footer-button--cloud"
-        @click="handleSaveAlt"
-        :disabled="config.saveAlt === 'cloudSave' && !canOperateDrive"
-        :title="saveAltTitle"
-      >
-        <span
-          v-if="config.saveAlt === 'cloudSave'"
-          :class="['icon-svg', 'icon-svg--footer', isCloudSaveSuccess ? 'icon-svg-success' : 'icon-svg-upload']"
-          aria-label="Cloud Save"
-        ></span>
-        <span v-else>📥</span>
+        デバイスに保存
       </button>
     </div>
     <div class="footer-button-container">
@@ -46,7 +32,7 @@
         for="load_input_vue"
         title="ローカルファイルを読み込む"
       >
-        データ読込
+        デバイスから読み込み
       </label>
       <input
         type="file"
@@ -55,6 +41,15 @@
         accept=".json,.txt,.zip"
         class="hidden"
       />
+    </div>
+    <div class="footer-button-container" v-if="uiStore.isSignedIn">
+      <button
+        class="button-base footer-button footer-button--cloud"
+        @click="$emit('save-to-drive')"
+        title="Google Driveに保存"
+      >
+        クラウドにアップロード
+      </button>
     </div>
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
       {{ outputButtonText }}
@@ -70,8 +65,8 @@
 </template>
 
 <script setup>
-import { ref, defineExpose, defineEmits, computed } from 'vue';
-import { useFooterState } from '../../composables/useFooterState.js';
+import { ref, defineExpose, defineEmits } from 'vue';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const props = defineProps({
   helpState: String,
@@ -99,32 +94,7 @@ const helpIcon = ref(null);
 
 defineExpose({ outputButton, helpIcon });
 
-const { config, canOperateDrive, isCloudSaveSuccess } = useFooterState();
-
-const saveMainTitle = computed(() =>
-  config.value.saveMain === 'cloudSave' ? 'Google Driveに保存' : 'ローカルに保存',
-);
-const saveAltTitle = computed(() => {
-  if (config.value.saveAlt === 'cloudSave') return 'Google Driveに保存';
-  if (config.value.saveAlt === 'localSave') return 'ローカルに保存';
-  return '';
-});
-
-function handleSaveMain() {
-  if (config.value.saveMain === 'cloudSave') {
-    emit('save-to-drive');
-  } else {
-    emit('save');
-  }
-}
-
-function handleSaveAlt() {
-  if (config.value.saveAlt === 'cloudSave') {
-    emit('save-to-drive');
-  } else if (config.value.saveAlt === 'localSave') {
-    emit('save');
-  }
-}
+const uiStore = useUiStore();
 
 function handleShareClick() {
   if (props.isViewingShared) {
