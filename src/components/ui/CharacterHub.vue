@@ -2,37 +2,48 @@
   <transition name="modal">
     <div class="modal-overlay" v-if="true">
       <div class="modal character-hub">
-        <button class="modal-close" @click="$emit('close')">×</button>
+        <button class="modal-close close-cross" @click="$emit('close')">×</button>
         <template v-if="uiStore.isSignedIn">
-          <h2 class="character-hub__title">キャラクター管理</h2>
-          <button class="button-base character-hub__signout" @click="$emit('sign-out')">サインアウト</button>
-          <button class="button-base character-hub__refresh" @click="refreshList">更新</button>
-          <button class="button-base character-hub__new" @click="saveNew">新規保存</button>
-          <ul class="character-hub__list">
+          <div class="character-hub--header">
+            <div class="character-hub--controls">
+              <button class="button-base character-hub-button character-hub--signout" @click="$emit('sign-out')">ログアウト</button>
+              <button class="button-base character-hub-button character-hub--refresh" @click="refreshList">更新</button>
+              <button class="button-base character-hub-button character-hub--new" @click="saveNew">新規保存</button>
+            </div>
+            <h2 class="character-hub--title">クラウドキャラクター管理</h2>
+          </div>
+          <ul class="character-hub--list">
             <li
               v-for="ch in characters"
               :key="ch.id"
-              :class="['character-hub__item', { 'character-hub__item--highlighted': ch.id === uiStore.currentDriveFileId }]"
+              :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
             >
-              <button class="character-hub__name" @click="confirmLoad(ch)">
+              
+            <button class="character-hub--name" @click="confirmLoad(ch)">
                 {{ ch.characterName || ch.name }}
               </button>
-              <span class="character-hub__date">{{ formatDate(ch.updatedAt) }}</span>
-              <div class="character-hub__actions-inline">
-                <button class="button-base" @click="overwrite(ch)">上書き保存</button>
-                <button class="button-base" @click="exportLocal(ch)">端末に保存</button>
-                <button class="button-base" @click="renameChar(ch)">名称変更</button>
-                <button class="button-base" @click="deleteChar(ch)">削除</button>
+              
+              <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
+              <div class="character-hub--actions-inline">
+                <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
+                <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
+                <button class="button-base button-compact" @click="renameChar(ch)">名称変更</button>
+                <button class="button-base button-compact" @click="deleteChar(ch)">削除</button>
               </div>
             </li>
           </ul>
         </template>
         <template v-else>
-          <h2 class="character-hub__title">Google Drive キャラクター管理</h2>
-          <p class="character-hub__description">
-            Google Drive 連携でキャラクターを保存・共有できます。
+          <div class="character-hub--header">
+            <div class="character-hub--controls">
+              <button class="button-base character-hub-button" @click="$emit('sign-in')">Googleにログイン</button>
+            </div>
+            <h2 class="character-hub--title">クラウドキャラクター管理</h2>
+          </div>
+          <p class="character-hub--description">
+            Google Driveと連携して、キャラクターを保存・共有できます。
           </p>
-          <button class="button-base button-" @click="$emit('sign-in')">サインイン</button>
+          
         </template>
       </div>
     </div>
@@ -176,45 +187,100 @@ async function exportLocal(ch) {
 .character-hub {
   position: relative;
 }
-.character-hub__title {
-  margin-bottom: 1rem;
-  font-size: 1.4em;
-  color: var(--color-text-normal);
+
+.character-hub--header {
+  margin-bottom: 10px; 
 }
-.character-hub__list {
+.character-hub--title {
+  margin: 0 6px 0 0;
+  font-size: 20pt;
+  color: var(--color-text-normal);
+  text-align: center;
+}
+
+.character-hub--controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+  gap: 8px;
+  margin-right: 10px;
+}
+
+.character-hub-button {
+  padding: 6px 8px;
+  font-weight: 500;
+  height: auto;
+  width: auto;
+}
+
+.character-hub--description {
+  text-align: center;
+}
+
+
+
+.character-hub--list {
   list-style: none;
   padding: 0;
-  margin: 0;
 }
-.character-hub__item {
+.character-hub--item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-content: space-around;
+  gap: 3px;
+  padding: 4px;
+  margin-top: 4px;
 }
-.character-hub__name {
+.character-hub--name {
   background: none;
   border: none;
   color: var(--color-accent);
   cursor: pointer;
+  font-size: 20px;
+  font-weight: 700;
+  padding-right: 50px;
+  text-align: left;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
-.character-hub__date {
+
+.button-compact {
+  padding: 3px 4px;
+  font-size: 0.9em;
+  border-radius: 0px;
+  font-weight: 400;
+  height: auto;
+  width: auto;
+}
+
+.button-compact:hover {
+  border-color: var(--color-accent-middle);
+  color: var(--color-accent-light);
+  background-color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.button-compact:not(:first-of-type) {
+  border-left: none;
+}
+
+.character-hub--date {
   color: var(--color-text-muted);
   flex-grow: 1;
 }
-.character-hub__actions-inline {
+.character-hub--actions-inline {
   display: flex;
-  gap: 4px;
 }
-.character-hub__item--highlighted {
+.character-hub--item--highlighted {
+  background-color: var(--color-panel-body);
   box-shadow:
-    inset 0 0 3px var(--color-accent),
+    inset 0 0 2px var(--color-accent),
     0 0 6px var(--color-accent);
 }
-.character-hub__signout,
-.character-hub__refresh {
-  margin-right: 0.5rem;
-}
+
 .modal-close {
   position: absolute;
   top: 10px;

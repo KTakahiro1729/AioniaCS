@@ -21,17 +21,17 @@
       <button
         class="button-base footer-button footer-button--save"
         @click="$emit('save')"
-        title="ローカルに保存"
+        title="端末に保存"
       >
         <span class="icon-svg icon-svg--footer icon-svg-local-download"></span>
-        端末に保存
+        端末保存
       </button>
     </div>
     <div class="footer-button-container">
       <label
         class="button-base footer-button footer-button--load"
         for="load_input_vue"
-        title="ローカルファイルを読み込む"
+        title="端末から読込む"
       >
         <span class="icon-svg icon-svg--footer icon-svg-local-upload"></span>
         読み込み

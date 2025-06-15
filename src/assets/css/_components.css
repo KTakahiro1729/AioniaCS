@@ -156,17 +156,32 @@ textarea.greyed-out {
   background-color: transparent;
   color: var(--color-accent);
   text-decoration: none;
-  padding: 0;
+  padding: 10px 18px;
+  font-size: 0.95em;
+  height: 48px;
+  font-weight: 700;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .button-base:hover {
   border-color: var(--color-accent);
   color: var(--color-accent-light);
-  background-color: var(--color-background);
+  background-color: transparent;
   box-shadow:
     inset 0 0 3px var(--color-accent),
     0 0 6px var(--color-accent);
-  text-shadow: 0 0 2px var(--color-accent);
+  text-shadow: 0 0 1px var(--color-accent);
+}
+
+.footer-button,
+.imagefile-button {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+  white-space: nowrap;
+}
+
+.close-cross {
+  font-size: 20pt;
 }
 
 .footer-button--output.state-1 {
@@ -195,18 +210,6 @@ textarea.greyed-out {
     color 0.2s ease-in-out 0.5s;
   background-color: transparent;
   color: var(--color-accent);
-}
-
-.footer-button--load > label {
-  color: inherit;
-  font-weight: 700;
-  padding: 10px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  box-sizing: border-box;
-  cursor: pointer;
 }
 
 .imagefile-button--add:hover:not(:disabled) {
@@ -315,7 +318,7 @@ textarea.greyed-out {
 
 /* フッターボタン */
 .footer-help-icon {
-  cursor: help;
+  cursor: pointer;
   height: 48px;
   padding: 0 14px;
   font-size: 1.1em;
@@ -329,19 +332,6 @@ textarea.greyed-out {
 .footer-help-icon--fixed,
 .footer-help-icon--fixed:hover {
   background-color: var(--color-accent-dark);
-}
-
-.footer-button,
-.imagefile-button {
-  /* padding: 10px 18px; */
-  font-size: 0.95em;
-  height: 48px;
-  font-weight: 700;
-  text-align: center;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
-  min-height: 42px;
-  box-sizing: border-box;
-  white-space: nowrap;
 }
 
 .footer-button--load {
@@ -364,13 +354,14 @@ textarea.greyed-out {
 }
 
 .footer-button--save,
-.footer-button--load,
-.footer-button--share {
+.footer-button--load {
   width: 120px;
   flex-shrink: 0;
-
-  /* ボタンの横幅を固定 */
   justify-content: center;
+}
+
+.footer-button--save {
+  padding: 0;
 }
 
 .footer-button--cloud {

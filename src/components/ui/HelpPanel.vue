@@ -1,7 +1,7 @@
 <template>
   <transition name="fade">
     <div class="help-panel" v-if="isVisible" ref="panelEl">
-      <button class="help-close" @click="$emit('close')">×</button>
+      <button class="help-close close-cross" @click="$emit('close')">×</button>
       <div v-html="helpText"></div>
     </div>
   </transition>
