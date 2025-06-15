@@ -3,12 +3,6 @@ import { DataManager } from "../../src/services/dataManager.js";
 import { AioniaGameData } from "../../src/data/gameData.js";
 import { deepClone } from "../../src/utils/utils.js";
 import JSZip from "jszip";
-import { encryptData, decryptData } from "../../src/utils/crypto.js";
-
-jest.mock("../../src/utils/crypto.js", () => ({
-  encryptData: jest.fn(),
-  decryptData: jest.fn(),
-}));
 
 // jest.mock をファイルのトップレベルに記述します。
 // これにより、Jestは 'tests/unit/__mocks__/jszip.js' を自動的に読み込みます。
@@ -348,74 +342,54 @@ describe("DataManager", () => {
     });
   });
 
-  describe("encrypted shareable zip", () => {
-    it("zips and encrypts data", async () => {
-      const mockZip = {
-        file: jest.fn(),
-        folder: jest.fn().mockReturnThis(),
-        generateAsync: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
+  describe("saveDataToAppData", () => {
+    beforeEach(() => {
+      dm.googleDriveManager = {
+        createCharacterFile: jest
+          .fn()
+          .mockResolvedValue({ id: "1", name: "c.json" }),
+        updateCharacterFile: jest
+          .fn()
+          .mockResolvedValue({ id: "1", name: "c.json" }),
+        addIndexEntry: jest.fn().mockResolvedValue(),
       };
-      JSZip.mockImplementation(() => mockZip);
-      encryptData.mockResolvedValue({
-        ciphertext: new ArrayBuffer(4),
-        iv: new Uint8Array(12),
-      });
+    });
 
-      const result = await dm.createEncryptedShareableZip(
+    test("creates new file and adds index when no id", async () => {
+      const res = await dm.saveDataToAppData(
         mockCharacter,
         mockSkills,
         mockSpecialSkills,
         mockEquipments,
         mockHistories,
-        "key",
+        null,
+        "c",
       );
-
-      expect(JSZip).toHaveBeenCalled();
-      expect(mockZip.file).toHaveBeenCalledWith(
-        "character_data.json",
-        expect.any(String),
-      );
-      expect(encryptData).toHaveBeenCalledWith("key", expect.any(ArrayBuffer));
-      expect(result).toHaveProperty("ciphertext");
-      expect(result).toHaveProperty("iv");
+      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
+      expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
+        id: "1",
+        name: "c.json",
+        characterName: "TestChar",
+      });
+      expect(res.id).toBe("1");
     });
 
-    it("decrypts and parses zip", async () => {
-      const mockZipInstance = {
-        file: jest
-          .fn()
-          .mockImplementation((filename) =>
-            filename === "character_data.json"
-              ? {
-                  async: jest
-                    .fn()
-                    .mockResolvedValue(
-                      JSON.stringify({ character: { name: "Zip" } }),
-                    ),
-                }
-              : null,
-          ),
-        folder: jest.fn().mockReturnValue({ forEach: jest.fn() }),
-      };
-      JSZip.loadAsync.mockResolvedValue(mockZipInstance);
-      decryptData.mockResolvedValue(new ArrayBuffer(8));
-      const parsed = { parsed: true };
-      dm.parseLoadedData = jest.fn().mockReturnValue(parsed);
-
-      const result = await dm.parseEncryptedShareableZip(
-        { ciphertext: new ArrayBuffer(4), iv: new Uint8Array(12) },
-        "key",
+    test("updates file when id exists", async () => {
+      await dm.saveDataToAppData(
+        mockCharacter,
+        mockSkills,
+        mockSpecialSkills,
+        mockEquipments,
+        mockHistories,
+        "1",
+        "c",
       );
-
-      expect(decryptData).toHaveBeenCalledWith("key", {
-        ciphertext: expect.any(ArrayBuffer),
-        iv: expect.any(Uint8Array),
-      });
-      expect(JSZip.loadAsync).toHaveBeenCalled();
-      expect(dm.parseLoadedData).toHaveBeenCalledWith({
-        character: { name: "Zip", images: [] },
-      });
-      expect(result).toBe(parsed);
+      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith(
+        "1",
+        expect.any(Object),
+        "c.json",
+      );
+      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
     });
   });
 });

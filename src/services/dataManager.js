@@ -1,6 +1,5 @@
 import { createWeaknessArray, deepClone } from "../utils/utils.js";
 import JSZip from "jszip";
-import { encryptData, decryptData } from "../utils/crypto.js";
 
 /**
  * データ管理系の機能を担当するクラス
@@ -244,7 +243,7 @@ export class DataManager {
   }
 
   /**
-   * Saves character data to Google Drive.
+   * Exports character data to a user selected Drive folder.
    * @param {object} character - The character data.
    * @param {Array} skills - The skills data.
    * @param {Array} specialSkills - The special skills data.
@@ -255,7 +254,7 @@ export class DataManager {
    * @param {string} fileName - The desired name for the file.
    * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
    */
-  async saveDataToDrive(
+  async exportDataToDriveFolder(
     character,
     skills,
     specialSkills,
@@ -316,6 +315,76 @@ export class DataManager {
   }
 
   /**
+   * Saves character data to the user's appDataFolder.
+   * Adds an index entry when creating a new file.
+   */
+  async saveDataToAppData(
+    character,
+    skills,
+    specialSkills,
+    equipments,
+    histories,
+    currentFileId,
+    fileName,
+  ) {
+    if (!this.googleDriveManager) {
+      console.error("GoogleDriveManager not set in DataManager.");
+      throw new Error(
+        "GoogleDriveManager not configured. Please sign in or initialize the Drive manager.",
+      );
+    }
+
+    const dataToSave = {
+      character: character,
+      skills: skills.map((s) => ({
+        id: s.id,
+        checked: s.checked,
+        canHaveExperts: s.canHaveExperts,
+        experts: s.canHaveExperts
+          ? s.experts
+              .filter((e) => e.value && e.value.trim() !== "")
+              .map((e) => ({ value: e.value }))
+          : [],
+      })),
+      specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
+      equipments: equipments,
+      histories: histories.filter(
+        (h) =>
+          h.sessionName ||
+          (h.gotExperiments !== null && h.gotExperiments !== "") ||
+          h.memo,
+      ),
+    };
+
+    const sanitizedFileName =
+      (fileName || character.name || "Aionia_Character_Sheet").replace(
+        /[\\/:*?"<>|]/g,
+        "_",
+      ) + ".json";
+
+    if (currentFileId) {
+      return this.googleDriveManager.updateCharacterFile(
+        currentFileId,
+        dataToSave,
+        sanitizedFileName,
+      );
+    }
+
+    const created = await this.googleDriveManager.createCharacterFile(
+      dataToSave,
+      sanitizedFileName,
+    );
+    if (created) {
+      await this.googleDriveManager.addIndexEntry({
+        id: created.id,
+        name: created.name,
+        characterName: character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
+      });
+    }
+    return created;
+  }
+
+  /**
    * Loads data from a file in Google Drive.
    * @param {string} fileId - The ID of the file to load.
    * @returns {Promise<object|null>} Parsed character data or null on error.
@@ -344,96 +413,6 @@ export class DataManager {
       }
       throw error; // Re-throw other errors
     }
-  }
-
-  /**
-   * Creates an encrypted shareable ZIP from character data.
-   * @param {object} character
-   * @param {Array} skills
-   * @param {Array} specialSkills
-   * @param {object} equipments
-   * @param {Array} histories
-   * @param {CryptoKey} key
-   * @returns {Promise<{ciphertext:ArrayBuffer, iv:Uint8Array}>}
-   */
-  async createEncryptedShareableZip(
-    character,
-    skills,
-    specialSkills,
-    equipments,
-    histories,
-    key,
-  ) {
-    const charData = { ...character };
-    let images = null;
-    if (Array.isArray(charData.images) && charData.images.length > 0) {
-      images = [...charData.images];
-      delete charData.images;
-    }
-
-    const jsonPayload = {
-      character: charData,
-      skills,
-      specialSkills,
-      equipments,
-      histories,
-    };
-
-    const zip = new JSZip();
-    zip.file("character_data.json", JSON.stringify(jsonPayload));
-    if (images) {
-      const folder = zip.folder("images");
-      images.forEach((img, idx) => {
-        const base64 = img.substring(img.indexOf(",") + 1);
-        const ext = img.substring(img.indexOf("/") + 1, img.indexOf(";"));
-        folder.file(`image_${idx}.${ext || "png"}`, base64, { base64: true });
-      });
-    }
-    const arrayBuffer = await zip.generateAsync({ type: "arraybuffer" });
-    return encryptData(key, arrayBuffer);
-  }
-
-  /**
-   * Decrypts and parses an encrypted shareable ZIP.
-   * @param {{ciphertext:ArrayBuffer,iv:Uint8Array}} encryptedData
-   * @param {CryptoKey} key
-   * @returns {Promise<object>} Parsed character data
-   */
-  async parseEncryptedShareableZip(encryptedData, key) {
-    const decrypted = await decryptData(key, encryptedData);
-    const zip = await JSZip.loadAsync(decrypted);
-    const jsonFile = zip.file("character_data.json");
-    if (!jsonFile) {
-      throw new Error("character_data.json not found in zip");
-    }
-    const jsonContent = await jsonFile.async("string");
-    const rawJsonData = JSON.parse(jsonContent);
-
-    const imageFolder = zip.folder("images");
-    const images = [];
-    if (imageFolder) {
-      const promises = [];
-      imageFolder.forEach((path, entry) => {
-        if (!entry.dir) {
-          promises.push(
-            entry.async("base64").then((b64) => {
-              const ext = path.substring(path.lastIndexOf(".") + 1) || "png";
-              const mime = `image/${ext === "jpg" ? "jpeg" : ext}`;
-              images.push({ path, dataUrl: `data:${mime};base64,${b64}` });
-            }),
-          );
-        }
-      });
-      await Promise.all(promises);
-      images.sort((a, b) => {
-        const numA = parseInt(a.path.match(/image_(\d+)/)?.[1] || "0", 10);
-        const numB = parseInt(b.path.match(/image_(\d+)/)?.[1] || "0", 10);
-        return numA - numB;
-      });
-    }
-    if (!rawJsonData.character) rawJsonData.character = {};
-    rawJsonData.character.images = images.map((i) => i.dataUrl);
-    return this.parseLoadedData(rawJsonData);
   }
 
   /**

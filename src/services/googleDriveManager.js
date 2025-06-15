@@ -9,7 +9,7 @@ export class GoogleDriveManager {
       "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
     ];
     this.scope =
-      "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
+      "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file";
     this.gapiLoadedCallback = null;
     this.gisLoadedCallback = null;
     this.tokenClient = null;
@@ -540,6 +540,113 @@ export class GoogleDriveManager {
 
     const picker = pickerBuilder.build();
     picker.setVisible(true);
+  }
+
+  /**
+   * Ensures the character index file exists in appDataFolder.
+   * @returns {Promise<{id:string,name:string}|null>} index file info
+   */
+  async ensureIndexFile() {
+    const fileList =
+      (
+        await gapi.client.drive.files.list({
+          q: "name='character_index.json' and trashed=false",
+          spaces: "appDataFolder",
+          fields: "files(id,name)",
+        })
+      ).result.files || [];
+
+    if (fileList.length > 0) {
+      this.indexFileId = fileList[0].id;
+      return fileList[0];
+    }
+
+    const created = await this.saveFile(
+      "appDataFolder",
+      "character_index.json",
+      "[]",
+    );
+    if (created) this.indexFileId = created.id;
+    return created;
+  }
+
+  /**
+   * Reads and parses the character index file.
+   * @returns {Promise<Array>}
+   */
+  async readIndexFile() {
+    const info = await this.ensureIndexFile();
+    if (!info) return [];
+    const content = await this.loadFileContent(info.id);
+    try {
+      return JSON.parse(content || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Writes the given index array back to the index file.
+   * @param {Array} indexData
+   */
+  async writeIndexFile(indexData) {
+    const info = await this.ensureIndexFile();
+    if (!info) return null;
+    return this.saveFile(
+      "appDataFolder",
+      "character_index.json",
+      JSON.stringify(indexData, null, 2),
+      info.id,
+    );
+  }
+
+  async addIndexEntry(entry) {
+    const index = await this.readIndexFile();
+    index.push(entry);
+    await this.writeIndexFile(index);
+  }
+
+  async renameIndexEntry(id, newName) {
+    const index = await this.readIndexFile();
+    index.forEach((e) => {
+      if (e.id === id) e.characterName = newName;
+    });
+    await this.writeIndexFile(index);
+  }
+
+  async removeIndexEntry(id) {
+    const index = await this.readIndexFile();
+    const filtered = index.filter((e) => e.id !== id);
+    await this.writeIndexFile(filtered);
+  }
+
+  /**
+   * Creates a character data file in appDataFolder.
+   * @param {object} data character JSON object
+   * @param {string} name file name
+   */
+  async createCharacterFile(data, name) {
+    return this.saveFile("appDataFolder", name, JSON.stringify(data, null, 2));
+  }
+
+  async updateCharacterFile(id, data, name) {
+    return this.saveFile(
+      "appDataFolder",
+      name,
+      JSON.stringify(data, null, 2),
+      id,
+    );
+  }
+
+  async loadCharacterFile(id) {
+    const content = await this.loadFileContent(id);
+    return content ? JSON.parse(content) : null;
+  }
+
+  async deleteCharacterFile(id) {
+    if (!gapi.client || !gapi.client.drive) return null;
+    await gapi.client.drive.files.delete({ fileId: id });
+    await this.removeIndexEntry(id);
   }
 }
 

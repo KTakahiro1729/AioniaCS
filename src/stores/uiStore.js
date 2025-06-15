@@ -12,6 +12,8 @@ export const useUiStore = defineStore("ui", {
     currentDriveFileId: null,
     currentDriveFileName: "",
     isViewingShared: false,
+    isHubVisible: false,
+    driveCharacters: [],
   }),
   getters: {
     experienceStatusClass() {
@@ -28,6 +30,21 @@ export const useUiStore = defineStore("ui", {
     },
     canOperateDrive(state) {
       return state.isSignedIn && state.driveFolderId;
+    },
+  },
+  actions: {
+    async refreshDriveCharacters(gdm) {
+      if (!gdm) return;
+      this.driveCharacters = await gdm.readIndexFile();
+    },
+    clearDriveCharacters() {
+      this.driveCharacters = [];
+    },
+    openHub() {
+      this.isHubVisible = true;
+    },
+    closeHub() {
+      this.isHubVisible = false;
     },
   },
 });

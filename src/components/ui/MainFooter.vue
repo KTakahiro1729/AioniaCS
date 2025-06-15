@@ -18,40 +18,31 @@
       荷重: {{ currentWeight }}
     </div>
     <div class="footer-button-container">
-      <button class="button-base footer-button footer-button--save" @click="$emit('save')">
-        データ保存
-      </button>
       <button
-        v-if="isSignedIn"
-        class="button-base footer-button footer-button--cloud"
-        @click="$emit('save-to-drive')"
-        :disabled="!canOperateDrive"
-        title="Google Driveに保存"
+        class="button-base footer-button footer-button--save"
+        @click="$emit('save')"
+        title="端末に保存"
       >
-        <span
-          v-if="isCloudSaveSuccess"
-          class="icon-svg icon-svg--footer icon-svg-success"
-          aria-label="Save Succeeded"
-        ></span>
-        <span
-          v-else
-          class="icon-svg icon-svg--footer icon-svg-upload"
-          aria-label="Save to Drive"
-        ></span>
+        <span class="icon-svg icon-svg--footer icon-svg-local-download"></span>
+        端末保存
       </button>
     </div>
     <div class="footer-button-container">
-      <label for="load_input_vue" class="button-base footer-button footer-button--load">データ読込</label>
-      <input type="file" id="load_input_vue" @change="(e) => $emit('file-upload', e)" accept=".json,.txt,.zip" class="hidden" />
-      <button
-        v-if="isSignedIn"
-        class="button-base footer-button footer-button--cloud"
-        @click="$emit('load-from-drive')"
-        :disabled="!isSignedIn"
-        title="Google Driveから読込"
+      <label
+        class="button-base footer-button footer-button--load"
+        for="load_input_vue"
+        title="端末から読込む"
       >
-        <span class="icon-svg icon-svg--footer icon-svg-download" aria-label="Load from Drive"></span>
-      </button>
+        <span class="icon-svg icon-svg--footer icon-svg-local-upload"></span>
+        読み込み
+      </label>
+      <input
+        type="file"
+        id="load_input_vue"
+        @change="(e) => $emit('file-upload', e)"
+        accept=".json,.txt,.zip"
+        class="hidden"
+      />
     </div>
     <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
       {{ outputButtonText }}
@@ -68,6 +59,7 @@
 
 <script setup>
 import { ref, defineExpose, defineEmits } from 'vue';
+import { useUiStore } from '../../stores/uiStore.js';
 
 const props = defineProps({
   helpState: String,
@@ -75,10 +67,7 @@ const props = defineProps({
   currentExperiencePoints: Number,
   maxExperiencePoints: Number,
   currentWeight: Number,
-  isSignedIn: Boolean,
-  canOperateDrive: Boolean,
   outputButtonText: String,
-  isCloudSaveSuccess: Boolean,
   isViewingShared: Boolean,
 });
 
@@ -87,9 +76,7 @@ const emit = defineEmits([
   'help-mouseleave',
   'help-click',
   'save',
-  'save-to-drive',
   'file-upload',
-  'load-from-drive',
   'output',
   'share',
   'copy-edit',
@@ -98,6 +85,8 @@ const outputButton = ref(null);
 const helpIcon = ref(null);
 
 defineExpose({ outputButton, helpIcon });
+
+const uiStore = useUiStore();
 
 function handleShareClick() {
   if (props.isViewingShared) {
