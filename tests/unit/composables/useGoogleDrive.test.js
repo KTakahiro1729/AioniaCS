@@ -8,9 +8,11 @@ describe("useGoogleDrive", () => {
     setActivePinia(createPinia());
   });
 
-  test("handleSaveToDriveClick calls saveDataToDrive with store data", async () => {
+  test("handleSaveToDriveClick calls saveDataToAppData with store data", async () => {
     const dataManager = {
-      saveDataToDrive: jest.fn().mockResolvedValue({ id: "1", name: "c.json" }),
+      saveDataToAppData: jest
+        .fn()
+        .mockResolvedValue({ id: "1", name: "c.json" }),
       googleDriveManager: {},
     };
 
@@ -18,22 +20,20 @@ describe("useGoogleDrive", () => {
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
 
-    uiStore.driveFolderId = "f1";
     uiStore.currentDriveFileId = null;
-    uiStore.currentDriveFileName = "c.json";
+    uiStore.currentDriveFileName = "c";
     charStore.character.name = "Hero";
 
     await handleSaveToDriveClick();
 
-    expect(dataManager.saveDataToDrive).toHaveBeenCalledWith(
+    expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
       charStore.character,
       charStore.skills,
       charStore.specialSkills,
       charStore.equipments,
       charStore.histories,
-      "f1",
       null,
-      "c.json",
+      "c",
     );
   });
 });

@@ -66,20 +66,15 @@ export function useGoogleDrive(dataManager) {
 
   async function handleSaveToDriveClick() {
     if (!dataManager.googleDriveManager) return;
-    if (!uiStore.driveFolderId) {
-      promptForDriveFolder();
-      return;
-    }
     uiStore.isCloudSaveSuccess = false;
     showToast({ type: "info", title: "Google Drive", message: "Saving..." });
     try {
-      const result = await dataManager.saveDataToDrive(
+      const result = await dataManager.saveDataToAppData(
         characterStore.character,
         characterStore.skills,
         characterStore.specialSkills,
         characterStore.equipments,
         characterStore.histories,
-        uiStore.driveFolderId,
         uiStore.currentDriveFileId,
         uiStore.currentDriveFileName,
       );

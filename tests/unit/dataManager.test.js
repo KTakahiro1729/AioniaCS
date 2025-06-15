@@ -342,4 +342,53 @@ describe("DataManager", () => {
     });
   });
 
+  describe("saveDataToAppData", () => {
+    beforeEach(() => {
+      dm.googleDriveManager = {
+        createCharacterFile: jest
+          .fn()
+          .mockResolvedValue({ id: "1", name: "c.json" }),
+        updateCharacterFile: jest
+          .fn()
+          .mockResolvedValue({ id: "1", name: "c.json" }),
+        addIndexEntry: jest.fn().mockResolvedValue(),
+      };
+    });
+
+    test("creates new file and adds index when no id", async () => {
+      const res = await dm.saveDataToAppData(
+        mockCharacter,
+        mockSkills,
+        mockSpecialSkills,
+        mockEquipments,
+        mockHistories,
+        null,
+        "c",
+      );
+      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
+      expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
+        id: "1",
+        name: "c.json",
+      });
+      expect(res.id).toBe("1");
+    });
+
+    test("updates file when id exists", async () => {
+      await dm.saveDataToAppData(
+        mockCharacter,
+        mockSkills,
+        mockSpecialSkills,
+        mockEquipments,
+        mockHistories,
+        "1",
+        "c",
+      );
+      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith(
+        "1",
+        expect.any(Object),
+        "c.json",
+      );
+      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
+    });
+  });
 });
