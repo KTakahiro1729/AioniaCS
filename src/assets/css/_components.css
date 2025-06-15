@@ -371,12 +371,6 @@ label.footer-button--load {
   justify-content: center;
 }
 
-/* クラウドボタンが隣にある場合、メインボタンの角を平らにする */
-.footer-button-container > .button-base:not(:last-child) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
 .footer-button--cloud {
   padding: 0 12px;
   border-top-left-radius: 0;
