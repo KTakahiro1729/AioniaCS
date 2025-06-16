@@ -66,7 +66,7 @@ const emit = defineEmits(['close', 'sign-in', 'sign-out']);
 
 const uiStore = useUiStore();
 const characterStore = useCharacterStore();
-const { showModal, showToast } = useNotifications();
+const { showModal, showToast, showAsyncToast } = useNotifications();
 const characters = computed(() => uiStore.driveCharacters);
 
 onMounted(ensureCharacters);
@@ -163,22 +163,24 @@ async function deleteChar(ch) {
 async function exportLocal(ch) {
   const gdm = props.dataManager.googleDriveManager;
   if (!gdm) return;
-  showToast({ type: 'info', title: 'エクスポート', message: 'エクスポート中...' });
-  try {
-    const data = await gdm.loadCharacterFile(ch.id);
-    if (data) {
-      await props.dataManager.saveData(
-        data.character,
-        data.skills,
-        data.specialSkills,
-        data.equipments,
-        data.histories,
-      );
-      showToast({ type: 'success', title: 'エクスポート完了', message: '' });
-    }
-  } catch (error) {
-    showToast({ type: 'error', title: 'エクスポート失敗', message: error.message || '' });
-  }
+  const exportPromise = gdm
+    .loadCharacterFile(ch.id)
+    .then(async (data) => {
+      if (data) {
+        await props.dataManager.saveData(
+          data.character,
+          data.skills,
+          data.specialSkills,
+          data.equipments,
+          data.histories,
+        );
+      }
+    });
+  showAsyncToast(exportPromise, {
+    loading: { title: 'エクスポート', message: 'エクスポート中...' },
+    success: { title: 'エクスポート完了', message: '' },
+    error: (err) => ({ title: 'エクスポート失敗', message: err.message || '' }),
+  });
 }
 
 </script>
