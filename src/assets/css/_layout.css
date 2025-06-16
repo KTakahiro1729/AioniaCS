@@ -199,6 +199,33 @@
   margin-bottom: 10px;
 }
 
+/* HelpPanel accordion */
+.accordion__item + .accordion__item {
+  margin-top: 10px;
+}
+
+.accordion__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: var(--color-panel-header);
+  color: var(--color-accent);
+  padding: 8px 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 3px;
+}
+
+.accordion__indicator {
+  margin-left: 10px;
+}
+
+.accordion__body {
+  padding: 10px 0;
+}
+
 .help-close {
   position: absolute;
   top: 5px;
