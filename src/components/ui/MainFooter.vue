@@ -60,6 +60,9 @@
     >
       印刷
     </button>
+    <div class="footer-build-info" v-if="buildInfo">
+      {{ buildInfo }}
+    </div>
   </div>
 </template>
 
@@ -95,11 +98,19 @@ defineExpose({ outputButton, helpIcon });
 
 const uiStore = useUiStore();
 
+const buildBranch = import.meta.env.VITE_BUILD_BRANCH;
+const buildHash = import.meta.env.VITE_BUILD_HASH;
+const buildDate = import.meta.env.VITE_BUILD_DATE;
+const buildInfo =
+  buildBranch && buildHash && buildDate
+    ? `${buildBranch} (${buildHash}) ${buildDate}`
+    : '';
+
 function handleShareClick() {
   if (props.isViewingShared) {
     emit('copy-edit');
   } else {
-    emit('share');
+    uiStore.openShareModal();
   }
 }
 </script>

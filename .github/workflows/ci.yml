@@ -96,6 +96,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Set build info
+        run: |
+          echo "VITE_BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "VITE_BUILD_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "VITE_BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_ENV
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -124,6 +129,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Set build info
+        run: |
+          echo "VITE_BUILD_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "VITE_BUILD_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "VITE_BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_ENV
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
