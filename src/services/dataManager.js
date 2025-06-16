@@ -363,11 +363,16 @@ export class DataManager {
       ) + ".json";
 
     if (currentFileId) {
-      return this.googleDriveManager.updateCharacterFile(
+      const res = await this.googleDriveManager.updateCharacterFile(
         currentFileId,
         dataToSave,
         sanitizedFileName,
       );
+      await this.googleDriveManager.renameIndexEntry(
+        currentFileId,
+        character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
+      );
+      return res;
     }
 
     const created = await this.googleDriveManager.createCharacterFile(

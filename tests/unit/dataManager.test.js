@@ -352,6 +352,7 @@ describe("DataManager", () => {
           .fn()
           .mockResolvedValue({ id: "1", name: "c.json" }),
         addIndexEntry: jest.fn().mockResolvedValue(),
+        renameIndexEntry: jest.fn().mockResolvedValue(),
       };
     });
 
@@ -374,7 +375,7 @@ describe("DataManager", () => {
       expect(res.id).toBe("1");
     });
 
-    test("updates file when id exists", async () => {
+    test("updates file when id exists and renames index", async () => {
       await dm.saveDataToAppData(
         mockCharacter,
         mockSkills,
@@ -388,6 +389,10 @@ describe("DataManager", () => {
         "1",
         expect.any(Object),
         "c.json",
+      );
+      expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith(
+        "1",
+        "TestChar",
       );
       expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
     });
