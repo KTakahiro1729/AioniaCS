@@ -49,7 +49,7 @@
             <div class="flex-weakness-acquired"><label>獲得</label></div>
           </li>
           <li v-for="(weakness, index) in characterStore.character.weaknesses" :key="index" class="base-list-item">
-            <div class="flex-weakness-number">{{ index + 1 }}</div>
+            <div class="flex-weakness-number">{{ (index < 9) ? index + 1 : "X"}}</div>
             <div class="flex-weakness-text">
               <input type="text" v-model="weakness.text" :disabled="uiStore.isViewingShared" />
             </div>

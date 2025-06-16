@@ -54,6 +54,12 @@
     >
       {{ isViewingShared ? '自分用にコピーして編集' : '共有' }}
     </button>
+    <button
+      class="button-base footer-button footer-button--print"
+      @click="$emit('print')"
+    >
+      印刷
+    </button>
     <div class="footer-build-info" v-if="buildInfo">
       {{ buildInfo }}
     </div>
@@ -83,6 +89,7 @@ const emit = defineEmits([
   'output',
   'share',
   'copy-edit',
+  'print',
 ]);
 const outputButton = ref(null);
 const helpIcon = ref(null);
