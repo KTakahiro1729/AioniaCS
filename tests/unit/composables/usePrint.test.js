@@ -23,7 +23,7 @@ describe("usePrint utilities", () => {
         experts: [{ value: "歴史" }],
       },
     ];
-    expect(formatSkills(skills)).toBe("〈運動：跳躍〉 〈射撃〉");
+    expect(formatSkills(skills)).toBe("〈運動：跳躍〉〈射撃〉");
   });
 
   test("formatAbilities builds ability string", () => {
