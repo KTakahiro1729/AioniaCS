@@ -1,4 +1,4 @@
-# Privacy Policy
+# プライバシーポリシー (Privacy Policy)
 
 最終更新日: 2025年6月16日
 

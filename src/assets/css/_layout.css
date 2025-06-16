@@ -324,7 +324,7 @@
   }
 
   .help-panel {
-    width: calc(100% - 40px);
+    width: calc(100% - 60px);
     max-width: none;
     left: 10px;
     bottom: 82px;
