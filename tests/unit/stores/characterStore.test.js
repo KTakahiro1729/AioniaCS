@@ -28,4 +28,24 @@ describe("characterStore", () => {
       AioniaGameData.equipmentWeights.armor["light_armor"];
     expect(store.currentWeight).toBe(expected);
   });
+
+  test("addExpert adds an expert", () => {
+    const store = useCharacterStore();
+    const skill = store.skills.find((s) => s.id === "motion");
+    const initial = skill.experts.length;
+    store.addExpert("motion");
+    expect(skill.experts.length).toBe(initial + 1);
+  });
+
+  test("removeExpert cleans up correctly", () => {
+    const store = useCharacterStore();
+    const skill = store.skills.find((s) => s.id === "motion");
+    skill.experts = [{ value: "foo" }, { value: "bar" }];
+    store.removeExpert("motion", 1);
+    expect(skill.experts.length).toBe(1);
+    expect(skill.experts[0].value).toBe("foo");
+    store.removeExpert("motion", 0);
+    expect(skill.experts.length).toBe(1);
+    expect(skill.experts[0].value).toBe("");
+  });
 });

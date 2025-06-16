@@ -12,7 +12,7 @@
             <button
               type="button"
               class="button-base list-button list-button--delete"
-              @click="removeSpecialSkill(index)"
+              @click="characterStore.removeSpecialSkill(index)"
               :disabled="localSpecialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)"
               aria-label="特技を削除"
             >－</button>
@@ -63,7 +63,7 @@
         <button
           type="button"
           class="button-base list-button list-button--add"
-          @click="addSpecialSkillItem()"
+          @click="characterStore.addSpecialSkillItem()"
           aria-label="特技を追加"
         >＋</button>
       </div>
@@ -84,19 +84,6 @@ function hasSpecialSkillContent(ss) {
   return !!(ss.group || ss.name || ss.note);
 }
 
-function addSpecialSkillItem() {
-  if (localSpecialSkills.length >= AioniaGameData.config.maxSpecialSkills) return;
-  localSpecialSkills.push({ group: '', name: '', note: '', showNote: false });
-}
-
-function removeSpecialSkill(index) {
-  const list = localSpecialSkills;
-  if (list.length > 1) {
-    list.splice(index, 1);
-  } else if (hasSpecialSkillContent(list[index])) {
-    list[index] = { group: '', name: '', note: '', showNote: false };
-  }
-}
 
 function availableSpecialSkillNames(index) {
   const item = localSpecialSkills[index];

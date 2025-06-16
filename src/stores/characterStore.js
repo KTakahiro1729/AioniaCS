@@ -216,6 +216,28 @@ export const useCharacterStore = defineStore("character", {
           ),
       });
     },
+    addExpert(skillId) {
+      const skill = this.skills.find((s) => s.id === skillId);
+      if (skill && skill.canHaveExperts) {
+        this._manageListItem({
+          list: skill.experts,
+          action: "add",
+          newItemFactory: () => ({ value: "" }),
+        });
+      }
+    },
+    removeExpert(skillId, expertIndex) {
+      const skill = this.skills.find((s) => s.id === skillId);
+      if (skill && skill.canHaveExperts) {
+        this._manageListItem({
+          list: skill.experts,
+          action: "remove",
+          index: expertIndex,
+          newItemFactory: () => ({ value: "" }),
+          hasContentChecker: (e) => e.value && e.value.trim() !== "",
+        });
+      }
+    },
     updateHistoryItem(index, field, value) {
       if (this.histories[index]) {
         this.histories[index][field] =

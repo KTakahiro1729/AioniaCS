@@ -18,7 +18,7 @@
           :key="index"
           :show-delete-button="!uiStore.isViewingShared"
           :can-delete="!(characterStore.histories.length <= 1 && !hasHistoryContent(history))"
-          @delete-item="removeItem(index)"
+          @delete-item="characterStore.removeHistoryItem(index)"
         >
           <div class="flex-grow">
             <div class="history-item-inputs">
@@ -26,7 +26,7 @@
                 <BaseInput
                   type="text"
                   :model-value="history.sessionName"
-                  @update:model-value="v => updateField(index, 'sessionName', v)"
+          @update:model-value="v => characterStore.updateHistoryItem(index, 'sessionName', v)"
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
@@ -35,7 +35,7 @@
                   type="number"
                   min="0"
                   :model-value="history.gotExperiments"
-                  @update:model-value="v => updateField(index, 'gotExperiments', v)"
+          @update:model-value="v => characterStore.updateHistoryItem(index, 'gotExperiments', v)"
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
@@ -43,7 +43,7 @@
                 <BaseInput
                   type="text"
                   :model-value="history.memo"
-                  @update:model-value="v => updateField(index, 'memo', v)"
+          @update:model-value="v => characterStore.updateHistoryItem(index, 'memo', v)"
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
@@ -55,7 +55,7 @@
         <button
           type="button"
           class="button-base list-button list-button--add"
-          @click="addItem"
+          @click="characterStore.addHistoryItem"
           aria-label="冒険記録を追加"
         >＋</button>
       </div>
@@ -71,18 +71,6 @@ import { useUiStore } from '../../stores/uiStore.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
-
-function addItem() {
-  characterStore.addHistoryItem();
-}
-
-function removeItem(index) {
-  characterStore.removeHistoryItem(index);
-}
-
-function updateField(index, field, value) {
-  characterStore.updateHistoryItem(index, field, value);
-}
 
 function hasHistoryContent(h) {
   return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo);
