@@ -27,7 +27,6 @@
               <div class="character-hub--actions-inline">
                 <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
                 <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
-                <button class="button-base button-compact" @click="renameChar(ch)">名称変更</button>
                 <button class="button-base button-compact" @click="deleteChar(ch)">削除</button>
               </div>
             </li>
@@ -66,8 +65,14 @@ const emit = defineEmits(['close', 'sign-in', 'sign-out']);
 
 const uiStore = useUiStore();
 const characterStore = useCharacterStore();
-const { showModal, showToast } = useNotifications();
-const characters = computed(() => uiStore.driveCharacters);
+const { showModal, showToast, showAsyncToast } = useNotifications();
+const characters = computed(() =>
+  [...uiStore.driveCharacters].sort((a, b) => {
+    const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const tB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return tB - tA;
+  })
+);
 
 onMounted(ensureCharacters);
 
@@ -119,31 +124,6 @@ async function confirmLoad(ch) {
   }
 }
 
-async function renameChar(ch) {
-  const inputComp = {
-    template: '<input type="text" v-model="name" />',
-    setup() {
-      const name = ref(ch.characterName || ch.name);
-      return { name };
-    },
-  };
-  const result = await showModal({
-    title: '名前変更',
-    component: inputComp,
-    buttons: [
-      { label: '保存', value: 'ok', variant: 'primary' },
-      { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
-    ],
-  });
-  if (result.value === 'ok' && result.component?.name) {
-    const newName = result.component.name;
-    if (newName && props.dataManager.googleDriveManager) {
-      await props.dataManager.googleDriveManager.renameIndexEntry(ch.id, newName);
-      const idx = uiStore.driveCharacters.findIndex((c) => c.id === ch.id);
-      if (idx !== -1) uiStore.driveCharacters[idx].characterName = newName;
-    }
-  }
-}
 
 async function deleteChar(ch) {
   const result = await showModal({
@@ -163,22 +143,24 @@ async function deleteChar(ch) {
 async function exportLocal(ch) {
   const gdm = props.dataManager.googleDriveManager;
   if (!gdm) return;
-  showToast({ type: 'info', title: 'エクスポート', message: 'エクスポート中...' });
-  try {
-    const data = await gdm.loadCharacterFile(ch.id);
-    if (data) {
-      await props.dataManager.saveData(
-        data.character,
-        data.skills,
-        data.specialSkills,
-        data.equipments,
-        data.histories,
-      );
-      showToast({ type: 'success', title: 'エクスポート完了', message: '' });
-    }
-  } catch (error) {
-    showToast({ type: 'error', title: 'エクスポート失敗', message: error.message || '' });
-  }
+  const exportPromise = gdm
+    .loadCharacterFile(ch.id)
+    .then(async (data) => {
+      if (data) {
+        await props.dataManager.saveData(
+          data.character,
+          data.skills,
+          data.specialSkills,
+          data.equipments,
+          data.histories,
+        );
+      }
+    });
+  showAsyncToast(exportPromise, {
+    loading: { title: 'エクスポート', message: 'エクスポート中...' },
+    success: { title: 'エクスポート完了', message: '' },
+    error: (err) => ({ title: 'エクスポート失敗', message: err.message || '' }),
+  });
 }
 
 </script>

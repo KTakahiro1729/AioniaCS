@@ -159,6 +159,13 @@
   background: var(--color-text-muted);
 }
 
+.footer-build-info {
+  margin-left: auto;
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
 /* ヘルプ表示 */
 .help-panel {
   position: fixed;

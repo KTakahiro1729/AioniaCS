@@ -69,15 +69,40 @@ describe("GoogleDriveManager appDataFolder", () => {
     expect(gdm.removeIndexEntry).toHaveBeenCalledWith("d1");
   });
 
-  test("renameIndexEntry updates characterName", async () => {
+  test("renameIndexEntry updates characterName and timestamp", async () => {
+    const now = new Date("2024-01-01T00:00:00.000Z");
+    jest.useFakeTimers().setSystemTime(now);
     jest
       .spyOn(gdm, "readIndexFile")
       .mockResolvedValue([{ id: "a", name: "a.json", characterName: "Old" }]);
     jest.spyOn(gdm, "writeIndexFile").mockResolvedValue();
     await gdm.renameIndexEntry("a", "New");
     expect(gdm.writeIndexFile).toHaveBeenCalledWith([
-      { id: "a", name: "a.json", characterName: "New" },
+      {
+        id: "a",
+        name: "a.json",
+        characterName: "New",
+        updatedAt: now.toISOString(),
+      },
     ]);
+    jest.useRealTimers();
+  });
+
+  test("addIndexEntry sets updatedAt", async () => {
+    const now = new Date("2024-01-02T00:00:00.000Z");
+    jest.useFakeTimers().setSystemTime(now);
+    jest.spyOn(gdm, "readIndexFile").mockResolvedValue([]);
+    jest.spyOn(gdm, "writeIndexFile").mockResolvedValue();
+    await gdm.addIndexEntry({ id: "b", name: "b.json", characterName: "Bob" });
+    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
+      {
+        id: "b",
+        name: "b.json",
+        characterName: "Bob",
+        updatedAt: now.toISOString(),
+      },
+    ]);
+    jest.useRealTimers();
   });
 
   test("onGapiLoad rejects when gapi.load is missing", async () => {

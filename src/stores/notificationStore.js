@@ -26,6 +26,17 @@ export const useNotificationStore = defineStore("notification", {
       }
       return id;
     },
+    updateToast(id, options) {
+      const idx = this.toasts.findIndex((t) => t.id === id);
+      if (idx === -1) return;
+      const toast = this.toasts[idx];
+      Object.assign(toast, options);
+      if (options.duration > 0) {
+        setTimeout(() => {
+          this.removeToast(id);
+        }, options.duration);
+      }
+    },
     removeToast(id) {
       this.toasts = this.toasts.filter((t) => t.id !== id);
     },

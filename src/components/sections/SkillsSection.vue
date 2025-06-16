@@ -23,7 +23,7 @@
                 <button
                   type="button"
                   class="button-base list-button list-button--delete"
-                  @click="removeExpert(index, expIndex)"
+                  @click="characterStore.removeExpert(skill.id, expIndex)"
                   :disabled="skill.experts.length <= 1 && expert.value === ''"
                   aria-label="専門技能を削除"
                 >－</button>
@@ -41,7 +41,7 @@
             <button
               type="button"
               class="button-base list-button list-button--add"
-              @click="addExpert(index)"
+              @click="characterStore.addExpert(skill.id)"
               aria-label="専門技能を追加"
             >＋</button>
           </div>
@@ -52,7 +52,6 @@
 </template>
 
 <script setup>
-import { useListManagement } from '../../composables/core/useListManagement.js';
 import { useSkillsManagement } from '../../composables/features/useSkillsManagement.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
@@ -61,25 +60,5 @@ const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 const localSkills = characterStore.skills;
 
-const { addItem, removeItem } = useListManagement();
 const { expertPlaceholder } = useSkillsManagement();
-
-function addExpert(skillIndex) {
-  const skill = localSkills[skillIndex];
-  if (skill && skill.canHaveExperts) {
-    addItem(skill.experts, () => ({ value: '' }));
-  }
-}
-
-function removeExpert(skillIndex, expertIndex) {
-  const skill = localSkills[skillIndex];
-  if (skill) {
-    removeItem(
-      skill.experts,
-      expertIndex,
-      () => ({ value: '' }),
-      (exp) => exp.value && exp.value.trim() !== ''
-    );
-  }
-}
 </script>

@@ -602,14 +602,17 @@ export class GoogleDriveManager {
 
   async addIndexEntry(entry) {
     const index = await this.readIndexFile();
-    index.push(entry);
+    index.push({ ...entry, updatedAt: new Date().toISOString() });
     await this.writeIndexFile(index);
   }
 
   async renameIndexEntry(id, newName) {
     const index = await this.readIndexFile();
     index.forEach((e) => {
-      if (e.id === id) e.characterName = newName;
+      if (e.id === id) {
+        e.characterName = newName;
+        e.updatedAt = new Date().toISOString();
+      }
     });
     await this.writeIndexFile(index);
   }
