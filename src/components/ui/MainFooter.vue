@@ -54,6 +54,9 @@
     >
       {{ isViewingShared ? '自分用にコピーして編集' : '共有' }}
     </button>
+    <div class="footer-build-info" v-if="buildInfo">
+      {{ buildInfo }}
+    </div>
   </div>
 </template>
 
@@ -87,6 +90,14 @@ const helpIcon = ref(null);
 defineExpose({ outputButton, helpIcon });
 
 const uiStore = useUiStore();
+
+const buildBranch = import.meta.env.VITE_BUILD_BRANCH;
+const buildHash = import.meta.env.VITE_BUILD_HASH;
+const buildDate = import.meta.env.VITE_BUILD_DATE;
+const buildInfo =
+  buildBranch && buildHash && buildDate
+    ? `${buildBranch} (${buildHash}) ${buildDate}`
+    : '';
 
 function handleShareClick() {
   if (props.isViewingShared) {
