@@ -27,7 +27,6 @@
               <div class="character-hub--actions-inline">
                 <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
                 <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
-                <button class="button-base button-compact" @click="renameChar(ch)">名称変更</button>
                 <button class="button-base button-compact" @click="deleteChar(ch)">削除</button>
               </div>
             </li>
@@ -67,7 +66,13 @@ const emit = defineEmits(['close', 'sign-in', 'sign-out']);
 const uiStore = useUiStore();
 const characterStore = useCharacterStore();
 const { showModal, showToast } = useNotifications();
-const characters = computed(() => uiStore.driveCharacters);
+const characters = computed(() =>
+  [...uiStore.driveCharacters].sort((a, b) => {
+    const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const tB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return tB - tA;
+  })
+);
 
 onMounted(ensureCharacters);
 
@@ -119,31 +124,6 @@ async function confirmLoad(ch) {
   }
 }
 
-async function renameChar(ch) {
-  const inputComp = {
-    template: '<input type="text" v-model="name" />',
-    setup() {
-      const name = ref(ch.characterName || ch.name);
-      return { name };
-    },
-  };
-  const result = await showModal({
-    title: '名前変更',
-    component: inputComp,
-    buttons: [
-      { label: '保存', value: 'ok', variant: 'primary' },
-      { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
-    ],
-  });
-  if (result.value === 'ok' && result.component?.name) {
-    const newName = result.component.name;
-    if (newName && props.dataManager.googleDriveManager) {
-      await props.dataManager.googleDriveManager.renameIndexEntry(ch.id, newName);
-      const idx = uiStore.driveCharacters.findIndex((c) => c.id === ch.id);
-      if (idx !== -1) uiStore.driveCharacters[idx].characterName = newName;
-    }
-  }
-}
 
 async function deleteChar(ch) {
   const result = await showModal({
