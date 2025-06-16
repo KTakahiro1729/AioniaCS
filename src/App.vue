@@ -20,8 +20,7 @@ import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
-import ShareOptions from './components/notifications/ShareOptions.vue';
-import { useShare } from './composables/useShare.js';
+import ShareModal from './components/ui/ShareModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
 import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
@@ -40,7 +39,6 @@ const {
   outputToCocofolia,
 } = useDataExport(mainFooter);
 
-const { generateShare, copyLink, isLongData } = useShare(dataManager);
 
 const {
   canSignInToGoogle,
@@ -59,7 +57,7 @@ const {
   closeHelpPanel,
 } = useHelp(helpPanelRef, mainFooter);
 
-const { showModal, showToast, showAsyncToast } = useNotifications();
+const { showToast, showAsyncToast } = useNotifications();
 
 function openHub() {
   uiStore.openHub();
@@ -68,6 +66,14 @@ function openHub() {
 function closeHub() {
   uiStore.closeHub();
 }
+
+watch(
+  () => uiStore.isShareModalVisible,
+  (val) => {
+    if (val) window.__driveSignIn = handleSignInClick;
+    else delete window.__driveSignIn;
+  },
+);
 
 async function loadCharacterById(id, name) {
   const loadPromise = dataManager
@@ -90,36 +96,6 @@ async function loadCharacterById(id, name) {
   });
 }
 
-async function handleShare() {
-  window.__driveSignIn = handleSignInClick;
-  const result = await showModal({
-    title: '共有',
-    component: ShareOptions,
-    buttons: [
-      { label: '生成', value: 'generate', variant: 'primary' },
-      { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
-    ],
-  });
-  if (result.value === 'generate' && result.component) {
-    const opts = {
-      type: result.component.type.value,
-      includeFull: result.component.includeFull.value,
-      password: result.component.password.value || '',
-      expiresInDays: Number(result.component.expires.value) || 0,
-    };
-    if ((opts.type === 'dynamic' || opts.includeFull) && !uiStore.isSignedIn) {
-      showToast({ type: 'error', title: 'Drive', message: 'サインインしてください' });
-      return;
-    }
-    try {
-      const link = await generateShare(opts);
-      await copyLink(link);
-    } catch (err) {
-      showToast({ type: 'error', title: '共有リンク生成失敗', message: err.message });
-    }
-  }
-  delete window.__driveSignIn;
-}
 
 
 // --- Computed Properties (formerly `computed`) ---
@@ -222,7 +198,6 @@ onMounted(async () => {
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
-    @share="handleShare"
     @copy-edit="uiStore.isViewingShared = false"
   />
   <HelpPanel
@@ -240,6 +215,7 @@ onMounted(async () => {
     @sign-out="handleSignOutClick"
     @close="closeHub"
   />
+  <ShareModal v-if="uiStore.isShareModalVisible" :data-manager="dataManager" />
   <NotificationContainer />
 </template>
 
