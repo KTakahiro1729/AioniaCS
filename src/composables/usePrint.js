@@ -16,7 +16,7 @@ export function formatSkills(skills) {
       }
       return txt;
     })
-    .join(" ");
+    .join("");
 }
 
 export function formatAbilities(
@@ -43,11 +43,12 @@ export function usePrint() {
 
   async function buildHtml() {
     const { default: printTemplate } = await import(
-      "../../public/print-template.html?raw"
+      "/src/assets/print/print-template.html?raw"
     );
     const { default: printStyles } = await import(
-      "../../public/style/css/print-styles.css?raw"
+      "/src/assets/print/print-styles.css?raw"
     );
+    const characterStore = useCharacterStore();
     const ch = characterStore.character;
     let html = printTemplate;
 
@@ -55,12 +56,14 @@ export function usePrint() {
       html = html.replace(new RegExp(`{{${key}}}`, "g"), val);
     };
 
+    // --- 基本情報の置換 ---
     replace("character-name", ch.name || "");
     replace("player-name", ch.playerName || "");
-    replace(
-      "race",
-      AioniaGameData.speciesLabelMap[ch.species] || ch.species || "",
-    );
+
+    const speciesLabel =
+      AioniaGameData.speciesLabelMap[ch.species] || ch.species || "";
+    replace("race", speciesLabel === "未選択" ? "" : speciesLabel);
+
     replace("gender", ch.gender || "");
     replace("age", ch.age != null ? String(ch.age) : "");
     replace("height", ch.height || "");
@@ -71,15 +74,24 @@ export function usePrint() {
     replace("current-scar-value", String(ch.currentScar ?? ""));
     replace(
       "current-experience-value",
-      String(characterStore.currentExperiencePoints ?? ""),
+      String(
+        characterStore.currentExperiencePoints +
+          "/" +
+          characterStore.maxExperiencePoints,
+      ),
     );
 
-    for (let i = 0; i < AioniaGameData.config.maxWeaknesses; i++) {
+    // --- 弱点の置換 ---
+    for (let i = 0; i < 10; i++) {
       const w = ch.weaknesses[i] || {};
-      replace(`weakness-content[${i}]`, w.text || "");
-      replace(`weakness-acquired[${i}]`, w.acquired || "");
+      replace(`weakness-content-${i}`, w.text || "");
+      replace(
+        `weakness-acquired-${i}`,
+        w.acquired === "--" ? "" : w.acquired || "",
+      );
     }
 
+    // --- 技能・特技の置換 ---
     replace("skills-content", formatSkills(characterStore.skills));
     replace(
       "abilities-content",
@@ -90,61 +102,116 @@ export function usePrint() {
       ),
     );
 
+    // --- 装備品の置換 ---
     const eq = characterStore.equipments;
-    replace(
-      "weapon1-type",
-      AioniaGameData.equipmentGroupLabelMap[eq.weapon1.group] || "",
-    );
+    const weapon1Label =
+      AioniaGameData.equipmentGroupLabelMap[eq.weapon1.group] || "";
+    replace("weapon1-type", weapon1Label === "なし" ? "" : weapon1Label);
     replace("weapon1-detail", eq.weapon1.name || "");
-    replace(
-      "weapon2-type",
-      AioniaGameData.equipmentGroupLabelMap[eq.weapon2.group] || "",
-    );
+
+    const weapon2Label =
+      AioniaGameData.equipmentGroupLabelMap[eq.weapon2.group] || "";
+    replace("weapon2-type", weapon2Label === "なし" ? "" : weapon2Label);
     replace("weapon2-detail", eq.weapon2.name || "");
-    replace(
-      "armor-type",
-      AioniaGameData.equipmentGroupLabelMap[eq.armor.group] || "",
-    );
+
+    const armorLabel =
+      AioniaGameData.equipmentGroupLabelMap[eq.armor.group] || "";
+    replace("armor-type", armorLabel === "なし" ? "" : armorLabel);
     replace("armor-detail", eq.armor.name || "");
     replace(
       "equipment-weight-value",
       String(characterStore.currentWeight || ""),
     );
 
+    // --- 2ページ目の置換 ---
     replace("inventory-content", ch.otherItems || "");
     replace("background-content", ch.memo || "");
 
     for (let i = 0; i < 7; i++) {
       const h = characterStore.histories[i] || {};
-      replace(`adventure-scenario[${i}]`, h.sessionName || "");
-      replace(`adventure-memo[${i}]`, h.memo || "");
+      replace(`adventure-scenario-${i}`, h.sessionName || "");
+      replace(`adventure-memo-${i}`, h.memo || "");
       replace(
-        `adventure-experience[${i}]`,
+        `adventure-experience-${i}`,
         h.gotExperiments != null ? String(h.gotExperiments) : "",
       );
     }
 
+    // --- 残りのプレースホルダをクリア & CSSを注入 ---
+    html = html.replace(/{{[^}]+}}/g, "");
     html = html.replace("</head>", `<style>${printStyles}</style></head>`);
+
     return html;
   }
 
   async function printCharacterSheet() {
-    const html = await buildHtml();
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.style.visibility = "hidden";
-    document.body.appendChild(iframe);
-    iframe.onload = () => {
-      iframe.contentWindow?.print();
-      document.body.removeChild(iframe);
-    };
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(html);
-    iframe.contentDocument.close();
+    console.log("印刷プロセスを開始します。");
+
+    try {
+      const html = await buildHtml();
+
+      if (!html) {
+        console.error("HTMLの構築に失敗しました。処理を中断します。");
+        return;
+      }
+
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      iframe.style.visibility = "hidden";
+
+      iframe.onload = () => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (e) {
+          console.error("印刷実行中にエラーが発生しました:", e);
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 500);
+        }
+      };
+      iframe.onerror = (e) => {
+        console.error("iframeの読み込み中にエラーが発生しました:", e);
+      };
+
+      iframe.srcdoc = html;
+      document.body.appendChild(iframe);
+    } catch (e) {
+      console.error("印刷プロセスの準備中にエラーが発生しました:", e);
+    }
   }
 
-  return { printCharacterSheet };
+  async function openPreviewPage() {
+    console.log("プレビューページを生成します。");
+    try {
+      const html = await buildHtml();
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.open();
+        newWindow.document.write(html);
+        newWindow.document.close();
+        console.log("プレビューページを新しいタブで開きました。");
+      } else {
+        console.error(
+          "ポップアップがブロックされたため、プレビューページを開けませんでした。",
+        );
+        alert(
+          "ポップアップがブロックされました。プレビュー機能を使用するには、このサイトのポップアップを許可してください。",
+        );
+      }
+    } catch (e) {
+      console.error("プレビューページの生成中にエラーが発生しました:", e);
+    }
+  }
+
+  return {
+    printCharacterSheet,
+    openPreviewPage,
+  };
 }

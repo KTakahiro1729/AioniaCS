@@ -31,7 +31,7 @@ const helpPanelRef = ref(null);
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 useKeyboardHandling();
-const { printCharacterSheet } = usePrint();
+const { printCharacterSheet, openPreviewPage  } = usePrint();
 
 const {
   dataManager,
