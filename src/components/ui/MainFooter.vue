@@ -103,7 +103,7 @@ function handleShareClick() {
   if (props.isViewingShared) {
     emit('copy-edit');
   } else {
-    emit('share');
+    uiStore.openShareModal();
   }
 }
 </script>

@@ -8,33 +8,31 @@ export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
   const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
-  const { showToast } = useNotifications();
+  const { showToast, showAsyncToast } = useNotifications();
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
 
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
-    showToast({
-      type: "info",
-      title: "Google Drive",
-      message: "Signing in...",
+    const signInPromise = new Promise((resolve, reject) => {
+      googleDriveManager.value.handleSignIn((error, authResult) => {
+        if (error || !authResult || !authResult.signedIn) {
+          uiStore.isSignedIn = false;
+          reject(error || new Error("Ensure pop-ups are enabled."));
+        } else {
+          uiStore.isSignedIn = true;
+          uiStore.refreshDriveCharacters(googleDriveManager.value);
+          resolve();
+        }
+      });
     });
-    googleDriveManager.value.handleSignIn((error, authResult) => {
-      if (error || !authResult || !authResult.signedIn) {
-        uiStore.isSignedIn = false;
-        showToast({
-          type: "error",
-          title: "Sign-in failed",
-          message:
-            (error
-              ? error.message || error.details
-              : "Ensure pop-ups are enabled.") || "Please try again.",
-        });
-      } else {
-        uiStore.isSignedIn = true;
-        uiStore.refreshDriveCharacters(googleDriveManager.value);
-        showToast({ type: "success", title: "Signed in", message: "" });
-      }
+    showAsyncToast(signInPromise, {
+      loading: { title: "Google Drive", message: "Signing in..." },
+      success: { title: "Signed in", message: "" },
+      error: (err) => ({
+        title: "Sign-in failed",
+        message: err.message || err.details || "Please try again.",
+      }),
     });
   }
 
@@ -67,9 +65,8 @@ export function useGoogleDrive(dataManager) {
   async function saveCharacterToDrive(fileId, fileName) {
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
-    showToast({ type: "info", title: "Google Drive", message: "Saving..." });
-    try {
-      const result = await dataManager.saveDataToAppData(
+    const savePromise = dataManager
+      .saveDataToAppData(
         characterStore.character,
         characterStore.skills,
         characterStore.specialSkills,
@@ -77,21 +74,21 @@ export function useGoogleDrive(dataManager) {
         characterStore.histories,
         fileId,
         fileName,
-      );
-      if (result) {
-        uiStore.currentDriveFileId = result.id;
-        uiStore.currentDriveFileName = result.name;
-        uiStore.isCloudSaveSuccess = true;
-        await uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
-        showToast({ type: "success", title: "Saved", message: "" });
-      }
-    } catch (error) {
-      showToast({
-        type: "error",
-        title: "Save failed",
-        message: error.message || "",
+      )
+      .then(async (result) => {
+        if (result) {
+          uiStore.currentDriveFileId = result.id;
+          uiStore.currentDriveFileName = result.name;
+          uiStore.isCloudSaveSuccess = true;
+          await uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
+        }
       });
-    }
+
+    showAsyncToast(savePromise, {
+      loading: { title: "Google Drive", message: "Saving..." },
+      success: { title: "Saved", message: "" },
+      error: (err) => ({ title: "Save failed", message: err.message || "" }),
+    });
   }
 
   function handleSaveToDriveClick() {
@@ -111,10 +108,10 @@ export function useGoogleDrive(dataManager) {
     const handleGapiLoaded = async () => {
       if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
       uiStore.isGapiInitialized = true;
-      showToast({ type: "info", title: "Google API", message: "Loading..." });
+      console.info("Google API Loading...");
       try {
         await googleDriveManager.value.onGapiLoad();
-        showToast({ type: "success", title: "Google API Ready", message: "" });
+        console.info("Google API Ready");
       } catch {
         showToast({
           type: "error",
@@ -127,18 +124,10 @@ export function useGoogleDrive(dataManager) {
     const handleGisLoaded = async () => {
       if (uiStore.isGisInitialized || !googleDriveManager.value) return;
       uiStore.isGisInitialized = true;
-      showToast({
-        type: "info",
-        title: "Google Sign-In",
-        message: "Loading...",
-      });
+      console.info("Google Sign-In Loading...");
       try {
         await googleDriveManager.value.onGisLoad();
-        showToast({
-          type: "success",
-          title: "Google Sign-In Ready",
-          message: "",
-        });
+        console.info("Google Sign-In Ready");
       } catch {
         showToast({
           type: "error",
