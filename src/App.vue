@@ -6,6 +6,7 @@ import { useGoogleDrive } from './composables/useGoogleDrive.js';
 import { useHelp } from './composables/useHelp.js';
 import { useDataExport } from './composables/useDataExport.js';
 import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
+import { usePrint } from './composables/usePrint.js';
 import { base64ToArrayBuffer } from './libs/sabalessshare/crypto.js';
 import { receiveSharedData } from './libs/sabalessshare/index.js';
 import { receiveDynamicData } from './libs/sabalessshare/dynamic.js';
@@ -31,6 +32,7 @@ const helpPanelRef = ref(null);
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 useKeyboardHandling();
+const { printCharacterSheet } = usePrint();
 
 const {
   dataManager,
@@ -222,6 +224,7 @@ onMounted(async () => {
     @help-click="handleHelpIconClick"
     @share="handleShare"
     @copy-edit="uiStore.isViewingShared = false"
+    @print="printCharacterSheet"
   />
   <HelpPanel
     ref="helpPanelRef"
