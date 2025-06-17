@@ -21,6 +21,7 @@ import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
+import BaseModal from './components/modals/BaseModal.vue';
 import ShareModal from './components/ui/ShareModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
 import { useNotifications } from './composables/useNotifications.js';
@@ -219,6 +220,7 @@ onMounted(async () => {
     @close="closeHub"
   />
   <ShareModal v-if="uiStore.isShareModalVisible" :data-manager="dataManager" />
+  <BaseModal />
   <NotificationContainer />
 </template>
 

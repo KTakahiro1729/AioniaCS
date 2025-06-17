@@ -25,14 +25,14 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useNotificationStore } from '../../stores/notificationStore.js';
+import { useModalStore } from '../../stores/modalStore.js';
 
-const notificationStore = useNotificationStore();
-const modal = notificationStore.modal;
+const modalStore = useModalStore();
+const modal = modalStore;
 const inner = ref(null);
 
 function resolve(value) {
-  notificationStore.resolveModal({ value, component: inner.value });
+  modalStore.resolveModal({ value, component: inner.value });
 }
 </script>
 

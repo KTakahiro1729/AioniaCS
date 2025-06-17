@@ -54,6 +54,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
+import { useModal } from '../../composables/useModal.js';
 
 const props = defineProps({
   dataManager: Object,
@@ -65,7 +66,8 @@ const emit = defineEmits(['close', 'sign-in', 'sign-out']);
 
 const uiStore = useUiStore();
 const characterStore = useCharacterStore();
-const { showModal, showToast, showAsyncToast } = useNotifications();
+const { showToast, showAsyncToast } = useNotifications();
+const { showModal } = useModal();
 const characters = computed(() =>
   [...uiStore.driveCharacters].sort((a, b) => {
     const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
