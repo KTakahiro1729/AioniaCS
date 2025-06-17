@@ -19,4 +19,14 @@ describe("uiStore character cache", () => {
     store.clearDriveCharacters();
     expect(store.driveCharacters).toEqual([]);
   });
+
+  test("drive character add, update, remove", () => {
+    const store = useUiStore();
+    store.addDriveCharacter({ id: "a", name: "a.json", characterName: "A" });
+    expect(store.driveCharacters).toHaveLength(1);
+    store.updateDriveCharacter("a", { characterName: "B" });
+    expect(store.driveCharacters[0].characterName).toBe("B");
+    store.removeDriveCharacter("a");
+    expect(store.driveCharacters).toHaveLength(0);
+  });
 });

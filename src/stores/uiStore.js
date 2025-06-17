@@ -53,5 +53,20 @@ export const useUiStore = defineStore("ui", {
     closeShareModal() {
       this.isShareModalVisible = false;
     },
+    addDriveCharacter(ch) {
+      this.driveCharacters.push(ch);
+    },
+    updateDriveCharacter(id, updates) {
+      const idx = this.driveCharacters.findIndex((c) => c.id === id);
+      if (idx !== -1) {
+        this.driveCharacters[idx] = {
+          ...this.driveCharacters[idx],
+          ...updates,
+        };
+      }
+    },
+    removeDriveCharacter(id) {
+      this.driveCharacters = this.driveCharacters.filter((c) => c.id !== id);
+    },
   },
 });
