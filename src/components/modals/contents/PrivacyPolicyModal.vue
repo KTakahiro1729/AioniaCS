@@ -1,22 +1,11 @@
 <template>
-  <transition name="modal">
-    <div class="modal-overlay" v-if="isVisible">
-      <div class="modal privacy-policy-modal">
-        <button class="modal-close close-cross" @click="$emit('close')">×</button>
-        <div class="privacy-policy-modal__content" v-html="sanitized" />
-      </div>
-    </div>
-  </transition>
+  <div class="privacy-policy-modal__content" v-html="sanitized" />
 </template>
 
 <script setup>
 import { computed } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-
-const props = defineProps({
-  isVisible: Boolean,
-});
 
 const policyText = `# プライバシーポリシー (Privacy Policy)
 
