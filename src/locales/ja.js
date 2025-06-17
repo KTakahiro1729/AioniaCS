@@ -1,14 +1,19 @@
 export const messages = {
   googleDrive: {
     signIn: {
-      loading: { title: "Google Drive", message: "サインインしています..." },
-      success: { title: "サインイン完了", message: "" },
+      loading: () => ({
+        title: "Google Drive",
+        message: "サインインしています...",
+      }),
+      success: () => ({ title: "サインイン完了", message: "" }),
       error: (err) => ({
         title: "サインイン失敗",
         message: err.message || err.details || "もう一度お試しください。",
       }),
     },
-    signOut: { success: { title: "サインアウトしました", message: "" } },
+    signOut: {
+      success: () => ({ title: "サインアウトしました", message: "" }),
+    },
     folderPicker: {
       error: (err) => ({
         title: "Google Drive",
@@ -16,8 +21,8 @@ export const messages = {
       }),
     },
     save: {
-      loading: { title: "Google Drive", message: "保存中..." },
-      success: { title: "保存完了", message: "" },
+      loading: () => ({ title: "Google Drive", message: "保存中..." }),
+      success: () => ({ title: "保存完了", message: "" }),
       error: (err) => ({ title: "保存失敗", message: err.message || "" }),
     },
     load: {
@@ -34,19 +39,22 @@ export const messages = {
         message: err.message || "不明なエラー",
       }),
     },
-    apiInitError: {
+    apiInitError: () => ({
       title: "Google API エラー",
       message: "初期化に失敗しました",
-    },
-    signInInitError: {
+    }),
+    signInInitError: () => ({
       title: "Google サインインエラー",
       message: "初期化に失敗しました",
-    },
+    }),
   },
   share: {
     copied: (link) => ({ title: "共有リンクをコピーしました", message: link }),
     copyFailed: (err) => ({ title: "コピー失敗", message: err.message }),
-    needSignIn: { title: "Google Drive", message: "サインインしてください" },
+    needSignIn: () => ({
+      title: "Google Drive",
+      message: "サインインしてください",
+    }),
     generateFailed: (err) => ({
       title: "共有リンク生成失敗",
       message: err.message,
@@ -64,24 +72,30 @@ export const messages = {
     loadConfirm: (name) => ({
       title: "読込確認",
       message: `${name} を読み込みますか？`,
-      buttons: { load: "読込", cancel: "キャンセル" },
+      buttons: [
+        { label: "読込", value: "load", variant: "primary" },
+        { label: "キャンセル", value: "cancel", variant: "secondary" },
+      ],
     }),
     deleteConfirm: (name) => ({
       title: "削除確認",
       message: `${name} を削除しますか？`,
-      buttons: { delete: "削除", cancel: "キャンセル" },
+      buttons: [
+        { label: "削除", value: "delete", variant: "primary" },
+        { label: "キャンセル", value: "cancel", variant: "secondary" },
+      ],
     }),
     delete: {
-      successToast: { title: "削除完了", message: "" },
+      successToast: () => ({ title: "削除完了", message: "" }),
       asyncToast: {
-        loading: { title: "削除", message: "削除中..." },
-        success: { title: "削除完了", message: "" },
+        loading: () => ({ title: "削除", message: "削除中..." }),
+        success: () => ({ title: "削除完了", message: "" }),
         error: (err) => ({ title: "削除失敗", message: err.message || "" }),
       },
     },
     export: {
-      loading: { title: "エクスポート", message: "エクスポート中..." },
-      success: { title: "エクスポート完了", message: "" },
+      loading: () => ({ title: "エクスポート", message: "エクスポート中..." }),
+      success: () => ({ title: "エクスポート完了", message: "" }),
       error: (err) => ({
         title: "エクスポート失敗",
         message: err.message || "",

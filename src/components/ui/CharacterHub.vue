@@ -129,7 +129,7 @@ async function deleteChar(ch) {
     if (ch.id.startsWith('temp-')) {
       uiStore.cancelPendingDriveSave(ch.id);
       uiStore.removeDriveCharacter(ch.id);
-      showToast({ type: 'success', ...messages.characterHub.delete.successToast });
+      showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
       return;
     }
     const previous = [...uiStore.driveCharacters];
@@ -141,8 +141,8 @@ async function deleteChar(ch) {
         throw err;
       });
     showAsyncToast(deletePromise, {
-      loading: messages.characterHub.delete.asyncToast.loading,
-      success: messages.characterHub.delete.asyncToast.success,
+      loading: messages.characterHub.delete.asyncToast.loading(),
+      success: messages.characterHub.delete.asyncToast.success(),
       error: (err) => messages.characterHub.delete.asyncToast.error(err),
     });
     await deletePromise;
@@ -166,8 +166,8 @@ async function exportLocal(ch) {
       }
     });
   showAsyncToast(exportPromise, {
-    loading: messages.characterHub.export.loading,
-    success: messages.characterHub.export.success,
+    loading: messages.characterHub.export.loading(),
+    success: messages.characterHub.export.success(),
     error: (err) => messages.characterHub.export.error(err),
   });
 }

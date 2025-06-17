@@ -42,7 +42,7 @@ async function generate() {
     expiresInDays: Number(options.value.expires.value) || 0,
   };
   if ((opts.type === 'dynamic' || opts.includeFull) && !uiStore.isSignedIn) {
-    showToast({ type: 'error', ...messages.share.needSignIn });
+    showToast({ type: 'error', ...messages.share.needSignIn() });
     return;
   }
   try {

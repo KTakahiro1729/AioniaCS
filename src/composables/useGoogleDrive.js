@@ -28,8 +28,8 @@ export function useGoogleDrive(dataManager) {
       });
     });
     showAsyncToast(signInPromise, {
-      loading: messages.googleDrive.signIn.loading,
-      success: messages.googleDrive.signIn.success,
+      loading: messages.googleDrive.signIn.loading(),
+      success: messages.googleDrive.signIn.success(),
       error: (err) => messages.googleDrive.signIn.error(err),
     });
   }
@@ -39,7 +39,7 @@ export function useGoogleDrive(dataManager) {
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
       uiStore.clearDriveCharacters();
-      showToast({ type: "success", ...messages.googleDrive.signOut.success });
+      showToast({ type: "success", ...messages.googleDrive.signOut.success() });
     });
   }
 
@@ -107,8 +107,8 @@ export function useGoogleDrive(dataManager) {
         });
 
       showAsyncToast(savePromise, {
-        loading: messages.googleDrive.save.loading,
-        success: messages.googleDrive.save.success,
+        loading: messages.googleDrive.save.loading(),
+        success: messages.googleDrive.save.success(),
         error: (err) => messages.googleDrive.save.error(err),
       });
       return savePromise;
@@ -143,8 +143,8 @@ export function useGoogleDrive(dataManager) {
         });
 
       showAsyncToast(savePromise, {
-        loading: messages.googleDrive.save.loading,
-        success: messages.googleDrive.save.success,
+        loading: messages.googleDrive.save.loading(),
+        success: messages.googleDrive.save.success(),
         error: (err) => messages.googleDrive.save.error(err),
       });
       return savePromise;
@@ -173,7 +173,7 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGapiLoad();
         console.info("Google API Ready");
       } catch {
-        showToast({ type: "error", ...messages.googleDrive.apiInitError });
+        showToast({ type: "error", ...messages.googleDrive.apiInitError() });
       }
     };
 
@@ -185,7 +185,7 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGisLoad();
         console.info("Google Sign-In Ready");
       } catch {
-        showToast({ type: "error", ...messages.googleDrive.signInInitError });
+        showToast({ type: "error", ...messages.googleDrive.signInInitError() });
       }
     };
 

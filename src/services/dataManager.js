@@ -24,11 +24,6 @@ export class DataManager {
     return sanitized || "Aionia_Character";
   }
 
-  _sanitizeFileName(name) {
-    const sanitized = (name || "").replace(/[\\/:*?"<>|]/g, "_").trim();
-    return sanitized || "Aionia_Character";
-  }
-
   /**
    * キャラクターデータを保存
    */
