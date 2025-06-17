@@ -73,6 +73,10 @@ async function openHub() {
       saveToDrive: saveCharacterToDrive,
     },
     buttons: [],
+    on: {
+      'sign-in': handleSignInClick,
+      'sign-out': handleSignOutClick,
+    },
   });
 }
 

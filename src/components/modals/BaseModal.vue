@@ -10,7 +10,12 @@
           <div class="modal-title">{{ modal.title }}</div>
         </div>
         <div class="modal-message" v-if="modal.message">{{ modal.message }}</div>
-        <component :is="modal.component" v-bind="modal.props" ref="inner" />
+        <component
+          :is="modal.component"
+          v-bind="modal.props"
+          v-on="modal.events"
+          ref="inner"
+        />
         <div class="modal-actions">
           <button
             v-for="(btn, index) in modal.buttons"

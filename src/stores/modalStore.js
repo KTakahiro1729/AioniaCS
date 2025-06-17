@@ -9,6 +9,7 @@ export const useModalStore = defineStore("modal", {
     component: shallowRef(null),
     props: {},
     buttons: [],
+    events: {},
     resolvePromise: null,
     rejectPromise: null,
   }),
@@ -21,6 +22,7 @@ export const useModalStore = defineStore("modal", {
         this.component = options.component || null;
         this.props = options.props || {};
         this.buttons = options.buttons || [];
+        this.events = options.on || {};
         this.resolvePromise = resolve;
         this.rejectPromise = reject;
       });
@@ -32,6 +34,7 @@ export const useModalStore = defineStore("modal", {
       this.component = null;
       this.props = {};
       this.buttons = [];
+      this.events = {};
       this.resolvePromise = null;
       this.rejectPromise = null;
     },
