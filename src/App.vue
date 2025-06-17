@@ -12,6 +12,7 @@ import { receiveSharedData } from './libs/sabalessshare/index.js';
 import { receiveDynamicData } from './libs/sabalessshare/dynamic.js';
 import { parseShareUrl } from './libs/sabalessshare/url.js';
 import { DriveStorageAdapter } from './services/driveStorageAdapter.js';
+import { messages } from './locales/ja.js';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -102,9 +103,9 @@ async function loadCharacterById(id, name) {
       }
     });
   showAsyncToast(loadPromise, {
-    loading: { title: 'Google Drive', message: `Loading ${name}...` },
-    success: { title: 'Loaded', message: `${name} from Drive` },
-    error: (err) => ({ title: 'Load error', message: err.message || 'Unknown error' }),
+    loading: messages.googleDrive.load.loading(name),
+    success: messages.googleDrive.load.success(name),
+    error: (err) => messages.googleDrive.load.error(err),
   });
 }
 
@@ -176,12 +177,12 @@ onMounted(async () => {
     characterStore.histories.splice(0, characterStore.histories.length, ...parsed.histories);
     uiStore.isViewingShared = true;
   } catch (err) {
-    let msg = '共有データ読み込み失敗';
-    if (err.name === 'InvalidLinkError') msg = '共有リンクが不正です';
-    else if (err.name === 'ExpiredLinkError') msg = '共有リンクの有効期限が切れています';
-    else if (err.name === 'PasswordRequiredError') msg = 'パスワードが必要です';
-    else if (err.name === 'DecryptionError') msg = '復号に失敗しました';
-    showToast({ type: 'error', title: '共有データエラー', message: msg });
+    let key = 'general';
+    if (err.name === 'InvalidLinkError') key = 'invalid';
+    else if (err.name === 'ExpiredLinkError') key = 'expired';
+    else if (err.name === 'PasswordRequiredError') key = 'passwordRequired';
+    else if (err.name === 'DecryptionError') key = 'decryptionFailed';
+    showToast({ type: 'error', ...messages.share.loadError.toast(key) });
     console.error('Error loading shared data:', err);
   }
 });
