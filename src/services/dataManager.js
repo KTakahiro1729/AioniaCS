@@ -1,5 +1,6 @@
 import { createWeaknessArray, deepClone } from "../utils/utils.js";
 import JSZip from "jszip";
+import { messages } from "../locales/ja.js";
 
 /**
  * データ管理系の機能を担当するクラス
@@ -215,12 +216,7 @@ export class DataManager {
           onSuccess(parsedData);
         } catch (error) {
           console.error("Failed to parse ZIP file:", error);
-          onError(
-            this.gameData.uiMessages.fileLoadError +
-              " (ZIP: " +
-              error.message +
-              ")",
-          );
+          onError(messages.file.loadError + " (ZIP: " + error.message + ")");
         }
       };
       reader.readAsArrayBuffer(file); // Read ZIP as ArrayBuffer
@@ -234,7 +230,7 @@ export class DataManager {
           onSuccess(parsedData);
         } catch (error) {
           console.error("Failed to parse JSON file:", error);
-          onError(this.gameData.uiMessages.fileLoadError);
+          onError(messages.file.loadError);
         }
       };
       reader.readAsText(file);
@@ -414,7 +410,7 @@ export class DataManager {
       console.error("Error loading data from Google Drive:", error);
       // Check if it's a parsing error from JSON.parse or from parseLoadedData
       if (error instanceof SyntaxError) {
-        throw new Error(this.gameData.uiMessages.fileLoadError);
+        throw new Error(messages.file.loadError);
       }
       throw error; // Re-throw other errors
     }

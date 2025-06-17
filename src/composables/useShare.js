@@ -4,6 +4,7 @@ import { arrayBufferToBase64 } from "../libs/sabalessshare/crypto.js";
 import { DriveStorageAdapter } from "../services/driveStorageAdapter.js";
 import { useCharacterStore } from "../stores/characterStore.js";
 import { useNotifications } from "./useNotifications.js";
+import { messages } from "../locales/ja.js";
 
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
@@ -72,13 +73,9 @@ export function useShare(dataManager) {
   async function copyLink(link) {
     try {
       await navigator.clipboard.writeText(link);
-      showToast({
-        type: "success",
-        title: "共有リンクをコピーしました",
-        message: link,
-      });
+      showToast({ type: "success", ...messages.share.copied(link) });
     } catch (err) {
-      showToast({ type: "error", title: "コピー失敗", message: err.message });
+      showToast({ type: "error", ...messages.share.copyFailed(err) });
     }
   }
 

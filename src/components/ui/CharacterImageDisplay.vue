@@ -48,6 +48,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { ImageManager } from '../../services/imageManager.js';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
+import { messages } from '../../locales/ja.js';
 
 const props = defineProps({
   images: {
@@ -132,7 +133,7 @@ const handleImageUpload = async (event) => {
     currentImageIndex.value = imagesInternal.value.length - 1;
   } catch (error) {
     console.error('Error loading image:', error);
-    showToast({ type: 'error', title: '画像読み込み失敗', message: error.message });
+    showToast({ type: 'error', ...messages.image.loadError(error) });
   } finally {
     event.target.value = null;
   }

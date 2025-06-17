@@ -3,6 +3,7 @@ import { GoogleDriveManager } from "../services/googleDriveManager.js";
 import { useUiStore } from "../stores/uiStore.js";
 import { useCharacterStore } from "../stores/characterStore.js";
 import { useNotifications } from "./useNotifications.js";
+import { messages } from "../locales/ja.js";
 
 export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
@@ -27,12 +28,9 @@ export function useGoogleDrive(dataManager) {
       });
     });
     showAsyncToast(signInPromise, {
-      loading: { title: "Google Drive", message: "Signing in..." },
-      success: { title: "Signed in", message: "" },
-      error: (err) => ({
-        title: "Sign-in failed",
-        message: err.message || err.details || "Please try again.",
-      }),
+      loading: messages.googleDrive.signIn.loading,
+      success: messages.googleDrive.signIn.success,
+      error: (err) => messages.googleDrive.signIn.error(err),
     });
   }
 
@@ -41,7 +39,7 @@ export function useGoogleDrive(dataManager) {
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
       uiStore.clearDriveCharacters();
-      showToast({ type: "success", title: "Signed out", message: "" });
+      showToast({ type: "success", ...messages.googleDrive.signOut.success });
     });
   }
 
@@ -52,8 +50,7 @@ export function useGoogleDrive(dataManager) {
       if (err || !folder) {
         showToast({
           type: "error",
-          title: "Drive",
-          message: err?.message || "フォルダ選択をキャンセルしました",
+          ...messages.googleDrive.folderPicker.error(err),
         });
         return;
       }
@@ -110,9 +107,9 @@ export function useGoogleDrive(dataManager) {
         });
 
       showAsyncToast(savePromise, {
-        loading: { title: "Google Drive", message: "Saving..." },
-        success: { title: "Saved", message: "" },
-        error: (err) => ({ title: "Save failed", message: err.message || "" }),
+        loading: messages.googleDrive.save.loading,
+        success: messages.googleDrive.save.success,
+        error: (err) => messages.googleDrive.save.error(err),
       });
       return savePromise;
     } else {
@@ -146,9 +143,9 @@ export function useGoogleDrive(dataManager) {
         });
 
       showAsyncToast(savePromise, {
-        loading: { title: "Google Drive", message: "Saving..." },
-        success: { title: "Saved", message: "" },
-        error: (err) => ({ title: "Save failed", message: err.message || "" }),
+        loading: messages.googleDrive.save.loading,
+        success: messages.googleDrive.save.success,
+        error: (err) => messages.googleDrive.save.error(err),
       });
       return savePromise;
     }
@@ -176,11 +173,7 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGapiLoad();
         console.info("Google API Ready");
       } catch {
-        showToast({
-          type: "error",
-          title: "Google API Error",
-          message: "Initializing failed",
-        });
+        showToast({ type: "error", ...messages.googleDrive.apiInitError });
       }
     };
 
@@ -192,11 +185,7 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGisLoad();
         console.info("Google Sign-In Ready");
       } catch {
-        showToast({
-          type: "error",
-          title: "Google Sign-In Error",
-          message: "Initializing failed",
-        });
+        showToast({ type: "error", ...messages.googleDrive.signInInitError });
       }
     };
 

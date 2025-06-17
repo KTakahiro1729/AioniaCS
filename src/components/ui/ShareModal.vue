@@ -23,6 +23,7 @@ import ShareOptions from '../notifications/ShareOptions.vue';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useShare } from '../../composables/useShare.js';
 import { useNotifications } from '../../composables/useNotifications.js';
+import { messages } from '../../locales/ja.js';
 
 const props = defineProps({ dataManager: Object });
 
@@ -41,7 +42,7 @@ async function generate() {
     expiresInDays: Number(options.value.expires.value) || 0,
   };
   if ((opts.type === 'dynamic' || opts.includeFull) && !uiStore.isSignedIn) {
-    showToast({ type: 'error', title: 'Drive', message: 'サインインしてください' });
+    showToast({ type: 'error', ...messages.share.needSignIn });
     return;
   }
   try {
@@ -49,7 +50,7 @@ async function generate() {
     await copyLink(link);
     uiStore.closeShareModal();
   } catch (err) {
-    showToast({ type: 'error', title: '共有リンク生成失敗', message: err.message });
+    showToast({ type: 'error', ...messages.share.generateFailed(err) });
   }
 }
 </script>
