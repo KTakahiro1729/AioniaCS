@@ -135,6 +135,12 @@ async function deleteChar(ch) {
     ],
   });
   if (result.value === 'delete' && props.dataManager.googleDriveManager) {
+    if (ch.id.startsWith('temp-')) {
+      uiStore.cancelPendingDriveSave(ch.id);
+      uiStore.removeDriveCharacter(ch.id);
+      showToast({ type: 'success', title: '削除完了', message: '' });
+      return;
+    }
     const previous = [...uiStore.driveCharacters];
     uiStore.removeDriveCharacter(ch.id);
     const deletePromise = props.dataManager.googleDriveManager

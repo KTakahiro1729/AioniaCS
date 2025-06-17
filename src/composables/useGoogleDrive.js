@@ -78,6 +78,8 @@ export function useGoogleDrive(dataManager) {
         updatedAt: now,
       });
 
+      const token = uiStore.registerPendingDriveSave(tempId);
+
       const savePromise = dataManager
         .saveDataToAppData(
           characterStore.character,
@@ -89,9 +91,7 @@ export function useGoogleDrive(dataManager) {
           fileName,
         )
         .then((result) => {
-          if (result) {
-            uiStore.currentDriveFileId = result.id;
-            uiStore.currentDriveFileName = result.name;
+          if (!token.canceled && result) {
             uiStore.isCloudSaveSuccess = true;
             uiStore.updateDriveCharacter(tempId, {
               id: result.id,
@@ -99,9 +99,13 @@ export function useGoogleDrive(dataManager) {
               updatedAt: now,
             });
           }
+          uiStore.completePendingDriveSave(tempId);
         })
         .catch((err) => {
-          uiStore.removeDriveCharacter(tempId);
+          if (!token.canceled) {
+            uiStore.removeDriveCharacter(tempId);
+          }
+          uiStore.completePendingDriveSave(tempId);
           throw err;
         });
 
@@ -131,8 +135,6 @@ export function useGoogleDrive(dataManager) {
         )
         .then((result) => {
           if (result) {
-            uiStore.currentDriveFileId = result.id;
-            uiStore.currentDriveFileName = result.name;
             uiStore.isCloudSaveSuccess = true;
           }
         })
