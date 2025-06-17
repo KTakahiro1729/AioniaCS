@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { AioniaGameData } from "../data/gameData.js";
+import { messages } from "../locales/ja.js";
 import { deepClone, createWeaknessArray } from "../utils/utils.js";
 
 function createCharacter() {
@@ -115,7 +116,7 @@ export const useCharacterStore = defineStore("character", {
         .map((name) => ({ value: name, text: name, disabled: false }));
       const helpOption = {
         value: "help-text",
-        text: AioniaGameData.uiMessages.weaknessDropdownHelp,
+        text: messages.weaknessDropdownHelp,
         disabled: true,
       };
       return defaultOptions.concat(sessionOptions, helpOption);

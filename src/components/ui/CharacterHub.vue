@@ -50,6 +50,7 @@ import { useUiStore } from '../../stores/uiStore.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 import { useModal } from '../../composables/useModal.js';
+import { messages } from '../../locales/ja.js';
 
 const props = defineProps({
   dataManager: Object,
@@ -108,14 +109,9 @@ function formatDate(date) {
 
 
 async function confirmLoad(ch) {
-  const result = await showModal({
-    title: '読込確認',
-    message: `${ch.characterName || ch.name} を読み込みますか？`,
-    buttons: [
-      { label: '読込', value: 'load', variant: 'primary' },
-      { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
-    ],
-  });
+  const result = await showModal(
+    messages.characterHub.loadConfirm(ch.characterName || ch.name),
+  );
   if (result.value === 'load') {
     await props.loadCharacter(ch.id, ch.name);
   }
@@ -123,17 +119,30 @@ async function confirmLoad(ch) {
 
 
 async function deleteChar(ch) {
-  const result = await showModal({
-    title: '削除確認',
-    message: `${ch.characterName || ch.name} を削除しますか？`,
-    buttons: [
-      { label: '削除', value: 'delete', variant: 'primary' },
-      { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
-    ],
-  });
+  const result = await showModal(
+    messages.characterHub.deleteConfirm(ch.characterName || ch.name),
+  );
   if (result.value === 'delete' && props.dataManager.googleDriveManager) {
-    await props.dataManager.googleDriveManager.deleteCharacterFile(ch.id);
-    uiStore.driveCharacters = uiStore.driveCharacters.filter((c) => c.id !== ch.id);
+    if (ch.id.startsWith('temp-')) {
+      uiStore.cancelPendingDriveSave(ch.id);
+      uiStore.removeDriveCharacter(ch.id);
+      showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
+      return;
+    }
+    const previous = [...uiStore.driveCharacters];
+    uiStore.removeDriveCharacter(ch.id);
+    const deletePromise = props.dataManager.googleDriveManager
+      .deleteCharacterFile(ch.id)
+      .catch((err) => {
+        uiStore.driveCharacters = previous;
+        throw err;
+      });
+    showAsyncToast(deletePromise, {
+      loading: messages.characterHub.delete.asyncToast.loading(),
+      success: messages.characterHub.delete.asyncToast.success(),
+      error: (err) => messages.characterHub.delete.asyncToast.error(err),
+    });
+    await deletePromise;
   }
 }
 
@@ -154,9 +163,9 @@ async function exportLocal(ch) {
       }
     });
   showAsyncToast(exportPromise, {
-    loading: { title: 'エクスポート', message: 'エクスポート中...' },
-    success: { title: 'エクスポート完了', message: '' },
-    error: (err) => ({ title: 'エクスポート失敗', message: err.message || '' }),
+    loading: messages.characterHub.export.loading(),
+    success: messages.characterHub.export.success(),
+    error: (err) => messages.characterHub.export.error(err),
   });
 }
 
