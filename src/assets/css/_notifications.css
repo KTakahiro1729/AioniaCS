@@ -235,6 +235,19 @@
     inset 0 1px 0 rgb(255 255 255 / 5%);
   position: relative;
 }
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 20px;
+  cursor: pointer;
+}
+.modal-close:hover {
+  color: var(--color-text-normal);
+}
 .modal--critical::before {
   content: "";
   position: absolute;

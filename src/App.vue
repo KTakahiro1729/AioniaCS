@@ -20,7 +20,7 @@ import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
-import PrivacyPolicyModal from './components/ui/PrivacyPolicyModal.vue';
+import PrivacyPolicyModal from './components/modals/contents/PrivacyPolicyModal.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import BaseModal from './components/modals/BaseModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
@@ -63,16 +63,15 @@ const {
 } = useHelp(helpPanelRef, mainFooter);
 
 const { showToast, showAsyncToast } = useNotifications();
-const isPrivacyPolicyVisible = ref(false);
-
-function openPrivacyPolicy() {
-  isPrivacyPolicyVisible.value = true;
-}
-
-function closePrivacyPolicy() {
-  isPrivacyPolicyVisible.value = false;
-}
 const { showModal } = useModal();
+
+async function openPrivacyPolicy() {
+  await showModal({
+    title: 'プライバシーポリシー',
+    component: PrivacyPolicyModal,
+    buttons: [{ label: '閉じる', value: 'close', variant: 'secondary' }],
+  });
+}
 
 async function openHub() {
   await showModal({
