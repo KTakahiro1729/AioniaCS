@@ -20,6 +20,7 @@ import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
+import PrivacyPolicyModal from './components/ui/PrivacyPolicyModal.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import ShareModal from './components/ui/ShareModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
@@ -60,6 +61,15 @@ const {
 } = useHelp(helpPanelRef, mainFooter);
 
 const { showToast, showAsyncToast } = useNotifications();
+const isPrivacyPolicyVisible = ref(false);
+
+function openPrivacyPolicy() {
+  isPrivacyPolicyVisible.value = true;
+}
+
+function closePrivacyPolicy() {
+  isPrivacyPolicyVisible.value = false;
+}
 
 function openHub() {
   uiStore.openHub();
@@ -184,7 +194,7 @@ onMounted(async () => {
     @open-hub="openHub"
   />
   <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
-  <CharacterSheetLayout />
+  <CharacterSheetLayout @open-privacy="openPrivacyPolicy" />
   <MainFooter
     ref="mainFooter"
     :help-state="helpState"
@@ -217,6 +227,10 @@ onMounted(async () => {
     @sign-in="handleSignInClick"
     @sign-out="handleSignOutClick"
     @close="closeHub"
+  />
+  <PrivacyPolicyModal
+    :is-visible="isPrivacyPolicyVisible"
+    @close="closePrivacyPolicy"
   />
   <ShareModal v-if="uiStore.isShareModalVisible" :data-manager="dataManager" />
   <NotificationContainer />
