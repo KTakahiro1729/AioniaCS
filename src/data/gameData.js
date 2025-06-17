@@ -333,27 +333,6 @@ export const AioniaGameData = {
     maxWeaknesses: 10,
   },
 
-  // UIメッセージ
-  uiMessages: {
-    outputButton: {
-      default: "ココフォリア駒出力",
-      success: "コピー完了！",
-      successFallback: "コピー完了！ (fallback)",
-      failed: "コピー失敗 (fallback)",
-      error: "コピーエラー (fallback)",
-      animating: "冒険が始まる――",
-      animationTimings: {
-        state1_bgFill: 500,
-        state2_textHold: 1000,
-        state3_textFadeOut: 500,
-        state4_bgReset: 700,
-      },
-    },
-    weaknessDropdownHelp: "（冒険の記録を追加すると選択肢が増えます）",
-    fileLoadError:
-      "ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。",
-  },
-
   // ヘルプテキスト
   helpText: `#### 基本操作
 - **データ保存**: 画面下部の「端末保存」ボタンで、入力内容をお使いの端末にファイル(.json または .zip)としてダウンロードできます。

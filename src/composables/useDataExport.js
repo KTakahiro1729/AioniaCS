@@ -4,6 +4,7 @@ import { CocofoliaExporter } from "../services/cocofoliaExporter.js";
 import { AioniaGameData } from "../data/gameData.js";
 import { useCharacterStore } from "../stores/characterStore.js";
 import { useNotifications } from "./useNotifications.js";
+import { messages } from "../locales/ja.js";
 
 export function useDataExport(footerRef) {
   const characterStore = useCharacterStore();
@@ -11,7 +12,7 @@ export function useDataExport(footerRef) {
   const cocofoliaExporter = new CocofoliaExporter();
   const { showToast } = useNotifications();
 
-  const outputButtonText = ref(AioniaGameData.uiMessages.outputButton.default);
+  const outputButtonText = ref(messages.outputButton.default);
 
   function saveData() {
     dataManager.saveData(
@@ -48,8 +49,7 @@ export function useDataExport(footerRef) {
       (errorMessage) =>
         showToast({
           type: "error",
-          title: "読み込み失敗",
-          message: errorMessage,
+          ...messages.dataExport.loadError(errorMessage),
         }),
     );
   }
@@ -57,7 +57,7 @@ export function useDataExport(footerRef) {
   function playOutputAnimation() {
     const button = footerRef.value?.outputButton;
     if (!button || button.classList.contains("is-animating")) return;
-    const buttonMessages = AioniaGameData.uiMessages.outputButton;
+    const buttonMessages = messages.outputButton;
     const timings = buttonMessages.animationTimings;
 
     button.classList.add("is-animating", "state-1");
@@ -121,17 +121,16 @@ export function useDataExport(footerRef) {
       if (successful) {
         playOutputAnimation();
       } else {
-        outputButtonText.value = AioniaGameData.uiMessages.outputButton.failed;
+        outputButtonText.value = messages.outputButton.failed;
         setTimeout(() => {
-          outputButtonText.value =
-            AioniaGameData.uiMessages.outputButton.default;
+          outputButtonText.value = messages.outputButton.default;
         }, 3000);
       }
     } catch (err) {
       console.error(err);
-      outputButtonText.value = AioniaGameData.uiMessages.outputButton.error;
+      outputButtonText.value = messages.outputButton.error;
       setTimeout(() => {
-        outputButtonText.value = AioniaGameData.uiMessages.outputButton.default;
+        outputButtonText.value = messages.outputButton.default;
       }, 3000);
     }
     document.body.removeChild(textArea);
@@ -155,7 +154,6 @@ export function useDataExport(footerRef) {
     const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
     copyToClipboard(textToCopy);
   }
-
 
   return {
     dataManager,
