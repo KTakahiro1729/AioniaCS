@@ -21,6 +21,7 @@ import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
+import BaseModal from './components/modals/BaseModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
 import ShareOptions from './components/modals/contents/ShareOptions.vue';
 import { useModal } from './composables/useModal.js';
@@ -210,15 +211,8 @@ onMounted(async () => {
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
   />
-  <CharacterHub
-    v-if="uiStore.isHubVisible"
-    :data-manager="dataManager"
-    :load-character="loadCharacterById"
-    :save-to-drive="saveCharacterToDrive"
-    @sign-in="handleSignInClick"
-    @sign-out="handleSignOutClick"
-    @close="closeHub"
-  />
+  <!-- CharacterHub and ShareModal are now injected via BaseModal -->
+  <BaseModal />
   <NotificationContainer />
 </template>
 
