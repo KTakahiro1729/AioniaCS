@@ -1,5 +1,5 @@
 import { DriveStorageAdapter } from "../../src/services/driveStorageAdapter.js";
-import { arrayBufferToBase64 } from "../../src/libs/sabalessshare/crypto.js";
+import { arrayBufferToBase64 } from "../../src/libs/sabalessshare/src/crypto.js";
 
 describe("DriveStorageAdapter", () => {
   let adapter;
