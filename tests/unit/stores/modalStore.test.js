@@ -19,7 +19,8 @@ describe("modalStore", () => {
   test("showModal accepts component", () => {
     const store = useModalStore();
     const component = { template: "<div />" };
-    store.showModal({ component });
+    store.showModal({ component, props: { foo: "bar" } });
     expect(store.component).toBe(component);
+    expect(store.props.foo).toBe("bar");
   });
 });

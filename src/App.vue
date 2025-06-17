@@ -22,8 +22,9 @@ import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import BaseModal from './components/modals/BaseModal.vue';
-import ShareModal from './components/ui/ShareModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
+import ShareOptions from './components/modals/contents/ShareOptions.vue';
+import { useModal } from './composables/useModal.js';
 import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
 const mainFooter = ref(null);
@@ -61,22 +62,20 @@ const {
 } = useHelp(helpPanelRef, mainFooter);
 
 const { showToast, showAsyncToast } = useNotifications();
+const { showModal } = useModal();
 
-function openHub() {
-  uiStore.openHub();
+async function openHub() {
+  await showModal({
+    component: CharacterHub,
+    props: {
+      dataManager,
+      loadCharacter: loadCharacterById,
+      saveToDrive: saveCharacterToDrive,
+    },
+    buttons: [],
+  });
 }
 
-function closeHub() {
-  uiStore.closeHub();
-}
-
-watch(
-  () => uiStore.isShareModalVisible,
-  (val) => {
-    if (val) window.__driveSignIn = handleSignInClick;
-    else delete window.__driveSignIn;
-  },
-);
 
 async function loadCharacterById(id, name) {
   const loadPromise = dataManager
@@ -194,6 +193,8 @@ onMounted(async () => {
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
     :output-button-text="outputButtonText"
+    :data-manager="dataManager"
+    :sign-in="handleSignInClick"
     :is-viewing-shared="uiStore.isViewingShared"
     @save="saveData"
     @file-upload="handleFileUpload"
@@ -210,16 +211,7 @@ onMounted(async () => {
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
   />
-  <CharacterHub
-    v-if="uiStore.isHubVisible"
-    :data-manager="dataManager"
-    :load-character="loadCharacterById"
-    :save-to-drive="saveCharacterToDrive"
-    @sign-in="handleSignInClick"
-    @sign-out="handleSignOutClick"
-    @close="closeHub"
-  />
-  <ShareModal v-if="uiStore.isShareModalVisible" :data-manager="dataManager" />
+  <!-- CharacterHub and ShareModal are now injected via BaseModal -->
   <BaseModal />
   <NotificationContainer />
 </template>

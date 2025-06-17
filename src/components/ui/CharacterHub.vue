@@ -1,8 +1,5 @@
 <template>
-  <transition name="modal">
-    <div class="modal-overlay" v-if="true">
-      <div class="modal character-hub">
-        <button class="modal-close close-cross" @click="$emit('close')">×</button>
+  <div class="character-hub">
         <template v-if="uiStore.isSignedIn">
           <div class="character-hub--header">
             <div class="character-hub--controls">
@@ -44,9 +41,7 @@
           </p>
           
         </template>
-      </div>
-    </div>
-  </transition>
+  </div>
 </template>
 
 <script setup>
@@ -62,7 +57,7 @@ const props = defineProps({
   saveToDrive: Function,
 });
 
-const emit = defineEmits(['close', 'sign-in', 'sign-out']);
+const emit = defineEmits(['sign-in', 'sign-out']);
 
 const uiStore = useUiStore();
 const characterStore = useCharacterStore();
@@ -265,16 +260,4 @@ async function exportLocal(ch) {
     0 0 6px var(--color-accent);
 }
 
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-.modal-close:hover {
-  color: var(--color-text-normal);
-}
 </style>
