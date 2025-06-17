@@ -65,30 +65,93 @@ export function useGoogleDrive(dataManager) {
   async function saveCharacterToDrive(fileId, fileName) {
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
-    const savePromise = dataManager
-      .saveDataToAppData(
-        characterStore.character,
-        characterStore.skills,
-        characterStore.specialSkills,
-        characterStore.equipments,
-        characterStore.histories,
-        fileId,
-        fileName,
-      )
-      .then(async (result) => {
-        if (result) {
-          uiStore.currentDriveFileId = result.id;
-          uiStore.currentDriveFileName = result.name;
-          uiStore.isCloudSaveSuccess = true;
-          await uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
-        }
+
+    const charName = characterStore.character.name || fileName;
+    const now = new Date().toISOString();
+
+    if (!fileId) {
+      const tempId = `temp-${Date.now()}`;
+      uiStore.addDriveCharacter({
+        id: tempId,
+        name: fileName,
+        characterName: charName,
+        updatedAt: now,
       });
 
-    showAsyncToast(savePromise, {
-      loading: { title: "Google Drive", message: "Saving..." },
-      success: { title: "Saved", message: "" },
-      error: (err) => ({ title: "Save failed", message: err.message || "" }),
-    });
+      const token = uiStore.registerPendingDriveSave(tempId);
+
+      const savePromise = dataManager
+        .saveDataToAppData(
+          characterStore.character,
+          characterStore.skills,
+          characterStore.specialSkills,
+          characterStore.equipments,
+          characterStore.histories,
+          fileId,
+          fileName,
+        )
+        .then((result) => {
+          if (!token.canceled && result) {
+            uiStore.isCloudSaveSuccess = true;
+            uiStore.updateDriveCharacter(tempId, {
+              id: result.id,
+              name: result.name,
+              updatedAt: now,
+            });
+          }
+          uiStore.completePendingDriveSave(tempId);
+        })
+        .catch((err) => {
+          if (!token.canceled) {
+            uiStore.removeDriveCharacter(tempId);
+          }
+          uiStore.completePendingDriveSave(tempId);
+          throw err;
+        });
+
+      showAsyncToast(savePromise, {
+        loading: { title: "Google Drive", message: "Saving..." },
+        success: { title: "Saved", message: "" },
+        error: (err) => ({ title: "Save failed", message: err.message || "" }),
+      });
+      return savePromise;
+    } else {
+      const idx = uiStore.driveCharacters.findIndex((c) => c.id === fileId);
+      const prev = idx !== -1 ? { ...uiStore.driveCharacters[idx] } : null;
+      uiStore.updateDriveCharacter(fileId, {
+        characterName: charName,
+        updatedAt: now,
+      });
+
+      const savePromise = dataManager
+        .saveDataToAppData(
+          characterStore.character,
+          characterStore.skills,
+          characterStore.specialSkills,
+          characterStore.equipments,
+          characterStore.histories,
+          fileId,
+          fileName,
+        )
+        .then((result) => {
+          if (result) {
+            uiStore.isCloudSaveSuccess = true;
+          }
+        })
+        .catch((err) => {
+          if (prev) {
+            uiStore.updateDriveCharacter(fileId, prev);
+          }
+          throw err;
+        });
+
+      showAsyncToast(savePromise, {
+        loading: { title: "Google Drive", message: "Saving..." },
+        success: { title: "Saved", message: "" },
+        error: (err) => ({ title: "Save failed", message: err.message || "" }),
+      });
+      return savePromise;
+    }
   }
 
   function handleSaveToDriveClick() {

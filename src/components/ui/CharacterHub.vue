@@ -135,8 +135,26 @@ async function deleteChar(ch) {
     ],
   });
   if (result.value === 'delete' && props.dataManager.googleDriveManager) {
-    await props.dataManager.googleDriveManager.deleteCharacterFile(ch.id);
-    uiStore.driveCharacters = uiStore.driveCharacters.filter((c) => c.id !== ch.id);
+    if (ch.id.startsWith('temp-')) {
+      uiStore.cancelPendingDriveSave(ch.id);
+      uiStore.removeDriveCharacter(ch.id);
+      showToast({ type: 'success', title: '削除完了', message: '' });
+      return;
+    }
+    const previous = [...uiStore.driveCharacters];
+    uiStore.removeDriveCharacter(ch.id);
+    const deletePromise = props.dataManager.googleDriveManager
+      .deleteCharacterFile(ch.id)
+      .catch((err) => {
+        uiStore.driveCharacters = previous;
+        throw err;
+      });
+    showAsyncToast(deletePromise, {
+      loading: { title: '削除', message: '削除中...' },
+      success: { title: '削除完了', message: '' },
+      error: (err) => ({ title: '削除失敗', message: err.message || '' }),
+    });
+    await deletePromise;
   }
 }
 
