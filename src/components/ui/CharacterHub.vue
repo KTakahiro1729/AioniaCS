@@ -263,16 +263,4 @@ async function exportLocal(ch) {
     0 0 6px var(--color-accent);
 }
 
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-.modal-close:hover {
-  color: var(--color-text-normal);
-}
 </style>
