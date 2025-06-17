@@ -12,8 +12,6 @@ export const useUiStore = defineStore("ui", {
     currentDriveFileId: null,
     currentDriveFileName: "",
     isViewingShared: false,
-    isHubVisible: false,
-    isShareModalVisible: false,
     driveCharacters: [],
     pendingDriveSaves: {},
   }),
@@ -69,18 +67,6 @@ export const useUiStore = defineStore("ui", {
     },
     clearDriveCharacters() {
       this.driveCharacters = [];
-    },
-    openHub() {
-      this.isHubVisible = true;
-    },
-    closeHub() {
-      this.isHubVisible = false;
-    },
-    openShareModal() {
-      this.isShareModalVisible = true;
-    },
-    closeShareModal() {
-      this.isShareModalVisible = false;
     },
     addDriveCharacter(ch) {
       this.driveCharacters.push(ch);

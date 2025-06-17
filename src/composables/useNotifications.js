@@ -35,9 +35,5 @@ export function useNotifications() {
     return promise;
   }
 
-  function showModal(options) {
-    return store.showModal(options);
-  }
-
-  return { showToast, showAsyncToast, showModal };
+  return { showToast, showAsyncToast };
 }

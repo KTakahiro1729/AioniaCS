@@ -21,10 +21,11 @@ import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
-import PrivacyPolicyModal from './components/ui/PrivacyPolicyModal.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
-import ShareModal from './components/ui/ShareModal.vue';
+import BaseModal from './components/modals/BaseModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
+import ShareOptions from './components/modals/contents/ShareOptions.vue';
+import { useModal } from './composables/useModal.js';
 import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
 const mainFooter = ref(null);
@@ -62,31 +63,24 @@ const {
 } = useHelp(helpPanelRef, mainFooter);
 
 const { showToast, showAsyncToast } = useNotifications();
-const isPrivacyPolicyVisible = ref(false);
+const { showModal } = useModal();
 
-function openPrivacyPolicy() {
-  isPrivacyPolicyVisible.value = true;
+async function openHub() {
+  await showModal({
+    component: CharacterHub,
+    props: {
+      dataManager,
+      loadCharacter: loadCharacterById,
+      saveToDrive: saveCharacterToDrive,
+    },
+    buttons: [],
+    on: {
+      'sign-in': handleSignInClick,
+      'sign-out': handleSignOutClick,
+    },
+  });
 }
 
-function closePrivacyPolicy() {
-  isPrivacyPolicyVisible.value = false;
-}
-
-function openHub() {
-  uiStore.openHub();
-}
-
-function closeHub() {
-  uiStore.closeHub();
-}
-
-watch(
-  () => uiStore.isShareModalVisible,
-  (val) => {
-    if (val) window.__driveSignIn = handleSignInClick;
-    else delete window.__driveSignIn;
-  },
-);
 
 async function loadCharacterById(id, name) {
   const loadPromise = dataManager
@@ -195,7 +189,7 @@ onMounted(async () => {
     @open-hub="openHub"
   />
   <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
-  <CharacterSheetLayout @open-privacy="openPrivacyPolicy" />
+  <CharacterSheetLayout />
   <MainFooter
     ref="mainFooter"
     :help-state="helpState"
@@ -204,6 +198,8 @@ onMounted(async () => {
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
     :output-button-text="outputButtonText"
+    :data-manager="dataManager"
+    :sign-in="handleSignInClick"
     :is-viewing-shared="uiStore.isViewingShared"
     @save="saveData"
     @file-upload="handleFileUpload"
@@ -220,20 +216,8 @@ onMounted(async () => {
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
   />
-  <CharacterHub
-    v-if="uiStore.isHubVisible"
-    :data-manager="dataManager"
-    :load-character="loadCharacterById"
-    :save-to-drive="saveCharacterToDrive"
-    @sign-in="handleSignInClick"
-    @sign-out="handleSignOutClick"
-    @close="closeHub"
-  />
-  <PrivacyPolicyModal
-    :is-visible="isPrivacyPolicyVisible"
-    @close="closePrivacyPolicy"
-  />
-  <ShareModal v-if="uiStore.isShareModalVisible" :data-manager="dataManager" />
+  <!-- CharacterHub and ShareModal are now injected via BaseModal -->
+  <BaseModal />
   <NotificationContainer />
 </template>
 

@@ -1,13 +1,21 @@
 <template>
   <transition name="modal">
-    <div class="modal-overlay" v-if="modal.isVisible">
+    <div class="modal-overlay" v-if="modal.isVisible" @click.self="modalStore.hideModal()">
       <div :class="['modal', modal.type ? `modal--${modal.type}` : '']">
+        <button class="modal-close close-cross" @click="modalStore.hideModal()">
+          ×
+        </button>
         <div class="modal-header" v-if="modal.title">
           <div class="modal-icon" v-if="modal.type === 'critical'">!</div>
           <div class="modal-title">{{ modal.title }}</div>
         </div>
         <div class="modal-message" v-if="modal.message">{{ modal.message }}</div>
-        <component :is="modal.component" ref="inner" />
+        <component
+          :is="modal.component"
+          v-bind="modal.props"
+          v-on="modal.events"
+          ref="inner"
+        />
         <div class="modal-actions">
           <button
             v-for="(btn, index) in modal.buttons"
@@ -25,14 +33,14 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useNotificationStore } from '../../stores/notificationStore.js';
+import { useModalStore } from '../../stores/modalStore.js';
 
-const notificationStore = useNotificationStore();
-const modal = notificationStore.modal;
+const modalStore = useModalStore();
+const modal = modalStore;
 const inner = ref(null);
 
 function resolve(value) {
-  notificationStore.resolveModal({ value, component: inner.value });
+  modalStore.resolveModal({ value, component: inner.value });
 }
 </script>
 

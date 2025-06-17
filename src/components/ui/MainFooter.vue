@@ -69,6 +69,11 @@
 <script setup>
 import { ref, defineExpose, defineEmits } from 'vue';
 import { useUiStore } from '../../stores/uiStore.js';
+import ShareOptions from '../modals/contents/ShareOptions.vue';
+import { useShare } from '../../composables/useShare.js';
+import { useModal } from '../../composables/useModal.js';
+import { useNotifications } from '../../composables/useNotifications.js';
+import { useModalStore } from '../../stores/modalStore.js';
 
 const props = defineProps({
   helpState: String,
@@ -78,6 +83,8 @@ const props = defineProps({
   currentWeight: Number,
   outputButtonText: String,
   isViewingShared: Boolean,
+  dataManager: Object,
+  signIn: Function,
 });
 
 const emit = defineEmits([
@@ -97,6 +104,10 @@ const helpIcon = ref(null);
 defineExpose({ outputButton, helpIcon });
 
 const uiStore = useUiStore();
+const { generateShare, copyLink, isLongData } = useShare(props.dataManager);
+const { showModal } = useModal();
+const { showToast } = useNotifications();
+const modalStore = useModalStore();
 
 const buildBranch = import.meta.env.VITE_BUILD_BRANCH;
 const buildHash = import.meta.env.VITE_BUILD_HASH;
@@ -106,11 +117,40 @@ const buildInfo =
     ? `${buildBranch} (${buildHash}) ${buildDate}`
     : '';
 
-function handleShareClick() {
+async function handleShareClick() {
   if (props.isViewingShared) {
     emit('copy-edit');
-  } else {
-    uiStore.openShareModal();
+    return;
+  }
+  window.__driveSignIn = props.signIn;
+  const result = await showModal({
+    component: ShareOptions,
+    props: { signedIn: uiStore.isSignedIn, longData: isLongData() },
+    title: '共有リンクを生成',
+    buttons: [
+      { label: '生成', value: 'generate', variant: 'primary' },
+      { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
+    ],
+  });
+  delete window.__driveSignIn;
+  if (result.value !== 'generate' || !result.component) return;
+  const optsComp = result.component;
+  const opts = {
+    type: optsComp.type.value,
+    includeFull: optsComp.includeFull.value,
+    password: optsComp.password.value || '',
+    expiresInDays: Number(optsComp.expires.value) || 0,
+  };
+  if ((opts.type === 'dynamic' || opts.includeFull) && !uiStore.isSignedIn) {
+    showToast({ type: 'error', title: 'Drive', message: 'サインインしてください' });
+    return;
+  }
+  try {
+    const link = await generateShare(opts);
+    await copyLink(link);
+    modalStore.hideModal();
+  } catch (err) {
+    showToast({ type: 'error', title: '共有リンク生成失敗', message: err.message });
   }
 }
 </script>

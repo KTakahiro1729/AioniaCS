@@ -8,14 +8,12 @@
         @close="store.removeToast(toast.id)"
       />
     </transition-group>
-    <ModalNotification />
   </div>
 </template>
 
 <script setup>
 import { useNotificationStore } from '../../stores/notificationStore.js';
 import ToastNotification from './ToastNotification.vue';
-import ModalNotification from './ModalNotification.vue';
 
 const store = useNotificationStore();
 </script>
