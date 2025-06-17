@@ -23,4 +23,13 @@ describe("modalStore", () => {
     expect(store.component).toBe(component);
     expect(store.props.foo).toBe("bar");
   });
+
+  test("showModal stores events and resets", () => {
+    const store = useModalStore();
+    const handler = jest.fn();
+    store.showModal({ on: { foo: handler } });
+    expect(store.events.foo).toBe(handler);
+    store.hideModal();
+    expect(store.events).toEqual({});
+  });
 });
