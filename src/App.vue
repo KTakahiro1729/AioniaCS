@@ -20,7 +20,6 @@ import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import TopLeftControls from './components/ui/TopLeftControls.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
-import PrivacyPolicyModal from './components/ui/PrivacyPolicyModal.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import BaseModal from './components/modals/BaseModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
@@ -63,15 +62,6 @@ const {
 } = useHelp(helpPanelRef, mainFooter);
 
 const { showToast, showAsyncToast } = useNotifications();
-const isPrivacyPolicyVisible = ref(false);
-
-function openPrivacyPolicy() {
-  isPrivacyPolicyVisible.value = true;
-}
-
-function closePrivacyPolicy() {
-  isPrivacyPolicyVisible.value = false;
-}
 const { showModal } = useModal();
 
 async function openHub() {
@@ -194,7 +184,7 @@ onMounted(async () => {
     @open-hub="openHub"
   />
   <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
-  <CharacterSheetLayout @open-privacy="openPrivacyPolicy" />
+  <CharacterSheetLayout />
   <MainFooter
     ref="mainFooter"
     :help-state="helpState"
@@ -221,16 +211,8 @@ onMounted(async () => {
     :help-text="AioniaGameData.helpText"
     @close="closeHelpPanel"
   />
-  <CharacterHub
-    v-if="uiStore.isHubVisible"
-    :data-manager="dataManager"
-    :load-character="loadCharacterById"
-    :save-to-drive="saveCharacterToDrive"
-    @sign-in="handleSignInClick"
-    @sign-out="handleSignOutClick"
-    @close="closeHub"
-  />
-  <ShareModal v-if="uiStore.isShareModalVisible" :data-manager="dataManager" />
+  <!-- CharacterHub and ShareModal are now injected via BaseModal -->
+  <BaseModal />
   <NotificationContainer />
 </template>
 

@@ -1,7 +1,10 @@
 <template>
   <transition name="modal">
-    <div class="modal-overlay" v-if="modal.isVisible">
+    <div class="modal-overlay" v-if="modal.isVisible" @click.self="modalStore.hideModal()">
       <div :class="['modal', modal.type ? `modal--${modal.type}` : '']">
+        <button class="modal-close close-cross" @click="modalStore.hideModal()">
+          ×
+        </button>
         <div class="modal-header" v-if="modal.title">
           <div class="modal-icon" v-if="modal.type === 'critical'">!</div>
           <div class="modal-title">{{ modal.title }}</div>

@@ -1,6 +1,7 @@
 <script setup>
 import { useCharacterStore } from '../stores/characterStore.js';
-import { defineEmits } from 'vue';
+import { useModal } from '../composables/useModal.js';
+import PrivacyPolicyModal from '../components/modals/contents/PrivacyPolicyModal.vue';
 
 import CharacterBasicInfo from '../components/sections/CharacterBasicInfo.vue';
 import ScarWeaknessSection from '../components/sections/ScarWeaknessSection.vue';
@@ -11,7 +12,15 @@ import CharacterMemoSection from '../components/sections/CharacterMemoSection.vu
 import AdventureLogSection from '../components/sections/AdventureLogSection.vue';
 
 const characterStore = useCharacterStore();
-const emit = defineEmits(['open-privacy']);
+const { showModal } = useModal();
+
+async function openPrivacyPolicy() {
+  await showModal({
+    component: PrivacyPolicyModal,
+    title: 'プライバシーポリシー',
+    buttons: [{ label: '閉じる', value: 'close', variant: 'secondary' }],
+  });
+}
 </script>
 
 <template>
@@ -30,6 +39,6 @@ const emit = defineEmits(['open-privacy']);
       本サイトは<a href="https://www.aioniatrpg.com/" target="_blank" rel="noopener noreferrer">「イチ（フシギ製作所）」様が権利を有する「慈悲なきアイオニア」</a>の二次創作物です(Ver 1.2対応)。<br />
       本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。
     </p>
-    <button class="button-base" @click="emit('open-privacy')">プライバシーポリシー</button>
+    <button class="button-base" @click="openPrivacyPolicy">プライバシーポリシー</button>
   </div>
 </template>
