@@ -549,7 +549,7 @@ textarea.greyed-out {
   width: 10px;
   height: 16px;
   border-radius: 2px;
-  background-color: var(--color-load-off);
+  background-color: var(--color-ghost-normal);
 }
 
 .load-indicator--step--on-normal {
