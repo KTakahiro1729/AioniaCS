@@ -236,9 +236,6 @@
   position: relative;
 }
 .modal-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   background: transparent;
   border: none;
   color: var(--color-accent);
@@ -267,8 +264,12 @@
 .modal-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-accent);
+  width: 100%;
 }
 .modal-icon {
   width: 36px;
@@ -288,9 +289,10 @@
   animation: pulseGlow 2s ease-in-out infinite alternate;
 }
 .modal-title {
+  font-family: "Noto Serif JP", serif;
   font-size: 1.3em;
   font-weight: 700;
-  color: var(--color-text-normal);
+  color: var(--color-accent);
 }
 .modal-message {
   margin-bottom: 25px;
