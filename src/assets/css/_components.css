@@ -6,6 +6,8 @@
   font-family: "Noto Serif JP", serif;
   color: var(--color-accent);
   font-weight: 700;
+  display: flex;
+  justify-content: space-between;
 }
 
 .box-title {
@@ -530,41 +532,46 @@ textarea.greyed-out {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-right: 20px;
 }
 
-.load-indicator__steps {
+.load-indicator--label {
+  font-family: "Noto Serif JP", serif;
+  font-size: 0.9em;
+}
+
+.load-indicator--steps {
   display: flex;
   gap: 2px;
 }
 
-.load-indicator__step {
+.load-indicator--step {
   width: 10px;
   height: 16px;
   border-radius: 2px;
   background-color: var(--color-load-off);
 }
 
-.load-indicator__step--on-normal {
+.load-indicator--step--on-normal {
   background-color: var(--color-load-normal);
 }
 
-.load-indicator__step--on-light {
+.load-indicator--step--on-light {
   background-color: var(--color-load-light);
 }
 
-.load-indicator__step--on-heavy {
+.load-indicator--step--on-heavy {
   background-color: var(--color-load-heavy);
 }
 
-.load-indicator__step--ghost-light {
+.load-indicator--step--ghost-normal {
+  background-color: var(--color-load-ghost-normal);
+}
+
+.load-indicator--step--ghost-light {
   background-color: var(--color-load-ghost-light);
 }
 
-.load-indicator__step--ghost-heavy {
+.load-indicator--step--ghost-heavy {
   background-color: var(--color-load-ghost-heavy);
-}
-
-.load-indicator__step--off {
-  background-color: var(--color-load-off);
 }

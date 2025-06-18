@@ -1,11 +1,12 @@
 <template>
   <div class="load-indicator">
-    <span class="load-indicator__label">荷重: {{ loadValue }}</span>
-    <div class="load-indicator__steps">
+    <span class="load-indicator--label">
+      荷重: {{ loadValue }}</span>
+    <div class="load-indicator--steps">
       <div
         v-for="i in 15"
         :key="i"
-        :class="['load-indicator__step', stepClasses[i - 1]]"
+        :class="['load-indicator--step', stepClasses[i - 1]]"
       ></div>
     </div>
   </div>

@@ -1,7 +1,7 @@
 <template>
   <div id="items_section" class="items">
-    <div class="box-title">所持品</div>
-    <LoadIndicator />
+    <div class="box-title">所持品<LoadIndicator /></div>
+    
     <div class="box-content">
       <div class="equipment-wrapper">
         <div class="equipment-container">
