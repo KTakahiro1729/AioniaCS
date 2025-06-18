@@ -14,9 +14,6 @@
     <div :class="['status-display', experienceStatusClass]">
       経験点 {{ currentExperiencePoints }} / {{ maxExperiencePoints }}
     </div>
-    <div class="status-display status-display--weight">
-      荷重: {{ currentWeight }}
-    </div>
     <div class="footer-button-container">
       <button
         class="button-base footer-button footer-button--save"
