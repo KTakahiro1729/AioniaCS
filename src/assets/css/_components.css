@@ -38,8 +38,9 @@
   background-color: var(--color-panel-sub-header);
   border-bottom: 1px solid var(--color-border-normal);
   padding: 10px 18px;
-  margin-left: -18px;
-  margin-right: -18px;
+
+  /* margin-left: -18px;
+  margin-right: -18px; */
 }
 
 /* フォーム要素 */

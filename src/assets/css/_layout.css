@@ -173,12 +173,12 @@
   left: 20px;
   background-color: var(--color-panel-body);
   border: 1px solid var(--color-border-normal);
-  padding: 20px;
+  padding: 30px;
   border-radius: 4px;
   box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
   z-index: 1000;
   max-width: 90%;
-  width: 420px;
+  width: 400px;
   font-size: 0.9em;
   color: var(--color-text-normal);
 }
@@ -230,7 +230,7 @@
 }
 
 .accordion__body {
-  padding: 10px 0;
+  padding-top: 5px;
 }
 
 .help-close {
@@ -331,7 +331,7 @@
   }
 
   .help-panel {
-    width: calc(100% - 60px);
+    width: calc(100% - 80px);
     max-width: none;
     left: 10px;
     bottom: 82px;

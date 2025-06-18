@@ -1,14 +1,6 @@
 <template>
   <div class="character-hub">
         <template v-if="uiStore.isSignedIn">
-          <div class="character-hub--header">
-            <div class="character-hub--controls">
-              <button class="button-base character-hub-button character-hub--signout" @click="$emit('sign-out')">ログアウト</button>
-              <button class="button-base character-hub-button character-hub--refresh" @click="refreshList">更新</button>
-              <button class="button-base character-hub-button character-hub--new" @click="saveNew">新規保存</button>
-            </div>
-            <h2 class="character-hub--title">クラウドキャラクター管理</h2>
-          </div>
           <ul class="character-hub--list">
             <li
               v-for="ch in characters"
@@ -30,12 +22,6 @@
           </ul>
         </template>
         <template v-else>
-          <div class="character-hub--header">
-            <div class="character-hub--controls">
-              <button class="button-base character-hub-button" @click="$emit('sign-in')">Googleにログイン</button>
-            </div>
-            <h2 class="character-hub--title">クラウドキャラクター管理</h2>
-          </div>
           <p class="character-hub--description">
             Google Driveと連携して、キャラクターを保存・共有できます。
           </p>
@@ -176,30 +162,7 @@ async function exportLocal(ch) {
   position: relative;
 }
 
-.character-hub--header {
-  margin-bottom: 10px; 
-}
-.character-hub--title {
-  margin: 0 6px 0 0;
-  font-size: 20pt;
-  color: var(--color-text-normal);
-  text-align: center;
-}
 
-.character-hub--controls {
-  display: flex;
-  flex-direction: row;
-  justify-content: right;
-  gap: 8px;
-  margin-right: 10px;
-}
-
-.character-hub-button {
-  padding: 6px 8px;
-  font-weight: 500;
-  height: auto;
-  width: auto;
-}
 
 .character-hub--description {
   text-align: center;

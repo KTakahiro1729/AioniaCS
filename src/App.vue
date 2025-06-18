@@ -24,6 +24,7 @@ import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import BaseModal from './components/modals/BaseModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
+import CharacterHubControls from './components/ui/CharacterHubControls.vue';
 import ShareOptions from './components/modals/contents/ShareOptions.vue';
 import { useModal } from './composables/useModal.js';
 import { useNotifications } from './composables/useNotifications.js';
@@ -68,17 +69,31 @@ const { showModal } = useModal();
 async function openHub() {
   await showModal({
     component: CharacterHub,
+    title: 'クラウドキャラクター管理',
     props: {
       dataManager,
       loadCharacter: loadCharacterById,
       saveToDrive: saveCharacterToDrive,
     },
-    buttons: [],
-    on: {
-      'sign-in': handleSignInClick,
-      'sign-out': handleSignOutClick,
+    globalActions: {
+      component: CharacterHubControls,
+      on: {
+        'sign-in': handleSignInClick,
+        'sign-out': handleSignOutClick,
+        refresh: refreshHubList,
+        new: saveNewCharacter,
+      },
     },
+    buttons: [],
   });
+}
+
+function refreshHubList() {
+  uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
+}
+
+async function saveNewCharacter() {
+  await saveCharacterToDrive(null, characterStore.character.name);
 }
 
 
