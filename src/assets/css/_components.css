@@ -6,6 +6,8 @@
   font-family: "Noto Serif JP", serif;
   color: var(--color-accent);
   font-weight: 700;
+  display: flex;
+  justify-content: space-between;
 }
 
 .box-title {
@@ -523,4 +525,53 @@ textarea.greyed-out {
   padding: 8px 12px;
   border-bottom: 1px solid var(--color-border-normal);
   margin-bottom: 5px;
+}
+
+/* Load Indicator */
+.load-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 20px;
+}
+
+.load-indicator--label {
+  font-family: "Noto Serif JP", serif;
+  font-size: 0.9em;
+}
+
+.load-indicator--steps {
+  display: flex;
+  gap: 2px;
+}
+
+.load-indicator--step {
+  width: 10px;
+  height: 16px;
+  border-radius: 2px;
+  background-color: var(--color-ghost-normal);
+}
+
+.load-indicator--step--on-normal {
+  background-color: var(--color-load-normal);
+}
+
+.load-indicator--step--on-light {
+  background-color: var(--color-load-light);
+}
+
+.load-indicator--step--on-heavy {
+  background-color: var(--color-load-heavy);
+}
+
+.load-indicator--step--ghost-normal {
+  background-color: var(--color-load-ghost-normal);
+}
+
+.load-indicator--step--ghost-light {
+  background-color: var(--color-load-ghost-light);
+}
+
+.load-indicator--step--ghost-heavy {
+  background-color: var(--color-load-ghost-heavy);
 }
