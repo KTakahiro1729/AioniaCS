@@ -17,9 +17,9 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@noble/hashes": "^1.8.0",
     "@vue/compiler-sfc": "^3.5.16",
     "@vue/test-utils": "^2.4.6",
-    "argon2-browser": "^1.18.0",
     "dompurify": "^3.2.6",
     "jest-environment-jsdom": "^30.0.0-beta.3",
     "jszip": "^3.10.1",
@@ -53,13 +53,20 @@
     "roots": [
       "<rootDir>/tests/unit"
     ],
+    "modulePaths": [
+      "<rootDir>/src"
+    ],
+    "setupFiles": [
+      "<rootDir>/tests/unit/setup.js"
+    ],
     "testEnvironment": "jsdom",
     "transform": {
       "^.+\\.js$": "babel-jest"
     },
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1",
-      "\\?raw$": "<rootDir>/tests/unit/__mocks__/raw.js"
+      "\\?raw$": "<rootDir>/tests/unit/__mocks__/raw.js",
+      "^@sabalessshare/(.*)$": "<rootDir>/src/libs/sabalessshare/src/$1"
     }
   },
   "lint-staged": {

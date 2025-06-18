@@ -1,5 +1,9 @@
 import { DriveStorageAdapter } from "../../src/services/driveStorageAdapter.js";
-import { arrayBufferToBase64 } from "../../src/libs/sabalessshare/crypto.js";
+import { arrayBufferToBase64 } from "../../src/libs/sabalessshare/src/crypto.js";
+
+jest.mock("../../src/libs/sabalessshare/src/crypto.js", () =>
+  jest.requireActual("./__mocks__/sabalessshare.js"),
+);
 
 describe("DriveStorageAdapter", () => {
   let adapter;
