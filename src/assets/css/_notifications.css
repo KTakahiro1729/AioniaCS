@@ -228,17 +228,15 @@
   border-radius: 12px;
   max-width: 500px;
   width: 90%;
-  padding: 30px;
+  padding: 0;
   box-shadow:
     0 20px 60px rgb(0 0 0 / 80%),
     0 0 0 1px rgb(192 154 105 / 10%),
     inset 0 1px 0 rgb(255 255 255 / 5%);
   position: relative;
+  overflow: hidden;
 }
 .modal-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   background: transparent;
   border: none;
   color: var(--color-accent);
@@ -267,8 +265,8 @@
 .modal-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 15px;
 }
 .modal-icon {
   width: 36px;
@@ -291,6 +289,15 @@
   font-size: 1.3em;
   font-weight: 700;
   color: var(--color-text-normal);
+}
+.modal-global-actions {
+  background-color: var(--color-panel-sub-header);
+  border-top: 1px solid var(--color-border-normal);
+  border-bottom: 1px solid var(--color-border-normal);
+  padding: 10px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 .modal-message {
   margin-bottom: 25px;
