@@ -1,6 +1,6 @@
 <template>
   <div class="character-hub--controls">
-    <template v-if="signedIn">
+    <template v-if="uiStore.isSignedIn">
       <button class="button-base character-hub-button character-hub--signout" @click="$emit('sign-out')">ログアウト</button>
       <button class="button-base character-hub-button character-hub--refresh" @click="$emit('refresh')">更新</button>
       <button class="button-base character-hub-button character-hub--new" @click="$emit('new')">新規保存</button>
@@ -12,8 +12,10 @@
 </template>
 
 <script setup>
-const props = defineProps({ signedIn: Boolean });
-const emit = defineEmits(['sign-in','sign-out','refresh','new']);
+import { useUiStore } from '../../stores/uiStore.js';
+
+const emit = defineEmits(['sign-in', 'sign-out', 'refresh', 'new']);
+const uiStore = useUiStore();
 </script>
 
 <style scoped>

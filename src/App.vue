@@ -77,7 +77,6 @@ async function openHub() {
     },
     globalActions: {
       component: CharacterHubControls,
-      props: { signedIn: uiStore.isSignedIn },
       on: {
         'sign-in': handleSignInClick,
         'sign-out': handleSignOutClick,
