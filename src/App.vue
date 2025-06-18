@@ -69,6 +69,7 @@ const { showModal } = useModal();
 async function openHub() {
   await showModal({
     component: CharacterHub,
+    title: 'クラウドキャラクター管理',
     props: {
       dataManager,
       loadCharacter: loadCharacterById,

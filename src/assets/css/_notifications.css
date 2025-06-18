@@ -237,6 +237,10 @@
   overflow: hidden;
 }
 .modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
   background: transparent;
   border: none;
   color: var(--color-accent);
