@@ -524,3 +524,47 @@ textarea.greyed-out {
   border-bottom: 1px solid var(--color-border-normal);
   margin-bottom: 5px;
 }
+
+/* Load Indicator */
+.load-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.load-indicator__steps {
+  display: flex;
+  gap: 2px;
+}
+
+.load-indicator__step {
+  width: 10px;
+  height: 16px;
+  border-radius: 2px;
+  background-color: var(--color-load-off);
+}
+
+.load-indicator__step--on-normal {
+  background-color: var(--color-load-normal);
+}
+
+.load-indicator__step--on-light {
+  background-color: var(--color-load-light);
+}
+
+.load-indicator__step--on-heavy {
+  background-color: var(--color-load-heavy);
+}
+
+.load-indicator__step--ghost-light {
+  background-color: var(--color-load-ghost-light);
+}
+
+.load-indicator__step--ghost-heavy {
+  background-color: var(--color-load-ghost-heavy);
+}
+
+.load-indicator__step--off {
+  background-color: var(--color-load-off);
+}
