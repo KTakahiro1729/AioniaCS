@@ -10,7 +10,7 @@
           </div>
         </div>
         <div
-          class="modal-global-actions"
+          class="modal-global-actions sub-box-title"
           v-if="modal.globalActions"
         >
           <component
