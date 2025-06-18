@@ -1,6 +1,9 @@
 <template>
   <div id="items_section" class="items">
-    <div class="box-title">所持品</div>
+    <div class="box-title items__header">
+      <span>所持品</span>
+      <LoadIndicator class="items__load-indicator" />
+    </div>
     <div class="box-content">
       <div class="equipment-wrapper">
         <div class="equipment-container">
@@ -100,6 +103,7 @@
 import { AioniaGameData as gameData } from '../../data/gameData.js'
 import { useCharacterStore } from '../../stores/characterStore.js'
 import { useUiStore } from '../../stores/uiStore.js'
+import LoadIndicator from '../ui/LoadIndicator.vue'
 
 const characterStore = useCharacterStore()
 const uiStore = useUiStore()

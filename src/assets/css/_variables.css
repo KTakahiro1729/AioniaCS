@@ -28,4 +28,9 @@
   --color-status-weight-border: #647687;
   --color-status-weight-text: #b0c4de;
   --color-status-weight-bg: #2a3038;
+  --status-normal-color: #ffffff;
+  --status-light-penalty-color: #e0c150;
+  --status-heavy-penalty-color: #c06060;
+  --ghost-light-penalty-color: rgba(224, 193, 80, 0.3);
+  --ghost-heavy-penalty-color: rgba(192, 96, 96, 0.3);
 }
