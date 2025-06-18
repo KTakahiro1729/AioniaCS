@@ -86,10 +86,6 @@ async function openHub() {
       },
     },
     buttons: [],
-    on: {
-      'sign-in': handleSignInClick,
-      'sign-out': handleSignOutClick,
-    },
   });
 }
 

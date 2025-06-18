@@ -16,7 +16,7 @@
           <component
             :is="modal.globalActions.component"
             v-bind="modal.globalActions.props"
-            v-on="modal.globalActions.events"
+            v-on="modal.globalActions.on"
           />
         </div>
         <div class="modal-content box-content">
