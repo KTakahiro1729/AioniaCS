@@ -1,7 +1,7 @@
 import {
   arrayBufferToBase64,
   base64ToArrayBuffer,
-} from "../libs/sabalessshare/crypto.js";
+} from "../libs/sabalessshare/src/crypto.js";
 
 export class DriveStorageAdapter {
   constructor(googleDriveManager) {

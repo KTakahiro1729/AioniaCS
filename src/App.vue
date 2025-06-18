@@ -7,10 +7,10 @@ import { useHelp } from './composables/useHelp.js';
 import { useDataExport } from './composables/useDataExport.js';
 import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
 import { usePrint } from './composables/usePrint.js';
-import { base64ToArrayBuffer } from './libs/sabalessshare/crypto.js';
-import { receiveSharedData } from './libs/sabalessshare/index.js';
-import { receiveDynamicData } from './libs/sabalessshare/dynamic.js';
-import { parseShareUrl } from './libs/sabalessshare/url.js';
+import { base64ToArrayBuffer } from './libs/sabalessshare/src/crypto.js';
+import { receiveSharedData } from './libs/sabalessshare/src/index.js';
+import { receiveDynamicData } from './libs/sabalessshare/src/dynamic.js';
+import { parseShareUrl } from './libs/sabalessshare/src/url.js';
 import { DriveStorageAdapter } from './services/driveStorageAdapter.js';
 import { messages } from './locales/ja.js';
 
