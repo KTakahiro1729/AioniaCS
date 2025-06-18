@@ -18,7 +18,7 @@ import { messages } from './locales/ja.js';
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
 import { AioniaGameData } from './data/gameData.js';
 import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
-import TopLeftControls from './components/ui/TopLeftControls.vue';
+import MainHeader from './components/ui/MainHeader.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
@@ -26,10 +26,12 @@ import BaseModal from './components/modals/BaseModal.vue';
 import CharacterHub from './components/ui/CharacterHub.vue';
 import CharacterHubControls from './components/ui/CharacterHubControls.vue';
 import ShareOptions from './components/modals/contents/ShareOptions.vue';
+import IoModal from './components/modals/contents/IoModal.vue';
 import { useModal } from './composables/useModal.js';
 import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
 const mainFooter = ref(null);
+const mainHeader = ref(null);
 const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
@@ -39,7 +41,6 @@ const { printCharacterSheet, openPreviewPage  } = usePrint();
 
 const {
   dataManager,
-  outputButtonText,
   saveData,
   handleFileUpload,
   outputToCocofolia,
@@ -52,6 +53,7 @@ const {
   handleSignOutClick,
   promptForDriveFolder,
   saveCharacterToDrive,
+  handleSaveToDriveClick,
 } = useGoogleDrive(dataManager);
 
 const {
@@ -61,7 +63,7 @@ const {
   handleHelpIconMouseLeave,
   handleHelpIconClick,
   closeHelpPanel,
-} = useHelp(helpPanelRef, mainFooter);
+} = useHelp(helpPanelRef, mainHeader);
 
 const { showToast, showAsyncToast } = useNotifications();
 const { showModal } = useModal();
@@ -94,6 +96,21 @@ function refreshHubList() {
 
 async function saveNewCharacter() {
   await saveCharacterToDrive(null, characterStore.character.name);
+}
+
+async function openIoModal() {
+  await showModal({
+    component: IoModal,
+    props: { isSignedIn: uiStore.isSignedIn },
+    title: '入出力',
+    on: {
+      print: printCharacterSheet,
+      cocofolia: outputToCocofolia,
+      'local-save': saveData,
+      'local-load': handleFileUpload,
+    },
+    buttons: [],
+  });
 }
 
 
@@ -198,32 +215,29 @@ onMounted(async () => {
 </script>
 
 <template>
-  <TopLeftControls
-    :is-gapi-initialized="uiStore.isGapiInitialized"
-    :is-gis-initialized="uiStore.isGisInitialized"
+  <MainHeader
+    ref="mainHeader"
     @open-hub="openHub"
+    @help-mouseover="handleHelpIconMouseOver"
+    @help-mouseleave="handleHelpIconMouseLeave"
+    @help-click="handleHelpIconClick"
   />
   <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
   <CharacterSheetLayout />
   <MainFooter
     ref="mainFooter"
-    :help-state="helpState"
     :experience-status-class="experienceStatusClass"
     :current-experience-points="currentExperiencePoints"
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
-    :output-button-text="outputButtonText"
     :data-manager="dataManager"
     :sign-in="handleSignInClick"
     :is-viewing-shared="uiStore.isViewingShared"
-    @save="saveData"
+    @save="uiStore.isSignedIn ? handleSaveToDriveClick() : saveData()"
     @file-upload="handleFileUpload"
-    @output="outputToCocofolia"
-    @help-mouseover="handleHelpIconMouseOver"
-    @help-mouseleave="handleHelpIconMouseLeave"
-    @help-click="handleHelpIconClick"
+    @open-hub="openHub"
+    @io="openIoModal"
     @copy-edit="uiStore.isViewingShared = false"
-    @print="printCharacterSheet"
   />
   <HelpPanel
     ref="helpPanelRef"

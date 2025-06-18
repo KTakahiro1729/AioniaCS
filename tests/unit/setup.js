@@ -1,4 +1,6 @@
 import { webcrypto } from "crypto";
+import * as Vue from "vue";
+import * as VueCompilerDOM from "@vue/compiler-dom";
 
 if (!global.crypto) {
   global.crypto = webcrypto;
@@ -11,3 +13,6 @@ if (typeof global.TextEncoder === "undefined") {
 if (typeof global.TextDecoder === "undefined") {
   global.TextDecoder = webcrypto.TextDecoder;
 }
+
+global.Vue = Vue;
+global.VueCompilerDOM = VueCompilerDOM;

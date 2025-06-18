@@ -428,6 +428,14 @@ textarea.greyed-out {
   mask-image: url("../svg/medieval_local_download.svg");
 }
 
+.icon-svg-io {
+  mask-image: url("../svg/medieval_io.svg");
+}
+
+.icon-svg-share {
+  mask-image: url("../svg/medieval_share.svg");
+}
+
 .icon-svg--footer {
   width: 30px;
   height: 30px;

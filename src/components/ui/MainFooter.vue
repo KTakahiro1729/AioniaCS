@@ -1,16 +1,5 @@
 <template>
   <div class="main-footer">
-    <div
-      class="button-base footer-help-icon"
-      ref="helpIcon"
-      :class="{ 'footer-help-icon--fixed': helpState === 'fixed' }"
-      @mouseover="$emit('help-mouseover')"
-      @mouseleave="$emit('help-mouseleave')"
-      @click="$emit('help-click')"
-      tabindex="0"
-    >
-      ？
-    </div>
     <div :class="['status-display', experienceStatusClass]">
       経験点 {{ currentExperiencePoints }} / {{ maxExperiencePoints }}
     </div>
@@ -18,48 +7,59 @@
       <button
         class="button-base footer-button footer-button--save"
         @click="$emit('save')"
-        title="端末に保存"
+        :title="uiStore.isSignedIn ? 'クラウド保存' : '端末に保存'"
       >
-        <span class="icon-svg icon-svg--footer icon-svg-local-download"></span>
-        端末保存
+        <span
+          class="icon-svg icon-svg--footer"
+          :class="uiStore.isSignedIn ? 'icon-svg-cloud-upload' : 'icon-svg-local-download'"
+        ></span>
+        {{ uiStore.isSignedIn ? '保存' : '端末保存' }}
       </button>
     </div>
     <div class="footer-button-container">
-      <label
+      <template v-if="!uiStore.isSignedIn">
+        <label
+          class="button-base footer-button footer-button--load"
+          for="load_input_vue"
+          title="端末から読込む"
+        >
+          <span class="icon-svg icon-svg--footer icon-svg-local-upload"></span>
+          読み込み
+        </label>
+        <input
+          type="file"
+          id="load_input_vue"
+          @change="(e) => $emit('file-upload', e)"
+          accept=".json,.txt,.zip"
+          class="hidden"
+        />
+      </template>
+      <button
+        v-else
         class="button-base footer-button footer-button--load"
-        for="load_input_vue"
-        title="端末から読込む"
+        title="クラウド読込"
+        @click="$emit('open-hub')"
       >
-        <span class="icon-svg icon-svg--footer icon-svg-local-upload"></span>
+        <span class="icon-svg icon-svg--footer icon-svg-cloud"></span>
         読み込み
-      </label>
-      <input
-        type="file"
-        id="load_input_vue"
-        @change="(e) => $emit('file-upload', e)"
-        accept=".json,.txt,.zip"
-        class="hidden"
-      />
+      </button>
     </div>
-    <div class="button-base footer-button footer-button--output" @click="$emit('output')" ref="outputButton">
-      {{ outputButtonText }}
+    <div
+      class="button-base footer-button footer-button--output"
+      @click="$emit('io')"
+      ref="outputButton"
+    >
+      <span class="icon-svg icon-svg--footer icon-svg-io"></span>
+      入出力
     </div>
     <button
       class="button-base footer-button footer-button--share"
       :aria-label="isViewingShared ? '自分用にコピーして編集' : '共有'"
       @click="handleShareClick"
     >
+      <span class="icon-svg icon-svg--footer icon-svg-share"></span>
       {{ isViewingShared ? '自分用にコピーして編集' : '共有' }}
     </button>
-    <button
-      class="button-base footer-button footer-button--print"
-      @click="$emit('print')"
-    >
-      印刷
-    </button>
-    <div class="footer-build-info" v-if="buildInfo">
-      {{ buildInfo }}
-    </div>
   </div>
 </template>
 
@@ -73,32 +73,19 @@ import { useNotifications } from '../../composables/useNotifications.js';
 import { useModalStore } from '../../stores/modalStore.js';
 
 const props = defineProps({
-  helpState: String,
   experienceStatusClass: String,
   currentExperiencePoints: Number,
   maxExperiencePoints: Number,
   currentWeight: Number,
-  outputButtonText: String,
   isViewingShared: Boolean,
   dataManager: Object,
   signIn: Function,
 });
 
-const emit = defineEmits([
-  'help-mouseover',
-  'help-mouseleave',
-  'help-click',
-  'save',
-  'file-upload',
-  'output',
-  'share',
-  'copy-edit',
-  'print',
-]);
+const emit = defineEmits(['save', 'file-upload', 'share', 'copy-edit', 'open-hub', 'io']);
 const outputButton = ref(null);
-const helpIcon = ref(null);
 
-defineExpose({ outputButton, helpIcon });
+defineExpose({ outputButton });
 
 const uiStore = useUiStore();
 const { generateShare, copyLink, isLongData } = useShare(props.dataManager);
@@ -106,13 +93,6 @@ const { showModal } = useModal();
 const { showToast } = useNotifications();
 const modalStore = useModalStore();
 
-const buildBranch = import.meta.env.VITE_BUILD_BRANCH;
-const buildHash = import.meta.env.VITE_BUILD_HASH;
-const buildDate = import.meta.env.VITE_BUILD_DATE;
-const buildInfo =
-  buildBranch && buildHash && buildDate
-    ? `${buildBranch} (${buildHash}) ${buildDate}`
-    : '';
 
 async function handleShareClick() {
   if (props.isViewingShared) {

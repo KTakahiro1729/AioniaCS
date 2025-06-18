@@ -14,6 +14,14 @@ import AdventureLogSection from '../components/sections/AdventureLogSection.vue'
 const characterStore = useCharacterStore();
 const { showModal } = useModal();
 
+const buildBranch = import.meta.env.VITE_BUILD_BRANCH;
+const buildHash = import.meta.env.VITE_BUILD_HASH;
+const buildDate = import.meta.env.VITE_BUILD_DATE;
+const buildInfo =
+  buildBranch && buildHash && buildDate
+    ? `${buildBranch} (${buildHash}) ${buildDate}`
+    : '';
+
 async function openPrivacyPolicy() {
   await showModal({
     component: PrivacyPolicyModal,
@@ -40,5 +48,6 @@ async function openPrivacyPolicy() {
       本サイトは<a href="https://bright-trpg.github.io/aionia_character_maker/" target="_blank" rel="noopener noreferrer">bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」</a>をもとに、あろすてりっくが作成しました。
     </p>
     <button class="button-link" @click="openPrivacyPolicy">プライバシーポリシー</button>
+    <div v-if="buildInfo" class="footer-build-info">{{ buildInfo }}</div>
   </div>
 </template>
