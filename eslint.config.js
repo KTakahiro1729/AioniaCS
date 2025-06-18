@@ -1,5 +1,6 @@
 import globals from "globals";
 import pluginVue from "eslint-plugin-vue";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 export default [
   {
@@ -33,4 +34,6 @@ export default [
       "no-unused-vars": "warn",
     },
   },
+  ...pluginVue.configs["flat/essential"],
+  eslintConfigPrettier,
 ];
