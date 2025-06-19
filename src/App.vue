@@ -1,14 +1,14 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
-import { useCharacterStore } from './stores/characterStore.js';
-import { useUiStore } from './stores/uiStore.js';
-import { useGoogleDrive } from './composables/useGoogleDrive.js';
-import { useHelp } from './composables/useHelp.js';
-import { useDataExport } from './composables/useDataExport.js';
-import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
-import { usePrint } from './composables/usePrint.js';
-import { useAppInitialization } from './composables/useAppInitialization.js';
-import { messages } from './locales/ja.js';
+import { ref, computed, watch, onMounted } from "vue";
+import { useCharacterStore } from "./stores/characterStore.js";
+import { useUiStore } from "./stores/uiStore.js";
+import { useGoogleDrive } from "./composables/useGoogleDrive.js";
+import { useHelp } from "./composables/useHelp.js";
+import { useDataExport } from "./composables/useDataExport.js";
+import { useKeyboardHandling } from "./composables/useKeyboardHandling.js";
+import { usePrint } from "./composables/usePrint.js";
+import { useAppInitialization } from "./composables/useAppInitialization.js";
+import { messages } from "./locales/ja.js";
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
