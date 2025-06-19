@@ -34,8 +34,8 @@ const app = createApp({
       outputButtonText: window.AioniaGameData.uiMessages.outputButton.default,
       cocofoliaExporter: null,
       // Image management
-      currentImageIndex: 0, // Index of the currently displayed image
-      imageManagerInstance: null, // Instance of ImageManager
+      currentImageIndex: 0,
+      imageManagerInstance: null,
     };
   },
   computed: {
@@ -47,7 +47,8 @@ const app = createApp({
         this.currentImageIndex >= 0 &&
         this.currentImageIndex < this.character.images.length
       ) {
-        return this.character.images[this.currentImageIndex];
+        const img = this.character.images[this.currentImageIndex];
+        return this.imageManagerInstance.getUrl(img.key);
       }
       return null; // Or a placeholder image path
     },
@@ -385,8 +386,14 @@ const app = createApp({
       });
     },
     saveData() {
+      const characterForSave = {
+        ...this.character,
+        images: Array.isArray(this.character.images)
+          ? this.character.images.map((img) => img.dataUrl)
+          : [],
+      };
       this.dataManager.saveData(
-        this.character,
+        characterForSave,
         this.skills,
         this.specialSkills,
         this.equipments,
@@ -398,6 +405,13 @@ const app = createApp({
         event,
         (parsedData) => {
           this.character = parsedData.character;
+          if (Array.isArray(this.character.images)) {
+            this.character.images = this.character.images.map((d) =>
+              this.imageManagerInstance.registerDataUrl(d),
+            );
+          } else {
+            this.character.images = [];
+          }
           this.skills = parsedData.skills;
           this.specialSkills = parsedData.specialSkills;
           this.equipments = parsedData.equipments;
@@ -667,6 +681,8 @@ const app = createApp({
         this.currentImageIndex >= 0 &&
         this.currentImageIndex < this.character.images.length
       ) {
+        const img = this.character.images[this.currentImageIndex];
+        this.imageManagerInstance.revoke(img.key);
         this.character.images.splice(this.currentImageIndex, 1);
         // Adjust currentImageIndex
         if (this.character.images.length === 0) {

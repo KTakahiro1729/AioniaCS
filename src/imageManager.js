@@ -1,28 +1,34 @@
-// src/imageManager.js
+(function (global) {
+  const cache = new Map();
 
-window.ImageManager = {
-  /**
-   * Loads an image file and returns a promise that resolves with the image data.
-   * @param {File} file - The image file to load.
-   * @returns {Promise<string>} A promise that resolves with the image data as a base64 string.
-   */
-  loadImage: function (file) {
+  function getKey(name, version) {
+    return `${name}-${version}`;
+  }
+
+  function invalidate(name, keepKey) {
+    for (const [key, url] of cache.entries()) {
+      if (key.startsWith(`${name}-`) && key !== keepKey) {
+        URL.revokeObjectURL(url);
+        cache.delete(key);
+      }
+    }
+  }
+
+  function loadImage(file) {
     return new Promise((resolve, reject) => {
-      const allowedTypes = [
+      const allowed = [
         "image/jpeg",
         "image/png",
         "image/gif",
         "image/webp",
         "image/svg+xml",
       ];
-      const maxSize = 10 * 1024 * 1024; // 10 MB
-
+      const maxSize = 10 * 1024 * 1024;
       if (!file) {
         reject(new Error("No file provided."));
         return;
       }
-
-      if (!allowedTypes.includes(file.type)) {
+      if (!allowed.includes(file.type)) {
         reject(
           new Error(
             "Unsupported file type. Please upload JPEG, PNG, GIF, or WebP images.",
@@ -30,44 +36,57 @@ window.ImageManager = {
         );
         return;
       }
-
       if (file.size > maxSize) {
         reject(new Error("File is too large. Maximum size is 10MB."));
         return;
       }
-
-      // Placeholder for file reading logic
-      // In a real implementation, you would use FileReader API
-      // console.log(`Simulating loading image: ${file.name}`); // Original console log
-      // Simulate async operation using FileReader to get a base64 string
       const reader = new FileReader();
       reader.onload = (e) => {
-        resolve(e.target.result);
+        const version = file.lastModified || Date.now();
+        const key = getKey(file.name, version);
+        const url = URL.createObjectURL(file);
+        invalidate(file.name, key);
+        cache.set(key, url);
+        resolve({ dataUrl: e.target.result, key });
       };
-      reader.onerror = (e) => {
-        console.error("FileReader error:", e);
+      reader.onerror = () => {
         reject(new Error("Error reading file."));
       };
-      reader.readAsDataURL(file); // Reads the file as a base64 encoded string
+      reader.readAsDataURL(file);
     });
-  },
+  }
 
-  /**
-   * Removes an image from an array of images at the specified index.
-   * (This is a utility function, Vue component might directly splice)
-   * @param {Array<string>} imagesArray - The array of image data strings.
-   * @param {number} index - The index of the image to remove.
-   * @returns {Array<string>} A new array with the image removed.
-   */
-  removeImage: function (imagesArray, index) {
-    if (index >= 0 && index < imagesArray.length) {
-      const updatedImagesArray = [...imagesArray];
-      updatedImagesArray.splice(index, 1);
-      console.log(`Simulating removal of image at index: ${index}`);
-      return updatedImagesArray;
-    } else {
-      console.error("Invalid index for image removal.");
-      return imagesArray; // Return original array if index is invalid
+  function registerDataUrl(dataUrl) {
+    const key = getKey("loaded", Date.now());
+    const blob = global.dataURLToBlob ? global.dataURLToBlob(dataUrl) : null;
+    const url = blob ? URL.createObjectURL(blob) : dataUrl;
+    if (blob) cache.set(key, url);
+    return { dataUrl, key };
+  }
+
+  function getUrl(key) {
+    return cache.get(key) || null;
+  }
+
+  function revoke(key) {
+    const url = cache.get(key);
+    if (url) {
+      URL.revokeObjectURL(url);
+      cache.delete(key);
     }
-  },
-};
+  }
+
+  function clear() {
+    for (const k of Array.from(cache.keys())) {
+      revoke(k);
+    }
+  }
+
+  global.ImageManager = {
+    loadImage,
+    registerDataUrl,
+    getUrl,
+    revoke,
+    clear,
+  };
+})(typeof window !== "undefined" ? window : globalThis);
