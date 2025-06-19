@@ -16,6 +16,8 @@ import { messages } from "./locales/ja.js";
 import { useHeaderVisibility } from "./composables/useHeaderVisibility.js";
 import { useDynamicButtons } from "./composables/useDynamicButtons.js";
 import { useAppModals } from "./composables/useAppModals.js";
+import { useAppInitialization } from "./composables/useAppInitialization.js";
+import { messages } from "./locales/ja.js";
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -59,6 +61,29 @@ const {
 } = useHelp(helpPanelRef, mainHeader);
 
 const { showToast, showAsyncToast } = useNotifications();
+const { showModal } = useModal();
+
+async function openHub() {
+  await showModal({
+    component: CharacterHub,
+    title: 'クラウドキャラクター管理',
+    props: {
+      dataManager,
+      loadCharacter: loadCharacterById,
+      saveToDrive: saveCharacterToDrive,
+    },
+    globalActions: {
+      component: CharacterHubControls,
+      on: {
+        'sign-in': handleSignInClick,
+        'sign-out': handleSignOutClick,
+        refresh: refreshHubList,
+        new: saveNewCharacter,
+      },
+    },
+    buttons: [],
+  });
+}
 
 function refreshHubList() {
     uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
@@ -160,6 +185,7 @@ watch(
 useHeaderVisibility();
 
 // --- Lifecycle Hooks ---
+const { initialize } = useAppInitialization(dataManager);
 onMounted(async () => {
     const params = parseShareUrl(window.location);
     if (!params) return;
