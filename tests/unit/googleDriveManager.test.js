@@ -148,6 +148,28 @@ describe("GoogleDriveManager appDataFolder", () => {
     });
   });
 
+  test("readIndexFile triggers healthCheckAndRepair on parse failure", async () => {
+    gapi.client.drive.files.list.mockResolvedValue({
+      result: { files: [{ id: "10", name: "character_index.json" }] },
+    });
+    gapi.client.drive.files.get.mockResolvedValue({ body: "[invalid" });
+    jest.spyOn(gdm, "healthCheckAndRepair").mockResolvedValue();
+    const result = await gdm.readIndexFile();
+    expect(result).toEqual([]);
+    expect(gdm.healthCheckAndRepair).toHaveBeenCalledTimes(1);
+  });
+
+  test("readIndexFile triggers healthCheckAndRepair on schema violation", async () => {
+    gapi.client.drive.files.list.mockResolvedValue({
+      result: { files: [{ id: "10", name: "character_index.json" }] },
+    });
+    gapi.client.drive.files.get.mockResolvedValue({ body: "{}" });
+    jest.spyOn(gdm, "healthCheckAndRepair").mockResolvedValue();
+    const result = await gdm.readIndexFile();
+    expect(result).toEqual([]);
+    expect(gdm.healthCheckAndRepair).toHaveBeenCalledTimes(1);
+  });
+
   test("onGapiLoad rejects when gapi.load is missing", async () => {
     delete gapi.load;
     await expect(gdm.onGapiLoad()).rejects.toThrow(
