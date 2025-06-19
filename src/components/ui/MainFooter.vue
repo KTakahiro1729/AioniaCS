@@ -120,12 +120,13 @@ async function handleShareClick() {
     return;
   }
   window.__driveSignIn = props.signIn;
+  const generateButton = { label: '生成', value: 'generate', variant: 'primary', disabled: true };
   const result = await showModal({
     component: ShareOptions,
     props: { signedIn: uiStore.isSignedIn, longData: isLongData() },
     title: '共有リンクを生成',
     buttons: [
-      { label: '生成', value: 'generate', variant: 'primary' },
+      generateButton,
       { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
     ],
   });

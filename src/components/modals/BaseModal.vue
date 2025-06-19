@@ -34,6 +34,7 @@
               v-for="(btn, index) in modal.buttons"
               :key="index"
               :class="['modal-button', `modal-button--${btn.variant || 'secondary'}`]"
+              :disabled="btn.disabled"
               @click="resolve(btn.value)"
             >
               {{ btn.label }}
