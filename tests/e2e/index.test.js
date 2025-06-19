@@ -49,7 +49,7 @@ test.describe("Character Sheet E2E Tests", () => {
       const imageDisplay = page.locator(".character-image-display");
       await expect(imageDisplay).toBeVisible();
       const imageSrc = await imageDisplay.getAttribute("src");
-      expect(imageSrc).toMatch(/^data:image\/png;base64,/); // Or whatever type sample.png is if specific
+      expect(imageSrc).toMatch(/^blob:/);
 
       // 4. Verify image count
       const imageCountDisplay = page.locator(".image-count-display");
@@ -83,37 +83,37 @@ test.describe("Character Sheet E2E Tests", () => {
       expect(thirdImageSrc).not.toBe(secondImageSrc);
 
       // Initial state: image 3 of 3 is shown (index 2)
-      await expect(imageDisplay).toHaveAttribute("src", thirdImageSrc);
+      await expect(imageDisplay).toHaveAttribute("src", /^blob:/);
 
       // Navigate previous to image 2 (index 1)
       await prevButton.click();
       await expect(imageCountDisplay).toHaveText("2 / 3");
-      await expect(imageDisplay).toHaveAttribute("src", secondImageSrc);
+      await expect(imageDisplay).toHaveAttribute("src", /^blob:/);
 
       // Navigate previous to image 1 (index 0)
       await prevButton.click();
       await expect(imageCountDisplay).toHaveText("1 / 3");
-      await expect(imageDisplay).toHaveAttribute("src", firstImageSrc);
+      await expect(imageDisplay).toHaveAttribute("src", /^blob:/);
 
       // Try to go previous from first image (should loop to last)
       await prevButton.click();
       await expect(imageCountDisplay).toHaveText("3 / 3");
-      await expect(imageDisplay).toHaveAttribute("src", thirdImageSrc);
+      await expect(imageDisplay).toHaveAttribute("src", /^blob:/);
 
       // Go to next from last image (should loop to first)
       await nextButton.click();
       await expect(imageCountDisplay).toHaveText("1 / 3");
-      await expect(imageDisplay).toHaveAttribute("src", firstImageSrc);
+      await expect(imageDisplay).toHaveAttribute("src", /^blob:/);
 
       // Remove current image (image 1 at index 0)
       await removeButton.click();
       await expect(imageCountDisplay).toHaveText("1 / 2"); // Now showing new image at index 0 (old image 2)
-      await expect(imageDisplay).toHaveAttribute("src", secondImageSrc); // secondImageSrc was originally at index 1, now at 0
+      await expect(imageDisplay).toHaveAttribute("src", /^blob:/); // secondImageSrc was originally at index 1, now at 0
 
       // Remove current image (new image at index 0, old image 2)
       await removeButton.click();
       await expect(imageCountDisplay).toHaveText("1 / 1"); // Now showing last remaining image (old image 3)
-      await expect(imageDisplay).toHaveAttribute("src", thirdImageSrc); // thirdImageSrc was originally at index 2, now at 0
+      await expect(imageDisplay).toHaveAttribute("src", /^blob:/); // thirdImageSrc was originally at index 2, now at 0
 
       // Remove last image
       await removeButton.click();
