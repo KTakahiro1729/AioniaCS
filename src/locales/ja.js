@@ -119,6 +119,50 @@ export const messages = {
     loadError:
       "ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。",
   },
+  ui: {
+    header: {
+      defaultTitle: "Aionia TRPG Character Sheet",
+      cloudHub: "Cloud Hub",
+      helpLabel: "?",
+    },
+    footer: {
+      experience: "経験点",
+      io: "入出力",
+      share: "共有",
+      copyEdit: "自分用にコピーして編集",
+    },
+    viewModeBanner: "閲覧モードで表示中",
+    buttons: {
+      saveCloud: "クラウド保存",
+      saveCloudTitle: "Google Driveに保存",
+      loadCloud: "クラウド読込",
+      loadCloudTitle: "Google Driveから読込む",
+      saveLocal: "端末保存",
+      saveLocalTitle: "端末に保存",
+      loadLocal: "読み込み",
+      loadLocalTitle: "端末から読込む",
+    },
+    prompts: {
+      sharedDataPassword: "共有データのパスワードを入力してください",
+    },
+    modal: {
+      hubTitle: "クラウドキャラクター管理",
+      generate: "生成",
+      shareTitle: "共有リンクを生成",
+      cancel: "キャンセル",
+      shareFailed: "共有リンク生成失敗",
+      io: {
+        title: "入出力",
+        buttons: {
+          saveLocal: "端末保存",
+          loadLocal: "端末読込",
+          output: "駒出力",
+          print: "印刷",
+          driveFolder: "フォルダ変更",
+        },
+      },
+    },
+  },
   outputButton: {
     default: "ココフォリア駒出力",
     success: "コピー完了！",

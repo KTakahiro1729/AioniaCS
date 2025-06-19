@@ -14,6 +14,14 @@ import AdventureLogSection from '../components/sections/AdventureLogSection.vue'
 const characterStore = useCharacterStore();
 const { showModal } = useModal();
 
+const buildBranch = import.meta.env.VITE_BUILD_BRANCH;
+const buildHash = import.meta.env.VITE_BUILD_HASH;
+const buildDate = import.meta.env.VITE_BUILD_DATE;
+const buildInfo =
+  buildBranch && buildHash && buildDate
+    ? `${buildBranch} (${buildHash}) ${buildDate}`
+    : '';
+
 async function openPrivacyPolicy() {
   await showModal({
     component: PrivacyPolicyModal,
@@ -25,6 +33,7 @@ async function openPrivacyPolicy() {
 
 <template>
   <div class="tool-title">Aionia TRPG Character Sheet</div>
+  <div class="build-info" v-if="buildInfo">{{ buildInfo }}</div>
   <div class="main-grid">
     <CharacterBasicInfo />
     <ScarWeaknessSection />

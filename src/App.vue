@@ -13,37 +13,38 @@ import { receiveDynamicData } from './libs/sabalessshare/src/dynamic.js';
 import { parseShareUrl } from './libs/sabalessshare/src/url.js';
 import { DriveStorageAdapter } from './services/driveStorageAdapter.js';
 import { messages } from './locales/ja.js';
+import { useHeaderVisibility } from './composables/useHeaderVisibility.js';
+import { useDynamicButtons } from './composables/useDynamicButtons.js';
+import { useAppModals } from './composables/useAppModals.js';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
 import { AioniaGameData } from './data/gameData.js';
 import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
-import TopLeftControls from './components/ui/TopLeftControls.vue';
+import MainHeader from './components/ui/MainHeader.vue';
 import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import BaseModal from './components/modals/BaseModal.vue';
-import CharacterHub from './components/ui/CharacterHub.vue';
-import CharacterHubControls from './components/ui/CharacterHubControls.vue';
-import ShareOptions from './components/modals/contents/ShareOptions.vue';
 import { useModal } from './composables/useModal.js';
 import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
+const mainHeader = ref(null);
 const mainFooter = ref(null);
 const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 useKeyboardHandling();
-const { printCharacterSheet, openPreviewPage  } = usePrint();
+
 
 const {
   dataManager,
-  outputButtonText,
   saveData,
   handleFileUpload,
   outputToCocofolia,
 } = useDataExport(mainFooter);
+const { printCharacterSheet } = usePrint();
 
 
 const {
@@ -61,32 +62,10 @@ const {
   handleHelpIconMouseLeave,
   handleHelpIconClick,
   closeHelpPanel,
-} = useHelp(helpPanelRef, mainFooter);
+} = useHelp(helpPanelRef, mainHeader);
 
 const { showToast, showAsyncToast } = useNotifications();
-const { showModal } = useModal();
 
-async function openHub() {
-  await showModal({
-    component: CharacterHub,
-    title: 'クラウドキャラクター管理',
-    props: {
-      dataManager,
-      loadCharacter: loadCharacterById,
-      saveToDrive: saveCharacterToDrive,
-    },
-    globalActions: {
-      component: CharacterHubControls,
-      on: {
-        'sign-in': handleSignInClick,
-        'sign-out': handleSignOutClick,
-        refresh: refreshHubList,
-        new: saveNewCharacter,
-      },
-    },
-    buttons: [],
-  });
-}
 
 function refreshHubList() {
   uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
@@ -118,6 +97,24 @@ async function loadCharacterById(id, name) {
   });
 }
 
+const { openHub, openIoModal, openShareModal } = useAppModals({
+  dataManager,
+  loadCharacterById,
+  saveCharacterToDrive,
+  handleSignInClick,
+  handleSignOutClick,
+  refreshHubList,
+  saveNewCharacter,
+  saveData,
+  handleFileUpload,
+  outputToCocofolia,
+  printCharacterSheet,
+  promptForDriveFolder,
+  copyEditCallback: () => {
+    uiStore.isViewingShared = false;
+  },
+});
+
 
 
 // --- Computed Properties (formerly `computed`) ---
@@ -126,6 +123,8 @@ const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
 const currentExperiencePoints = computed(() => characterStore.currentExperiencePoints);
 const currentWeight = computed(() => characterStore.currentWeight);
 const experienceStatusClass = computed(() => uiStore.experienceStatusClass);
+
+const { saveButton, loadButton } = useDynamicButtons();
 
 
 
@@ -144,6 +143,16 @@ watch(() => characterStore.character.linkCurrentToInitialScar, (isLinked) => {
   }
 });
 
+watch(
+  () => characterStore.character.name,
+  (name) => {
+    document.title = name || messages.ui.header.defaultTitle;
+  },
+  { immediate: true }
+);
+
+useHeaderVisibility();
+
 // --- Lifecycle Hooks ---
 onMounted(async () => {
   const params = parseShareUrl(window.location);
@@ -156,7 +165,7 @@ onMounted(async () => {
         location: window.location,
         adapter,
         passwordPromptHandler: async () =>
-          Promise.resolve(window.prompt('共有データのパスワードを入力してください') || null),
+          Promise.resolve(window.prompt(messages.ui.prompts.sharedDataPassword) || null),
       });
     } else {
       buffer = await receiveSharedData({
@@ -171,7 +180,7 @@ onMounted(async () => {
           };
         },
         passwordPromptHandler: async () =>
-          Promise.resolve(window.prompt('共有データのパスワードを入力してください') || null),
+          Promise.resolve(window.prompt(messages.ui.prompts.sharedDataPassword) || null),
       });
     }
     const parsed = JSON.parse(new TextDecoder().decode(buffer));
@@ -195,35 +204,46 @@ onMounted(async () => {
     console.error('Error loading shared data:', err);
   }
 });
+
 </script>
 
 <template>
-  <TopLeftControls
-    :is-gapi-initialized="uiStore.isGapiInitialized"
-    :is-gis-initialized="uiStore.isGisInitialized"
+  <MainHeader
+    ref="mainHeader"
+    :help-state="helpState"
+    :default-title="messages.ui.header.defaultTitle"
+    :cloud-hub-label="messages.ui.header.cloudHub"
+    :help-label="messages.ui.header.helpLabel"
     @open-hub="openHub"
+    @help-mouseover="handleHelpIconMouseOver"
+    @help-mouseleave="handleHelpIconMouseLeave"
+    @help-click="handleHelpIconClick"
   />
-  <div v-if="uiStore.isViewingShared" class="view-mode-banner">閲覧モードで表示中</div>
+  <div v-if="uiStore.isViewingShared" class="view-mode-banner">{{ messages.ui.viewModeBanner }}</div>
   <CharacterSheetLayout />
   <MainFooter
     ref="mainFooter"
-    :help-state="helpState"
     :experience-status-class="experienceStatusClass"
     :current-experience-points="currentExperiencePoints"
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
-    :output-button-text="outputButtonText"
     :data-manager="dataManager"
     :sign-in="handleSignInClick"
+    :save-title="saveButton.title"
+    :save-label="saveButton.label"
+    :save-icon="saveButton.icon"
+    :load-title="loadButton.title"
+    :load-label="loadButton.label"
+    :load-icon="loadButton.icon"
+    :experience-label="messages.ui.footer.experience"
+    :io-label="messages.ui.footer.io"
+    :share-label="messages.ui.footer.share"
+    :copy-edit-label="messages.ui.footer.copyEdit"
     :is-viewing-shared="uiStore.isViewingShared"
     @save="saveData"
     @file-upload="handleFileUpload"
-    @output="outputToCocofolia"
-    @help-mouseover="handleHelpIconMouseOver"
-    @help-mouseleave="handleHelpIconMouseLeave"
-    @help-click="handleHelpIconClick"
-    @copy-edit="uiStore.isViewingShared = false"
-    @print="printCharacterSheet"
+    @io="openIoModal"
+    @share="openShareModal"
   />
   <HelpPanel
     ref="helpPanelRef"

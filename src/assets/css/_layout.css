@@ -159,7 +159,7 @@
   background: var(--color-text-muted);
 }
 
-.footer-build-info {
+.build-info {
   margin-left: auto;
   font-size: 0.8em;
   color: var(--color-text-muted);

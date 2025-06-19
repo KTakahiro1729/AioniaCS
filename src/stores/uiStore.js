@@ -14,6 +14,7 @@ export const useUiStore = defineStore("ui", {
     isViewingShared: false,
     driveCharacters: [],
     pendingDriveSaves: {},
+    showHeader: true,
   }),
   getters: {
     experienceStatusClass() {
