@@ -670,7 +670,7 @@ export class GoogleDriveManager {
   async deleteCharacterFile(id) {
     if (!gapi.client || !gapi.client.drive) return null;
     await this.removeIndexEntry(id);
-    gapi.client.drive.files.delete({ fileId: id }).catch((err) => {
+    gapi.client.drive.files.delete({ fileId: id }).then(null, (err) => {
       console.error("Error deleting file:", err);
     });
   }
