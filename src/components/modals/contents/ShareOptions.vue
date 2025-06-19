@@ -47,22 +47,18 @@
 
 <script setup>
 import { ref, computed, defineExpose, watchEffect } from 'vue';
-import { useModalStore } from '../../../stores/modalStore.js';
 const props = defineProps({ signedIn: Boolean, longData: Boolean });
-const emit = defineEmits(['signin']);
+const emit = defineEmits(['signin', 'update:canGenerate']);
 const type = ref('snapshot');
 const includeFull = ref(false);
 const enablePassword = ref(false);
 const password = ref('');
 const expires = ref('0');
-const modalStore = useModalStore();
 const needSignin = computed(() => (type.value === 'dynamic' || includeFull.value) && !props.signedIn);
 const showTruncateWarning = computed(() => props.longData && !includeFull.value);
 const canGenerate = computed(() => !needSignin.value);
 watchEffect(() => {
-  if (modalStore.buttons.length > 0) {
-    modalStore.buttons[0].disabled = !canGenerate.value;
-  }
+  emit('update:canGenerate', canGenerate.value);
 });
 
 defineExpose({ type, includeFull, password, expires, enablePassword });

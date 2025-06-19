@@ -121,6 +121,9 @@ async function handleShareClick() {
   }
   window.__driveSignIn = props.signIn;
   const generateButton = { label: '生成', value: 'generate', variant: 'primary', disabled: true };
+  function updateCanGenerate(v) {
+    generateButton.disabled = !v;
+  }
   const result = await showModal({
     component: ShareOptions,
     props: { signedIn: uiStore.isSignedIn, longData: isLongData() },
@@ -129,6 +132,9 @@ async function handleShareClick() {
       generateButton,
       { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
     ],
+    on: {
+      'update:canGenerate': updateCanGenerate,
+    },
   });
   delete window.__driveSignIn;
   if (result.value !== 'generate' || !result.component) return;
@@ -139,10 +145,6 @@ async function handleShareClick() {
     password: optsComp.password.value || '',
     expiresInDays: Number(optsComp.expires.value) || 0,
   };
-  if ((opts.type === 'dynamic' || opts.includeFull) && !uiStore.isSignedIn) {
-    showToast({ type: 'error', title: 'Drive', message: 'サインインしてください' });
-    return;
-  }
   try {
     const link = await generateShare(opts);
     await copyLink(link);
