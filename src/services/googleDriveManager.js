@@ -1,6 +1,8 @@
 /**
  * Manages interactions with Google Drive and Google Sign-In.
  */
+export const INDEX_STATUS_PENDING_DELETION = "pending_deletion";
+
 export class GoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
@@ -14,6 +16,7 @@ export class GoogleDriveManager {
     this.gisLoadedCallback = null;
     this.tokenClient = null;
     this.pickerApiLoaded = false;
+    this.indexCache = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
@@ -575,12 +578,24 @@ export class GoogleDriveManager {
    * @returns {Promise<Array>}
    */
   async readIndexFile() {
+    if (this.indexCache) return this.indexCache;
     const info = await this.ensureIndexFile();
     if (!info) return [];
     const content = await this.loadFileContent(info.id);
     try {
-      return JSON.parse(content || "[]");
+      const data = JSON.parse(content || "[]");
+      if (!Array.isArray(data)) throw new Error("Invalid index schema");
+      const filtered = data.filter(
+        (e) => e && typeof e.id === "string" && typeof e.name === "string",
+      );
+      if (filtered.length !== data.length) {
+        console.warn("GDM: index schema issues detected, repairing...");
+        await this.healthCheckAndRepair();
+      }
+      this.indexCache = filtered;
+      return filtered;
     } catch {
+      await this.healthCheckAndRepair();
       return [];
     }
   }
@@ -592,12 +607,14 @@ export class GoogleDriveManager {
   async writeIndexFile(indexData) {
     const info = await this.ensureIndexFile();
     if (!info) return null;
-    return this.saveFile(
+    const res = await this.saveFile(
       "appDataFolder",
       "character_index.json",
       JSON.stringify(indexData, null, 2),
       info.id,
     );
+    this.indexCache = null;
+    return res;
   }
 
   async addIndexEntry(entry) {
@@ -619,8 +636,12 @@ export class GoogleDriveManager {
 
   async removeIndexEntry(id) {
     const index = await this.readIndexFile();
-    const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
+    const entry = index.find((e) => e.id === id);
+    if (entry) {
+      entry.status = INDEX_STATUS_PENDING_DELETION;
+      entry.updatedAt = new Date().toISOString();
+    }
+    await this.writeIndexFile(index);
   }
 
   /**
@@ -648,8 +669,67 @@ export class GoogleDriveManager {
 
   async deleteCharacterFile(id) {
     if (!gapi.client || !gapi.client.drive) return null;
-    await gapi.client.drive.files.delete({ fileId: id });
     await this.removeIndexEntry(id);
+    gapi.client.drive.files.delete({ fileId: id }).catch((err) => {
+      console.error("Error deleting file:", err);
+    });
+  }
+
+  async healthCheckAndRepair() {
+    const info = await this.ensureIndexFile();
+    if (!info) return;
+    const indexContent = await this.loadFileContent(info.id);
+    let index = [];
+    try {
+      index = JSON.parse(indexContent || "[]");
+    } catch {
+      index = [];
+    }
+
+    const files = await this.listFiles("appDataFolder", "application/json");
+    const fileIds = new Set(files.map((f) => f.id));
+
+    const repaired = [];
+    const now = new Date().toISOString();
+    const existingIds = new Set();
+    for (const entry of index) {
+      if (!entry || typeof entry.id !== "string" || !fileIds.has(entry.id)) {
+        if (entry && entry.status === INDEX_STATUS_PENDING_DELETION) {
+          continue;
+        }
+        continue;
+      }
+      if (entry.status === INDEX_STATUS_PENDING_DELETION) {
+        if (fileIds.has(entry.id)) {
+          gapi.client.drive.files
+            .delete({ fileId: entry.id })
+            .catch((err) => console.error("Error deleting file:", err));
+          fileIds.delete(entry.id);
+        }
+        existingIds.add(entry.id);
+        continue;
+      }
+      if (!entry.characterName) {
+        entry.characterName = entry.name.replace(/\.json$/i, "");
+      }
+      if (!entry.updatedAt) {
+        entry.updatedAt = now;
+      }
+      repaired.push(entry);
+      existingIds.add(entry.id);
+    }
+    files.forEach((f) => {
+      if (!existingIds.has(f.id)) {
+        repaired.push({
+          id: f.id,
+          name: f.name,
+          characterName: f.name.replace(/\.json$/i, ""),
+          updatedAt: now,
+        });
+      }
+    });
+
+    await this.writeIndexFile(repaired);
   }
 }
 

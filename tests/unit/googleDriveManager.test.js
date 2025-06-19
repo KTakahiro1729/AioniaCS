@@ -59,7 +59,7 @@ describe("GoogleDriveManager appDataFolder", () => {
     expect(gapi.client.request).toHaveBeenCalled();
   });
 
-  test("deleteCharacterFile removes file and index entry", async () => {
+  test("deleteCharacterFile marks index entry and deletes file", async () => {
     jest.spyOn(gdm, "removeIndexEntry").mockResolvedValue();
     gapi.client.drive.files.delete.mockResolvedValue({});
     await gdm.deleteCharacterFile("d1");
@@ -103,6 +103,49 @@ describe("GoogleDriveManager appDataFolder", () => {
       },
     ]);
     jest.useRealTimers();
+  });
+
+  test("index is cached between reads and invalidated on write", async () => {
+    gapi.client.drive.files.list.mockResolvedValue({
+      result: { files: [{ id: "10", name: "character_index.json" }] },
+    });
+    gapi.client.drive.files.get.mockResolvedValue({ body: "[]" });
+    await gdm.readIndexFile();
+    await gdm.readIndexFile();
+    expect(gapi.client.drive.files.get).toHaveBeenCalledTimes(1);
+
+    gapi.client.request.mockResolvedValue({ result: { id: "10" } });
+    await gdm.writeIndexFile([]);
+    gapi.client.drive.files.get.mockResolvedValue({ body: "[]" });
+    await gdm.readIndexFile();
+    expect(gapi.client.drive.files.get).toHaveBeenCalledTimes(2);
+  });
+
+  test("healthCheckAndRepair cleans invalid entries", async () => {
+    gapi.client.drive.files.list.mockResolvedValueOnce({
+      result: { files: [{ id: "10", name: "character_index.json" }] },
+    });
+    gapi.client.drive.files.get.mockResolvedValueOnce({
+      body: '[{"id":"x","name":"x.json","status":"pending_deletion"},{"id":"y","name":"y.json"}]',
+    });
+    jest.spyOn(gdm, "listFiles").mockResolvedValue([
+      { id: "y", name: "y.json" },
+      { id: "x", name: "x.json" },
+    ]);
+    jest.spyOn(gdm, "writeIndexFile").mockResolvedValue();
+    gapi.client.drive.files.delete.mockResolvedValue({});
+    await gdm.healthCheckAndRepair();
+    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
+      {
+        id: "y",
+        name: "y.json",
+        characterName: "y",
+        updatedAt: expect.any(String),
+      },
+    ]);
+    expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({
+      fileId: "x",
+    });
   });
 
   test("onGapiLoad rejects when gapi.load is missing", async () => {
