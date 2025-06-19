@@ -1,0 +1,99 @@
+import { setActivePinia, createPinia } from "pinia";
+import { useAppInitialization } from "../../../src/composables/useAppInitialization.js";
+import { useCharacterStore } from "../../../src/stores/characterStore.js";
+import { useUiStore } from "../../../src/stores/uiStore.js";
+
+jest.mock("../../../src/libs/sabalessshare/src/url.js", () => ({
+  parseShareUrl: jest.fn(),
+}));
+
+jest.mock("../../../src/libs/sabalessshare/src/index.js", () => ({
+  receiveSharedData: jest.fn(),
+}));
+
+jest.mock("../../../src/libs/sabalessshare/src/dynamic.js", () => ({
+  receiveDynamicData: jest.fn(),
+}));
+
+jest.mock("../../../src/services/driveStorageAdapter.js", () => ({
+  DriveStorageAdapter: jest.fn().mockImplementation(() => ({})),
+}));
+
+jest.mock("../../../src/composables/useNotifications.js", () => ({
+  useNotifications: () => ({ showToast: jest.fn() }),
+}));
+
+describe("useAppInitialization", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    jest.clearAllMocks();
+  });
+
+  test("loads shared data when URL has params", async () => {
+    const {
+      parseShareUrl,
+    } = require("../../../src/libs/sabalessshare/src/url.js");
+    const {
+      receiveSharedData,
+    } = require("../../../src/libs/sabalessshare/src/index.js");
+    parseShareUrl.mockReturnValue({ mode: "simple" });
+    const payload = {
+      character: { name: "Hero" },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const buffer = Uint8Array.from(Buffer.from(JSON.stringify(payload))).buffer;
+    receiveSharedData.mockResolvedValue(buffer);
+
+    const dataManager = { googleDriveManager: {} };
+    const { initialize } = useAppInitialization(dataManager);
+    await initialize();
+
+    const charStore = useCharacterStore();
+    const uiStore = useUiStore();
+    expect(parseShareUrl).toHaveBeenCalled();
+    expect(receiveSharedData).toHaveBeenCalled();
+    expect(uiStore.isViewingShared).toBe(true);
+    expect(charStore.character.name).toBe("Hero");
+  });
+
+  test("does nothing when no params", async () => {
+    const {
+      parseShareUrl,
+    } = require("../../../src/libs/sabalessshare/src/url.js");
+    parseShareUrl.mockReturnValue(null);
+    const dataManager = { googleDriveManager: {} };
+    const { initialize } = useAppInitialization(dataManager);
+    const charStore = useCharacterStore();
+    charStore.character.name = "Default";
+    await initialize();
+    const uiStore = useUiStore();
+    expect(uiStore.isViewingShared).toBe(false);
+    expect(charStore.character.name).toBe("Default");
+  });
+
+  test("updates loading state", async () => {
+    const {
+      parseShareUrl,
+    } = require("../../../src/libs/sabalessshare/src/url.js");
+    const {
+      receiveSharedData,
+    } = require("../../../src/libs/sabalessshare/src/index.js");
+    parseShareUrl.mockReturnValue({ mode: "simple" });
+    let resolve;
+    receiveSharedData.mockReturnValue(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    );
+    const { initialize } = useAppInitialization({ googleDriveManager: {} });
+    const uiStore = useUiStore();
+    const p = initialize();
+    expect(uiStore.isLoading).toBe(true);
+    resolve(new ArrayBuffer(0));
+    await p;
+    expect(uiStore.isLoading).toBe(false);
+  });
+});

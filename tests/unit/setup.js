@@ -1,4 +1,8 @@
 import { webcrypto } from "crypto";
+import {
+  TextEncoder as UtilTextEncoder,
+  TextDecoder as UtilTextDecoder,
+} from "util";
 
 if (!global.crypto) {
   global.crypto = webcrypto;
@@ -6,8 +10,8 @@ if (!global.crypto) {
 
 // Ensure TextEncoder and TextDecoder are available
 if (typeof global.TextEncoder === "undefined") {
-  global.TextEncoder = webcrypto.TextEncoder;
+  global.TextEncoder = UtilTextEncoder;
 }
 if (typeof global.TextDecoder === "undefined") {
-  global.TextDecoder = webcrypto.TextDecoder;
+  global.TextDecoder = UtilTextDecoder;
 }
