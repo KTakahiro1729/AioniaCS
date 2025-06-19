@@ -3,6 +3,9 @@
 This project prefers component-based or BEM-style classes for styling. Avoid using utility classes such as `mb-*`, `mt-*`, or `mr-*` for margins. Instead, define or extend component classes when spacing is needed, or apply inline styles for single-use cases.
 
 The goal is to keep CSS maintainable and descriptive, so class names should reflect the component they style.
+All component specific styles must live in the Vue file for that component under a `<style scoped>` block. Only
+global layout, base resets, and design tokens remain in the global CSS files (`_variables.css`, `_base.css`, `_layout.css`).
+Strict BEM naming is not mandatory inside components; prefer short and clear class names.
 
 
 

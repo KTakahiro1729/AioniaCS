@@ -141,5 +141,148 @@ const handleImageUpload = async (event) => {
 </script>
 
 <style scoped>
+.character-image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 0;
+  border: 1px solid var(--color-border-normal);
+  border-radius: 3px;
+  background-color: var(--color-input-bg);
+}
+
+.image-display-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  width: 100%;
+  height: 350px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border-normal);
+  border-radius: 2px;
+}
+
+.character-image-container img.character-image-display {
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.character-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-input-disabled);
+}
+
+.image-display-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-display-wrapper .character-image-display {
+  display: block;
+}
+
+.image-display-wrapper:hover .button-imagenav:not(:disabled) {
+  opacity: 1;
+}
+
+.image-display-wrapper:hover .image-count-display {
+  opacity: 0.7;
+}
+
+.button-imagenav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background-color: var(--color-panel-header);
+  border: none;
+  padding: 6px 10px;
+  font-size: 1.2em;
+  line-height: 1;
+  min-width: auto;
+  height: auto;
+  font-weight: bold;
+  border-radius: 4px;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.button-imagenav:hover {
+  background-color: var(--color-panel-sub-header);
+}
+
+.button-imagenav.button-imagenav--prev {
+  left: 10px;
+}
+
+.button-imagenav.button-imagenav--next {
+  right: 10px;
+}
+
+.button-imagenav:disabled {
+  cursor: default;
+}
+
+.image-count-display {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background-color: var(--color-panel-header);
+  color: white;
+  padding: 3px 8px;
+  font-size: 0.9em;
+  border-radius: 3px;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+  cursor: default;
+}
+
+.image-display-wrapper:hover .image-count-display:hover {
+  opacity: 1;
+}
+
+.image-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.imagefile-button {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+  white-space: nowrap;
+}
+
+.imagefile-button--add:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.imagefile-button--delete {
+  color: var(--color-delete-text);
+  border-color: var(--color-delete-border);
+}
+
+.imagefile-button--delete:hover:not(:disabled) {
+  border-color: var(--color-delete-text);
+  box-shadow:
+    inset 0 0 3px var(--color-delete-text),
+    0 0 6px var(--color-delete-text);
+  text-shadow: 0 0 2px var(--color-delete-text);
+}
 </style>
 
