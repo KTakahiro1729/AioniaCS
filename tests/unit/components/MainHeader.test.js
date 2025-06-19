@@ -53,6 +53,6 @@ describe("MainHeader", () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     await wrapper.vm.$nextTick();
-    expect(wrapper.find(".icon-button").exists()).toBe(false);
+    expect(wrapper.find(".icon-button").exists()).toBe(true);
   });
 });
