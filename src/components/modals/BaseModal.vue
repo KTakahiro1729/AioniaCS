@@ -194,7 +194,7 @@ function resolve(value) {
   color: var(--color-text-normal);
 }
 
-.moda-content {
+.modal-content {
   display: flex;
 }
 

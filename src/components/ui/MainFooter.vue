@@ -153,5 +153,74 @@ async function handleShareClick() {
 </script>
 
 <style scoped>
+.footer-button {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+  white-space: nowrap;
+}
+
+.footer-button--output.state-1 {
+  transition:
+    background-color 0.5s ease-in-out,
+    color 0.5s ease-in-out;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-light);
+}
+
+.footer-button--output.state-2 {
+  transition: color 0.1s ease-in;
+  background-color: var(--color-accent-light);
+  color: var(--color-background);
+}
+
+.footer-button--output.state-3 {
+  transition: color 0.5s ease-in-out;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-light);
+}
+
+.footer-button--output.state-4 {
+  transition:
+    background-color 0.7s ease-in-out,
+    color 0.2s ease-in-out 0.5s;
+  background-color: transparent;
+  color: var(--color-accent);
+}
+
+.footer-button--load {
+  padding: 0;
+}
+
+.footer-button--output {
+  width: 175px;
+  user-select: none;
+}
+
+.footer-button--output.is-animating {
+  pointer-events: none;
+}
+
+.footer-button-container {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.footer-button--save,
+.footer-button--load {
+  width: 120px;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.footer-button--save {
+  padding: 0;
+}
+
+.footer-button--cloud {
+  padding: 0 12px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
 </style>
 
