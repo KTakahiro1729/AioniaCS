@@ -1,5 +1,15 @@
 /* assets/css/_base.css */
 
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
 /* リセットとベーススタイル */
 body {
   font-family: "Noto Sans JP", sans-serif;
@@ -8,6 +18,7 @@ body {
   color: var(--color-text-normal);
   line-height: 1.7;
   padding-bottom: 72px;
+  padding-top: 72px;
   position: relative;
 
   /* 固定フッター分の余白 */

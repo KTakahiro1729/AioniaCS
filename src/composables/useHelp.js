@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 
-export function useHelp(helpPanelRef, footerRef) {
+export function useHelp(helpPanelRef, triggerRef) {
   const helpState = ref("closed");
   const isDesktop = ref(false);
   const isHelpVisible = computed(() => helpState.value !== "closed");
@@ -32,7 +32,7 @@ export function useHelp(helpPanelRef, footerRef) {
   function handleClickOutside(event) {
     if (helpState.value !== "fixed") return;
     const panelEl = helpPanelRef.value?.panelEl || helpPanelRef.value;
-    const iconEl = footerRef.value?.helpIcon;
+    const iconEl = triggerRef.value?.helpIcon;
     if (
       panelEl &&
       iconEl &&
