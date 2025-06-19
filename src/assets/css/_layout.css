@@ -16,6 +16,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 30px 10px;
+  margin-top: 30px;
   grid-template-areas:
     "character-info scar-weakness"
     "skills special-skills"
@@ -169,8 +170,8 @@
 /* ヘルプ表示 */
 .help-panel {
   position: fixed;
-  bottom: 92px;
-  left: 20px;
+  top: 92px;
+  right: 20px;
   background-color: var(--color-panel-body);
   border: 1px solid var(--color-border-normal);
   padding: 30px;
@@ -315,6 +316,7 @@
       "memo"
       "history";
     gap: 20px;
+    margin-top: 30px;
   }
 
   .adventure-log-section .history-item-inputs {
@@ -333,8 +335,8 @@
   .help-panel {
     width: calc(100% - 80px);
     max-width: none;
-    left: 10px;
-    bottom: 82px;
+    top: 92px;
+    right: 20px;
   }
 
   .info-row {

@@ -23,6 +23,7 @@ export function useAppModals(options) {
     saveData,
     handleFileUpload,
     outputToCocofolia,
+    outputButtonText,
     printCharacterSheet,
     promptForDriveFolder,
     copyEditCallback,
@@ -31,7 +32,7 @@ export function useAppModals(options) {
   async function openHub() {
     await showModal({
       component: CharacterHub,
-      title: messages.modal.hubTitle,
+      title: messages.ui.modal.hubTitle,
       props: {
         dataManager,
         loadCharacter: loadCharacterById,
@@ -53,14 +54,14 @@ export function useAppModals(options) {
   async function openIoModal() {
     await showModal({
       component: IoModal,
-      title: messages.modal.io.title,
+      title: messages.ui.modal.io.title,
       props: {
         signedIn: uiStore.isSignedIn,
-        saveLocalLabel: messages.modal.io.buttons.saveLocal,
-        loadLocalLabel: messages.modal.io.buttons.loadLocal,
-        outputLabel: messages.modal.io.buttons.output,
-        printLabel: messages.modal.io.buttons.print,
-        driveFolderLabel: messages.modal.io.buttons.driveFolder,
+        saveLocalLabel: messages.ui.modal.io.buttons.saveLocal,
+        loadLocalLabel: messages.ui.modal.io.buttons.loadLocal,
+        outputLabel: messages.ui.modal.io.buttons.output,
+        printLabel: messages.ui.modal.io.buttons.print,
+        driveFolderLabel: messages.ui.modal.io.buttons.driveFolder,
       },
       buttons: [],
       on: {
