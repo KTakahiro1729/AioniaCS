@@ -7,6 +7,7 @@ export const useUiStore = defineStore("ui", {
     isSignedIn: false,
     isGapiInitialized: false,
     isGisInitialized: false,
+    isLoading: false,
     driveFolderId: null,
     driveFolderName: "",
     currentDriveFileId: null,
@@ -33,6 +34,9 @@ export const useUiStore = defineStore("ui", {
     },
   },
   actions: {
+    setLoading(flag) {
+      this.isLoading = flag;
+    },
     async refreshDriveCharacters(gdm) {
       if (!gdm) return;
       const temps = this.driveCharacters.filter((c) =>
