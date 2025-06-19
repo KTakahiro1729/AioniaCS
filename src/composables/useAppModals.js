@@ -1,3 +1,4 @@
+import { reactive } from "vue";
 import { useModal } from "./useModal.js";
 import { useUiStore } from "../stores/uiStore.js";
 import CharacterHub from "../components/ui/CharacterHub.vue";
@@ -85,12 +86,12 @@ export function useAppModals(options) {
     const { showToast } = useNotifications();
     const modalStore = useModalStore();
     window.__driveSignIn = handleSignInClick;
-    const generateButton = {
+    const generateButton = reactive({
       label: messages.ui.modal.generate,
       value: "generate",
       variant: "primary",
       disabled: true,
-    };
+    });
     function updateCanGenerate(v) {
       generateButton.disabled = !v;
     }
