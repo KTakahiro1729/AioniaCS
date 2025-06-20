@@ -124,6 +124,9 @@ export class DataManager {
    */
   handleFileUpload(event, onSuccess, onError) {
     const file = event.target.files[0];
+    console.log(
+      `DataManager: handleFileUpload entered at: ${new Date().toISOString()}`,
+    );
     if (!file) return;
 
     const fileName = file.name;

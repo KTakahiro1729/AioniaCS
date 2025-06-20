@@ -31,8 +31,17 @@ const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 useKeyboardHandling();
 
-const { dataManager, saveData, handleFileUpload, outputToCocofolia } =
-    useDataExport();
+const {
+    dataManager,
+    saveData,
+    handleFileUpload: dataExportHandleFileUpload,
+    outputToCocofolia,
+} = useDataExport();
+
+function handleFileUpload(event) {
+    console.log(`App.vue: handleFileUpload called at: ${new Date().toISOString()}`);
+    dataExportHandleFileUpload(event);
+}
 const { printCharacterSheet } = usePrint();
 
 const {
