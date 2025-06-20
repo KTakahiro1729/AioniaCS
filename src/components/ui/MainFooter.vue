@@ -109,7 +109,6 @@ function handleSave() {
   display: inline-block;
   border-width: 2px;
   border-style: solid;
-  box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset;
   white-space: nowrap;
 }
 
