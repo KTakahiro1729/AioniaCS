@@ -261,12 +261,12 @@
   margin: 0.2em 0;
 }
 
-.copyright-footer a {
+a {
   color: var(--color-link);
   text-decoration: underline;
 }
 
-.copyright-footer a:hover {
+a:hover {
   color: var(--color-link-hover);
 }
 
