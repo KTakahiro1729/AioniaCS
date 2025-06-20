@@ -282,5 +282,14 @@ const handleImageUpload = async (event) => {
   text-shadow: 0 0 2px var(--color-delete-text);
 }
 
+.imagefile-button--delete:disabled {
+  cursor: default;
+  background-color: transparent;
+  color: var(--color-border-normal);
+  border-color: var(--color-border-normal);
+  box-shadow: none;
+  text-shadow: none;
+}
+
 </style>
 

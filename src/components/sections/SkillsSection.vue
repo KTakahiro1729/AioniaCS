@@ -106,10 +106,6 @@ const { expertPlaceholder } = useSkillsManagement();
   align-items: center;
 }
 
-.skills-list > li .experts-section {
-  margin-top: 0;
-}
-
 .expert-list {
   margin-top: 5px;
 }

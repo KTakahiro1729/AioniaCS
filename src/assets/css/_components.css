@@ -38,9 +38,7 @@
   background-color: var(--color-panel-sub-header);
   border-bottom: 1px solid var(--color-border-normal);
   padding: 10px 18px;
-
-  /* margin-left: -18px;
-  margin-right: -18px; */
+  margin-bottom: 10px;
 }
 
 /* リストアイテム (汎用的なリストのベーススタイル) */
@@ -174,6 +172,7 @@
 }
 
 .list-button--delete:hover:not(:disabled) {
+  color: var(--color-delete-text);
   border-color: var(--color-delete-text);
   box-shadow:
     inset 0 0 3px var(--color-delete-text),

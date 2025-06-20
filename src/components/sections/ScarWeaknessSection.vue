@@ -92,6 +92,11 @@ function handleCurrentScarInput(event) {
 </script>
 
 <style scoped>
+
+.box-content {
+  padding-top: 0;
+}
+
 .scar-section {
   margin-bottom: 25px;
 }
@@ -121,15 +126,7 @@ function handleCurrentScarInput(event) {
   margin-bottom: 0;
 }
 
-/* サブボックスタイトル（特定のセクション用） */
-.sub-box-title--scar {
-  margin-top: -18px;
-  margin-bottom: 15px;
-}
-
 .sub-box-title--weakness {
-  margin-top: 0;
-  margin-bottom: 10px;
   border-top: 1px solid var(--color-border-normal);
 }
 

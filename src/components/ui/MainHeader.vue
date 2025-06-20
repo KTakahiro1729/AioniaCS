@@ -73,6 +73,7 @@ defineExpose({ headerEl, helpIcon });
     box-shadow: 0 3px 8px rgb(0 0 0 / 50%);
     z-index: 101;
     transition: transform 0.3s ease;
+    will-change: transform;
 }
 
 .main-header--hidden {
