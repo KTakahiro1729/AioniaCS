@@ -158,6 +158,15 @@ export function useGoogleDrive(dataManager) {
     );
   }
 
+  function saveOrUpdateCurrentCharacterInDrive() {
+    return saveCharacterToDrive(
+      uiStore.currentDriveFileId,
+      uiStore.currentDriveFileId
+        ? uiStore.currentDriveFileName
+        : characterStore.character.name,
+    );
+  }
+
   function initializeGoogleDrive() {
     const apiKey = "AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU";
     const clientId =
@@ -217,5 +226,6 @@ export function useGoogleDrive(dataManager) {
     promptForDriveFolder,
     saveCharacterToDrive,
     handleSaveToDriveClick,
+    saveOrUpdateCurrentCharacterInDrive,
   };
 }

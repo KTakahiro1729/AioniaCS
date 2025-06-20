@@ -134,6 +134,8 @@ export const messages = {
     viewModeBanner: "閲覧モードで表示中",
     buttons: {
       saveCloud: "Drive保存",
+      saveCloudNew: "新規保存",
+      saveCloudOverwrite: "上書保存",
       saveCloudTitle: "Google Driveに保存",
       loadCloud: "Drive読込",
       loadCloudTitle: "Google Driveから読込む",
