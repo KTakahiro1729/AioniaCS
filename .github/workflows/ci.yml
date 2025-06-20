@@ -184,5 +184,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          publish_branch: gh-pages-manual # デプロイ先ブランチを指定
+          publish_branch: gh-pages-manual
           force_orphan: true
