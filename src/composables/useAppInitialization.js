@@ -29,7 +29,7 @@ export function useAppInitialization(dataManager) {
           adapter,
           passwordPromptHandler: async () =>
             Promise.resolve(
-              window.prompt("共有データのパスワードを入力してください") || null,
+              window.prompt(messages.ui.prompts.sharedDataPassword) || null,
             ),
         });
       } else {
@@ -47,7 +47,7 @@ export function useAppInitialization(dataManager) {
           },
           passwordPromptHandler: async () =>
             Promise.resolve(
-              window.prompt("共有データのパスワードを入力してください") || null,
+              window.prompt(messages.ui.prompts.sharedDataPassword) || null,
             ),
         });
       }
