@@ -68,6 +68,7 @@ defineExpose({ headerEl, helpIcon });
     top: 0;
     left: 0;
     width: 100%;
+    height: 80px;
     background-color: var(--color-background);
     border-bottom: 1px solid var(--color-border-normal);
     box-shadow: 0 3px 8px rgb(0 0 0 / 50%);
@@ -85,7 +86,7 @@ defineExpose({ headerEl, helpIcon });
     text-align: center;
     font-family: "Cinzel Decorative", "Shippori Mincho", serif;
     color: var(--color-accent);
-    font-size: 30px;
+	font-size:min(4vw,30px);
 }
 
 .google-drive-button-container {
