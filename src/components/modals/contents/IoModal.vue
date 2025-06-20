@@ -3,12 +3,12 @@
         <button class="button-base" @click="$emit('save-local')">
             {{ saveLocalLabel }}
         </button>
-        <label class="button-base">
+        <label class="button-base" @click="triggerFileUpload">
             {{ loadLocalLabel }}
             <input
                 type="file"
                 class="hidden"
-                @change="(e) => $emit('load-local', e)"
+                @change="onFileSelected"
                 accept=".json,.txt,.zip"
             />
         </label>
@@ -48,7 +48,7 @@ defineProps({
     driveFolderLabel: String,
 });
 
-defineEmits([
+const emit = defineEmits([
     'save-local',
     'load-local',
     'output-cocofolia',
@@ -59,6 +59,15 @@ defineEmits([
 const triggerKey = ref(0);
 function triggerAnimation() {
   triggerKey.value += 1;
+}
+
+function triggerFileUpload() {
+  console.log(`IoModal: triggerFileUpload called at: ${new Date().toISOString()}`);
+}
+
+function onFileSelected(e) {
+  console.log(`IoModal: onFileSelected fired at: ${new Date().toISOString()}`);
+  emit('load-local', e);
 }
 
 function handleCopySuccess(event) {

@@ -124,6 +124,9 @@ export class DataManager {
    */
   handleFileUpload(event, onSuccess, onError) {
     const file = event.target.files[0];
+    console.log(
+      `DataManager: handleFileUpload entered at: ${new Date().toISOString()}`,
+    );
     if (!file) return;
 
     const fileName = file.name;
@@ -131,6 +134,8 @@ export class DataManager {
 
     if (fileName.endsWith(".zip")) {
       reader.onload = async (e) => {
+        console.timeEnd("FileRead");
+        console.time("DataProcessing");
         try {
           const zip = await JSZip.loadAsync(e.target.result);
           const jsonDataFile = zip.file("character_data.json");
@@ -142,7 +147,9 @@ export class DataManager {
           }
 
           const jsonContent = await jsonDataFile.async("string");
+          console.time("JSON_Parse");
           const rawJsonData = JSON.parse(jsonContent);
+          console.timeEnd("JSON_Parse");
 
           const imageFilesData = []; // Intermediate array for image data and paths
           const imageFolder = zip.folder("images");
@@ -208,26 +215,34 @@ export class DataManager {
           );
 
           const parsedData = this.parseLoadedData(rawJsonData);
+          console.timeEnd("DataProcessing");
           onSuccess(parsedData);
         } catch (error) {
           console.error("Failed to parse ZIP file:", error);
           onError(messages.file.loadError + " (ZIP: " + error.message + ")");
         }
       };
+      console.time("FileRead");
       reader.readAsArrayBuffer(file); // Read ZIP as ArrayBuffer
     } else {
       // Assume JSON or other text file
       reader.onload = (e) => {
+        console.timeEnd("FileRead");
+        console.time("DataProcessing");
         const fileContent = e.target.result;
         try {
+          console.time("JSON_Parse");
           const rawJsonData = JSON.parse(fileContent);
+          console.timeEnd("JSON_Parse");
           const parsedData = this.parseLoadedData(rawJsonData);
+          console.timeEnd("DataProcessing");
           onSuccess(parsedData);
         } catch (error) {
           console.error("Failed to parse JSON file:", error);
           onError(messages.file.loadError);
         }
       };
+      console.time("FileRead");
       reader.readAsText(file);
     }
     event.target.value = null;
@@ -669,6 +684,7 @@ export class DataManager {
   }
 
   _normalizeLoadedData(dataToParse) {
+    console.time("Normalization");
     // キャラクターデータの正規化
     const defaultCharacter = {
       ...this.gameData.defaultCharacterData, // This now includes images: []
@@ -701,7 +717,7 @@ export class DataManager {
     ) {
       normalizedData.character.linkCurrentToInitialScar = true;
     }
-
+    console.timeEnd("Normalization");
     return normalizedData;
   }
 
