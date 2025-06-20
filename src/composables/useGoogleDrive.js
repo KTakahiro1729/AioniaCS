@@ -168,9 +168,8 @@ export function useGoogleDrive(dataManager) {
   }
 
   function initializeGoogleDrive() {
-    const apiKey = "AIzaSyBXvh_XH2XdHedIO5AaZKWLl1NJm7UAHnU";
-    const clientId =
-      "913887099800-5pkljcl9uua4ktealpbndilam9i1q1dg.apps.googleusercontent.com";
+    const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     googleDriveManager.value = new GoogleDriveManager(apiKey, clientId);
     dataManager.setGoogleDriveManager(googleDriveManager.value);
 
