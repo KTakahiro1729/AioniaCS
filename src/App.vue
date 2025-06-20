@@ -28,6 +28,7 @@ import NotificationContainer from "./components/notifications/NotificationContai
 import BaseModal from "./components/modals/BaseModal.vue";
 import { useModal } from "./composables/useModal.js";
 import { useNotifications } from "./composables/useNotifications.js";
+import PasswordPromptModal from "./components/modals/contents/PasswordPromptModal.vue";
 // --- Template Refs ---
 const mainHeader = ref(null);
 const mainFooter = ref(null);
@@ -166,6 +167,21 @@ onMounted(async () => {
     const params = parseShareUrl(window.location);
     if (!params) return;
     try {
+        const promptPassword = async () => {
+            const result = await showModal({
+                component: PasswordPromptModal,
+                title: messages.ui.prompts.sharedDataPassword,
+                buttons: [
+                    { label: "OK", value: "ok", variant: "primary" },
+                    { label: messages.ui.modal.cancel, value: "cancel", variant: "secondary" },
+                ],
+            });
+            if (result.value === "ok" && result.component) {
+                return result.component.password.value || null;
+            }
+            return null;
+        };
+
         let buffer;
         if (params.mode === "dynamic") {
             const adapter = new DriveStorageAdapter(
@@ -174,11 +190,7 @@ onMounted(async () => {
             buffer = await receiveDynamicData({
                 location: window.location,
                 adapter,
-                passwordPromptHandler: async () =>
-                    Promise.resolve(
-                        window.prompt(messages.ui.prompts.sharedDataPassword) ||
-                            null
-                    ),
+                passwordPromptHandler: promptPassword,
             });
         } else {
             buffer = await receiveSharedData({
@@ -195,11 +207,7 @@ onMounted(async () => {
                         iv: new Uint8Array(base64ToArrayBuffer(iv)),
                     };
                 },
-                passwordPromptHandler: async () =>
-                    Promise.resolve(
-                        window.prompt(messages.ui.prompts.sharedDataPassword) ||
-                            null
-                    ),
+                passwordPromptHandler: promptPassword,
             });
         }
         const parsed = JSON.parse(new TextDecoder().decode(buffer));

@@ -7,11 +7,14 @@ import { parseShareUrl } from "../libs/sabalessshare/src/url.js";
 import { DriveStorageAdapter } from "../services/driveStorageAdapter.js";
 import { useNotifications } from "./useNotifications.js";
 import { messages } from "../locales/ja.js";
+import { useModal } from "./useModal.js";
+import PasswordPromptModal from "../components/modals/contents/PasswordPromptModal.vue";
 
 export function useAppInitialization(dataManager) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
   const { showToast } = useNotifications();
+  const { showModal } = useModal();
 
   async function initialize() {
     uiStore.setLoading(true);
@@ -22,15 +25,31 @@ export function useAppInitialization(dataManager) {
     }
     try {
       let buffer;
+      const promptPassword = async () => {
+        const result = await showModal({
+          component: PasswordPromptModal,
+          title: messages.ui.prompts.sharedDataPassword,
+          buttons: [
+            { label: "OK", value: "ok", variant: "primary" },
+            {
+              label: messages.ui.modal.cancel,
+              value: "cancel",
+              variant: "secondary",
+            },
+          ],
+        });
+        if (result.value === "ok" && result.component) {
+          return result.component.password.value || null;
+        }
+        return null;
+      };
+
       if (params.mode === "dynamic") {
         const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
         buffer = await receiveDynamicData({
           location: window.location,
           adapter,
-          passwordPromptHandler: async () =>
-            Promise.resolve(
-              window.prompt("共有データのパスワードを入力してください") || null,
-            ),
+          passwordPromptHandler: promptPassword,
         });
       } else {
         buffer = await receiveSharedData({
@@ -45,10 +64,7 @@ export function useAppInitialization(dataManager) {
               iv: new Uint8Array(base64ToArrayBuffer(iv)),
             };
           },
-          passwordPromptHandler: async () =>
-            Promise.resolve(
-              window.prompt("共有データのパスワードを入力してください") || null,
-            ),
+          passwordPromptHandler: promptPassword,
         });
       }
       const parsed = JSON.parse(new TextDecoder().decode(buffer));

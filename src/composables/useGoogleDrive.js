@@ -197,19 +197,27 @@ export function useGoogleDrive(dataManager) {
       }
     };
 
-    const gapiPoll = setInterval(() => {
-      if (window.gapi && window.gapi.load) {
-        handleGapiLoaded();
-        clearInterval(gapiPoll);
+    if (window.gapi && window.gapi.load) {
+      handleGapiLoaded();
+    } else {
+      const gapiScript = document.querySelector(
+        'script[src="https://apis.google.com/js/api.js"]',
+      );
+      if (gapiScript) {
+        gapiScript.addEventListener("load", handleGapiLoaded, { once: true });
       }
-    }, 100);
+    }
 
-    const gisPoll = setInterval(() => {
-      if (window.google && window.google.accounts) {
-        handleGisLoaded();
-        clearInterval(gisPoll);
+    if (window.google && window.google.accounts) {
+      handleGisLoaded();
+    } else {
+      const gisScript = document.querySelector(
+        'script[src="https://accounts.google.com/gsi/client"]',
+      );
+      if (gisScript) {
+        gisScript.addEventListener("load", handleGisLoaded, { once: true });
       }
-    }, 100);
+    }
   }
 
   onMounted(() => {
