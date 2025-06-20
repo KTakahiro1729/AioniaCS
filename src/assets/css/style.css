@@ -13,5 +13,4 @@
 @import url("_components.css");
 
 /* 特定のセクション（画像、傷痕、スキルなど） */
-@import url("_sections.css");
 @import url("_notifications.css");

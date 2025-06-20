@@ -106,3 +106,36 @@ import LoadIndicator from '../ui/LoadIndicator.vue'
 const characterStore = useCharacterStore()
 const uiStore = useUiStore()
 </script>
+
+<style scoped>
+
+.equipment-wrapper {
+  margin-bottom: 15px;
+}
+
+.equipment-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.equipment-section {
+  flex: 1 1 300px;
+  min-width: 280px;
+}
+
+.equipment-item {
+  margin-bottom: 12px;
+}
+
+.equipment-item:last-child {
+  margin-bottom: 0;
+}
+
+/* アイテム用テキストエリア */
+.items-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+</style>

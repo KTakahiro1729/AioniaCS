@@ -261,15 +261,6 @@
   margin: 0.2em 0;
 }
 
-a {
-  color: var(--color-link);
-  text-decoration: underline;
-}
-
-a:hover {
-  color: var(--color-link-hover);
-}
-
 /* カスタムアラートモーダル */
 .custom-alert-modal {
   position: fixed;
@@ -358,8 +349,10 @@ a:hover {
   }
 
   .top-left-controls {
-    top: 5px;
-    left: 5px;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1050;
   }
 
   .icon-button {

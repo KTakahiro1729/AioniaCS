@@ -92,4 +92,80 @@ function handleCurrentScarInput(event) {
 </script>
 
 <style scoped>
+.scar-section {
+  margin-bottom: 25px;
+}
+
+.link-checkbox-container {
+  display: flex;
+  align-items: center;
+}
+
+.link-checkbox-main-label {
+  margin-right: 8px;
+}
+
+.link-checkbox {
+  margin-right: 4px;
+  margin-bottom: 2px;
+  accent-color: var(--color-accent);
+  transform: scale(1.1);
+  width: auto;
+}
+
+.link-checkbox-label {
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+  font-weight: normal;
+  user-select: none;
+  margin-bottom: 0;
+}
+
+/* サブボックスタイトル（特定のセクション用） */
+.sub-box-title--scar {
+  margin-top: -18px;
+  margin-bottom: 15px;
+}
+
+.sub-box-title--weakness {
+  margin-top: 0;
+  margin-bottom: 10px;
+  border-top: 1px solid var(--color-border-normal);
+}
+
+/* 弱点リスト */
+.weakness-list .base-list-item {
+  font-size: 0.9em;
+  align-items: center;
+}
+
+.weakness-labels-header {
+  color: var(--color-text-muted);
+}
+
+.weakness-labels-header .flex-weakness-number {
+  color: transparent;
+  user-select: none;
+}
+
+.flex-weakness-number {
+  font-family: "Cinzel Decorative", serif;
+  color: var(--color-accent);
+  font-weight: 700;
+  width: 20px;
+  text-align: center;
+}
+
+.flex-weakness-text {
+  flex: 1;
+}
+
+.flex-weakness-acquired {
+  width: 150px;
+}
+
+.flex-weakness-acquired option[disabled] {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
 </style>

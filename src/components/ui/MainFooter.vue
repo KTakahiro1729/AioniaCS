@@ -102,4 +102,109 @@ function handleSave() {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+
+
+.status-display {
+  padding: 7px 14px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.9em;
+  display: inline-block;
+  border-width: 2px;
+  border-style: solid;
+  box-shadow: 0 0 5px rgb(0 0 0 / 30%) inset;
+  white-space: nowrap;
+}
+
+.status-display--experience-ok {
+  border-color: var(--color-status-experience-ok-border);
+  color: var(--color-status-experience-ok-text);
+  background-color: var(--color-status-experience-ok-bg);
+}
+
+.status-display--experience-over {
+  border-color: var(--color-status-experience-over-border);
+  color: var(--color-status-experience-over-text);
+  background-color: var(--color-status-experience-over-bg);
+}
+
+
+.footer-button--output.state-1 {
+  transition:
+    background-color 0.5s ease-in-out,
+    color 0.5s ease-in-out;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-light);
+}
+
+.footer-button--output.state-2 {
+  transition: color 0.1s ease-in;
+  background-color: var(--color-accent-light);
+  color: var(--color-background);
+}
+
+.footer-button--output.state-3 {
+  transition: color 0.5s ease-in-out;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-light);
+}
+
+.footer-button--output.state-4 {
+  transition:
+    background-color 0.7s ease-in-out,
+    color 0.2s ease-in-out 0.5s;
+  background-color: transparent;
+  color: var(--color-accent);
+}
+
+.footer-button--load {
+  padding: 0;
+}
+
+.footer-button--output {
+  width: 175px;
+  user-select: none;
+}
+
+.footer-button--output.is-animating {
+  pointer-events: none;
+}
+
+.footer-button-container {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.footer-button--save,
+.footer-button--load {
+  width: 120px;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.footer-button--save {
+  padding: 0;
+}
+
+.footer-button--cloud {
+  padding: 0 12px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+
+
+.icon-svg--footer {
+  width: 36px;
+  height: 36px;
+  margin: -3px;
+  margin-right: 3px;
+}
+
+.icon-svg--footer:hover .icon-svg--footer {
+  background-color: var(--color-accent-light);
+}
+
+</style>

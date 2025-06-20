@@ -107,3 +107,8 @@ function updateSpecialSkillNoteVisibility(index) {
 }
 </script>
 
+<style scoped>
+.special-skill-note-input {
+  margin-top: 3px;
+}
+</style>

@@ -87,3 +87,31 @@ const localSkills = characterStore.skills;
 
 const { expertPlaceholder } = useSkillsManagement();
 </script>
+
+<style scoped>
+.skills-list {
+  padding: 18px;
+}
+
+.skills-list > li {
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-border-normal);
+  border-radius: 3px;
+  background-color: var(--color-panel-specialskill);
+}
+
+.skills-list > li .skill-header {
+  display: flex;
+  align-items: center;
+}
+
+.skills-list > li .experts-section {
+  margin-top: 0;
+}
+
+.expert-list {
+  margin-top: 5px;
+}
+
+</style>

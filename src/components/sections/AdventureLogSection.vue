@@ -77,3 +77,26 @@ function hasHistoryContent(h) {
 }
 </script>
 
+<style scoped>
+
+.history-item-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 5px;
+}
+
+.flex-history-name {
+  flex: 1 1 150px;
+  max-width: 150px;
+}
+
+.flex-history-exp {
+  flex: 0 1 80px;
+}
+
+.flex-history-memo {
+  flex: 3 2 220px;
+}
+
+</style>

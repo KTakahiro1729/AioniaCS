@@ -29,3 +29,14 @@ const localValue = computed({
 });
 </script>
 
+<style scoped>
+.character-memo .box-content {
+  max-width: 100%;
+}
+
+.character-memo-textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+}
+</style>

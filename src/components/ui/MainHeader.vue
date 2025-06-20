@@ -74,9 +74,11 @@ defineExpose({ headerEl, helpIcon });
     z-index: 101;
     transition: transform 0.3s ease;
 }
+
 .main-header--hidden {
     transform: translateY(-100%);
 }
+
 .main-header__title {
     flex: 1;
     text-align: center;
@@ -84,6 +86,39 @@ defineExpose({ headerEl, helpIcon });
     color: var(--color-accent);
     font-size: 30px;
 }
+
+.google-drive-button-container {
+  position: relative;
+}
+
+.icon-button {
+  padding: 8px;
+  background-color: var(--color-panel-body);
+  border: 1px solid var(--color-border-normal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
+}
+
+.icon-button:hover {
+  border-color: var(--color-accent);
+  background-color: var(--color-panel-header);
+}
+
+.icon-button .icon-svg {
+  width: 48px;
+  height: 48px;
+}
+
+.icon-button:hover .icon-svg {
+  border-color: var(--color-accent-light);
+  background-color: var(--color-accent-light);
+}
+
 .header-help-icon {
     cursor: pointer;
     font-size: 25px;
@@ -91,6 +126,7 @@ defineExpose({ headerEl, helpIcon });
     width: 50px;
     height: 50px;
 }
+
 .header-help-icon--fixed,
 .header-help-icon--fixed:hover {
     background-color: var(--color-accent-dark);
