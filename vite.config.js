@@ -12,6 +12,7 @@ export default defineConfig({
   },
   server: {
     fs: {
+      "@": resolve(__dirname, "src/"),
       allow: ["src/libs/sabalessshare", "."],
     },
   },

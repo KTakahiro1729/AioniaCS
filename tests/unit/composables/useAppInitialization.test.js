@@ -92,7 +92,16 @@ describe("useAppInitialization", () => {
     const uiStore = useUiStore();
     const p = initialize();
     expect(uiStore.isLoading).toBe(true);
-    resolve(new ArrayBuffer(0));
+    const payload = {
+      character: { name: "Test" },
+      playerName: "Test",
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
+    resolve(buffer);
     await p;
     expect(uiStore.isLoading).toBe(false);
   });

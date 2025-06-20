@@ -12,6 +12,7 @@
     "lint:css": "stylelint \"**/*.css\"",
     "lint:html": "htmlhint \"**/*.html\"",
     "test": "vitest run",
+    "test:ui": "vitest --ui",
     "e2e": "playwright test",
     "pree2e": "playwright install",
     "prepare": "husky"
