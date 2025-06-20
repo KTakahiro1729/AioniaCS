@@ -1,5 +1,5 @@
 <template>
-  <transition name="modal">
+  <transition name="modal-fade">
     <div class="modal-overlay" v-if="modal.isVisible" @click.self="modalStore.hideModal()">
       <div :class="['modal', modal.type ? `modal--${modal.type}` : '']">
         <button class="modal-close close-cross" @click="modalStore.hideModal()">×</button>

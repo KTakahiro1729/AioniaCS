@@ -177,6 +177,7 @@ export const messages = {
       state2_textHold: 1000,
       state3_textFadeOut: 500,
       state4_bgReset: 700,
+      state5_successHold: 300,
     },
   },
   weaknessDropdownHelp: "（冒険の記録を追加すると選択肢が増えます）",

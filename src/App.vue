@@ -25,7 +25,6 @@ import { useModal } from "./composables/useModal.js";
 import { useNotifications } from "./composables/useNotifications.js";
 // --- Template Refs ---
 const mainHeader = ref(null);
-const mainFooter = ref(null);
 const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
@@ -33,7 +32,7 @@ const uiStore = useUiStore();
 useKeyboardHandling();
 
 const { dataManager, saveData, handleFileUpload, outputToCocofolia } =
-    useDataExport(mainFooter);
+    useDataExport();
 const { printCharacterSheet } = usePrint();
 
 const {
@@ -177,7 +176,6 @@ onMounted(initialize);
     </div>
     <CharacterSheetLayout />
     <MainFooter
-        ref="mainFooter"
         :experience-status-class="experienceStatusClass"
         :current-experience-points="currentExperiencePoints"
         :max-experience-points="maxExperiencePoints"
