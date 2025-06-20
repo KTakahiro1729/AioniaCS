@@ -374,24 +374,6 @@
     padding: 10px 15px;
     gap: 10px;
   }
-
-  .footer-button-container > .footer-button,
-  .footer-button--dropdown-arrow {
-    height: 42px;
-  }
-
-  .footer-button--save,
-  .footer-button--load {
-    width: 90px;
-  }
-
-  .footer-button--output {
-    width: 140px;
-  }
-
-  .footer-dropdown-menu {
-    min-width: 180px;
-  }
 }
 
 @media (max-width: 480px) {

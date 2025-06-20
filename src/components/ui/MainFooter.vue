@@ -4,53 +4,49 @@
             {{ experienceLabel }} {{ currentExperiencePoints }} /
             {{ maxExperiencePoints }}
         </div>
-        <div class="footer-button-container">
-            <button
-                class="button-base footer-button footer-button--save"
-                @click="handleSave"
-                :title="saveButton.title"
-            >
-                <span
-                    class="icon-svg icon-svg--footer"
-                    :class="saveButton.icon"
-                ></span>
-                {{ saveButton.label }}
-            </button>
-        </div>
-        <div class="footer-button-container">
-            <label
-                v-if="!uiStore.isSignedIn"
-                class="button-base footer-button footer-button--load"
-                for="load_input_vue"
-                :title="loadButton.title"
-            >
-                <span
-                    class="icon-svg icon-svg--footer"
-                    :class="loadButton.icon"
-                ></span>
-                {{ loadButton.label }}
-            </label>
-            <button
-                v-else
-                class="button-base footer-button footer-button--load"
-                @click="props.openHub"
-                :title="loadButton.title"
-            >
-                <span
-                    class="icon-svg icon-svg--footer"
-                    :class="loadButton.icon"
-                ></span>
-                {{ loadButton.label }}
-            </button>
-            <input
-                v-if="!uiStore.isSignedIn"
-                type="file"
-                id="load_input_vue"
-                @change="(e) => props.handleFileUpload(e)"
-                accept=".json,.txt,.zip"
-                class="hidden"
-            />
-        </div>
+        <button
+            class="button-base footer-button footer-button--save"
+            @click="handleSave"
+            :title="saveButton.title"
+        >
+            <span
+                class="icon-svg icon-svg--footer"
+                :class="saveButton.icon"
+            ></span>
+            {{ saveButton.label }}
+        </button>
+        <label
+            v-if="!uiStore.isSignedIn"
+            class="button-base footer-button footer-button--load"
+            for="load_input_vue"
+            :title="loadButton.title"
+        >
+            <span
+                class="icon-svg icon-svg--footer"
+                :class="loadButton.icon"
+            ></span>
+            {{ loadButton.label }}
+        </label>
+        <button
+            v-else
+            class="button-base footer-button footer-button--load"
+            @click="props.openHub"
+            :title="loadButton.title"
+        >
+            <span
+                class="icon-svg icon-svg--footer"
+                :class="loadButton.icon"
+            ></span>
+            {{ loadButton.label }}
+        </button>
+        <input
+            v-if="!uiStore.isSignedIn"
+            type="file"
+            id="load_input_vue"
+            @change="(e) => props.handleFileUpload(e)"
+            accept=".json,.txt,.zip"
+            class="hidden"
+        />
         <button
             class="button-base footer-button footer-button--io"
             @click="$emit('io')"
