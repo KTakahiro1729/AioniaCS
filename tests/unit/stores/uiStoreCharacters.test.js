@@ -12,7 +12,7 @@ describe("uiStore character cache", () => {
       { id: "2", name: "b.json" },
       { id: "temp-1", name: "temp.json" },
     ];
-    const gdm = { readIndexFile: jest.fn().mockResolvedValue([{ id: "1" }]) };
+    const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: "1" }]) };
     await store.refreshDriveCharacters(gdm);
     expect(store.driveCharacters).toEqual(
       expect.arrayContaining([

@@ -1,5 +1,5 @@
 import { GoogleDriveManager } from "../../src/services/googleDriveManager.js";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 describe("GoogleDriveManager appDataFolder", () => {
   let gdm;
@@ -9,19 +9,19 @@ describe("GoogleDriveManager appDataFolder", () => {
       client: {
         drive: {
           files: {
-            list: jest.fn(),
-            get: jest.fn(),
-            delete: jest.fn(),
+            list: vi.fn(),
+            get: vi.fn(),
+            delete: vi.fn(),
           },
         },
-        request: jest.fn(),
+        request: vi.fn(),
       },
     };
     gdm = new GoogleDriveManager("k", "c");
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("ensureIndexFile creates new index when absent", async () => {
@@ -60,7 +60,7 @@ describe("GoogleDriveManager appDataFolder", () => {
   });
 
   test("deleteCharacterFile removes file and index entry", async () => {
-    jest.spyOn(gdm, "removeIndexEntry").mockResolvedValue();
+    vi.spyOn(gdm, "removeIndexEntry").mockResolvedValue();
     gapi.client.drive.files.delete.mockResolvedValue({});
     await gdm.deleteCharacterFile("d1");
     expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({
@@ -71,11 +71,11 @@ describe("GoogleDriveManager appDataFolder", () => {
 
   test("renameIndexEntry updates characterName and timestamp", async () => {
     const now = new Date("2024-01-01T00:00:00.000Z");
-    jest.useFakeTimers().setSystemTime(now);
-    jest
-      .spyOn(gdm, "readIndexFile")
-      .mockResolvedValue([{ id: "a", name: "a.json", characterName: "Old" }]);
-    jest.spyOn(gdm, "writeIndexFile").mockResolvedValue();
+    vi.useFakeTimers().setSystemTime(now);
+    vi.spyOn(gdm, "readIndexFile").mockResolvedValue([
+      { id: "a", name: "a.json", characterName: "Old" },
+    ]);
+    vi.spyOn(gdm, "writeIndexFile").mockResolvedValue();
     await gdm.renameIndexEntry("a", "New");
     expect(gdm.writeIndexFile).toHaveBeenCalledWith([
       {
@@ -85,14 +85,14 @@ describe("GoogleDriveManager appDataFolder", () => {
         updatedAt: now.toISOString(),
       },
     ]);
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("addIndexEntry sets updatedAt", async () => {
     const now = new Date("2024-01-02T00:00:00.000Z");
-    jest.useFakeTimers().setSystemTime(now);
-    jest.spyOn(gdm, "readIndexFile").mockResolvedValue([]);
-    jest.spyOn(gdm, "writeIndexFile").mockResolvedValue();
+    vi.useFakeTimers().setSystemTime(now);
+    vi.spyOn(gdm, "readIndexFile").mockResolvedValue([]);
+    vi.spyOn(gdm, "writeIndexFile").mockResolvedValue();
     await gdm.addIndexEntry({ id: "b", name: "b.json", characterName: "Bob" });
     expect(gdm.writeIndexFile).toHaveBeenCalledWith([
       {
@@ -102,7 +102,7 @@ describe("GoogleDriveManager appDataFolder", () => {
         updatedAt: now.toISOString(),
       },
     ]);
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("onGapiLoad rejects when gapi.load is missing", async () => {

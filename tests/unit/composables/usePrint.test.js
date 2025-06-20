@@ -1,5 +1,5 @@
-jest.mock("../../public/print-template.html?raw", () => "");
-jest.mock("../../public/style/css/print-styles.css?raw", () => "");
+vi.mock("../../public/print-template.html?raw", () => "");
+vi.mock("../../public/style/css/print-styles.css?raw", () => "");
 
 import {
   formatSkills,

@@ -11,7 +11,7 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
-        ...globals.jest,
+        ...globals.vitest,
         // プロジェクト固有のグローバル変数
         AioniaGameData: "readonly",
         deepClone: "readonly",

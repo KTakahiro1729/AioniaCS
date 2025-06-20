@@ -3,39 +3,39 @@ import { useAppInitialization } from "../../../src/composables/useAppInitializat
 import { useCharacterStore } from "../../../src/stores/characterStore.js";
 import { useUiStore } from "../../../src/stores/uiStore.js";
 
-jest.mock("../../../src/libs/sabalessshare/src/url.js", () => ({
-  parseShareUrl: jest.fn(),
+vi.mock("../../../src/libs/sabalessshare/src/url.js", () => ({
+  parseShareUrl: vi.fn(),
 }));
 
-jest.mock("../../../src/libs/sabalessshare/src/index.js", () => ({
-  receiveSharedData: jest.fn(),
+vi.mock("../../../src/libs/sabalessshare/src/index.js", () => ({
+  receiveSharedData: vi.fn(),
 }));
 
-jest.mock("../../../src/libs/sabalessshare/src/dynamic.js", () => ({
-  receiveDynamicData: jest.fn(),
+vi.mock("../../../src/libs/sabalessshare/src/dynamic.js", () => ({
+  receiveDynamicData: vi.fn(),
 }));
 
-jest.mock("../../../src/services/driveStorageAdapter.js", () => ({
-  DriveStorageAdapter: jest.fn().mockImplementation(() => ({})),
+vi.mock("../../../src/services/driveStorageAdapter.js", () => ({
+  DriveStorageAdapter: vi.fn().mockImplementation(() => ({})),
 }));
 
-jest.mock("../../../src/composables/useNotifications.js", () => ({
-  useNotifications: () => ({ showToast: jest.fn() }),
+vi.mock("../../../src/composables/useNotifications.js", () => ({
+  useNotifications: () => ({ showToast: vi.fn() }),
 }));
 
 describe("useAppInitialization", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("loads shared data when URL has params", async () => {
-    const {
-      parseShareUrl,
-    } = require("../../../src/libs/sabalessshare/src/url.js");
-    const {
-      receiveSharedData,
-    } = require("../../../src/libs/sabalessshare/src/index.js");
+    const { parseShareUrl } = await import(
+      "../../../src/libs/sabalessshare/src/url.js"
+    );
+    const { receiveSharedData } = await import(
+      "../../../src/libs/sabalessshare/src/index.js"
+    );
     parseShareUrl.mockReturnValue({ mode: "simple" });
     const payload = {
       character: { name: "Hero" },
@@ -60,9 +60,9 @@ describe("useAppInitialization", () => {
   });
 
   test("does nothing when no params", async () => {
-    const {
-      parseShareUrl,
-    } = require("../../../src/libs/sabalessshare/src/url.js");
+    const { parseShareUrl } = await import(
+      "../../../src/libs/sabalessshare/src/url.js"
+    );
     parseShareUrl.mockReturnValue(null);
     const dataManager = { googleDriveManager: {} };
     const { initialize } = useAppInitialization(dataManager);
@@ -75,12 +75,12 @@ describe("useAppInitialization", () => {
   });
 
   test("updates loading state", async () => {
-    const {
-      parseShareUrl,
-    } = require("../../../src/libs/sabalessshare/src/url.js");
-    const {
-      receiveSharedData,
-    } = require("../../../src/libs/sabalessshare/src/index.js");
+    const { parseShareUrl } = await import(
+      "../../../src/libs/sabalessshare/src/url.js"
+    );
+    const { receiveSharedData } = await import(
+      "../../../src/libs/sabalessshare/src/index.js"
+    );
     parseShareUrl.mockReturnValue({ mode: "simple" });
     let resolve;
     receiveSharedData.mockReturnValue(

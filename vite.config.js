@@ -1,0 +1,29 @@
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { resolve } from "path";
+
+export default defineConfig({
+  base: "./",
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      "@sabalessshare": resolve(__dirname, "src/libs/sabalessshare/src"),
+    },
+  },
+  server: {
+    fs: {
+      allow: ["src/libs/sabalessshare", "."],
+    },
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./tests/unit/setup.js",
+    include: ["tests/unit/**/*.test.js"],
+    exclude: ["tests/e2e/**", "src/libs/sabalessshare/**", "node_modules/**"],
+    alias: {
+      "\\?raw$": resolve(__dirname, "tests/unit/__mocks__/raw.js"),
+      "@sabalessshare": resolve(__dirname, "src/libs/sabalessshare/src"),
+    },
+  },
+});

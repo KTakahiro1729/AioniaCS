@@ -26,7 +26,7 @@ describe("modalStore", () => {
 
   test("showModal stores events and resets", () => {
     const store = useModalStore();
-    const handler = jest.fn();
+    const handler = vi.fn();
     store.showModal({ on: { foo: handler } });
     expect(store.events.foo).toBe(handler);
     store.hideModal();

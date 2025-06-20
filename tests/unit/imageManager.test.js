@@ -1,6 +1,6 @@
 // tests/unit/imageManager.test.js
 
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 // Mocking FileReader
 global.FileReader = class {
   constructor() {
@@ -40,7 +40,7 @@ global.FileReader = class {
 // you might need to manually load it or mock its structure:
 if (typeof window.ImageManager === "undefined") {
   window.ImageManager = {
-    loadImage: jest.fn((file) => {
+    loadImage: vi.fn((file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);

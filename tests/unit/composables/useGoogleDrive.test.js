@@ -10,9 +10,7 @@ describe("useGoogleDrive", () => {
 
   test("handleSaveToDriveClick calls saveDataToAppData with store data", async () => {
     const dataManager = {
-      saveDataToAppData: jest
-        .fn()
-        .mockResolvedValue({ id: "1", name: "c.json" }),
+      saveDataToAppData: vi.fn().mockResolvedValue({ id: "1", name: "c.json" }),
       googleDriveManager: {},
     };
 
@@ -39,9 +37,7 @@ describe("useGoogleDrive", () => {
 
   test("saveCharacterToDrive uses provided id and name", async () => {
     const dataManager = {
-      saveDataToAppData: jest
-        .fn()
-        .mockResolvedValue({ id: "1", name: "a.json" }),
+      saveDataToAppData: vi.fn().mockResolvedValue({ id: "1", name: "a.json" }),
       googleDriveManager: {},
     };
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
@@ -62,14 +58,14 @@ describe("useGoogleDrive", () => {
   });
 
   test("saveOrUpdateCurrentCharacterInDrive chooses create or update", async () => {
-    const createFile = jest.fn().mockResolvedValue({ id: "1" });
-    const updateFile = jest.fn().mockResolvedValue({ id: "2" });
+    const createFile = vi.fn().mockResolvedValue({ id: "1" });
+    const updateFile = vi.fn().mockResolvedValue({ id: "2" });
     const dataManager = {
       googleDriveManager: {
         createCharacterFile: createFile,
         updateCharacterFile: updateFile,
       },
-      saveDataToAppData: jest.fn((c, s, ss, e, h, id, name) => {
+      saveDataToAppData: vi.fn((c, s, ss, e, h, id, name) => {
         return id ? updateFile(id, {}, name) : createFile({}, name);
       }),
     };
