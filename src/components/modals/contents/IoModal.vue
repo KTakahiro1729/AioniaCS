@@ -35,10 +35,10 @@
 </template>
 
 <script setup>
-import { ref, defineExpose } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import AnimatedButton from '../../common/AnimatedButton.vue';
 
-const props = defineProps({
+defineProps({
     signedIn: Boolean,
     saveLocalLabel: String,
     loadLocalLabel: String,
@@ -47,7 +47,8 @@ const props = defineProps({
     printLabel: String,
     driveFolderLabel: String,
 });
-const emit = defineEmits([
+
+defineEmits([
     'save-local',
     'load-local',
     'output-cocofolia',
@@ -57,10 +58,23 @@ const emit = defineEmits([
 
 const triggerKey = ref(0);
 function triggerAnimation() {
-    triggerKey.value += 1;
+  triggerKey.value += 1;
 }
 
-defineExpose({ triggerAnimation });
+function handleCopySuccess(event) {
+  if (event.detail.type === 'cocofolia') {
+    triggerAnimation();
+  }
+}
+
+onMounted(() => {
+  document.removeEventListener('aionia-copy-success', handleCopySuccess);
+  document.addEventListener('aionia-copy-success', handleCopySuccess);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('aionia-copy-success', handleCopySuccess);
+});
 </script>
 
 <style scoped>

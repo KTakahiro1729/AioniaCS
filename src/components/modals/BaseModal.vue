@@ -1,5 +1,5 @@
 <template>
-  <transition name="modal">
+  <transition name="modal-fade">
     <div class="modal-overlay" v-if="modal.isVisible" @click.self="modalStore.hideModal()">
       <div :class="['modal', modal.type ? `modal--${modal.type}` : '']">
         <button class="modal-close close-cross" @click="modalStore.hideModal()">×</button>
@@ -25,7 +25,7 @@
           </div>
           <component
             :is="modal.component"
-            v-bind="componentProps"
+            v-bind="modal.props"
             v-on="modal.events"
             ref="inner"
           />
@@ -47,25 +47,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref } from 'vue';
 import { useModalStore } from '../../stores/modalStore.js';
 
 const modalStore = useModalStore();
 const modal = modalStore;
 const inner = ref(null);
-const componentProps = computed(() => {
-  const { componentRef, ...rest } = modal.props;
-  return rest;
-});
-
-watch(
-  () => inner.value,
-  (val) => {
-    if (modal.props && modal.props.componentRef) {
-      modal.props.componentRef.value = val;
-    }
-  },
-);
 
 function resolve(value) {
   modalStore.resolveModal({ value, component: inner.value });

@@ -1,4 +1,3 @@
-import { ref } from "vue";
 import { DataManager } from "../services/dataManager.js";
 import { CocofoliaExporter } from "../services/cocofoliaExporter.js";
 import { AioniaGameData } from "../data/gameData.js";
@@ -53,17 +52,21 @@ export function useDataExport() {
     );
   }
 
-  async function copyToClipboard(text, onSuccess) {
+  async function copyToClipboard(text) {
     try {
       await copyText(text);
-      if (typeof onSuccess === "function") onSuccess();
+      document.dispatchEvent(
+        new CustomEvent("aionia-copy-success", {
+          detail: { type: "cocofolia" },
+        }),
+      );
     } catch (err) {
       console.error("Failed to copy: ", err);
       showToast({ type: "error", title: messages.outputButton.error });
     }
   }
 
-  function outputToCocofolia(onSuccess) {
+  function outputToCocofolia() {
     const exportData = {
       character: characterStore.character,
       skills: characterStore.skills,
@@ -79,7 +82,7 @@ export function useDataExport() {
     const cocofoliaCharacter =
       cocofoliaExporter.generateCocofoliaData(exportData);
     const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
-    copyToClipboard(textToCopy, onSuccess);
+    copyToClipboard(textToCopy);
   }
 
   return {

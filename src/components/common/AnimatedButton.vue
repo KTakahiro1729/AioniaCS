@@ -24,11 +24,12 @@ const props = defineProps({
       state2_textHold: 1000,
       state3_textFadeOut: 500,
       state4_bgReset: 700,
+      state5_successHold: 300,
     }),
   },
 });
 
-const emit = defineEmits(['finished']);
+const emit = defineEmits(['finished', 'click']);
 
 const currentLabel = ref(props.defaultLabel);
 const stateClass = ref('');
@@ -41,8 +42,16 @@ watch(
   },
 );
 
+watch(() => props.defaultLabel, (newLabel) => {
+  if (!isAnimating.value) {
+    currentLabel.value = newLabel;
+  }
+});
+
 function startAnimation() {
-  if (isAnimating.value) return;
+  if (isAnimating.value) {
+    return;
+  }
   isAnimating.value = true;
   stateClass.value = 'state-1';
   setTimeout(() => {
@@ -68,7 +77,8 @@ function startAnimation() {
   props.timings.state1_bgFill +
     props.timings.state2_textHold +
     props.timings.state3_textFadeOut +
-    props.timings.state4_bgReset);
+    props.timings.state4_bgReset +
+    props.timings.state5_successHold);
 }
 </script>
 

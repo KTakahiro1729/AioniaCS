@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { reactive } from "vue";
 import { useModal } from "./useModal.js";
 import { useUiStore } from "../stores/uiStore.js";
 import CharacterHub from "../components/ui/CharacterHub.vue";
@@ -13,7 +13,6 @@ import { messages } from "../locales/ja.js";
 export function useAppModals(options) {
   const uiStore = useUiStore();
   const { showModal } = useModal();
-  const ioModalRef = ref(null);
   const {
     dataManager,
     loadCharacterById,
@@ -66,7 +65,6 @@ export function useAppModals(options) {
           success: messages.outputButton.success,
         },
         outputTimings: messages.outputButton.animationTimings,
-        componentRef: ioModalRef,
         printLabel: messages.ui.modal.io.buttons.print,
         driveFolderLabel: messages.ui.modal.io.buttons.driveFolder,
       },
@@ -74,10 +72,7 @@ export function useAppModals(options) {
       on: {
         "save-local": saveData,
         "load-local": handleFileUpload,
-        "output-cocofolia": () =>
-          outputToCocofolia(() => {
-            ioModalRef.value?.triggerAnimation();
-          }),
+        "output-cocofolia": outputToCocofolia,
         print: printCharacterSheet,
         "drive-folder": promptForDriveFolder,
       },
