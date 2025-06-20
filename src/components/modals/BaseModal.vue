@@ -25,7 +25,7 @@
           </div>
           <component
             :is="modal.component"
-            v-bind="modal.props"
+            v-bind="componentProps"
             v-on="modal.events"
             ref="inner"
           />
@@ -47,12 +47,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useModalStore } from '../../stores/modalStore.js';
 
 const modalStore = useModalStore();
 const modal = modalStore;
 const inner = ref(null);
+const componentProps = computed(() => {
+  const { componentRef, ...rest } = modal.props;
+  return rest;
+});
+
+watch(
+  () => inner.value,
+  (val) => {
+    if (modal.props && modal.props.componentRef) {
+      modal.props.componentRef.value = val;
+    }
+  },
+);
 
 function resolve(value) {
   modalStore.resolveModal({ value, component: inner.value });

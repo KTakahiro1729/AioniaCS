@@ -126,33 +126,6 @@ function handleSave() {
 }
 
 
-.footer-button--output.state-1 {
-  transition:
-    background-color 0.5s ease-in-out,
-    color 0.5s ease-in-out;
-  background-color: var(--color-accent-light);
-  color: var(--color-accent-light);
-}
-
-.footer-button--output.state-2 {
-  transition: color 0.1s ease-in;
-  background-color: var(--color-accent-light);
-  color: var(--color-background);
-}
-
-.footer-button--output.state-3 {
-  transition: color 0.5s ease-in-out;
-  background-color: var(--color-accent-light);
-  color: var(--color-accent-light);
-}
-
-.footer-button--output.state-4 {
-  transition:
-    background-color 0.7s ease-in-out,
-    color 0.2s ease-in-out 0.5s;
-  background-color: transparent;
-  color: var(--color-accent);
-}
 
 .footer-button--load {
   padding: 0;
@@ -163,9 +136,6 @@ function handleSave() {
   user-select: none;
 }
 
-.footer-button--output.is-animating {
-  pointer-events: none;
-}
 
 .footer-button-container {
   position: relative;
