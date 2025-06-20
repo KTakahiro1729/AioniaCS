@@ -8,7 +8,6 @@ import { useDataExport } from "./composables/useDataExport.js";
 import { useKeyboardHandling } from "./composables/useKeyboardHandling.js";
 import { usePrint } from "./composables/usePrint.js";
 import { messages } from "./locales/ja.js";
-import { useHeaderVisibility } from "./composables/useHeaderVisibility.js";
 import { useAppModals } from "./composables/useAppModals.js";
 import { useAppInitialization } from "./composables/useAppInitialization.js";
 
@@ -152,7 +151,6 @@ watch(
     { immediate: true }
 );
 
-useHeaderVisibility();
 
 // --- Lifecycle Hooks ---
 const { initialize } = useAppInitialization(dataManager);

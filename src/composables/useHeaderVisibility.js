@@ -1,25 +1,34 @@
-import { onMounted, onBeforeUnmount } from "vue";
-import { useUiStore } from "../stores/uiStore.js";
+import { onMounted, onUnmounted } from "vue";
 
-export function useHeaderVisibility() {
-  const uiStore = useUiStore();
-  let lastScroll = 0;
+export function useHeaderVisibility(targetRef) {
+  let lastScrollY = 0;
+  let currentTranslateY = 0;
+  let headerHeight = 0;
 
   function handleScroll() {
-    const y = window.scrollY;
-    if (y > lastScroll && y > 50) {
-      uiStore.showHeader = false;
-    } else if (y < lastScroll) {
-      uiStore.showHeader = true;
-    }
-    lastScroll = y;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      const delta = y - lastScrollY;
+      currentTranslateY -= delta;
+      if (currentTranslateY > 0) currentTranslateY = 0;
+      if (currentTranslateY < -headerHeight) currentTranslateY = -headerHeight;
+      if (targetRef.value) {
+        targetRef.value.style.transform = `translateY(${currentTranslateY}px)`;
+      }
+      lastScrollY = y;
+    });
   }
 
   onMounted(() => {
+    if (targetRef.value) {
+      headerHeight = targetRef.value.offsetHeight;
+      targetRef.value.style.transform = "translateY(0px)";
+    }
+    lastScrollY = window.scrollY;
     window.addEventListener("scroll", handleScroll, { passive: true });
   });
 
-  onBeforeUnmount(() => {
+  onUnmounted(() => {
     window.removeEventListener("scroll", handleScroll);
   });
 }
