@@ -32,7 +32,6 @@ async function openPrivacyPolicy() {
 </script>
 
 <template>
-    <div class="build-info" v-if="buildInfo">{{ buildInfo }}</div>
     <div class="main-grid">
         <CharacterBasicInfo />
         <ScarWeaknessSection />
@@ -60,5 +59,6 @@ async function openPrivacyPolicy() {
         <button class="button-link" @click="openPrivacyPolicy">
             プライバシーポリシー
         </button>
+        <div class="build-info" v-if="buildInfo">{{ buildInfo }}</div>
     </div>
 </template>
