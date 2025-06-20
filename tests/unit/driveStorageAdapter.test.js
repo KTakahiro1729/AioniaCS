@@ -1,8 +1,8 @@
 import { DriveStorageAdapter } from "../../src/services/driveStorageAdapter.js";
 import { arrayBufferToBase64 } from "../../src/libs/sabalessshare/src/crypto.js";
-
-jest.mock("../../src/libs/sabalessshare/src/crypto.js", () =>
-  jest.requireActual("./__mocks__/sabalessshare.js"),
+vi.mock(
+  "../../src/libs/sabalessshare/src/crypto.js",
+  async () => await import("./__mocks__/sabalessshare.js"),
 );
 
 describe("DriveStorageAdapter", () => {
@@ -10,8 +10,8 @@ describe("DriveStorageAdapter", () => {
   let gdm;
   beforeEach(() => {
     gdm = {
-      saveFile: jest.fn().mockResolvedValue({ id: "1" }),
-      loadFileContent: jest.fn().mockResolvedValue(""),
+      saveFile: vi.fn().mockResolvedValue({ id: "1" }),
+      loadFileContent: vi.fn().mockResolvedValue(""),
     };
     adapter = new DriveStorageAdapter(gdm);
   });

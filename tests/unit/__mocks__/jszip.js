@@ -1,15 +1,15 @@
 // tests/unit/__mocks__/jszip.js
 
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 // JSZipコンストラクタのモック実装
-const JSZip = jest.fn().mockImplementation(() => ({
-  file: jest.fn(),
-  folder: jest.fn().mockReturnThis(), // method chainingを可能にする
-  generateAsync: jest.fn().mockResolvedValue(new Blob(["zip_blob_content"])),
+const JSZip = vi.fn().mockImplementation(() => ({
+  file: vi.fn(),
+  folder: vi.fn().mockReturnThis(), // method chainingを可能にする
+  generateAsync: vi.fn().mockResolvedValue(new Blob(["zip_blob_content"])),
 }));
 
 // 静的メソッド loadAsync のモック実装
-JSZip.loadAsync = jest.fn();
+JSZip.loadAsync = vi.fn();
 
 export default JSZip;

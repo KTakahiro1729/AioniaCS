@@ -11,8 +11,8 @@ describe("MainFooter", () => {
   });
 
   test("local save and file upload when signed out", async () => {
-    const saveLocal = jest.fn();
-    const fileUpload = jest.fn();
+    const saveLocal = vi.fn();
+    const fileUpload = vi.fn();
     const wrapper = mount(MainFooter, {
       props: {
         experienceStatusClass: "",
@@ -22,8 +22,8 @@ describe("MainFooter", () => {
         isViewingShared: false,
         saveLocal,
         handleFileUpload: fileUpload,
-        openHub: jest.fn(),
-        saveToDrive: jest.fn(),
+        openHub: vi.fn(),
+        saveToDrive: vi.fn(),
         ioLabel: "io",
         shareLabel: "share",
         copyEditLabel: "copy",
@@ -38,8 +38,8 @@ describe("MainFooter", () => {
   });
 
   test("drive actions when signed in", async () => {
-    const saveDrive = jest.fn();
-    const openHub = jest.fn();
+    const saveDrive = vi.fn();
+    const openHub = vi.fn();
     const wrapper = mount(MainFooter, {
       props: {
         experienceStatusClass: "",
@@ -47,8 +47,8 @@ describe("MainFooter", () => {
         maxExperiencePoints: 2,
         experienceLabel: "EXP",
         isViewingShared: false,
-        saveLocal: jest.fn(),
-        handleFileUpload: jest.fn(),
+        saveLocal: vi.fn(),
+        handleFileUpload: vi.fn(),
         openHub,
         saveToDrive: saveDrive,
         ioLabel: "io",

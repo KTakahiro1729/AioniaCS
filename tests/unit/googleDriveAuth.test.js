@@ -1,22 +1,22 @@
 import { GoogleDriveManager } from "../../src/services/googleDriveManager.js";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 describe("GoogleDriveManager auth", () => {
   beforeEach(() => {
     global.google = {
       accounts: {
         oauth2: {
-          initTokenClient: jest.fn().mockReturnValue({
-            requestAccessToken: jest.fn(),
+          initTokenClient: vi.fn().mockReturnValue({
+            requestAccessToken: vi.fn(),
           }),
-          revoke: jest.fn((token, cb) => cb()),
+          revoke: vi.fn((token, cb) => cb()),
         },
       },
     };
     global.gapi = {
       client: {
-        getToken: jest.fn(() => null),
-        setToken: jest.fn(),
+        getToken: vi.fn(() => null),
+        setToken: vi.fn(),
       },
     };
   });
@@ -34,9 +34,9 @@ describe("GoogleDriveManager auth", () => {
 
   test("handleSignOut revokes token and clears gapi token", () => {
     const gdm = new GoogleDriveManager("k", "c");
-    gdm.tokenClient = { requestAccessToken: jest.fn() };
+    gdm.tokenClient = { requestAccessToken: vi.fn() };
     gapi.client.getToken.mockReturnValue({ access_token: "t" });
-    const cb = jest.fn();
+    const cb = vi.fn();
     gdm.handleSignOut(cb);
     expect(google.accounts.oauth2.revoke).toHaveBeenCalledWith(
       "t",

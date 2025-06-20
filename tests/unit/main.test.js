@@ -1,5 +1,5 @@
 // Mock global objects and functions expected by main.js methods
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 global.window = {
   AioniaGameData: {
     config: {
@@ -7,7 +7,7 @@ global.window = {
     },
     // ... other necessary mock parts of AioniaGameData
   },
-  deepClone: jest.fn((obj) => JSON.parse(JSON.stringify(obj))), // Simple deepClone mock
+  deepClone: vi.fn((obj) => JSON.parse(JSON.stringify(obj))), // Simple deepClone mock
 };
 
 // This is a simplified mock of the Vue app's methods.
@@ -63,7 +63,7 @@ describe("Vue app methods - _manageListItem", () => {
   let list;
 
   // Ensure window.deepClone is a Jest mock function for this test suite
-  window.deepClone = jest.fn((item) => JSON.parse(JSON.stringify(item)));
+  window.deepClone = vi.fn((item) => JSON.parse(JSON.stringify(item)));
 
   beforeEach(() => {
     list = [];
@@ -113,7 +113,7 @@ describe("Vue app methods - _manageListItem", () => {
     });
 
     it("should call newItemFactory (function) to create the new item", () => {
-      const newItemFactory = jest.fn(() => ({ id: 1, value: "created" }));
+      const newItemFactory = vi.fn(() => ({ id: 1, value: "created" }));
       mockVueInstanceMethods._manageListItem({
         list,
         action: "add",
@@ -168,7 +168,7 @@ describe("Vue app methods - _manageListItem", () => {
       const originalItem = { id: 1, value: "filled" };
       list.push(originalItem);
       const newItemFactory = () => ({ id: "empty", value: "" });
-      const hasContentChecker = jest.fn(() => true);
+      const hasContentChecker = vi.fn(() => true);
 
       mockVueInstanceMethods._manageListItem({
         list,
@@ -189,7 +189,7 @@ describe("Vue app methods - _manageListItem", () => {
       list.push({ id: 1, value: "no-content" });
       const originalItemRef = list[0];
       const newItemFactory = () => ({ id: "empty" }); // Should not be used
-      const hasContentChecker = jest.fn(() => false);
+      const hasContentChecker = vi.fn(() => false);
 
       mockVueInstanceMethods._manageListItem({
         list,
