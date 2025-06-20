@@ -1,10 +1,19 @@
-import { reactive } from "vue";
+import { reactive, defineAsyncComponent } from "vue";
 import { useModal } from "./useModal.js";
 import { useUiStore } from "../stores/uiStore.js";
-import CharacterHub from "../components/ui/CharacterHub.vue";
-import CharacterHubControls from "../components/ui/CharacterHubControls.vue";
-import IoModal from "../components/modals/contents/IoModal.vue";
-import ShareOptions from "../components/modals/contents/ShareOptions.vue";
+const CharacterHub = defineAsyncComponent(
+  () => import("../components/ui/CharacterHub.vue"),
+);
+const CharacterHubControls = defineAsyncComponent(
+  () => import("../components/ui/CharacterHubControls.vue"),
+);
+const IoModal = defineAsyncComponent(
+  () => import("../components/modals/contents/IoModal.vue"),
+);
+const ShareOptions = defineAsyncComponent(
+  () => import("../components/modals/contents/ShareOptions.vue"),
+);
+
 import { useShare } from "./useShare.js";
 import { useNotifications } from "./useNotifications.js";
 import { useModalStore } from "../stores/modalStore.js";

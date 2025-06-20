@@ -1,10 +1,11 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   base: "./",
-  plugins: [vue()],
+  plugins: [vue(), visualizer({ open: true })],
   resolve: {
     alias: {
       "@sabalessshare": resolve(__dirname, "src/libs/sabalessshare/src"),

@@ -1,5 +1,4 @@
 import { createWeaknessArray, deepClone } from "../utils/utils.js";
-import JSZip from "jszip";
 import { messages } from "../locales/ja.js";
 
 /**
@@ -73,6 +72,7 @@ export class DataManager {
     if (imagesToSave) {
       // Save as ZIP
       try {
+        const { default: JSZip } = await import("jszip");
         const zip = new JSZip();
         zip.file("character_data.json", jsonData);
         const imageFolder = zip.folder("images");
@@ -132,6 +132,7 @@ export class DataManager {
     if (fileName.endsWith(".zip")) {
       reader.onload = async (e) => {
         try {
+          const { default: JSZip } = await import("jszip");
           const zip = await JSZip.loadAsync(e.target.result);
           const jsonDataFile = zip.file("character_data.json");
 

@@ -30,8 +30,6 @@
 
 <script setup>
 import { ref, defineExpose, watch } from 'vue';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
 
 const props = defineProps({
   isVisible: Boolean,
@@ -60,15 +58,25 @@ function parseSections(text) {
     const lines = part.split('\n');
     const title = lines.shift().trim();
     const body = lines.join('\n');
-    const html = DOMPurify.sanitize(marked.parse(body));
-    return { title, content: html };
+    return { title, content: body, html: '' };
   });
 }
 
-function toggle(index) {
-  activeSection.value = activeSection.value === index ? -1 : index;
-}
+async function toggle(index) {
+  if (activeSection.value === index) {
+    activeSection.value = -1;
+    return;
+  }
+  
+  activeSection.value = index;
+  const section = sections.value[index];
 
+  if (!section.html) {
+    const { marked } = await import('marked');
+    const { default: DOMPurify } = await import('dompurify');
+    section.html = DOMPurify.sanitize(marked.parse(section.content));
+  }
+}
 defineExpose({ panelEl });
 </script>
 
