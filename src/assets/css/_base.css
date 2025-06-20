@@ -49,7 +49,8 @@ body {
 }
 
 /* Keyboard Handling Adjustments (グローバルなベース調整) */
-body.keyboard-visible {
+
+/* body.keyboard-visible {
   padding-bottom: 0 !important;
 }
 
@@ -65,4 +66,4 @@ body.keyboard-visible .help-panel {
 
 body.keyboard-visible .top-left-controls {
   position: fixed !important;
-}
+} */

@@ -80,17 +80,16 @@ defineExpose({ headerEl, helpIcon });
 .main-header__title {
     flex: 1;
     text-align: center;
-    font-family: "Cinzel Decorative", cursive;
+    font-family: "Cinzel Decorative", "Shippori Mincho", serif;
     color: var(--color-accent);
-    font-size: 1.5em;
+    font-size: 30px;
 }
 .header-help-icon {
     cursor: pointer;
     font-size: 25px;
     font-weight: 400;
-    /* padding: 6px 8px; */
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
 }
 .header-help-icon--fixed,
 .header-help-icon--fixed:hover {
