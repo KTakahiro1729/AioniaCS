@@ -6,12 +6,15 @@ import { receiveDynamicData } from "../libs/sabalessshare/src/dynamic.js";
 import { parseShareUrl } from "../libs/sabalessshare/src/url.js";
 import { DriveStorageAdapter } from "../services/driveStorageAdapter.js";
 import { useNotifications } from "./useNotifications.js";
+import { useModal } from "./useModal.js";
+import PasswordPromptModal from "../components/modals/contents/PasswordPromptModal.vue";
 import { messages } from "../locales/ja.js";
 
 export function useAppInitialization(dataManager) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
   const { showToast } = useNotifications();
+  const { showModal } = useModal();
 
   async function initialize() {
     uiStore.setLoading(true);
@@ -24,15 +27,44 @@ export function useAppInitialization(dataManager) {
       let buffer;
       if (params.mode === "dynamic") {
         const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
+        async function promptPassword() {
+          const result = await showModal({
+            component: PasswordPromptModal,
+            title: messages.ui.prompts.sharedDataPassword,
+            buttons: [
+              { label: "OK", value: "ok", variant: "primary" },
+              {
+                label: messages.ui.modal.cancel,
+                value: "cancel",
+                variant: "secondary",
+              },
+            ],
+          });
+          if (!result.component || result.value !== "ok") return null;
+          return result.component.password.value || null;
+        }
         buffer = await receiveDynamicData({
           location: window.location,
           adapter,
-          passwordPromptHandler: async () =>
-            Promise.resolve(
-              window.prompt(messages.ui.prompts.sharedDataPassword) || null,
-            ),
+          passwordPromptHandler: promptPassword,
         });
       } else {
+        async function promptPassword() {
+          const result = await showModal({
+            component: PasswordPromptModal,
+            title: messages.ui.prompts.sharedDataPassword,
+            buttons: [
+              { label: "OK", value: "ok", variant: "primary" },
+              {
+                label: messages.ui.modal.cancel,
+                value: "cancel",
+                variant: "secondary",
+              },
+            ],
+          });
+          if (!result.component || result.value !== "ok") return null;
+          return result.component.password.value || null;
+        }
         buffer = await receiveSharedData({
           location: window.location,
           downloadHandler: async (id) => {
@@ -45,10 +77,7 @@ export function useAppInitialization(dataManager) {
               iv: new Uint8Array(base64ToArrayBuffer(iv)),
             };
           },
-          passwordPromptHandler: async () =>
-            Promise.resolve(
-              window.prompt(messages.ui.prompts.sharedDataPassword) || null,
-            ),
+          passwordPromptHandler: promptPassword,
         });
       }
       const parsed = JSON.parse(new TextDecoder().decode(buffer));

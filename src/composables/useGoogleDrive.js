@@ -197,19 +197,43 @@ export function useGoogleDrive(dataManager) {
       }
     };
 
-    const gapiPoll = setInterval(() => {
-      if (window.gapi && window.gapi.load) {
-        handleGapiLoaded();
-        clearInterval(gapiPoll);
-      }
-    }, 100);
+    function waitForScript(selector, check) {
+      return new Promise((resolve, reject) => {
+        if (check()) {
+          resolve();
+          return;
+        }
+        const script = document.querySelector(selector);
+        if (!script) {
+          reject(new Error("Script not found"));
+          return;
+        }
+        script.addEventListener("load", resolve, { once: true });
+        script.addEventListener(
+          "error",
+          () => reject(new Error("Script load failed")),
+          { once: true },
+        );
+      });
+    }
 
-    const gisPoll = setInterval(() => {
-      if (window.google && window.google.accounts) {
-        handleGisLoaded();
-        clearInterval(gisPoll);
-      }
-    }, 100);
+    waitForScript(
+      'script[src="https://apis.google.com/js/api.js"]',
+      () => window.gapi && window.gapi.load,
+    )
+      .then(handleGapiLoaded)
+      .catch(() =>
+        showToast({ type: "error", ...messages.googleDrive.apiInitError() }),
+      );
+
+    waitForScript(
+      'script[src="https://accounts.google.com/gsi/client"]',
+      () => window.google && window.google.accounts,
+    )
+      .then(handleGisLoaded)
+      .catch(() =>
+        showToast({ type: "error", ...messages.googleDrive.signInInitError() }),
+      );
   }
 
   onMounted(() => {
