@@ -26,6 +26,7 @@ export function useDataExport() {
     dataManager.handleFileUpload(
       event,
       (parsedData) => {
+        console.time("StoreUpdate");
         Object.assign(characterStore.character, parsedData.character);
         characterStore.skills.splice(
           0,
@@ -43,6 +44,7 @@ export function useDataExport() {
           characterStore.histories.length,
           ...parsedData.histories,
         );
+        console.timeEnd("StoreUpdate");
       },
       (errorMessage) =>
         showToast({
