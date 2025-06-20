@@ -14,7 +14,6 @@ import { parseShareUrl } from "./libs/sabalessshare/src/url.js";
 import { DriveStorageAdapter } from "./services/driveStorageAdapter.js";
 import { messages } from "./locales/ja.js";
 import { useHeaderVisibility } from "./composables/useHeaderVisibility.js";
-import { useDynamicButtons } from "./composables/useDynamicButtons.js";
 import { useAppModals } from "./composables/useAppModals.js";
 import { useAppInitialization } from "./composables/useAppInitialization.js";
 
@@ -48,6 +47,7 @@ const {
     handleSignOutClick,
     promptForDriveFolder,
     saveCharacterToDrive,
+    saveOrUpdateCurrentCharacterInDrive,
 } = useGoogleDrive(dataManager);
 
 const {
@@ -128,7 +128,6 @@ const currentExperiencePoints = computed(
 const currentWeight = computed(() => characterStore.currentWeight);
 const experienceStatusClass = computed(() => uiStore.experienceStatusClass);
 
-const { saveButton, loadButton } = useDynamicButtons();
 
 // --- Watchers (formerly `watch`) ---
 
@@ -256,21 +255,15 @@ onMounted(async () => {
         :current-experience-points="currentExperiencePoints"
         :max-experience-points="maxExperiencePoints"
         :current-weight="currentWeight"
-        :data-manager="dataManager"
-        :sign-in="handleSignInClick"
-        :save-title="saveButton.title"
-        :save-label="saveButton.label"
-        :save-icon="saveButton.icon"
-        :load-title="loadButton.title"
-        :load-label="loadButton.label"
-        :load-icon="loadButton.icon"
+        :save-local="saveData"
+        :handle-file-upload="handleFileUpload"
+        :open-hub="openHub"
+        :save-to-drive="saveOrUpdateCurrentCharacterInDrive"
         :experience-label="messages.ui.footer.experience"
         :io-label="messages.ui.footer.io"
         :share-label="messages.ui.footer.share"
         :copy-edit-label="messages.ui.footer.copyEdit"
         :is-viewing-shared="uiStore.isViewingShared"
-        @save="saveData"
-        @file-upload="handleFileUpload"
         @io="openIoModal"
         @share="openShareModal"
     />

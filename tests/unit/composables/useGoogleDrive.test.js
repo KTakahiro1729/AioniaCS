@@ -60,4 +60,31 @@ describe("useGoogleDrive", () => {
       "foo",
     );
   });
+
+  test("saveOrUpdateCurrentCharacterInDrive chooses create or update", async () => {
+    const createFile = jest.fn().mockResolvedValue({ id: "1" });
+    const updateFile = jest.fn().mockResolvedValue({ id: "2" });
+    const dataManager = {
+      googleDriveManager: {
+        createCharacterFile: createFile,
+        updateCharacterFile: updateFile,
+      },
+      saveDataToAppData: jest.fn((c, s, ss, e, h, id, name) => {
+        return id ? updateFile(id, {}, name) : createFile({}, name);
+      }),
+    };
+    const { saveOrUpdateCurrentCharacterInDrive } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.currentDriveFileId = null;
+    await saveOrUpdateCurrentCharacterInDrive();
+    expect(createFile).toHaveBeenCalled();
+    uiStore.currentDriveFileId = "abc";
+    uiStore.currentDriveFileName = "c.json";
+    await saveOrUpdateCurrentCharacterInDrive();
+    expect(updateFile).toHaveBeenCalledWith(
+      "abc",
+      expect.any(Object),
+      "c.json",
+    );
+  });
 });

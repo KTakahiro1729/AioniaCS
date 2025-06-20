@@ -7,32 +7,46 @@
         <div class="footer-button-container">
             <button
                 class="button-base footer-button footer-button--save"
-                @click="$emit('save')"
-                :title="saveTitle"
+                @click="handleSave"
+                :title="saveButton.title"
             >
                 <span
                     class="icon-svg icon-svg--footer"
-                    :class="saveIcon"
+                    :class="saveButton.icon"
                 ></span>
-                {{ saveLabel }}
+                {{ saveButton.label }}
             </button>
         </div>
         <div class="footer-button-container">
             <label
+                v-if="!uiStore.isSignedIn"
                 class="button-base footer-button footer-button--load"
                 for="load_input_vue"
-                :title="loadTitle"
+                :title="loadButton.title"
             >
                 <span
                     class="icon-svg icon-svg--footer"
-                    :class="loadIcon"
+                    :class="loadButton.icon"
                 ></span>
-                {{ loadLabel }}
+                {{ loadButton.label }}
             </label>
+            <button
+                v-else
+                class="button-base footer-button footer-button--load"
+                @click="props.openHub"
+                :title="loadButton.title"
+            >
+                <span
+                    class="icon-svg icon-svg--footer"
+                    :class="loadButton.icon"
+                ></span>
+                {{ loadButton.label }}
+            </button>
             <input
+                v-if="!uiStore.isSignedIn"
                 type="file"
                 id="load_input_vue"
-                @change="(e) => $emit('file-upload', e)"
+                @change="(e) => props.handleFileUpload(e)"
                 accept=".json,.txt,.zip"
                 class="hidden"
             />
@@ -56,7 +70,9 @@
 </template>
 
 <script setup>
-import { ref, defineExpose, defineEmits } from "vue";
+import { defineProps } from "vue";
+import { useUiStore } from "../../stores/uiStore.js";
+import { useDynamicButtons } from "../../composables/useDynamicButtons.js";
 
 const props = defineProps({
     experienceStatusClass: String,
@@ -65,20 +81,25 @@ const props = defineProps({
     maxExperiencePoints: Number,
     currentWeight: Number,
     isViewingShared: Boolean,
-    dataManager: Object,
-    signIn: Function,
-    saveTitle: String,
-    saveLabel: String,
-    saveIcon: String,
-    loadTitle: String,
-    loadLabel: String,
-    loadIcon: String,
+    saveLocal: Function,
+    handleFileUpload: Function,
+    openHub: Function,
+    saveToDrive: Function,
     ioLabel: String,
     shareLabel: String,
     copyEditLabel: String,
 });
 
-const emit = defineEmits(["save", "file-upload", "io", "share", "copy-edit"]);
+const uiStore = useUiStore();
+const { saveButton, loadButton } = useDynamicButtons();
+
+function handleSave() {
+    if (uiStore.isSignedIn) {
+        props.saveToDrive();
+    } else {
+        props.saveLocal();
+    }
+}
 </script>
 
 <style scoped></style>

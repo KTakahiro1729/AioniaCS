@@ -3,13 +3,16 @@ global.Vue = Vue;
 import { mount } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import MainFooter from "../../../src/components/ui/MainFooter.vue";
+import { useUiStore } from "../../../src/stores/uiStore.js";
 
 describe("MainFooter", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  test("emits events on button click", async () => {
+  test("local save and file upload when signed out", async () => {
+    const saveLocal = jest.fn();
+    const fileUpload = jest.fn();
     const wrapper = mount(MainFooter, {
       props: {
         experienceStatusClass: "",
@@ -17,27 +20,51 @@ describe("MainFooter", () => {
         maxExperiencePoints: 2,
         experienceLabel: "EXP",
         isViewingShared: false,
-        dataManager: {},
-        signIn: () => {},
-        saveTitle: "save",
-        saveLabel: "save",
-        saveIcon: "icon-svg-local-download",
-        loadTitle: "load",
-        loadLabel: "load",
-        loadIcon: "icon-svg-local-upload",
+        saveLocal,
+        handleFileUpload: fileUpload,
+        openHub: jest.fn(),
+        saveToDrive: jest.fn(),
         ioLabel: "io",
         shareLabel: "share",
         copyEditLabel: "copy",
       },
     });
-
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = false;
     await wrapper.find(".footer-button--save").trigger("click");
-    expect(wrapper.emitted("save")).toBeTruthy();
+    expect(saveLocal).toHaveBeenCalled();
+    await wrapper.find("#load_input_vue").trigger("change");
+    expect(fileUpload).toHaveBeenCalled();
+  });
 
-    await wrapper.find(".footer-button--io").trigger("click");
-    expect(wrapper.emitted("io")).toBeTruthy();
-
-    await wrapper.find(".footer-button--share").trigger("click");
-    expect(wrapper.emitted("share")).toBeTruthy();
+  test("drive actions when signed in", async () => {
+    const saveDrive = jest.fn();
+    const openHub = jest.fn();
+    const wrapper = mount(MainFooter, {
+      props: {
+        experienceStatusClass: "",
+        currentExperiencePoints: 1,
+        maxExperiencePoints: 2,
+        experienceLabel: "EXP",
+        isViewingShared: false,
+        saveLocal: jest.fn(),
+        handleFileUpload: jest.fn(),
+        openHub,
+        saveToDrive: saveDrive,
+        ioLabel: "io",
+        shareLabel: "share",
+        copyEditLabel: "copy",
+      },
+    });
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    uiStore.currentDriveFileId = null;
+    await wrapper.find(".footer-button--save").trigger("click");
+    expect(saveDrive).toHaveBeenCalled();
+    await wrapper.find(".footer-button--load").trigger("click");
+    expect(openHub).toHaveBeenCalled();
+    uiStore.currentDriveFileId = "id";
+    await wrapper.find(".footer-button--save").trigger("click");
+    expect(saveDrive).toHaveBeenCalledTimes(2);
   });
 });
