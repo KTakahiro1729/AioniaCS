@@ -18,6 +18,8 @@ import { useShare } from "./useShare.js";
 import { useNotifications } from "./useNotifications.js";
 import { useModalStore } from "../stores/modalStore.js";
 import { messages } from "../locales/ja.js";
+import { openPreviewPage } from "./usePrint.js";
+import { isDesktopDevice } from "../utils/device.js";
 
 export function useAppModals(options) {
   const uiStore = useUiStore();
@@ -37,6 +39,14 @@ export function useAppModals(options) {
     promptForDriveFolder,
     copyEditCallback,
   } = options;
+
+  function handlePrint() {
+    if (isDesktopDevice()) {
+      printCharacterSheet();
+    } else {
+      openPreviewPage();
+    }
+  }
 
   async function openHub() {
     await showModal({
@@ -82,7 +92,7 @@ export function useAppModals(options) {
         "save-local": saveData,
         "load-local": handleFileUpload,
         "output-cocofolia": outputToCocofolia,
-        print: printCharacterSheet,
+        print: handlePrint,
         "drive-folder": promptForDriveFolder,
       },
     });

@@ -1,4 +1,5 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { isDesktopDevice } from "../utils/device.js";
 
 export function useHelp(helpPanelRef, triggerRef) {
   const helpState = ref("closed");
@@ -44,9 +45,7 @@ export function useHelp(helpPanelRef, triggerRef) {
   }
 
   onMounted(() => {
-    isDesktop.value = !(
-      "ontouchstart" in window || navigator.maxTouchPoints > 0
-    );
+    isDesktop.value = isDesktopDevice();
     document.addEventListener("click", handleClickOutside);
   });
 
