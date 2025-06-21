@@ -21,7 +21,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./tests/unit/setup.js",
-    include: ["tests/unit/**/*.test.js"],
+    include: ["tests/unit/**/*.test.js", "tests/integrity/**/*.test.js"],
     exclude: ["tests/e2e/**", "src/libs/sabalessshare/**", "node_modules/**"],
     alias: {
       "\\?raw$": resolve(__dirname, "tests/unit/__mocks__/raw.js"),

@@ -413,6 +413,37 @@ export class DataManager {
   }
 
   /**
+   * Loads the character index and returns only valid entries.
+   * @returns {Promise<Array>} Array of valid index entries
+   */
+  async loadCharacterListFromDrive() {
+    if (!this.googleDriveManager) {
+      console.error("GoogleDriveManager not set in DataManager.");
+      throw new Error(
+        "GoogleDriveManager not configured. Please sign in or initialize the Drive manager.",
+      );
+    }
+
+    const index = await this.googleDriveManager.readIndexFile();
+    const valid = [];
+
+    for (const entry of index) {
+      try {
+        const data = await this.loadDataFromDrive(entry.id);
+        if (data) {
+          valid.push(entry);
+        } else {
+          console.error(`Character file not found or invalid: ${entry.id}`);
+        }
+      } catch (err) {
+        console.error(`Failed to load character file ${entry.id}:`, err);
+      }
+    }
+
+    return valid;
+  }
+
+  /**
    * 外部JSONフォーマットを内部フォーマットに変換
    */
   convertExternalJsonToInternalFormat(externalData) {

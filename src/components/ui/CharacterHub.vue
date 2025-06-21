@@ -67,12 +67,14 @@ async function ensureCharacters() {
     uiStore.driveCharacters.length === 0 &&
     props.dataManager.googleDriveManager
   ) {
-    await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
+    uiStore.driveCharacters = await props.dataManager.loadCharacterListFromDrive();
   }
 }
 
 function refreshList() {
-  uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
+  props.dataManager
+    .loadCharacterListFromDrive()
+    .then((list) => (uiStore.driveCharacters = list));
 }
 
 async function saveNew() {

@@ -56,7 +56,10 @@ const { showAsyncToast } = useNotifications();
 const { showModal } = useModal();
 
 function refreshHubList() {
-    uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
+    if (!dataManager.googleDriveManager) return;
+    dataManager
+        .loadCharacterListFromDrive()
+        .then((list) => (uiStore.driveCharacters = list));
 }
 
 async function saveNewCharacter() {
