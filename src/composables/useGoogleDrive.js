@@ -22,7 +22,9 @@ export function useGoogleDrive(dataManager) {
           reject(error || new Error("Ensure pop-ups are enabled."));
         } else {
           uiStore.isSignedIn = true;
-          uiStore.refreshDriveCharacters(googleDriveManager.value);
+          dataManager
+            .loadCharacterListFromDrive()
+            .then((list) => (uiStore.driveCharacters = list));
           resolve();
         }
       });
