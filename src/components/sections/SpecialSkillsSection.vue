@@ -110,7 +110,11 @@ function updateSpecialSkillOptions(index) {
   const item = localSpecialSkills[index];
   if (item) {
     item.name = '';
-    updateSpecialSkillNoteVisibility(index);
+    item.note = '';
+    item.showNote = item.group === 'free';
+    if (item.group !== 'free') {
+      updateSpecialSkillNoteVisibility(index);
+    }
   }
 }
 
