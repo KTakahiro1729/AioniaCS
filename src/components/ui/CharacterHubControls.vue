@@ -4,6 +4,7 @@
       <button class="button-base character-hub-button character-hub--signout" @click="$emit('sign-out')">ログアウト</button>
       <button class="button-base character-hub-button character-hub--refresh" @click="$emit('refresh')">更新</button>
       <button class="button-base character-hub-button character-hub--new" @click="$emit('new')">新規保存</button>
+      <button class="button-base character-hub-button character-hub--check" @click="$emit('check')">整合確認</button>
     </template>
     <template v-else>
       <button class="button-base character-hub-button" @click="$emit('sign-in')">Googleにログイン</button>
@@ -14,7 +15,7 @@
 <script setup>
 import { useUiStore } from '../../stores/uiStore.js';
 
-const emit = defineEmits(['sign-in', 'sign-out', 'refresh', 'new']);
+const emit = defineEmits(['sign-in', 'sign-out', 'refresh', 'new', 'check']);
 const uiStore = useUiStore();
 </script>
 

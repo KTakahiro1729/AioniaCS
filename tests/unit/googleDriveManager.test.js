@@ -105,6 +105,39 @@ describe("GoogleDriveManager appDataFolder", () => {
     vi.useRealTimers();
   });
 
+  test("scanIntegrity detects orphan and broken entries", async () => {
+    vi.spyOn(gdm, "listFiles").mockResolvedValue([
+      { id: "i", name: "character_index.json" },
+      { id: "a", name: "a.json" },
+      { id: "b", name: "b.json" },
+    ]);
+    vi.spyOn(gdm, "readIndexFile").mockResolvedValue([
+      { id: "a", name: "a.json" },
+      { id: "c", name: "c.json" },
+    ]);
+    const res = await gdm.scanIntegrity();
+    expect(res.orphanFiles).toEqual([{ id: "b", name: "b.json" }]);
+    expect(res.brokenPointers).toEqual([{ id: "c", name: "c.json" }]);
+  });
+
+  test("repairIndex updates index and deletes files", async () => {
+    vi.spyOn(gdm, "readIndexFile").mockResolvedValue([
+      { id: "a", name: "a.json" },
+    ]);
+    vi.spyOn(gdm, "writeIndexFile").mockResolvedValue();
+    vi.spyOn(gdm, "listFiles").mockResolvedValue([{ id: "b", name: "b.json" }]);
+    vi.spyOn(gdm, "deleteFile").mockResolvedValue();
+    await gdm.repairIndex({
+      addIds: ["b"],
+      removeIds: ["a"],
+      deleteFileIds: ["x"],
+    });
+    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
+      expect.objectContaining({ id: "b", name: "b.json" }),
+    ]);
+    expect(gdm.deleteFile).toHaveBeenCalledWith("x");
+  });
+
   test("onGapiLoad rejects when gapi.load is missing", async () => {
     delete gapi.load;
     await expect(gdm.onGapiLoad()).rejects.toThrow(

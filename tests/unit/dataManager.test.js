@@ -347,12 +347,10 @@ describe("DataManager", () => {
       dm.googleDriveManager = {
         createCharacterFile: vi
           .fn()
-          .mockResolvedValue({ id: "1", name: "c.json" }),
-        updateCharacterFile: vi
-          .fn()
-          .mockResolvedValue({ id: "1", name: "c.json" }),
+          .mockResolvedValue({ id: "2", name: "c.json" }),
         addIndexEntry: vi.fn().mockResolvedValue(),
-        renameIndexEntry: vi.fn().mockResolvedValue(),
+        replaceIndexEntry: vi.fn().mockResolvedValue(),
+        deleteFile: vi.fn().mockResolvedValue(),
       };
     });
 
@@ -368,14 +366,14 @@ describe("DataManager", () => {
       );
       expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
       expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
-        id: "1",
+        id: "2",
         name: "c.json",
         characterName: "TestChar",
       });
-      expect(res.id).toBe("1");
+      expect(res.id).toBe("2");
     });
 
-    test("updates file when id exists and renames index", async () => {
+    test("updates file by creating new version and deleting old", async () => {
       await dm.saveDataToAppData(
         mockCharacter,
         mockSkills,
@@ -385,16 +383,34 @@ describe("DataManager", () => {
         "1",
         "c",
       );
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith(
+      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
+      expect(dm.googleDriveManager.replaceIndexEntry).toHaveBeenCalledWith(
         "1",
-        expect.any(Object),
-        "c.json",
+        {
+          id: "2",
+          name: "c.json",
+          characterName: "TestChar",
+        },
       );
-      expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith(
-        "1",
-        "TestChar",
+      expect(dm.googleDriveManager.deleteFile).toHaveBeenCalledWith("1");
+    });
+
+    test("cleans up new file if index update fails", async () => {
+      dm.googleDriveManager.replaceIndexEntry.mockRejectedValue(
+        new Error("fail"),
       );
-      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
+      await expect(
+        dm.saveDataToAppData(
+          mockCharacter,
+          mockSkills,
+          mockSpecialSkills,
+          mockEquipments,
+          mockHistories,
+          "1",
+          "c",
+        ),
+      ).rejects.toThrow("fail");
+      expect(dm.googleDriveManager.deleteFile).toHaveBeenCalledWith("2");
     });
   });
 });

@@ -163,6 +163,7 @@ export const messages = {
           driveFolder: "フォルダ変更",
         },
       },
+      dataCheckTitle: "クラウドデータチェック",
     },
   },
   outputButton: {

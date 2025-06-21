@@ -623,6 +623,18 @@ export class GoogleDriveManager {
     await this.writeIndexFile(filtered);
   }
 
+  async replaceIndexEntry(oldId, newEntry) {
+    const index = await this.readIndexFile();
+    const now = new Date().toISOString();
+    const idx = index.findIndex((e) => e.id === oldId);
+    if (idx !== -1) {
+      index[idx] = { ...index[idx], ...newEntry, updatedAt: now };
+    } else {
+      index.push({ ...newEntry, updatedAt: now });
+    }
+    await this.writeIndexFile(index);
+  }
+
   /**
    * Creates a character data file in appDataFolder.
    * @param {object} data character JSON object
@@ -650,6 +662,44 @@ export class GoogleDriveManager {
     if (!gapi.client || !gapi.client.drive) return null;
     await gapi.client.drive.files.delete({ fileId: id });
     await this.removeIndexEntry(id);
+  }
+
+  async deleteFile(id) {
+    if (!gapi.client || !gapi.client.drive) return null;
+    await gapi.client.drive.files.delete({ fileId: id });
+  }
+
+  async scanIntegrity() {
+    const allFiles = await this.listFiles("appDataFolder");
+    const dataFiles = allFiles.filter((f) => f.name !== "character_index.json");
+    const index = await this.readIndexFile();
+    const indexIds = new Set(index.map((e) => e.id));
+    const fileIds = new Set(dataFiles.map((f) => f.id));
+    const orphanFiles = dataFiles.filter((f) => !indexIds.has(f.id));
+    const brokenPointers = index.filter((e) => !fileIds.has(e.id));
+    return { orphanFiles, brokenPointers };
+  }
+
+  async repairIndex({ addIds = [], removeIds = [], deleteFileIds = [] }) {
+    let index = await this.readIndexFile();
+    const allFiles = await this.listFiles("appDataFolder");
+    const fileMap = new Map(allFiles.map((f) => [f.id, f.name]));
+    const now = new Date().toISOString();
+    index = index.filter((e) => !removeIds.includes(e.id));
+    addIds.forEach((id) => {
+      const name = fileMap.get(id);
+      if (name)
+        index.push({
+          id,
+          name,
+          characterName: name.replace(".json", ""),
+          updatedAt: now,
+        });
+    });
+    await this.writeIndexFile(index);
+    for (const fid of deleteFileIds) {
+      await this.deleteFile(fid);
+    }
   }
 }
 

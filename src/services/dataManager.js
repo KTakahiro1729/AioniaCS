@@ -355,16 +355,23 @@ export class DataManager {
       ) + ".json";
 
     if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(
-        currentFileId,
+      const created = await this.googleDriveManager.createCharacterFile(
         dataToSave,
         sanitizedFileName,
       );
-      await this.googleDriveManager.renameIndexEntry(
-        currentFileId,
-        character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
-      );
-      return res;
+      if (!created) return null;
+      try {
+        await this.googleDriveManager.replaceIndexEntry(currentFileId, {
+          id: created.id,
+          name: created.name,
+          characterName: character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
+        });
+      } catch (err) {
+        await this.googleDriveManager.deleteFile(created.id);
+        throw err;
+      }
+      await this.googleDriveManager.deleteFile(currentFileId);
+      return created;
     }
 
     const created = await this.googleDriveManager.createCharacterFile(

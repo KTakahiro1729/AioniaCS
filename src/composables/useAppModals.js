@@ -13,6 +13,9 @@ const IoModal = defineAsyncComponent(
 const ShareOptions = defineAsyncComponent(
   () => import("../components/modals/contents/ShareOptions.vue"),
 );
+const DataIntegrityModal = defineAsyncComponent(
+  () => import("../components/modals/contents/DataIntegrityModal.vue"),
+);
 
 import { useShare } from "./useShare.js";
 import { useNotifications } from "./useNotifications.js";
@@ -54,6 +57,7 @@ export function useAppModals(options) {
           "sign-out": handleSignOutClick,
           refresh: refreshHubList,
           new: saveNewCharacter,
+          check: openDataCheck,
         },
       },
       buttons: [],
@@ -85,6 +89,16 @@ export function useAppModals(options) {
         print: printCharacterSheet,
         "drive-folder": promptForDriveFolder,
       },
+    });
+  }
+
+  async function openDataCheck() {
+    await showModal({
+      component: DataIntegrityModal,
+      title: messages.ui.modal.dataCheckTitle,
+      props: { gdm: dataManager.googleDriveManager },
+      buttons: [],
+      on: { done: refreshHubList },
     });
   }
 
@@ -144,5 +158,5 @@ export function useAppModals(options) {
     }
   }
 
-  return { openHub, openIoModal, openShareModal };
+  return { openHub, openIoModal, openShareModal, openDataCheck };
 }
