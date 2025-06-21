@@ -26,21 +26,6 @@ describe("MainHeader", () => {
     expect(wrapper.find(".main-header__title").text()).toBe("Hero");
   });
 
-  test("hidden class applied when store flag false", async () => {
-    const wrapper = mount(MainHeader, {
-      props: {
-        defaultTitle: "Default",
-        cloudHubLabel: "hub",
-        helpLabel: "?",
-        helpState: "closed",
-      },
-    });
-    const uiStore = useUiStore();
-    uiStore.showHeader = false;
-    await wrapper.vm.$nextTick();
-    expect(wrapper.classes()).toContain("main-header--hidden");
-  });
-
   test("cloud hub hidden when not signed in", async () => {
     const wrapper = mount(MainHeader, {
       props: {

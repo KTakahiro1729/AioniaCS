@@ -1,7 +1,6 @@
 <template>
     <header
         class="main-header"
-        :class="{ 'main-header--hidden': !uiStore.showHeader }"
         ref="headerEl"
     >
         <button
@@ -28,7 +27,7 @@
 
 <script setup>
 import { ref, computed, defineExpose } from "vue";
-import { useUiStore } from "../../stores/uiStore.js";
+import { useHeaderVisibility } from "../../composables/useHeaderVisibility.js";
 import { useCharacterStore } from "../../stores/characterStore.js";
 
 const props = defineProps({
@@ -48,8 +47,9 @@ const emit = defineEmits([
 const headerEl = ref(null);
 const helpIcon = ref(null);
 
-const uiStore = useUiStore();
 const characterStore = useCharacterStore();
+
+useHeaderVisibility(headerEl);
 
 const titleText = computed(
     () => characterStore.character.name || props.defaultTitle
@@ -73,12 +73,7 @@ defineExpose({ headerEl, helpIcon });
     border-bottom: 1px solid var(--color-border-normal);
     box-shadow: 0 3px 8px rgb(0 0 0 / 50%);
     z-index: 101;
-    transition: transform 0.3s ease;
     will-change: transform;
-}
-
-.main-header--hidden {
-    transform: translateY(-100%);
 }
 
 .main-header__title {
