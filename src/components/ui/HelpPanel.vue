@@ -20,7 +20,7 @@
           <div
             class="accordion__body"
             v-show="activeSection === index"
-            v-html="section.content"
+            v-html="section.html"
           ></div>
         </div>
       </div>
@@ -44,9 +44,16 @@ const activeSection = ref(0);
 
 watch(
   () => props.helpText,
-  (val) => {
+  async (val) => {
     sections.value = parseSections(val);
     activeSection.value = 0;
+    if (sections.value[0]) {
+      const { marked } = await import('marked');
+      const { default: DOMPurify } = await import('dompurify');
+      sections.value[0].html = DOMPurify.sanitize(
+        marked.parse(sections.value[0].content),
+      );
+    }
   },
   { immediate: true },
 );
