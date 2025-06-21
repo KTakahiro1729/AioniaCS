@@ -41,6 +41,10 @@ const {
     promptForDriveFolder,
     saveCharacterToDrive,
     saveOrUpdateCurrentCharacterInDrive,
+    checkDriveIntegrity,
+    restoreCharacter,
+    deleteCharacterCompletely,
+    removeBrokenEntry,
 } = useGoogleDrive(dataManager);
 
 const {
@@ -107,6 +111,7 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
     outputToCocofolia,
     printCharacterSheet,
     promptForDriveFolder,
+    checkIntegrity: checkDriveIntegrity,
     copyEditCallback: () => {
         uiStore.isViewingShared = false;
     },
@@ -153,7 +158,7 @@ watch(
 
 
 // --- Lifecycle Hooks ---
-const { initialize } = useAppInitialization(dataManager);
+const { initialize } = useAppInitialization(dataManager, checkDriveIntegrity);
 onMounted(initialize);
 </script>
 
@@ -182,6 +187,9 @@ onMounted(initialize);
         :handle-file-upload="handleFileUpload"
         :open-hub="openHub"
         :save-to-drive="saveOrUpdateCurrentCharacterInDrive"
+        :restore="restoreCharacter"
+        :delete-full="deleteCharacterCompletely"
+        :remove-pointer="removeBrokenEntry"
         :experience-label="messages.ui.footer.experience"
         :io-label="messages.ui.footer.io"
         :share-label="messages.ui.footer.share"

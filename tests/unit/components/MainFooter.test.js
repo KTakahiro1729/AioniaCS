@@ -67,4 +67,41 @@ describe("MainFooter", () => {
     await wrapper.find(".footer-button--save").trigger("click");
     expect(saveDrive).toHaveBeenCalledTimes(2);
   });
+
+  test("shows repair buttons for corrupted data", async () => {
+    const restore = vi.fn();
+    const del = vi.fn();
+    const wrapper = mount(MainFooter, {
+      props: {
+        experienceStatusClass: "",
+        currentExperiencePoints: 1,
+        maxExperiencePoints: 2,
+        experienceLabel: "EXP",
+        isViewingShared: false,
+        saveLocal: vi.fn(),
+        handleFileUpload: vi.fn(),
+        openHub: vi.fn(),
+        saveToDrive: vi.fn(),
+        restore,
+        deleteFull: del,
+        removePointer: vi.fn(),
+        ioLabel: "io",
+        shareLabel: "share",
+        copyEditLabel: "copy",
+      },
+    });
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    uiStore.driveCharacters.push({
+      id: "x",
+      name: "x.json",
+      isCorrupted: true,
+      recoverable: true,
+    });
+    uiStore.currentDriveFileId = "x";
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain("キャラクターを復元");
+    await wrapper.findAll("button")[0].trigger("click");
+    expect(restore).toHaveBeenCalled();
+  });
 });

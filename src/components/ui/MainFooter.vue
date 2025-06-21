@@ -4,6 +4,7 @@
             {{ experienceLabel }} {{ currentExperiencePoints }} /
             {{ maxExperiencePoints }}
         </div>
+        <template v-if="!isCorrupted">
         <button
             class="button-base footer-button footer-button--save"
             @click="handleSave"
@@ -47,6 +48,20 @@
             accept=".json,.txt,.zip"
             class="hidden"
         />
+        </template>
+        <template v-else-if="recoverable">
+          <button class="button-base footer-button" @click="props.restore">
+            キャラクターを復元
+          </button>
+          <button class="button-base footer-button" @click="props.deleteFull">
+            完全に削除
+          </button>
+        </template>
+        <template v-else>
+          <button class="button-base footer-button" @click="props.removePointer">
+            リストから削除
+          </button>
+        </template>
         <button
             class="button-base footer-button footer-button--io"
             @click="$emit('io')"
@@ -66,7 +81,7 @@
 </template>
 
 <script setup>
-import { defineProps } from "vue";
+import { defineProps, computed } from "vue";
 import { useUiStore } from "../../stores/uiStore.js";
 import { useDynamicButtons } from "../../composables/useDynamicButtons.js";
 
@@ -81,6 +96,9 @@ const props = defineProps({
     handleFileUpload: Function,
     openHub: Function,
     saveToDrive: Function,
+    restore: Function,
+    deleteFull: Function,
+    removePointer: Function,
     ioLabel: String,
     shareLabel: String,
     copyEditLabel: String,
@@ -88,6 +106,11 @@ const props = defineProps({
 
 const uiStore = useUiStore();
 const { saveButton, loadButton } = useDynamicButtons();
+const currentEntry = computed(() =>
+  uiStore.driveCharacters.find((c) => c.id === uiStore.currentDriveFileId),
+);
+const isCorrupted = computed(() => currentEntry.value?.isCorrupted);
+const recoverable = computed(() => currentEntry.value?.recoverable);
 
 function handleSave() {
     if (uiStore.isSignedIn) {

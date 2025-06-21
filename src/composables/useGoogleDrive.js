@@ -22,7 +22,9 @@ export function useGoogleDrive(dataManager) {
           reject(error || new Error("Ensure pop-ups are enabled."));
         } else {
           uiStore.isSignedIn = true;
-          uiStore.refreshDriveCharacters(googleDriveManager.value);
+          uiStore
+            .refreshDriveCharacters(googleDriveManager.value)
+            .then(checkDriveIntegrity);
           resolve();
         }
       });
@@ -167,6 +169,64 @@ export function useGoogleDrive(dataManager) {
     );
   }
 
+  async function checkDriveIntegrity() {
+    const gdm = googleDriveManager.value;
+    if (!gdm) return;
+    const { orphanFiles, brokenPointers } = await gdm.scanIntegrity();
+    orphanFiles.forEach((f) => {
+      uiStore.upsertDriveCharacter({
+        id: f.id,
+        name: f.name,
+        characterName: f.name.replace(/\.json$/, ""),
+        updatedAt: null,
+        isCorrupted: true,
+        recoverable: true,
+      });
+    });
+    brokenPointers.forEach((e) => {
+      uiStore.upsertDriveCharacter({
+        id: e.id,
+        name: e.name,
+        characterName: e.characterName || e.name.replace(/\.json$/, ""),
+        updatedAt: e.updatedAt || null,
+        isCorrupted: true,
+        recoverable: false,
+      });
+    });
+  }
+
+  async function restoreCharacter(id) {
+    const gdm = googleDriveManager.value;
+    if (!gdm) return;
+    await gdm.repairIndex({ addIds: [id] });
+    uiStore.updateDriveCharacter(id, {
+      isCorrupted: false,
+      recoverable: false,
+    });
+  }
+
+  async function deleteCharacterCompletely(id) {
+    const gdm = googleDriveManager.value;
+    if (!gdm) return;
+    await gdm.repairIndex({ removeIds: [id], deleteFileIds: [id] });
+    uiStore.removeDriveCharacter(id);
+    if (uiStore.currentDriveFileId === id) {
+      uiStore.currentDriveFileId = null;
+      uiStore.currentDriveFileName = "";
+    }
+  }
+
+  async function removeBrokenEntry(id) {
+    const gdm = googleDriveManager.value;
+    if (!gdm) return;
+    await gdm.repairIndex({ removeIds: [id] });
+    uiStore.removeDriveCharacter(id);
+    if (uiStore.currentDriveFileId === id) {
+      uiStore.currentDriveFileId = null;
+      uiStore.currentDriveFileName = "";
+    }
+  }
+
   function initializeGoogleDrive() {
     const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -250,5 +310,9 @@ export function useGoogleDrive(dataManager) {
     saveCharacterToDrive,
     handleSaveToDriveClick,
     saveOrUpdateCurrentCharacterInDrive,
+    checkDriveIntegrity,
+    restoreCharacter,
+    deleteCharacterCompletely,
+    removeBrokenEntry,
   };
 }

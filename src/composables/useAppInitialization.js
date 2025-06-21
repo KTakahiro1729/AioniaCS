@@ -1,5 +1,6 @@
 import { useCharacterStore } from "../stores/characterStore.js";
 import { useUiStore } from "../stores/uiStore.js";
+import { watch } from "vue";
 import { base64ToArrayBuffer } from "../libs/sabalessshare/src/crypto.js";
 import { receiveSharedData } from "../libs/sabalessshare/src/index.js";
 import { receiveDynamicData } from "../libs/sabalessshare/src/dynamic.js";
@@ -10,11 +11,22 @@ import { useModal } from "./useModal.js";
 import PasswordPromptModal from "../components/modals/contents/PasswordPromptModal.vue";
 import { messages } from "../locales/ja.js";
 
-export function useAppInitialization(dataManager) {
+export function useAppInitialization(dataManager, integrityCheck) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
   const { showToast } = useNotifications();
   const { showModal } = useModal();
+  let checked = false;
+
+  watch(
+    () => uiStore.isSignedIn,
+    (v) => {
+      if (v && !checked && typeof integrityCheck === "function") {
+        checked = true;
+        integrityCheck();
+      }
+    },
+  );
 
   async function initialize() {
     uiStore.setLoading(true);

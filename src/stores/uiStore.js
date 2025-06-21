@@ -76,6 +76,14 @@ export const useUiStore = defineStore("ui", {
     addDriveCharacter(ch) {
       this.driveCharacters.push(ch);
     },
+    upsertDriveCharacter(ch) {
+      const idx = this.driveCharacters.findIndex((c) => c.id === ch.id);
+      if (idx !== -1) {
+        this.driveCharacters[idx] = { ...this.driveCharacters[idx], ...ch };
+      } else {
+        this.driveCharacters.push(ch);
+      }
+    },
     updateDriveCharacter(id, updates) {
       const idx = this.driveCharacters.findIndex((c) => c.id === id);
       if (idx !== -1) {
