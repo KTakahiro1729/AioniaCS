@@ -230,6 +230,7 @@ export const AioniaGameData = {
     { value: "tactics", label: "戦術" },
     { value: "magic", label: "魔術" },
     { value: "features", label: "特徴" },
+    { value: "free", label: "自由入力" },
   ],
 
   // 種族ラベルマップ

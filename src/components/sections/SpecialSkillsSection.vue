@@ -31,7 +31,15 @@
                   :value="option.value"
                 >{{ option.label }}</option>
               </select>
+              <input
+                v-if="specialSkill.group === 'free'"
+                type="text"
+                v-model="specialSkill.name"
+                class="flex-item-2"
+                :disabled="uiStore.isViewingShared"
+              />
               <select
+                v-else
                 v-model="specialSkill.name"
                 @change="updateSpecialSkillNoteVisibility(index)"
                 :disabled="!specialSkill.group || uiStore.isViewingShared"
@@ -45,7 +53,15 @@
                 >{{ opt.label }}</option>
               </select>
             </div>
+            <textarea
+              v-if="specialSkill.group === 'free'"
+              v-model="specialSkill.note"
+              class="special-skill-note-input"
+              :placeholder="AioniaGameData.placeholderTexts.specialSkillNote"
+              :disabled="uiStore.isViewingShared"
+            ></textarea>
             <input
+              v-else
               type="text"
               v-model="specialSkill.note"
               v-show="specialSkill.showNote"
@@ -94,7 +110,11 @@ function updateSpecialSkillOptions(index) {
   const item = localSpecialSkills[index];
   if (item) {
     item.name = '';
-    updateSpecialSkillNoteVisibility(index);
+    item.note = '';
+    item.showNote = item.group === 'free';
+    if (item.group !== 'free') {
+      updateSpecialSkillNoteVisibility(index);
+    }
   }
 }
 
