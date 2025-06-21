@@ -17,6 +17,7 @@ const ShareOptions = defineAsyncComponent(
 import { useShare } from "./useShare.js";
 import { useNotifications } from "./useNotifications.js";
 import { useModalStore } from "../stores/modalStore.js";
+import { isDesktopDevice } from "../utils/device.js";
 import { messages } from "../locales/ja.js";
 
 export function useAppModals(options) {
@@ -34,6 +35,7 @@ export function useAppModals(options) {
     handleFileUpload,
     outputToCocofolia,
     printCharacterSheet,
+    openPreviewPage,
     promptForDriveFolder,
     copyEditCallback,
   } = options;
@@ -61,6 +63,9 @@ export function useAppModals(options) {
   }
 
   async function openIoModal() {
+    const handlePrint = isDesktopDevice()
+      ? printCharacterSheet
+      : openPreviewPage;
     await showModal({
       component: IoModal,
       title: messages.ui.modal.io.title,
@@ -82,7 +87,7 @@ export function useAppModals(options) {
         "save-local": saveData,
         "load-local": handleFileUpload,
         "output-cocofolia": outputToCocofolia,
-        print: printCharacterSheet,
+        print: handlePrint,
         "drive-folder": promptForDriveFolder,
       },
     });

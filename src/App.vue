@@ -32,7 +32,7 @@ useKeyboardHandling();
 
 const { dataManager, saveData, handleFileUpload, outputToCocofolia } =
     useDataExport();
-const { printCharacterSheet } = usePrint();
+const { printCharacterSheet, openPreviewPage } = usePrint();
 
 const {
     canSignInToGoogle,
@@ -106,6 +106,7 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
     handleFileUpload,
     outputToCocofolia,
     printCharacterSheet,
+    openPreviewPage,
     promptForDriveFolder,
     copyEditCallback: () => {
         uiStore.isViewingShared = false;
