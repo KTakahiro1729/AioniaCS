@@ -135,10 +135,15 @@
   box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
   flex-wrap: nowrap;
   overflow-x: auto;
+  transition: bottom 0.2s ease-in-out;
   gap: 15px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border-normal) var(--color-background);
+}
+
+body.keyboard-visible .main-footer {
+  bottom: var(--keyboard-height, 0);
 }
 
 .main-footer::-webkit-scrollbar {
