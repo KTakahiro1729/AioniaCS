@@ -84,6 +84,11 @@
   display: none !important;
 }
 
+/* キーボード表示中は、コンテンツ下の余白を減らしてフッターとの距離を詰める */
+body.keyboard-visible .main-content {
+  padding-bottom: 15px;
+}
+
 /* フォーム行レイアウト */
 .info-row {
   display: flex;
