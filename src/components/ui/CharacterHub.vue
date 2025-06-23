@@ -9,7 +9,7 @@
             >
               
             <button class="character-hub--name" @click="confirmLoad(ch)">
-                {{ ch.characterName || ch.name }}
+                {{ ch.characterName  || "名もなき冒険者"}}
               </button>
               
               <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>

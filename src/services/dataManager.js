@@ -20,7 +20,7 @@ export class DataManager {
 
   _sanitizeFileName(name) {
     const sanitized = (name || "").replace(/[\\/:*?"<>|]/g, "_").trim();
-    return sanitized || "Aionia_Character";
+    return sanitized || "名もなき冒険者";
   }
 
   /**
@@ -287,7 +287,7 @@ export class DataManager {
 
     const jsonData = JSON.stringify(dataToSave, null, 2);
     const sanitizedFileName =
-      (fileName || character.name || "Aionia_Character_Sheet").replace(
+      (fileName || character.name || "名もなき冒険者").replace(
         /[\\/:*?"<>|]/g,
         "_",
       ) + ".json";
@@ -349,7 +349,7 @@ export class DataManager {
     };
 
     const sanitizedFileName =
-      (fileName || character.name || "Aionia_Character_Sheet").replace(
+      (fileName || character.name || "名もなき冒険者").replace(
         /[\\/:*?"<>|]/g,
         "_",
       ) + ".json";
@@ -362,7 +362,7 @@ export class DataManager {
       );
       await this.googleDriveManager.renameIndexEntry(
         currentFileId,
-        character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
+        character.name || null,
       );
       return res;
     }
@@ -375,7 +375,7 @@ export class DataManager {
       await this.googleDriveManager.addIndexEntry({
         id: created.id,
         name: created.name,
-        characterName: character.name || "\u540D\u79F0\u672A\u8A2D\u5B9A",
+        characterName: character.name || null,
       });
     }
     return created;

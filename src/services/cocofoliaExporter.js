@@ -16,7 +16,7 @@ export class CocofoliaExporter {
 
     // 名前とプレイヤー名
     lines.push(
-      `名前：${character.name || "名無し"}${character.playerName ? `（${character.playerName}）` : ""}`,
+      `名前：${character.name || "名もなき冒険者"}${character.playerName ? `（${character.playerName}）` : ""}`,
     );
 
     // 種族情報
@@ -271,7 +271,7 @@ export class CocofoliaExporter {
           { label: "傷痕", value: scar },
           { label: "ストレス", value: stress },
         ],
-        name: character.name || "名無し",
+        name: character.name || "名もなき冒険者",
         initiative: currentWeight * -1,
         memo: memo,
         externalUrl: "",
