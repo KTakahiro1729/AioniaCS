@@ -1,44 +1,41 @@
 <template>
   <div class="character-hub">
-        <template v-if="uiStore.isSignedIn">
-          <ul class="character-hub--list">
-            <li
-              v-for="ch in characters"
-              :key="ch.id"
-              :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
-            >
-              
-            <button class="character-hub--name" @click="confirmLoad(ch)">
-                {{ ch.characterName  || "名もなき冒険者"}}
-              </button>
-              
-              <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
+    <template v-if="uiStore.isSignedIn">
+      <ul class="character-hub--list">
+        <li
+          v-for="ch in characters"
+          :key="ch.id"
+          :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
+        >
+        <button class="character-hub--name" @click="confirmLoad(ch)">
+            {{ ch.characterName  || "名もなき冒険者"}}
+          </button>
+          <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
 
-              <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--confirmation-box">
-                <p class="character-hub--confirmation-message">
-                  本当に削除しますか？
-                </p>
-                <div class="character-hub--confirmation-actions">
-                  <button class="button-base button-compact" @click="executeDelete">はい</button>
-                  <button class="button-base button-compact button-secondary" @click="cancelDelete">いいえ</button>
-                </div>
-              </div>
-              <div v-else>
-              <div class="character-hub--actions-inline">
-                <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
-                <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
-                <button class="button-base button-compact" @click="startDelete(ch)">削除</button>
-              </div>
-              </div>
-            </li>
-          </ul>
-        </template>
-        <template v-else>
-          <p class="character-hub--description">
-            Google Driveと連携して、キャラクターを保存・共有できます。
-          </p>
-          
-        </template>
+          <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--confirmation-box">
+            <p class="character-hub--confirmation-message">
+              本当に削除しますか？
+            </p>
+            <div class="character-hub--confirmation-actions">
+              <button class="button-base button-compact" @click="executeDelete">はい</button>
+              <button class="button-base button-compact button-secondary" @click="cancelDelete">いいえ</button>
+            </div>
+          </div>
+          <div v-else>
+          <div class="character-hub--actions-inline">
+            <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
+            <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
+            <button class="button-base button-compact" @click="startDelete(ch)">削除</button>
+          </div>
+          </div>
+        </li>
+      </ul>
+    </template>
+    <template v-else>
+      <p class="character-hub--description">
+        Google Driveと連携して、キャラクターを保存・共有できます。
+      </p>
+    </template>
   </div>
 </template>
 
