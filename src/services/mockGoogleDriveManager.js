@@ -2,13 +2,52 @@ export class MockGoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
     this.clientId = clientId;
-    console.log("MockGoogleDriveManager is active.");
+    this.storageKey = "mockGoogleDriveData";
+    console.log("MockGoogleDriveManager is active and uses localStorage.");
+    this._loadState();
+  }
+
+  _loadState() {
+    try {
+      const storedState = localStorage.getItem(this.storageKey);
+      if (storedState) {
+        const state = JSON.parse(storedState);
+        this.appData = state.appData;
+        this.folders = state.folders;
+        this.fileCounter = state.fileCounter;
+        this.indexFileId = state.indexFileId;
+        this.signedIn = state.signedIn;
+      } else {
+        this._initState();
+      }
+    } catch (e) {
+      console.error(
+        "Failed to load mock state from localStorage, resetting.",
+        e,
+      );
+      this._initState();
+    }
+    this.pickerApiLoaded = true;
+  }
+
+  _saveState() {
+    const stateToSave = {
+      appData: this.appData,
+      folders: this.folders,
+      fileCounter: this.fileCounter,
+      indexFileId: this.indexFileId,
+      signedIn: this.signedIn,
+    };
+    localStorage.setItem(this.storageKey, JSON.stringify(stateToSave));
+  }
+
+  _initState() {
     this.appData = {};
     this.folders = {};
     this.fileCounter = 1;
     this.indexFileId = null;
-    this.pickerApiLoaded = true;
     this.signedIn = false;
+    this._saveState();
   }
 
   onGapiLoad() {
@@ -21,11 +60,13 @@ export class MockGoogleDriveManager {
 
   handleSignIn(callback) {
     this.signedIn = true;
+    this._saveState();
     if (callback) callback(null, { signedIn: true });
   }
 
   handleSignOut(callback) {
     this.signedIn = false;
+    this._saveState();
     if (callback) callback();
   }
 
@@ -37,6 +78,7 @@ export class MockGoogleDriveManager {
     const id = `folder-${this.fileCounter++}`;
     const folder = { id, name: folderName };
     this.folders[id] = folder;
+    this._saveState();
     return folder;
   }
 
@@ -59,12 +101,6 @@ export class MockGoogleDriveManager {
   }
 
   async saveFile(folderId, fileName, fileContent, fileId = null) {
-    if (fileId && this.appData[fileId]) {
-      const file = this.appData[fileId];
-      file.content = fileContent;
-      file.name = fileName;
-      return { id: fileId, name: fileName };
-    }
     const id = fileId || `file-${this.fileCounter++}`;
     this.appData[id] = {
       id,
@@ -72,6 +108,7 @@ export class MockGoogleDriveManager {
       content: fileContent,
       parentId: folderId,
     };
+    this._saveState();
     return { id, name: fileName };
   }
 
@@ -119,6 +156,7 @@ export class MockGoogleDriveManager {
     );
     if (foundId) {
       this.indexFileId = foundId;
+      this._saveState();
       return { id: foundId, name: "character_index.json" };
     }
     const created = await this.saveFile(
@@ -127,6 +165,7 @@ export class MockGoogleDriveManager {
       "[]",
     );
     this.indexFileId = created.id;
+    this._saveState();
     return created;
   }
 
@@ -193,6 +232,7 @@ export class MockGoogleDriveManager {
 
   async deleteCharacterFile(id) {
     delete this.appData[id];
+    this._saveState();
     await this.removeIndexEntry(id);
   }
 }

@@ -1,10 +1,15 @@
 import { ref, computed, onMounted } from "vue";
-// import { GoogleDriveManager } from "../services/googleDriveManager.js";
-import { MockGoogleDriveManager as GoogleDriveManager } from "../services/mockGoogleDriveManager.js"; // Used for mock
+import { GoogleDriveManager as RealGoogleDriveManager } from "../services/googleDriveManager.js";
+import { MockGoogleDriveManager } from "../services/mockGoogleDriveManager.js";
 import { useUiStore } from "../stores/uiStore.js";
 import { useCharacterStore } from "../stores/characterStore.js";
 import { useNotifications } from "./useNotifications.js";
 import { messages } from "../locales/ja.js";
+
+const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === "true";
+const GoogleDriveManager = useMock
+  ? MockGoogleDriveManager
+  : RealGoogleDriveManager;
 
 export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
