@@ -60,4 +60,13 @@ function resolve(value) {
 </script>
 
 <style scoped>
+
+.box-content {
+  border: none;
+  padding: 14px;
+}
+
+.sub-box-title {
+  margin: 0;
+}
 </style>

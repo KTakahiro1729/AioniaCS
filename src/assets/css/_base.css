@@ -24,6 +24,10 @@ body {
   /* 固定フッター分の余白 */
 }
 
+body.is-modal-open {
+  overflow: hidden;
+}
+
 #app {
   padding: 20px;
   max-width: 1200px;

@@ -21,6 +21,7 @@ import HelpPanel from "./components/ui/HelpPanel.vue";
 import NotificationContainer from "./components/notifications/NotificationContainer.vue";
 import BaseModal from "./components/modals/BaseModal.vue";
 import { useModal } from "./composables/useModal.js";
+import { useModalStore } from "./stores/modalStore.js";
 import { useNotifications } from "./composables/useNotifications.js";
 // --- Template Refs ---
 const mainHeader = ref(null);
@@ -54,6 +55,7 @@ const {
 
 const { showAsyncToast } = useNotifications();
 const { showModal } = useModal();
+const modalStore = useModalStore();
 
 function refreshHubList() {
     if (!dataManager.googleDriveManager) return;
@@ -154,6 +156,16 @@ watch(
     { immediate: true }
 );
 
+watch(
+  () => modalStore.isVisible,
+  (isVisible) => {
+    if (isVisible) {
+      document.body.classList.add('is-modal-open');
+    } else {
+      document.body.classList.remove('is-modal-open');
+    }
+  },
+);
 
 // --- Lifecycle Hooks ---
 const { initialize } = useAppInitialization(dataManager);
