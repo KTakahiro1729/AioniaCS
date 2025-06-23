@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import { AioniaGameData } from "../data/gameData.js";
-import { messages } from "../locales/ja.js";
-import { deepClone, createWeaknessArray } from "../utils/utils.js";
+import { defineStore } from 'pinia';
+import { AioniaGameData } from '../data/gameData.js';
+import { messages } from '../locales/ja.js';
+import { deepClone, createWeaknessArray } from '../utils/utils.js';
 
 function createCharacter() {
   const base = deepClone(AioniaGameData.defaultCharacterData);
@@ -16,22 +16,22 @@ function baseSkills() {
 function baseSpecialSkills() {
   return Array(AioniaGameData.config.initialSpecialSkillCount)
     .fill(null)
-    .map(() => ({ group: "", name: "", note: "", showNote: false }));
+    .map(() => ({ group: '', name: '', note: '', showNote: false }));
 }
 
 function baseEquipments() {
   return {
-    weapon1: { group: "", name: "" },
-    weapon2: { group: "", name: "" },
-    armor: { group: "", name: "" },
+    weapon1: { group: '', name: '' },
+    weapon2: { group: '', name: '' },
+    armor: { group: '', name: '' },
   };
 }
 
 function baseHistories() {
-  return [{ sessionName: "", gotExperiments: null, memo: "" }];
+  return [{ sessionName: '', gotExperiments: null, memo: '' }];
 }
 
-export const useCharacterStore = defineStore("character", {
+export const useCharacterStore = defineStore('character', {
   state: () => ({
     character: createCharacter(),
     skills: baseSkills(),
@@ -45,44 +45,23 @@ export const useCharacterStore = defineStore("character", {
       const creationWeaknessExp = state.character.weaknesses.reduce(
         (sum, weakness) =>
           sum +
-          (weakness.text &&
-          weakness.text.trim() !== "" &&
-          weakness.acquired === "作成時"
+          (weakness.text && weakness.text.trim() !== '' && weakness.acquired === '作成時'
             ? AioniaGameData.experiencePointValues.weakness
             : 0),
         0,
       );
-      const combinedInitialBonus = Math.min(
-        initialScarExp + creationWeaknessExp,
-        AioniaGameData.experiencePointValues.maxInitialBonus,
-      );
-      const historyExp = state.histories.reduce(
-        (sum, h) => sum + (Number(h.gotExperiments) || 0),
-        0,
-      );
-      return (
-        AioniaGameData.experiencePointValues.basePoints +
-        combinedInitialBonus +
-        historyExp
-      );
+      const combinedInitialBonus = Math.min(initialScarExp + creationWeaknessExp, AioniaGameData.experiencePointValues.maxInitialBonus);
+      const historyExp = state.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
+      return AioniaGameData.experiencePointValues.basePoints + combinedInitialBonus + historyExp;
     },
     currentExperiencePoints(state) {
-      const skillExp = state.skills.reduce(
-        (sum, s) =>
-          sum +
-          (s.checked ? AioniaGameData.experiencePointValues.skillBase : 0),
-        0,
-      );
+      const skillExp = state.skills.reduce((sum, s) => sum + (s.checked ? AioniaGameData.experiencePointValues.skillBase : 0), 0);
       const expertExp = state.skills.reduce((sum, s) => {
         if (s.checked && s.canHaveExperts) {
           return (
             sum +
             s.experts.reduce(
-              (expSum, exp) =>
-                expSum +
-                (exp.value && exp.value.trim() !== ""
-                  ? AioniaGameData.experiencePointValues.expertSkill
-                  : 0),
+              (expSum, exp) => expSum + (exp.value && exp.value.trim() !== '' ? AioniaGameData.experiencePointValues.expertSkill : 0),
               0,
             )
           );
@@ -90,11 +69,7 @@ export const useCharacterStore = defineStore("character", {
         return sum;
       }, 0);
       const specialSkillExp = state.specialSkills.reduce(
-        (sum, ss) =>
-          sum +
-          (ss.name && ss.name.trim() !== ""
-            ? AioniaGameData.experiencePointValues.specialSkill
-            : 0),
+        (sum, ss) => sum + (ss.name && ss.name.trim() !== '' ? AioniaGameData.experiencePointValues.specialSkill : 0),
         0,
       );
       return skillExp + expertExp + specialSkillExp;
@@ -112,10 +87,10 @@ export const useCharacterStore = defineStore("character", {
       const defaultOptions = [...AioniaGameData.weaknessAcquisitionOptions];
       const sessionOptions = state.histories
         .map((h) => h.sessionName)
-        .filter((name) => name && name.trim() !== "")
+        .filter((name) => name && name.trim() !== '')
         .map((name) => ({ value: name, text: name, disabled: false }));
       const helpOption = {
-        value: "help-text",
+        value: 'help-text',
         text: messages.weaknessDropdownHelp,
         disabled: true,
       };
@@ -123,52 +98,28 @@ export const useCharacterStore = defineStore("character", {
     },
   },
   actions: {
-    _manageListItem({
-      list,
-      action,
-      index,
-      newItemFactory,
-      hasContentChecker,
-      maxLength,
-    }) {
-      if (action === "add") {
+    _manageListItem({ list, action, index, newItemFactory, hasContentChecker, maxLength }) {
+      if (action === 'add') {
         if (maxLength && list.length >= maxLength) return;
-        const newItem =
-          typeof newItemFactory === "function"
-            ? newItemFactory()
-            : newItemFactory;
-        list.push(
-          typeof newItem === "object" && newItem !== null
-            ? deepClone(newItem)
-            : newItem,
-        );
-      } else if (action === "remove") {
+        const newItem = typeof newItemFactory === 'function' ? newItemFactory() : newItemFactory;
+        list.push(typeof newItem === 'object' && newItem !== null ? deepClone(newItem) : newItem);
+      } else if (action === 'remove') {
         if (list.length > 1) {
           list.splice(index, 1);
-        } else if (
-          list.length === 1 &&
-          hasContentChecker &&
-          hasContentChecker(list[index])
-        ) {
-          const emptyItem =
-            typeof newItemFactory === "function"
-              ? newItemFactory()
-              : newItemFactory;
-          list[index] =
-            typeof emptyItem === "object" && emptyItem !== null
-              ? deepClone(emptyItem)
-              : emptyItem;
+        } else if (list.length === 1 && hasContentChecker && hasContentChecker(list[index])) {
+          const emptyItem = typeof newItemFactory === 'function' ? newItemFactory() : newItemFactory;
+          list[index] = typeof emptyItem === 'object' && emptyItem !== null ? deepClone(emptyItem) : emptyItem;
         }
       }
     },
     addSpecialSkillItem() {
       this._manageListItem({
         list: this.specialSkills,
-        action: "add",
+        action: 'add',
         newItemFactory: () => ({
-          group: "",
-          name: "",
-          note: "",
+          group: '',
+          name: '',
+          note: '',
           showNote: false,
         }),
         maxLength: AioniaGameData.config.maxSpecialSkills,
@@ -177,12 +128,12 @@ export const useCharacterStore = defineStore("character", {
     removeSpecialSkill(index) {
       this._manageListItem({
         list: this.specialSkills,
-        action: "remove",
+        action: 'remove',
         index,
         newItemFactory: () => ({
-          group: "",
-          name: "",
-          note: "",
+          group: '',
+          name: '',
+          note: '',
           showNote: false,
         }),
         hasContentChecker: (ss) => !!(ss.group || ss.name || ss.note),
@@ -191,30 +142,25 @@ export const useCharacterStore = defineStore("character", {
     addHistoryItem() {
       this._manageListItem({
         list: this.histories,
-        action: "add",
+        action: 'add',
         newItemFactory: () => ({
-          sessionName: "",
+          sessionName: '',
           gotExperiments: null,
-          memo: "",
+          memo: '',
         }),
       });
     },
     removeHistoryItem(index) {
       this._manageListItem({
         list: this.histories,
-        action: "remove",
+        action: 'remove',
         index,
         newItemFactory: () => ({
-          sessionName: "",
+          sessionName: '',
           gotExperiments: null,
-          memo: "",
+          memo: '',
         }),
-        hasContentChecker: (h) =>
-          !!(
-            h.sessionName ||
-            (h.gotExperiments !== null && h.gotExperiments !== "") ||
-            h.memo
-          ),
+        hasContentChecker: (h) => !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
       });
     },
     addExpert(skillId) {
@@ -222,8 +168,8 @@ export const useCharacterStore = defineStore("character", {
       if (skill && skill.canHaveExperts) {
         this._manageListItem({
           list: skill.experts,
-          action: "add",
-          newItemFactory: () => ({ value: "" }),
+          action: 'add',
+          newItemFactory: () => ({ value: '' }),
         });
       }
     },
@@ -232,32 +178,25 @@ export const useCharacterStore = defineStore("character", {
       if (skill && skill.canHaveExperts) {
         this._manageListItem({
           list: skill.experts,
-          action: "remove",
+          action: 'remove',
           index: expertIndex,
-          newItemFactory: () => ({ value: "" }),
-          hasContentChecker: (e) => e.value && e.value.trim() !== "",
+          newItemFactory: () => ({ value: '' }),
+          hasContentChecker: (e) => e.value && e.value.trim() !== '',
         });
       }
     },
     updateHistoryItem(index, field, value) {
       if (this.histories[index]) {
-        this.histories[index][field] =
-          field === "gotExperiments" && value !== "" && value !== null
-            ? Number(value)
-            : value;
+        this.histories[index][field] = field === 'gotExperiments' && value !== '' && value !== null ? Number(value) : value;
       }
     },
     handleSpeciesChange() {
-      if (this.character.species !== "other") this.character.rareSpecies = "";
+      if (this.character.species !== 'other') this.character.rareSpecies = '';
     },
     initializeAll() {
       Object.assign(this.character, createCharacter());
       this.skills.splice(0, this.skills.length, ...baseSkills());
-      this.specialSkills.splice(
-        0,
-        this.specialSkills.length,
-        ...baseSpecialSkills(),
-      );
+      this.specialSkills.splice(0, this.specialSkills.length, ...baseSpecialSkills());
       Object.assign(this.equipments, baseEquipments());
       this.histories.splice(0, this.histories.length, ...baseHistories());
     },

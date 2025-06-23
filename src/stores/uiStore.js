@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import { useCharacterStore } from "./characterStore.js";
+import { defineStore } from 'pinia';
+import { useCharacterStore } from './characterStore.js';
 
-export const useUiStore = defineStore("ui", {
+export const useUiStore = defineStore('ui', {
   state: () => ({
     isCloudSaveSuccess: false,
     isSignedIn: false,
@@ -9,9 +9,9 @@ export const useUiStore = defineStore("ui", {
     isGisInitialized: false,
     isLoading: false,
     driveFolderId: null,
-    driveFolderName: "",
+    driveFolderName: '',
     currentDriveFileId: null,
-    currentDriveFileName: "",
+    currentDriveFileName: '',
     isViewingShared: false,
     driveCharacters: [],
     pendingDriveSaves: {},
@@ -20,15 +20,12 @@ export const useUiStore = defineStore("ui", {
   getters: {
     experienceStatusClass() {
       const characterStore = useCharacterStore();
-      return characterStore.currentExperiencePoints >
-        characterStore.maxExperiencePoints
-        ? "status-display--experience-over"
-        : "status-display--experience-ok";
+      return characterStore.currentExperiencePoints > characterStore.maxExperiencePoints
+        ? 'status-display--experience-over'
+        : 'status-display--experience-ok';
     },
     canSignInToGoogle(state) {
-      return (
-        state.isGapiInitialized && state.isGisInitialized && !state.isSignedIn
-      );
+      return state.isGapiInitialized && state.isGisInitialized && !state.isSignedIn;
     },
     canOperateDrive(state) {
       return state.isSignedIn && state.driveFolderId;
@@ -40,16 +37,12 @@ export const useUiStore = defineStore("ui", {
     },
     async refreshDriveCharacters(gdm) {
       if (!gdm) return;
-      const temps = this.driveCharacters.filter((c) =>
-        c.id.startsWith("temp-"),
-      );
+      const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
       const serverList = await gdm.readIndexFile();
       const serverIds = new Set(serverList.map((c) => c.id));
 
       // Keep local entries that still exist on server
-      let merged = this.driveCharacters.filter(
-        (c) => c.id.startsWith("temp-") || serverIds.has(c.id),
-      );
+      let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
 
       // Add or update server entries
       serverList.forEach((srv) => {

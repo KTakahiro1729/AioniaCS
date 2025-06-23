@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted } from 'vue';
 
 export function useHeaderVisibility(targetRef) {
   let lastScrollY = 0;
@@ -22,13 +22,13 @@ export function useHeaderVisibility(targetRef) {
   onMounted(() => {
     if (targetRef.value) {
       headerHeight = targetRef.value.offsetHeight;
-      targetRef.value.style.transform = "translateY(0px)";
+      targetRef.value.style.transform = 'translateY(0px)';
     }
     lastScrollY = window.scrollY;
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
   });
 
   onUnmounted(() => {
-    window.removeEventListener("scroll", handleScroll);
+    window.removeEventListener('scroll', handleScroll);
   });
 }

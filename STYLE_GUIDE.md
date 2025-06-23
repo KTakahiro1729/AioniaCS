@@ -4,13 +4,12 @@ This project prefers component-based or BEM-style classes for styling. Avoid usi
 
 The goal is to keep CSS maintainable and descriptive, so class names should reflect the component they style.
 
-
-
 ## CSS variables
 
 - Define every color and common shadow as a CSS variable under `:root`.
 - Reuse these variables instead of hard coded values.
-- Status colors are defined with CSS variables like --color-status-experience-ok-border. 
+- Status colors are defined with CSS variables like --color-status-experience-ok-border.
+
 ## Responsive design
 
 - Breakpoints are generally `768px` and `480px`.

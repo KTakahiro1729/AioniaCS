@@ -3,11 +3,7 @@
     <div class="box-title">特技</div>
     <div class="box-content">
       <ul class="list-reset special-skills-list">
-        <li
-          v-for="(specialSkill, index) in localSpecialSkills"
-          :key="index"
-          class="base-list-item special-skill-item"
-        >
+        <li v-for="(specialSkill, index) in localSpecialSkills" :key="index" class="base-list-item special-skill-item">
           <div class="delete-button-wrapper" v-if="!uiStore.isViewingShared">
             <button
               type="button"
@@ -15,7 +11,9 @@
               @click="characterStore.removeSpecialSkill(index)"
               :disabled="localSpecialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)"
               aria-label="特技を削除"
-            >－</button>
+            >
+              －
+            </button>
           </div>
           <div class="flex-grow">
             <div class="flex-group">
@@ -25,11 +23,9 @@
                 class="flex-item-1"
                 :disabled="uiStore.isViewingShared"
               >
-                <option
-                  v-for="option in AioniaGameData.specialSkillGroupOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >{{ option.label }}</option>
+                <option v-for="option in AioniaGameData.specialSkillGroupOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
               </select>
               <input
                 v-if="specialSkill.group === 'free'"
@@ -46,11 +42,7 @@
                 class="flex-item-2"
               >
                 <option value="">---</option>
-                <option
-                  v-for="opt in availableSpecialSkillNames(index)"
-                  :key="opt.value"
-                  :value="opt.value"
-                >{{ opt.label }}</option>
+                <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </div>
             <textarea
@@ -81,7 +73,9 @@
           class="button-base list-button list-button--add"
           @click="characterStore.addSpecialSkillItem()"
           aria-label="特技を追加"
-        >＋</button>
+        >
+          ＋
+        </button>
       </div>
     </div>
   </div>
@@ -99,7 +93,6 @@ const localSpecialSkills = characterStore.specialSkills;
 function hasSpecialSkillContent(ss) {
   return !!(ss.group || ss.name || ss.note);
 }
-
 
 function availableSpecialSkillNames(index) {
   const item = localSpecialSkills[index];

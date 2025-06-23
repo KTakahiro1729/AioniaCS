@@ -1,23 +1,16 @@
-import { reactive, defineAsyncComponent } from "vue";
-import { useModal } from "./useModal.js";
-import { useUiStore } from "../stores/uiStore.js";
-const CharacterHub = defineAsyncComponent(
-  () => import("../components/ui/CharacterHub.vue"),
-);
-const CharacterHubControls = defineAsyncComponent(
-  () => import("../components/ui/CharacterHubControls.vue"),
-);
-const IoModal = defineAsyncComponent(
-  () => import("../components/modals/contents/IoModal.vue"),
-);
-const ShareOptions = defineAsyncComponent(
-  () => import("../components/modals/contents/ShareOptions.vue"),
-);
+import { reactive, defineAsyncComponent } from 'vue';
+import { useModal } from './useModal.js';
+import { useUiStore } from '../stores/uiStore.js';
+const CharacterHub = defineAsyncComponent(() => import('../components/ui/CharacterHub.vue'));
+const CharacterHubControls = defineAsyncComponent(() => import('../components/ui/CharacterHubControls.vue'));
+const IoModal = defineAsyncComponent(() => import('../components/modals/contents/IoModal.vue'));
+const ShareOptions = defineAsyncComponent(() => import('../components/modals/contents/ShareOptions.vue'));
 
-import { useShare } from "./useShare.js";
-import { useNotifications } from "./useNotifications.js";
-import { useModalStore } from "../stores/modalStore.js";
-import { messages } from "../locales/ja.js";
+import { useShare } from './useShare.js';
+import { useNotifications } from './useNotifications.js';
+import { useModalStore } from '../stores/modalStore.js';
+import { isDesktopDevice } from '../utils/device.js';
+import { messages } from '../locales/ja.js';
 
 export function useAppModals(options) {
   const uiStore = useUiStore();
@@ -34,6 +27,7 @@ export function useAppModals(options) {
     handleFileUpload,
     outputToCocofolia,
     printCharacterSheet,
+    openPreviewPage,
     promptForDriveFolder,
     copyEditCallback,
   } = options;
@@ -50,8 +44,8 @@ export function useAppModals(options) {
       globalActions: {
         component: CharacterHubControls,
         on: {
-          "sign-in": handleSignInClick,
-          "sign-out": handleSignOutClick,
+          'sign-in': handleSignInClick,
+          'sign-out': handleSignOutClick,
           refresh: refreshHubList,
           new: saveNewCharacter,
         },
@@ -61,6 +55,7 @@ export function useAppModals(options) {
   }
 
   async function openIoModal() {
+    const handlePrint = isDesktopDevice() ? printCharacterSheet : openPreviewPage;
     await showModal({
       component: IoModal,
       title: messages.ui.modal.io.title,
@@ -79,18 +74,18 @@ export function useAppModals(options) {
       },
       buttons: [],
       on: {
-        "save-local": saveData,
-        "load-local": handleFileUpload,
-        "output-cocofolia": outputToCocofolia,
-        print: printCharacterSheet,
-        "drive-folder": promptForDriveFolder,
+        'save-local': saveData,
+        'load-local': handleFileUpload,
+        'output-cocofolia': outputToCocofolia,
+        print: handlePrint,
+        'drive-folder': promptForDriveFolder,
       },
     });
   }
 
   async function openShareModal() {
     if (uiStore.isViewingShared) {
-      if (typeof copyEditCallback === "function") {
+      if (typeof copyEditCallback === 'function') {
         copyEditCallback();
       }
       return;
@@ -101,8 +96,8 @@ export function useAppModals(options) {
     window.__driveSignIn = handleSignInClick;
     const generateButton = reactive({
       label: messages.ui.modal.generate,
-      value: "generate",
-      variant: "primary",
+      value: 'generate',
+      variant: 'primary',
       disabled: true,
     });
     function updateCanGenerate(v) {
@@ -116,19 +111,19 @@ export function useAppModals(options) {
         generateButton,
         {
           label: messages.ui.modal.cancel,
-          value: "cancel",
-          variant: "secondary",
+          value: 'cancel',
+          variant: 'secondary',
         },
       ],
-      on: { "update:canGenerate": updateCanGenerate },
+      on: { 'update:canGenerate': updateCanGenerate },
     });
     delete window.__driveSignIn;
-    if (result.value !== "generate" || !result.component) return;
+    if (result.value !== 'generate' || !result.component) return;
     const optsComp = result.component;
     const opts = {
       type: optsComp.type.value,
       includeFull: optsComp.includeFull.value,
-      password: optsComp.password.value || "",
+      password: optsComp.password.value || '',
       expiresInDays: Number(optsComp.expires.value) || 0,
     };
     try {
@@ -137,7 +132,7 @@ export function useAppModals(options) {
       modalStore.hideModal();
     } catch (err) {
       showToast({
-        type: "error",
+        type: 'error',
         title: messages.ui.modal.shareFailed,
         message: err.message,
       });

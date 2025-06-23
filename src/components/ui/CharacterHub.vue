@@ -7,34 +7,30 @@
           :key="ch.id"
           :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
         >
-        <button class="character-hub--name" @click="confirmLoad(ch)">
-            {{ ch.characterName  || "名もなき冒険者"}}
+          <button class="character-hub--name" @click="confirmLoad(ch)">
+            {{ ch.characterName || '名もなき冒険者' }}
           </button>
           <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
 
           <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--confirmation-box">
-            <p class="character-hub--confirmation-message">
-              本当に削除しますか？
-            </p>
+            <p class="character-hub--confirmation-message">本当に削除しますか？</p>
             <div class="character-hub--confirmation-actions">
               <button class="button-base button-compact" @click="executeDelete">はい</button>
               <button class="button-base button-compact button-secondary" @click="cancelDelete">いいえ</button>
             </div>
           </div>
           <div v-else>
-          <div class="character-hub--actions-inline">
-            <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
-            <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
-            <button class="button-base button-compact" @click="startDelete(ch)">削除</button>
-          </div>
+            <div class="character-hub--actions-inline">
+              <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
+              <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
+              <button class="button-base button-compact" @click="startDelete(ch)">削除</button>
+            </div>
           </div>
         </li>
       </ul>
     </template>
     <template v-else>
-      <p class="character-hub--description">
-        Google Driveと連携して、キャラクターを保存・共有できます。
-      </p>
+      <p class="character-hub--description">Google Driveと連携して、キャラクターを保存・共有できます。</p>
     </template>
   </div>
 </template>
@@ -66,26 +62,19 @@ const characters = computed(() =>
     const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
     const tB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
     return tB - tA;
-  })
+  }),
 );
 
 onMounted(ensureCharacters);
 
-
 async function ensureCharacters() {
-  if (
-    uiStore.isSignedIn &&
-    uiStore.driveCharacters.length === 0 &&
-    props.dataManager.googleDriveManager
-  ) {
-    uiStore.driveCharacters = await props.dataManager.loadCharacterListFromDrive();
+  if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0 && props.dataManager.googleDriveManager) {
+    await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
   }
 }
 
 function refreshList() {
-  props.dataManager
-    .loadCharacterListFromDrive()
-    .then((list) => (uiStore.driveCharacters = list));
+  props.dataManager.loadCharacterListFromDrive().then((list) => (uiStore.driveCharacters = list));
 }
 
 async function saveNew() {
@@ -100,91 +89,62 @@ async function overwrite(ch) {
   }
 }
 
-
 function formatDate(date) {
   if (!date) return '';
   return new Date(date).toLocaleString();
 }
 
-
 async function confirmLoad(ch) {
-  const result = await showModal(
-    messages.characterHub.loadConfirm(ch.characterName || ch.name),
-  );
+  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName || ch.name));
   if (result.value === 'load') {
     await props.loadCharacter(ch.id, ch.name);
   }
 }
 
-function startDelete(ch) {
-  characterToDelete.value = ch;
-}
-
-function cancelDelete() {
-  characterToDelete.value = null;
-}
-
-async function executeDelete() {
-  const ch = characterToDelete.value;
-  if (!ch) return;
-
-  if (props.dataManager.googleDriveManager) {
+async function deleteChar(ch) {
+  const result = await showModal(messages.characterHub.deleteConfirm(ch.characterName || ch.name));
+  if (result.value === 'delete' && props.dataManager.googleDriveManager) {
     if (ch.id.startsWith('temp-')) {
       uiStore.cancelPendingDriveSave(ch.id);
       uiStore.removeDriveCharacter(ch.id);
       showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
-    } else {
-      const previous = [...uiStore.driveCharacters];
-      uiStore.removeDriveCharacter(ch.id);
-      const deletePromise = props.dataManager.googleDriveManager
-        .deleteCharacterFile(ch.id)
-        .catch((err) => {
-          uiStore.driveCharacters = previous;
-          throw err;
-        });
-      showAsyncToast(deletePromise, {
-        loading: messages.characterHub.delete.asyncToast.loading(),
-        success: messages.characterHub.delete.asyncToast.success(),
-        error: (err) => messages.characterHub.delete.asyncToast.error(err),
-      });
-      await deletePromise;
+      return;
     }
+    const previous = [...uiStore.driveCharacters];
+    uiStore.removeDriveCharacter(ch.id);
+    const deletePromise = props.dataManager.googleDriveManager.deleteCharacterFile(ch.id).catch((err) => {
+      uiStore.driveCharacters = previous;
+      throw err;
+    });
+    showAsyncToast(deletePromise, {
+      loading: messages.characterHub.delete.asyncToast.loading(),
+      success: messages.characterHub.delete.asyncToast.success(),
+      error: (err) => messages.characterHub.delete.asyncToast.error(err),
+    });
+    await deletePromise;
   }
-
-  characterToDelete.value = null;
 }
 
 async function exportLocal(ch) {
   const gdm = props.dataManager.googleDriveManager;
   if (!gdm) return;
-  const exportPromise = gdm
-    .loadCharacterFile(ch.id)
-    .then(async (data) => {
-      if (data) {
-        await props.dataManager.saveData(
-          data.character,
-          data.skills,
-          data.specialSkills,
-          data.equipments,
-          data.histories,
-        );
-      }
-    });
+  const exportPromise = gdm.loadCharacterFile(ch.id).then(async (data) => {
+    if (data) {
+      await props.dataManager.saveData(data.character, data.skills, data.specialSkills, data.equipments, data.histories);
+    }
+  });
   showAsyncToast(exportPromise, {
     loading: messages.characterHub.export.loading(),
     success: messages.characterHub.export.success(),
     error: (err) => messages.characterHub.export.error(err),
   });
 }
-
 </script>
 
 <style scoped>
 .character-hub {
   position: relative;
 }
-
-
 
 .character-hub--description {
   text-align: center;
@@ -252,16 +212,4 @@ async function exportLocal(ch) {
     inset 0 0 2px var(--color-accent),
     0 0 6px var(--color-accent);
 }
-
-.character-hub--confirmation-box {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.character-hub--confirmation-message {
-  margin: 0 30px 0 0;
-  
-}
-
 </style>

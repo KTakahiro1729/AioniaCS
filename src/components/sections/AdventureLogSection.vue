@@ -26,7 +26,7 @@
                 <BaseInput
                   type="text"
                   :model-value="history.sessionName"
-          @update:model-value="v => characterStore.updateHistoryItem(index, 'sessionName', v)"
+                  @update:model-value="(v) => characterStore.updateHistoryItem(index, 'sessionName', v)"
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
@@ -35,7 +35,7 @@
                   type="number"
                   min="0"
                   :model-value="history.gotExperiments"
-          @update:model-value="v => characterStore.updateHistoryItem(index, 'gotExperiments', v)"
+                  @update:model-value="(v) => characterStore.updateHistoryItem(index, 'gotExperiments', v)"
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
@@ -43,7 +43,7 @@
                 <BaseInput
                   type="text"
                   :model-value="history.memo"
-          @update:model-value="v => characterStore.updateHistoryItem(index, 'memo', v)"
+                  @update:model-value="(v) => characterStore.updateHistoryItem(index, 'memo', v)"
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
@@ -57,7 +57,9 @@
           class="button-base list-button list-button--add"
           @click="characterStore.addHistoryItem"
           aria-label="冒険記録を追加"
-        >＋</button>
+        >
+          ＋
+        </button>
       </div>
     </div>
   </div>
@@ -78,7 +80,6 @@ function hasHistoryContent(h) {
 </script>
 
 <style scoped>
-
 .history-item-inputs {
   display: flex;
   flex-wrap: wrap;
@@ -98,5 +99,4 @@ function hasHistoryContent(h) {
 .flex-history-memo {
   flex: 3 2 220px;
 }
-
 </style>

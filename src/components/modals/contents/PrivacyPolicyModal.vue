@@ -18,4 +18,3 @@ const sanitized = computed(() => DOMPurify.sanitize(marked.parse(policyText)));
   color: var(--color-text-normal);
 }
 </style>
-

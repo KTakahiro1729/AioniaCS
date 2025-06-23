@@ -3,7 +3,7 @@
 /* ボックス共通コンポーネント */
 .box-title,
 .sub-box-title {
-  font-family: "Noto Serif JP", serif;
+  font-family: 'Noto Serif JP', serif;
   color: var(--color-accent);
   font-weight: 700;
   display: flex;
@@ -205,33 +205,33 @@
 }
 
 .icon-svg-cloud {
-  mask-image: url("../svg/medieval_cloud.svg");
+  mask-image: url('../svg/medieval_cloud.svg');
 }
 
 .icon-svg-success {
-  mask-image: url("../svg/medieval_check.svg");
+  mask-image: url('../svg/medieval_check.svg');
 }
 
 .icon-svg-cloud-upload {
-  mask-image: url("../svg/medieval_cloud_upload.svg");
+  mask-image: url('../svg/medieval_cloud_upload.svg');
 }
 
 .icon-svg-cloud-download {
-  mask-image: url("../svg/medieval_cloud_download.svg");
+  mask-image: url('../svg/medieval_cloud_download.svg');
 }
 
 .icon-svg-local-upload {
-  mask-image: url("../svg/medieval_local_upload.svg");
+  mask-image: url('../svg/medieval_local_upload.svg');
 }
 
 .icon-svg-local-download {
-  mask-image: url("../svg/medieval_local_download.svg");
+  mask-image: url('../svg/medieval_local_download.svg');
 }
 
 .icon-svg-io {
-  mask-image: url("../svg/medieval_io.svg");
+  mask-image: url('../svg/medieval_io.svg');
 }
 
 .icon-svg-share {
-  mask-image: url("../svg/medieval_share.svg");
+  mask-image: url('../svg/medieval_share.svg');
 }

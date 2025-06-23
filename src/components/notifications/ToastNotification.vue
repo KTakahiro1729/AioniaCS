@@ -15,5 +15,4 @@ const props = defineProps({ toast: Object });
 const emit = defineEmits(['close']);
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

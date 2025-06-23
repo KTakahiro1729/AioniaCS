@@ -1,10 +1,8 @@
-import { AioniaGameData } from "../../data/gameData.js";
+import { AioniaGameData } from '../../data/gameData.js';
 
 export function useSkillsManagement() {
   const expertPlaceholder = (skill) =>
-    skill.checked
-      ? AioniaGameData.placeholderTexts.expertSkill
-      : AioniaGameData.placeholderTexts.expertSkillDisabled;
+    skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
 
   return {
     expertPlaceholder,

@@ -1,10 +1,6 @@
 <template>
   <div class="password-prompt-modal">
-    <input
-      type="password"
-      v-model="password"
-      class="password-prompt-modal__input"
-    />
+    <input type="password" v-model="password" class="password-prompt-modal__input" />
   </div>
 </template>
 

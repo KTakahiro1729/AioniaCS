@@ -1,48 +1,36 @@
 <template>
-    <header
-        class="main-header"
-        ref="headerEl"
+  <header class="main-header" ref="headerEl">
+    <button class="button-base icon-button" :title="cloudHubLabel" @click="$emit('open-hub')">
+      <span class="icon-svg icon-svg-cloud" aria-label="cloud"></span>
+    </button>
+    <div class="main-header__title">{{ titleText }}</div>
+    <div
+      class="button-base header-help-icon"
+      ref="helpIcon"
+      :class="{ 'header-help-icon--fixed': helpState === 'fixed' }"
+      @mouseover="$emit('help-mouseover')"
+      @mouseleave="$emit('help-mouseleave')"
+      @click="$emit('help-click')"
+      tabindex="0"
     >
-        <button
-            class="button-base icon-button"
-            :title="cloudHubLabel"
-            @click="$emit('open-hub')"
-        >
-            <span class="icon-svg icon-svg-cloud" aria-label="cloud"></span>
-        </button>
-        <div class="main-header__title">{{ titleText }}</div>
-        <div
-            class="button-base header-help-icon"
-            ref="helpIcon"
-            :class="{ 'header-help-icon--fixed': helpState === 'fixed' }"
-            @mouseover="$emit('help-mouseover')"
-            @mouseleave="$emit('help-mouseleave')"
-            @click="$emit('help-click')"
-            tabindex="0"
-        >
-            {{ helpLabel }}
-        </div>
-    </header>
+      {{ helpLabel }}
+    </div>
+  </header>
 </template>
 
 <script setup>
-import { ref, computed, defineExpose } from "vue";
-import { useHeaderVisibility } from "../../composables/useHeaderVisibility.js";
-import { useCharacterStore } from "../../stores/characterStore.js";
+import { ref, computed, defineExpose } from 'vue';
+import { useHeaderVisibility } from '../../composables/useHeaderVisibility.js';
+import { useCharacterStore } from '../../stores/characterStore.js';
 
 const props = defineProps({
-    helpState: String,
-    defaultTitle: String,
-    cloudHubLabel: String,
-    helpLabel: String,
+  helpState: String,
+  defaultTitle: String,
+  cloudHubLabel: String,
+  helpLabel: String,
 });
 
-const emit = defineEmits([
-    "open-hub",
-    "help-mouseover",
-    "help-mouseleave",
-    "help-click",
-]);
+const emit = defineEmits(['open-hub', 'help-mouseover', 'help-mouseleave', 'help-click']);
 
 const headerEl = ref(null);
 const helpIcon = ref(null);
@@ -51,37 +39,35 @@ const characterStore = useCharacterStore();
 
 useHeaderVisibility(headerEl);
 
-const titleText = computed(
-    () => characterStore.character.name || props.defaultTitle
-);
+const titleText = computed(() => characterStore.character.name || props.defaultTitle);
 
 defineExpose({ headerEl, helpIcon });
 </script>
 
 <style scoped>
 .main-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 80px;
-    background-color: var(--color-background);
-    border-bottom: 1px solid var(--color-border-normal);
-    box-shadow: 0 3px 8px rgb(0 0 0 / 50%);
-    z-index: 101;
-    will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--color-border-normal);
+  box-shadow: 0 3px 8px rgb(0 0 0 / 50%);
+  z-index: 101;
+  will-change: transform;
 }
 
 .main-header__title {
-    flex: 1;
-    text-align: center;
-    font-family: "Cinzel Decorative", "Shippori Mincho", serif;
-    color: var(--color-accent);
-	font-size:min(4vw,30px);
+  flex: 1;
+  text-align: center;
+  font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
+  color: var(--color-accent);
+  font-size: min(4vw, 30px);
 }
 
 .google-drive-button-container {
@@ -117,15 +103,15 @@ defineExpose({ headerEl, helpIcon });
 }
 
 .header-help-icon {
-    cursor: pointer;
-    font-size: 25px;
-    font-weight: 400;
-    width: 50px;
-    height: 50px;
+  cursor: pointer;
+  font-size: 25px;
+  font-weight: 400;
+  width: 50px;
+  height: 50px;
 }
 
 .header-help-icon--fixed,
 .header-help-icon--fixed:hover {
-    background-color: var(--color-accent-dark);
+  background-color: var(--color-accent-dark);
 }
 </style>

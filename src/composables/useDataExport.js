@@ -1,10 +1,10 @@
-import { DataManager } from "../services/dataManager.js";
-import { CocofoliaExporter } from "../services/cocofoliaExporter.js";
-import { AioniaGameData } from "../data/gameData.js";
-import { useCharacterStore } from "../stores/characterStore.js";
-import { useNotifications } from "./useNotifications.js";
-import { messages } from "../locales/ja.js";
-import { copyText } from "../utils/clipboard.js";
+import { DataManager } from '../services/dataManager.js';
+import { CocofoliaExporter } from '../services/cocofoliaExporter.js';
+import { AioniaGameData } from '../data/gameData.js';
+import { useCharacterStore } from '../stores/characterStore.js';
+import { useNotifications } from './useNotifications.js';
+import { messages } from '../locales/ja.js';
+import { copyText } from '../utils/clipboard.js';
 
 export function useDataExport() {
   const characterStore = useCharacterStore();
@@ -27,26 +27,14 @@ export function useDataExport() {
       event,
       (parsedData) => {
         Object.assign(characterStore.character, parsedData.character);
-        characterStore.skills.splice(
-          0,
-          characterStore.skills.length,
-          ...parsedData.skills,
-        );
-        characterStore.specialSkills.splice(
-          0,
-          characterStore.specialSkills.length,
-          ...parsedData.specialSkills,
-        );
+        characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
+        characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
         Object.assign(characterStore.equipments, parsedData.equipments);
-        characterStore.histories.splice(
-          0,
-          characterStore.histories.length,
-          ...parsedData.histories,
-        );
+        characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
       },
       (errorMessage) =>
         showToast({
-          type: "error",
+          type: 'error',
           ...messages.dataExport.loadError(errorMessage),
         }),
     );
@@ -56,13 +44,13 @@ export function useDataExport() {
     try {
       await copyText(text);
       document.dispatchEvent(
-        new CustomEvent("aionia-copy-success", {
-          detail: { type: "cocofolia" },
+        new CustomEvent('aionia-copy-success', {
+          detail: { type: 'cocofolia' },
         }),
       );
     } catch (err) {
-      console.error("Failed to copy: ", err);
-      showToast({ type: "error", title: messages.outputButton.error });
+      console.error('Failed to copy: ', err);
+      showToast({ type: 'error', title: messages.outputButton.error });
     }
   }
 
@@ -79,8 +67,7 @@ export function useDataExport() {
       specialSkillsRequiringNote: AioniaGameData.specialSkillsRequiringNote,
       weaponDamage: AioniaGameData.weaponDamage,
     };
-    const cocofoliaCharacter =
-      cocofoliaExporter.generateCocofoliaData(exportData);
+    const cocofoliaCharacter = cocofoliaExporter.generateCocofoliaData(exportData);
     const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
     copyToClipboard(textToCopy);
   }

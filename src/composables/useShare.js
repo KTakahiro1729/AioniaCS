@@ -1,10 +1,10 @@
-import { createShareLink } from "../libs/sabalessshare/src/index.js";
-import { createDynamicLink } from "../libs/sabalessshare/src/dynamic.js";
-import { arrayBufferToBase64 } from "../libs/sabalessshare/src/crypto.js";
-import { DriveStorageAdapter } from "../services/driveStorageAdapter.js";
-import { useCharacterStore } from "../stores/characterStore.js";
-import { useNotifications } from "./useNotifications.js";
-import { messages } from "../locales/ja.js";
+import { createShareLink } from '../libs/sabalessshare/src/index.js';
+import { createDynamicLink } from '../libs/sabalessshare/src/dynamic.js';
+import { arrayBufferToBase64 } from '../libs/sabalessshare/src/crypto.js';
+import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
+import { useCharacterStore } from '../stores/characterStore.js';
+import { useNotifications } from './useNotifications.js';
+import { messages } from '../locales/ja.js';
 
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
@@ -38,18 +38,14 @@ export function useShare(dataManager) {
       ciphertext: arrayBufferToBase64(data.ciphertext),
       iv: arrayBufferToBase64(data.iv),
     });
-    const id = await dataManager.googleDriveManager.uploadAndShareFile(
-      payload,
-      "share.enc",
-      "application/json",
-    );
+    const id = await dataManager.googleDriveManager.uploadAndShareFile(payload, 'share.enc', 'application/json');
     return id;
   }
 
   async function generateShare(options) {
     const { type, includeFull, password, expiresInDays } = options;
     const data = _collectData(includeFull);
-    if (type === "dynamic") {
+    if (type === 'dynamic') {
       const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
       const { shareLink } = await createDynamicLink({
         data,
@@ -59,7 +55,7 @@ export function useShare(dataManager) {
       });
       return shareLink;
     }
-    const mode = includeFull ? "cloud" : "simple";
+    const mode = includeFull ? 'cloud' : 'simple';
     return createShareLink({
       data,
       mode,
@@ -67,21 +63,15 @@ export function useShare(dataManager) {
       shortenUrlHandler: async (longUrl) => {
         try {
           // TinyURLのAPIエンドポイントにリクエストを送信
-          const response = await fetch(
-            `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`,
-          );
+          const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
           if (response.ok) {
             return await response.text();
           } else {
-            console.error(
-              "TinyURL API request failed:",
-              response.status,
-              response.statusText,
-            );
+            console.error('TinyURL API request failed:', response.status, response.statusText);
             return longUrl;
           }
         } catch (error) {
-          console.error("Failed to shorten URL with TinyURL:", error);
+          console.error('Failed to shorten URL with TinyURL:', error);
           return longUrl;
         }
       },
@@ -93,9 +83,9 @@ export function useShare(dataManager) {
   async function copyLink(link) {
     try {
       await navigator.clipboard.writeText(link);
-      showToast({ type: "success", ...messages.share.copied(link) });
+      showToast({ type: 'success', ...messages.share.copied(link) });
     } catch (err) {
-      showToast({ type: "error", ...messages.share.copyFailed(err) });
+      showToast({ type: 'error', ...messages.share.copyFailed(err) });
     }
   }
 

@@ -1,11 +1,11 @@
-import { defineStore } from "pinia";
-import { shallowRef } from "vue";
+import { defineStore } from 'pinia';
+import { shallowRef } from 'vue';
 
-export const useModalStore = defineStore("modal", {
+export const useModalStore = defineStore('modal', {
   state: () => ({
     isVisible: false,
-    title: "",
-    message: "",
+    title: '',
+    message: '',
     component: shallowRef(null),
     props: {},
     buttons: [],
@@ -18,8 +18,8 @@ export const useModalStore = defineStore("modal", {
     showModal(options) {
       return new Promise((resolve, reject) => {
         this.isVisible = true;
-        this.title = options.title || "";
-        this.message = options.message || "";
+        this.title = options.title || '';
+        this.message = options.message || '';
         this.component = options.component || null;
         this.props = options.props || {};
         this.buttons = options.buttons || [];
@@ -31,8 +31,8 @@ export const useModalStore = defineStore("modal", {
     },
     hideModal() {
       this.isVisible = false;
-      this.title = "";
-      this.message = "";
+      this.title = '';
+      this.message = '';
       this.component = null;
       this.props = {};
       this.buttons = [];

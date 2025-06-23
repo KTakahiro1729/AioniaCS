@@ -9,26 +9,14 @@
             <div class="modal-title">{{ modal.title }}</div>
           </div>
         </div>
-        <div
-          class="modal-global-actions sub-box-title"
-          v-if="modal.globalActions"
-        >
-          <component
-            :is="modal.globalActions.component"
-            v-bind="modal.globalActions.props"
-            v-on="modal.globalActions.on"
-          />
+        <div class="modal-global-actions sub-box-title" v-if="modal.globalActions">
+          <component :is="modal.globalActions.component" v-bind="modal.globalActions.props" v-on="modal.globalActions.on" />
         </div>
         <div class="modal-content box-content">
           <div class="modal-message" v-if="modal.message">
             {{ modal.message }}
           </div>
-          <component
-            :is="modal.component"
-            v-bind="modal.props"
-            v-on="modal.events"
-            ref="inner"
-          />
+          <component :is="modal.component" v-bind="modal.props" v-on="modal.events" ref="inner" />
           <div class="modal-actions">
             <button
               v-for="(btn, index) in modal.buttons"
@@ -60,7 +48,6 @@ function resolve(value) {
 </script>
 
 <style scoped>
-
 .box-content {
   border: none;
   padding: 14px;

@@ -3,14 +3,14 @@ export async function copyText(text) {
     await navigator.clipboard.writeText(text);
     return;
   }
-  const textArea = document.createElement("textarea");
+  const textArea = document.createElement('textarea');
   textArea.value = text;
-  textArea.style.cssText = "position: fixed; top: 0; left: 0; opacity: 0;";
+  textArea.style.cssText = 'position: fixed; top: 0; left: 0; opacity: 0;';
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
   try {
-    document.execCommand("copy");
+    document.execCommand('copy');
   } finally {
     document.body.removeChild(textArea);
   }

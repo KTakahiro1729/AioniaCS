@@ -1,15 +1,12 @@
-import { ref, computed } from "vue";
-import { ImageManager } from "../services/imageManager.js";
+import { ref, computed } from 'vue';
+import { ImageManager } from '../services/imageManager.js';
 
 // 画像関連のロジックを提供するコンポーザブル関数
 export function useImages(character, showCustomAlert) {
   const currentImageIndex = ref(0);
 
   const currentImageSrc = computed(() => {
-    if (
-      character.value?.images?.length > 0 &&
-      currentImageIndex.value < character.value.images.length
-    ) {
+    if (character.value?.images?.length > 0 && currentImageIndex.value < character.value.images.length) {
       return character.value.images[currentImageIndex.value];
     }
     return null;
@@ -35,16 +32,13 @@ export function useImages(character, showCustomAlert) {
 
   function nextImage() {
     if (character.value?.images?.length > 1) {
-      currentImageIndex.value =
-        (currentImageIndex.value + 1) % character.value.images.length;
+      currentImageIndex.value = (currentImageIndex.value + 1) % character.value.images.length;
     }
   }
 
   function previousImage() {
     if (character.value?.images?.length > 1) {
-      currentImageIndex.value =
-        (currentImageIndex.value - 1 + character.value.images.length) %
-        character.value.images.length;
+      currentImageIndex.value = (currentImageIndex.value - 1 + character.value.images.length) % character.value.images.length;
     }
   }
 

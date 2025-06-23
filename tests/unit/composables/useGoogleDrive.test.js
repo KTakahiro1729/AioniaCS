@@ -1,16 +1,16 @@
-import { setActivePinia, createPinia } from "pinia";
-import { useGoogleDrive } from "../../../src/composables/useGoogleDrive.js";
-import { useCharacterStore } from "../../../src/stores/characterStore.js";
-import { useUiStore } from "../../../src/stores/uiStore.js";
+import { setActivePinia, createPinia } from 'pinia';
+import { useGoogleDrive } from '../../../src/composables/useGoogleDrive.js';
+import { useCharacterStore } from '../../../src/stores/characterStore.js';
+import { useUiStore } from '../../../src/stores/uiStore.js';
 
-describe("useGoogleDrive", () => {
+describe('useGoogleDrive', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  test("handleSaveToDriveClick calls saveDataToAppData with store data", async () => {
+  test('handleSaveToDriveClick calls saveDataToAppData with store data', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: "1", name: "c.json" }),
+      saveDataToAppData: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
       googleDriveManager: {},
     };
 
@@ -19,8 +19,8 @@ describe("useGoogleDrive", () => {
     const uiStore = useUiStore();
 
     uiStore.currentDriveFileId = null;
-    uiStore.currentDriveFileName = "c";
-    charStore.character.name = "Hero";
+    uiStore.currentDriveFileName = 'c';
+    charStore.character.name = 'Hero';
 
     await handleSaveToDriveClick();
 
@@ -31,20 +31,20 @@ describe("useGoogleDrive", () => {
       charStore.equipments,
       charStore.histories,
       null,
-      "c",
+      'c',
     );
   });
 
-  test("saveCharacterToDrive uses provided id and name", async () => {
+  test('saveCharacterToDrive uses provided id and name', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: "1", name: "a.json" }),
+      saveDataToAppData: vi.fn().mockResolvedValue({ id: '1', name: 'a.json' }),
       googleDriveManager: {},
     };
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
-    charStore.character.name = "Brave";
+    charStore.character.name = 'Brave';
 
-    await saveCharacterToDrive("abc", "foo");
+    await saveCharacterToDrive('abc', 'foo');
 
     expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
       charStore.character,
@@ -52,14 +52,14 @@ describe("useGoogleDrive", () => {
       charStore.specialSkills,
       charStore.equipments,
       charStore.histories,
-      "abc",
-      "foo",
+      'abc',
+      'foo',
     );
   });
 
-  test("saveOrUpdateCurrentCharacterInDrive chooses create or update", async () => {
-    const createFile = vi.fn().mockResolvedValue({ id: "1" });
-    const updateFile = vi.fn().mockResolvedValue({ id: "2" });
+  test('saveOrUpdateCurrentCharacterInDrive chooses create or update', async () => {
+    const createFile = vi.fn().mockResolvedValue({ id: '1' });
+    const updateFile = vi.fn().mockResolvedValue({ id: '2' });
     const dataManager = {
       googleDriveManager: {
         createCharacterFile: createFile,
@@ -74,13 +74,9 @@ describe("useGoogleDrive", () => {
     uiStore.currentDriveFileId = null;
     await saveOrUpdateCurrentCharacterInDrive();
     expect(createFile).toHaveBeenCalled();
-    uiStore.currentDriveFileId = "abc";
-    uiStore.currentDriveFileName = "c.json";
+    uiStore.currentDriveFileId = 'abc';
+    uiStore.currentDriveFileName = 'c.json';
     await saveOrUpdateCurrentCharacterInDrive();
-    expect(updateFile).toHaveBeenCalledWith(
-      "abc",
-      expect.any(Object),
-      "c.json",
-    );
+    expect(updateFile).toHaveBeenCalledWith('abc', expect.any(Object), 'c.json');
   });
 });
