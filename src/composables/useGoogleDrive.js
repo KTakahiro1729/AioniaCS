@@ -240,7 +240,7 @@ export function useGoogleDrive(dataManager) {
   }
 
   onMounted(() => {
-    if (window.GoogleDriveManager) {
+    if (window.GoogleDriveManager || window.MockGoogleDriveManager) {
       initializeGoogleDrive();
     }
   });
