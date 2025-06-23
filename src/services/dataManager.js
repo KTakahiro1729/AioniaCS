@@ -242,7 +242,7 @@ export class DataManager {
     };
 
     const jsonData = JSON.stringify(dataToSave, null, 2);
-    const sanitizedFileName = (fileName || character.name || 'Aionia_Character_Sheet').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+    const sanitizedFileName = (fileName || character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
 
     try {
       const result = await this.googleDriveManager.saveFile(targetFolderId, sanitizedFileName, jsonData, currentFileId);
@@ -276,11 +276,11 @@ export class DataManager {
       histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
     };
 
-    const sanitizedFileName = (fileName || character.name || 'Aionia_Character_Sheet').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+    const sanitizedFileName = (fileName || character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
 
     if (currentFileId) {
       const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave, sanitizedFileName);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '\u540D\u79F0\u672A\u8A2D\u5B9A');
+      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
       return res;
     }
 
@@ -289,7 +289,7 @@ export class DataManager {
       await this.googleDriveManager.addIndexEntry({
         id: created.id,
         name: created.name,
-        characterName: character.name || '\u540D\u79F0\u672A\u8A2D\u5B9A',
+        characterName: character.name || '名もなき冒険者',
       });
     }
     return created;

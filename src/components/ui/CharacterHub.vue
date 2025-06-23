@@ -7,19 +7,20 @@
           :key="ch.id"
           :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
         >
-          <button class="character-hub--name" @click="confirmLoad(ch)">
-            {{ ch.characterName || '名もなき冒険者' }}
-          </button>
-          <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
-
-          <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--confirmation-box">
+          <span>
+            <button class="character-hub--name" @click="confirmLoad(ch)">
+              {{ ch.characterName || '名もなき冒険者' }}
+            </button>
+            <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
+          </span>
+          <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--actions-container">
             <p class="character-hub--confirmation-message">本当に削除しますか？</p>
             <div class="character-hub--confirmation-actions">
               <button class="button-base button-compact" @click="executeDelete">はい</button>
               <button class="button-base button-compact button-secondary" @click="cancelDelete">いいえ</button>
             </div>
           </div>
-          <div v-else>
+          <div v-else class="character-hub--actions-container">
             <div class="character-hub--actions-inline">
               <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
               <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
@@ -165,13 +166,13 @@ async function exportLocal(ch) {
 .character-hub--list {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .character-hub--item {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: flex-end;
   align-content: space-around;
   gap: 3px;
   padding: 4px;
@@ -184,7 +185,7 @@ async function exportLocal(ch) {
   cursor: pointer;
   font-size: 20px;
   font-weight: 700;
-  padding-right: 50px;
+  padding-right: 15px;
   text-align: left;
   overflow-wrap: break-word;
   word-break: break-all;
@@ -215,6 +216,14 @@ async function exportLocal(ch) {
   color: var(--color-text-muted);
   flex-grow: 1;
 }
+.character-hub--actions-container {
+  display: flex;
+  margin: 0 0 0 auto;
+  justify-content: flex-end;
+  flex-direction: row;
+  align-items: center;
+}
+
 .character-hub--actions-inline {
   display: flex;
 }
@@ -223,12 +232,6 @@ async function exportLocal(ch) {
   box-shadow:
     inset 0 0 2px var(--color-accent),
     0 0 6px var(--color-accent);
-}
-
-.character-hub--confirmation-box {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
 }
 
 .character-hub--confirmation-message {
