@@ -1,23 +1,23 @@
-import { setActivePinia, createPinia } from "pinia";
-import { useAppModals } from "../../../src/composables/useAppModals.js";
-import { useModal } from "../../../src/composables/useModal.js";
-import { isDesktopDevice } from "../../../src/utils/device.js";
+import { setActivePinia, createPinia } from 'pinia';
+import { useAppModals } from '../../../src/composables/useAppModals.js';
+import { useModal } from '../../../src/composables/useModal.js';
+import { isDesktopDevice } from '../../../src/utils/device.js';
 
-vi.mock("../../../src/composables/useModal.js", () => ({
+vi.mock('../../../src/composables/useModal.js', () => ({
   useModal: vi.fn(),
 }));
-vi.mock("../../../src/utils/device.js", () => ({
+vi.mock('../../../src/utils/device.js', () => ({
   isDesktopDevice: vi.fn(),
 }));
 
-describe("useAppModals", () => {
+describe('useAppModals', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setActivePinia(createPinia());
     useModal.mockReturnValue({ showModal: vi.fn().mockResolvedValue(null) });
   });
 
-  test("desktop uses direct print", async () => {
+  test('desktop uses direct print', async () => {
     isDesktopDevice.mockReturnValue(true);
     const printCharacterSheet = vi.fn();
     const openPreviewPage = vi.fn();
@@ -42,7 +42,7 @@ describe("useAppModals", () => {
     expect(args.on.print).toBe(printCharacterSheet);
   });
 
-  test("mobile uses preview page", async () => {
+  test('mobile uses preview page', async () => {
     isDesktopDevice.mockReturnValue(false);
     const printCharacterSheet = vi.fn();
     const openPreviewPage = vi.fn();

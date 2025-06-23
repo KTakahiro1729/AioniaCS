@@ -1,13 +1,11 @@
-import { reactive } from "vue";
-import { AioniaGameData } from "../../data/gameData.js";
-import { deepClone, createWeaknessArray } from "../../utils/utils.js";
+import { reactive } from 'vue';
+import { AioniaGameData } from '../../data/gameData.js';
+import { deepClone, createWeaknessArray } from '../../utils/utils.js';
 
 export function useCharacterData() {
   function createCharacter() {
     const base = deepClone(AioniaGameData.defaultCharacterData);
-    base.weaknesses = createWeaknessArray(
-      AioniaGameData.config.maxWeaknesses,
-    );
+    base.weaknesses = createWeaknessArray(AioniaGameData.config.maxWeaknesses);
     return base;
   }
 
@@ -16,16 +14,14 @@ export function useCharacterData() {
   const specialSkills = reactive(
     Array(AioniaGameData.config.initialSpecialSkillCount)
       .fill(null)
-      .map(() => ({ group: "", name: "", note: "", showNote: false }))
+      .map(() => ({ group: '', name: '', note: '', showNote: false })),
   );
   const equipments = reactive({
-    weapon1: { group: "", name: "" },
-    weapon2: { group: "", name: "" },
-    armor: { group: "", name: "" },
+    weapon1: { group: '', name: '' },
+    weapon2: { group: '', name: '' },
+    armor: { group: '', name: '' },
   });
-  const histories = reactive([
-    { sessionName: "", gotExperiments: null, memo: "" },
-  ]);
+  const histories = reactive([{ sessionName: '', gotExperiments: null, memo: '' }]);
 
   function resetCharacter() {
     Object.assign(character, createCharacter());
@@ -41,24 +37,24 @@ export function useCharacterData() {
       specialSkills.length,
       ...Array(AioniaGameData.config.initialSpecialSkillCount)
         .fill(null)
-        .map(() => ({ group: "", name: "", note: "", showNote: false })),
+        .map(() => ({ group: '', name: '', note: '', showNote: false })),
     );
   }
 
   function resetEquipments() {
-    equipments.weapon1.group = "";
-    equipments.weapon1.name = "";
-    equipments.weapon2.group = "";
-    equipments.weapon2.name = "";
-    equipments.armor.group = "";
-    equipments.armor.name = "";
+    equipments.weapon1.group = '';
+    equipments.weapon1.name = '';
+    equipments.weapon2.group = '';
+    equipments.weapon2.name = '';
+    equipments.armor.group = '';
+    equipments.armor.name = '';
   }
 
   function resetHistories() {
     histories.splice(0, histories.length, {
-      sessionName: "",
+      sessionName: '',
       gotExperiments: null,
-      memo: "",
+      memo: '',
     });
   }
 
@@ -84,4 +80,3 @@ export function useCharacterData() {
     initializeAll,
   };
 }
-

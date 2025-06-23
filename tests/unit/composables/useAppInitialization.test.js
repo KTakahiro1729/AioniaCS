@@ -1,44 +1,40 @@
-import { setActivePinia, createPinia } from "pinia";
-import { useAppInitialization } from "../../../src/composables/useAppInitialization.js";
-import { useCharacterStore } from "../../../src/stores/characterStore.js";
-import { useUiStore } from "../../../src/stores/uiStore.js";
+import { setActivePinia, createPinia } from 'pinia';
+import { useAppInitialization } from '../../../src/composables/useAppInitialization.js';
+import { useCharacterStore } from '../../../src/stores/characterStore.js';
+import { useUiStore } from '../../../src/stores/uiStore.js';
 
-vi.mock("../../../src/libs/sabalessshare/src/url.js", () => ({
+vi.mock('../../../src/libs/sabalessshare/src/url.js', () => ({
   parseShareUrl: vi.fn(),
 }));
 
-vi.mock("../../../src/libs/sabalessshare/src/index.js", () => ({
+vi.mock('../../../src/libs/sabalessshare/src/index.js', () => ({
   receiveSharedData: vi.fn(),
 }));
 
-vi.mock("../../../src/libs/sabalessshare/src/dynamic.js", () => ({
+vi.mock('../../../src/libs/sabalessshare/src/dynamic.js', () => ({
   receiveDynamicData: vi.fn(),
 }));
 
-vi.mock("../../../src/services/driveStorageAdapter.js", () => ({
+vi.mock('../../../src/services/driveStorageAdapter.js', () => ({
   DriveStorageAdapter: vi.fn().mockImplementation(() => ({})),
 }));
 
-vi.mock("../../../src/composables/useNotifications.js", () => ({
+vi.mock('../../../src/composables/useNotifications.js', () => ({
   useNotifications: () => ({ showToast: vi.fn() }),
 }));
 
-describe("useAppInitialization", () => {
+describe('useAppInitialization', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
   });
 
-  test("loads shared data when URL has params", async () => {
-    const { parseShareUrl } = await import(
-      "../../../src/libs/sabalessshare/src/url.js"
-    );
-    const { receiveSharedData } = await import(
-      "../../../src/libs/sabalessshare/src/index.js"
-    );
-    parseShareUrl.mockReturnValue({ mode: "simple" });
+  test('loads shared data when URL has params', async () => {
+    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
+    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
+    parseShareUrl.mockReturnValue({ mode: 'simple' });
     const payload = {
-      character: { name: "Hero" },
+      character: { name: 'Hero' },
       skills: [],
       specialSkills: [],
       equipments: {},
@@ -56,32 +52,26 @@ describe("useAppInitialization", () => {
     expect(parseShareUrl).toHaveBeenCalled();
     expect(receiveSharedData).toHaveBeenCalled();
     expect(uiStore.isViewingShared).toBe(true);
-    expect(charStore.character.name).toBe("Hero");
+    expect(charStore.character.name).toBe('Hero');
   });
 
-  test("does nothing when no params", async () => {
-    const { parseShareUrl } = await import(
-      "../../../src/libs/sabalessshare/src/url.js"
-    );
+  test('does nothing when no params', async () => {
+    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
     parseShareUrl.mockReturnValue(null);
     const dataManager = { googleDriveManager: {} };
     const { initialize } = useAppInitialization(dataManager);
     const charStore = useCharacterStore();
-    charStore.character.name = "Default";
+    charStore.character.name = 'Default';
     await initialize();
     const uiStore = useUiStore();
     expect(uiStore.isViewingShared).toBe(false);
-    expect(charStore.character.name).toBe("Default");
+    expect(charStore.character.name).toBe('Default');
   });
 
-  test("updates loading state", async () => {
-    const { parseShareUrl } = await import(
-      "../../../src/libs/sabalessshare/src/url.js"
-    );
-    const { receiveSharedData } = await import(
-      "../../../src/libs/sabalessshare/src/index.js"
-    );
-    parseShareUrl.mockReturnValue({ mode: "simple" });
+  test('updates loading state', async () => {
+    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
+    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
+    parseShareUrl.mockReturnValue({ mode: 'simple' });
     let resolve;
     receiveSharedData.mockReturnValue(
       new Promise((r) => {
@@ -93,8 +83,8 @@ describe("useAppInitialization", () => {
     const p = initialize();
     expect(uiStore.isLoading).toBe(true);
     const payload = {
-      character: { name: "Test" },
-      playerName: "Test",
+      character: { name: 'Test' },
+      playerName: 'Test',
       skills: [],
       specialSkills: [],
       equipments: {},

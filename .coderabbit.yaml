@@ -1,7 +1,7 @@
 # CodeRabbit AIレビューのための設定ファイルです。
 
 # レビューコメントの言語を指定します。プロジェクトの主要言語に合わせて "ja" を設定します。
-language: "ja"
+language: 'ja'
 
 # 早期アクセス機能を有効にし、最新のレビュー機能を試せるようにします。
 early_access: true
@@ -10,26 +10,26 @@ reviews:
   # レビューを実行するブランチを指定します。
   # この設定により、mainとdevの両ブランチへのPRがレビュー対象となります。
   branches:
-    - "main"
-    - "dev"
+    - 'main'
+    - 'dev'
 
   # レビュー対象から除外するパスを指定します。
   path_filters:
     # .gitignoreの内容に基づき、ビルド成果物や依存関係、設定ファイルなどを除外します。
     - exclude:
-      - "node_modules/**" #
-      - "dist/**" #
-      - "logs/**" #
-      - "*.log" #
-      - ".vscode/**" #
-      - "!/.vscode/extensions.json" # VSCodeの推奨拡張機能はレビュー対象に含めます
-      - "package-lock.json" #
-      - ".github/workflows/**" # CI/CD設定はレビュー対象外とします
-      - "tests/unit/__mocks__/**" # テストのモックはレビュー対象外とします
+        - 'node_modules/**' #
+        - 'dist/**' #
+        - 'logs/**' #
+        - '*.log' #
+        - '.vscode/**' #
+        - '!/.vscode/extensions.json' # VSCodeの推奨拡張機能はレビュー対象に含めます
+        - 'package-lock.json' #
+        - '.github/workflows/**' # CI/CD設定はレビュー対象外とします
+        - 'tests/unit/__mocks__/**' # テストのモックはレビュー対象外とします
 
   # 特定のパスに対するレビューの指示です。
   path_instructions:
-    - path: "src/**"
+    - path: 'src/**'
       instructions: |
         ### Vue.js開発全般のレビュー指針
         - **テーマ**: UI/UXは「ダークファンタジー」をテーマとしています。デザインや命名規則はこの世界観に合わせてください。
@@ -39,24 +39,24 @@ reviews:
         - **モジュール性**: `composables` や `services` ディレクトリのように、機能ごとにモジュールを分割する設計を維持してください。
         - **コメント**: 変更履歴のようなコメントは避け、コードの意図を説明するコメントのみに留めてください。
 
-    - path: "src/**/*.vue"
+    - path: 'src/**/*.vue'
       instructions: |
         ### Vueコンポーネント実装ガイド
         - **スタイル**: スタイルの影響範囲をコンポーネント内に限定するため、`<style scoped>` を使用してください。
         - **状態管理**: `App.vue` を参考に、リアクティブなデータ (`ref`, `reactive`)、算出プロパティ (`computed`)、メソッド、ライフサイクルフックを論理的に整理してください。
 
-    - path: "src/assets/css/**"
+    - path: 'src/assets/css/**'
       instructions: |
         ### CSSスタイルガイド
         - **命名規則**: BEM (`block__element--modifier`) スタイルを遵守してください。
         - **CSS変数**: 色や影などの共通スタイルは、`_variables.css` で定義されたCSS変数 (`var(...)`) を使用してください。
         - **レスポンシブデザイン**: `768px` と `480px` のブレークポイントを基準に、柔軟なレイアウトを実装してください。
 
-    - path: "tests/unit/**"
+    - path: 'tests/unit/**'
       instructions: |
         ### 単体テストガイド
         - **フレームワーク**: テストはVitestを使用して記述します。 # "Jest" から "Vitest" に変更
         - **モック**: `vi.mock()` を使用してモジュールをモックします。
 
-    - path: "*.md"
-      instructions: "ドキュメントは明確かつ簡潔に記述してください。特に`README.md`や`AGENTS.md`は、プロジェクトの概要やレビュワーへの指示が正確に伝わるようにしてください。"
+    - path: '*.md'
+      instructions: 'ドキュメントは明確かつ簡潔に記述してください。特に`README.md`や`AGENTS.md`は、プロジェクトの概要やレビュワーへの指示が正確に伝わるようにしてください。'

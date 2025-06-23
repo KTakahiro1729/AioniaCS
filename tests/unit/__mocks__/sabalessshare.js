@@ -1,5 +1,5 @@
 export function createShareLink() {
-  return Promise.resolve("mock-link");
+  return Promise.resolve('mock-link');
 }
 
 export function receiveSharedData() {
@@ -7,7 +7,7 @@ export function receiveSharedData() {
 }
 
 export function createDynamicLink() {
-  return Promise.resolve({ shareLink: "dynamic-link" });
+  return Promise.resolve({ shareLink: 'dynamic-link' });
 }
 
 export function receiveDynamicData() {
@@ -15,9 +15,9 @@ export function receiveDynamicData() {
 }
 
 export function arrayBufferToBase64(buffer) {
-  return Buffer.from(buffer).toString("base64");
+  return Buffer.from(buffer).toString('base64');
 }
 
 export function base64ToArrayBuffer(str) {
-  return Uint8Array.from(Buffer.from(str, "base64")).buffer;
+  return Uint8Array.from(Buffer.from(str, 'base64')).buffer;
 }

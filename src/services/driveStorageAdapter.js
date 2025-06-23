@@ -1,7 +1,4 @@
-import {
-  arrayBufferToBase64,
-  base64ToArrayBuffer,
-} from "../libs/sabalessshare/src/crypto.js";
+import { arrayBufferToBase64, base64ToArrayBuffer } from '../libs/sabalessshare/src/crypto.js';
 
 export class DriveStorageAdapter {
   constructor(googleDriveManager) {
@@ -10,11 +7,7 @@ export class DriveStorageAdapter {
 
   async create(data) {
     const content = this._serializeData(data);
-    const res = await this.gdm.saveFile(
-      "appDataFolder",
-      `sls_${Date.now()}.json`,
-      content,
-    );
+    const res = await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content);
     return res && res.id ? res.id : null;
   }
 
@@ -26,12 +19,7 @@ export class DriveStorageAdapter {
 
   async update(id, data) {
     const content = this._serializeData(data);
-    await this.gdm.saveFile(
-      "appDataFolder",
-      `sls_${Date.now()}.json`,
-      content,
-      id,
-    );
+    await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content, id);
   }
 
   _serializeData(data) {

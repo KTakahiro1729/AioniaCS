@@ -1,12 +1,5 @@
 <template>
-  <input
-    v-bind="$attrs"
-    :type="type"
-    :placeholder="placeholder"
-    :disabled="disabled"
-    :value="modelValue"
-    @input="onInput"
-  />
+  <input v-bind="$attrs" :type="type" :placeholder="placeholder" :disabled="disabled" :value="modelValue" @input="onInput" />
 </template>
 
 <script setup>
@@ -21,4 +14,3 @@ function onInput(e) {
   emit('update:modelValue', e.target.value);
 }
 </script>
-

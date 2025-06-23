@@ -8,31 +8,21 @@ export const ImageManager = {
    */
   loadImage: function (file) {
     return new Promise((resolve, reject) => {
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "image/svg+xml",
-      ];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
       const maxSize = 10 * 1024 * 1024; // 10 MB
 
       if (!file) {
-        reject(new Error("No file provided."));
+        reject(new Error('No file provided.'));
         return;
       }
 
       if (!allowedTypes.includes(file.type)) {
-        reject(
-          new Error(
-            "Unsupported file type. Please upload JPEG, PNG, GIF, or WebP images.",
-          ),
-        );
+        reject(new Error('Unsupported file type. Please upload JPEG, PNG, GIF, or WebP images.'));
         return;
       }
 
       if (file.size > maxSize) {
-        reject(new Error("File is too large. Maximum size is 10MB."));
+        reject(new Error('File is too large. Maximum size is 10MB.'));
         return;
       }
 
@@ -45,8 +35,8 @@ export const ImageManager = {
         resolve(e.target.result);
       };
       reader.onerror = (e) => {
-        console.error("FileReader error:", e);
-        reject(new Error("Error reading file."));
+        console.error('FileReader error:', e);
+        reject(new Error('Error reading file.'));
       };
       reader.readAsDataURL(file); // Reads the file as a base64 encoded string
     });
@@ -66,7 +56,7 @@ export const ImageManager = {
       console.log(`Simulating removal of image at index: ${index}`);
       return updatedImagesArray;
     } else {
-      console.error("Invalid index for image removal.");
+      console.error('Invalid index for image removal.');
       return imagesArray; // Return original array if index is invalid
     }
   },

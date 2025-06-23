@@ -1,16 +1,6 @@
 <template>
-  <select
-    v-bind="$attrs"
-    :disabled="disabled"
-    :value="modelValue"
-    @change="onChange"
-  >
-    <option
-      v-for="option in options"
-      :key="option.value"
-      :value="option.value"
-      :disabled="option.disabled"
-    >
+  <select v-bind="$attrs" :disabled="disabled" :value="modelValue" @change="onChange">
+    <option v-for="option in options" :key="option.value" :value="option.value" :disabled="option.disabled">
       {{ option.label }}
     </option>
   </select>
@@ -27,4 +17,3 @@ function onChange(e) {
   emit('update:modelValue', e.target.value);
 }
 </script>
-

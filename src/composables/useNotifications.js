@@ -1,4 +1,4 @@
-import { useNotificationStore } from "../stores/notificationStore.js";
+import { useNotificationStore } from '../stores/notificationStore.js';
 
 export function useNotifications() {
   const store = useNotificationStore();
@@ -10,7 +10,7 @@ export function useNotifications() {
   function showAsyncToast(promise, messages) {
     const id = showToast({
       duration: 0,
-      type: "info",
+      type: 'info',
       ...(messages.loading || {}),
     });
     const finalize = (opts, type) => {
@@ -18,19 +18,18 @@ export function useNotifications() {
     };
     promise
       .then((res) => {
-        finalize(messages.success || {}, "success");
+        finalize(messages.success || {}, 'success');
         return res;
       })
       .catch((err) => {
         const errorOpts =
-          typeof messages.error === "function"
+          typeof messages.error === 'function'
             ? messages.error(err)
             : {
                 ...(messages.error || {}),
-                message:
-                  (messages.error && messages.error.message) || err.message,
+                message: (messages.error && messages.error.message) || err.message,
               };
-        finalize(errorOpts, "error");
+        finalize(errorOpts, 'error');
       });
     return promise;
   }

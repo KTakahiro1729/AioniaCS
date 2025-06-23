@@ -1,5 +1,5 @@
-import { computed } from "vue";
-import { AioniaGameData } from "../../data/gameData.js";
+import { computed } from 'vue';
+import { AioniaGameData } from '../../data/gameData.js';
 
 export function useExperienceCalculation(character, skills, specialSkills, histories) {
   const maxExperiencePoints = computed(() => {
@@ -12,37 +12,19 @@ export function useExperienceCalculation(character, skills, specialSkills, histo
           : 0),
       0,
     );
-    const combinedInitialBonus = Math.min(
-      initialScarExp + creationWeaknessExp,
-      AioniaGameData.experiencePointValues.maxInitialBonus,
-    );
-    const historyExp = histories.reduce(
-      (sum, h) => sum + (Number(h.gotExperiments) || 0),
-      0,
-    );
-    return (
-      AioniaGameData.experiencePointValues.basePoints +
-      combinedInitialBonus +
-      historyExp
-    );
+    const combinedInitialBonus = Math.min(initialScarExp + creationWeaknessExp, AioniaGameData.experiencePointValues.maxInitialBonus);
+    const historyExp = histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
+    return AioniaGameData.experiencePointValues.basePoints + combinedInitialBonus + historyExp;
   });
 
   const currentExperiencePoints = computed(() => {
-    const skillExp = skills.reduce(
-      (sum, s) =>
-        sum + (s.checked ? AioniaGameData.experiencePointValues.skillBase : 0),
-      0,
-    );
+    const skillExp = skills.reduce((sum, s) => sum + (s.checked ? AioniaGameData.experiencePointValues.skillBase : 0), 0);
     const expertExp = skills.reduce((sum, s) => {
       if (s.checked && s.canHaveExperts) {
         return (
           sum +
           s.experts.reduce(
-            (expSum, exp) =>
-              expSum +
-              (exp.value && exp.value.trim() !== ''
-                ? AioniaGameData.experiencePointValues.expertSkill
-                : 0),
+            (expSum, exp) => expSum + (exp.value && exp.value.trim() !== '' ? AioniaGameData.experiencePointValues.expertSkill : 0),
             0,
           )
         );
@@ -50,11 +32,7 @@ export function useExperienceCalculation(character, skills, specialSkills, histo
       return sum;
     }, 0);
     const specialSkillExp = specialSkills.reduce(
-      (sum, ss) =>
-        sum +
-        (ss.name && ss.name.trim() !== ''
-          ? AioniaGameData.experiencePointValues.specialSkill
-          : 0),
+      (sum, ss) => sum + (ss.name && ss.name.trim() !== '' ? AioniaGameData.experiencePointValues.specialSkill : 0),
       0,
     );
     return skillExp + expertExp + specialSkillExp;
@@ -65,4 +43,3 @@ export function useExperienceCalculation(character, skills, specialSkills, histo
     currentExperiencePoints,
   };
 }
-

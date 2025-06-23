@@ -5,11 +5,8 @@ export class GoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
     this.clientId = clientId;
-    this.discoveryDocs = [
-      "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
-    ];
-    this.scope =
-      "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file";
+    this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
+    this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
     this.gapiLoadedCallback = null;
     this.gisLoadedCallback = null;
     this.tokenClient = null;
@@ -27,17 +24,15 @@ export class GoogleDriveManager {
    */
   onGapiLoad() {
     return new Promise((resolve, reject) => {
-      if (typeof gapi === "undefined" || !gapi.load) {
-        const err = new Error("GAPI core script not available for gapi.load.");
-        console.error("GDM: " + err.message);
+      if (typeof gapi === 'undefined' || !gapi.load) {
+        const err = new Error('GAPI core script not available for gapi.load.');
+        console.error('GDM: ' + err.message);
         return reject(err);
       }
-      gapi.load("client:picker", () => {
-        if (typeof gapi.client === "undefined" || !gapi.client.init) {
-          const err = new Error(
-            "GAPI client script not available for gapi.client.init.",
-          );
-          console.error("GDM: " + err.message);
+      gapi.load('client:picker', () => {
+        if (typeof gapi.client === 'undefined' || !gapi.client.init) {
+          const err = new Error('GAPI client script not available for gapi.client.init.');
+          console.error('GDM: ' + err.message);
           return reject(err);
         }
         gapi.client
@@ -48,11 +43,11 @@ export class GoogleDriveManager {
           })
           .then(() => {
             this.pickerApiLoaded = true;
-            console.log("GDM: GAPI client and Picker initialized.");
+            console.log('GDM: GAPI client and Picker initialized.');
             resolve();
           })
           .catch((error) => {
-            console.error("GDM: Error initializing GAPI client:", error);
+            console.error('GDM: Error initializing GAPI client:', error);
             reject(error);
           });
       });
@@ -66,28 +61,23 @@ export class GoogleDriveManager {
    */
   onGisLoad() {
     return new Promise((resolve, reject) => {
-      if (
-        typeof google === "undefined" ||
-        !google.accounts ||
-        !google.accounts.oauth2 ||
-        !google.accounts.oauth2.initTokenClient
-      ) {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2 || !google.accounts.oauth2.initTokenClient) {
         const err = new Error(
-          "GIS library not fully available to initialize token client (google.accounts.oauth2.initTokenClient is undefined).",
+          'GIS library not fully available to initialize token client (google.accounts.oauth2.initTokenClient is undefined).',
         );
-        console.error("GDM: " + err.message);
+        console.error('GDM: ' + err.message);
         return reject(err);
       }
       try {
         this.tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: this.clientId,
           scope: this.scope,
-          callback: "", // Callback will be set dynamically per request for actual token requests
+          callback: '', // Callback will be set dynamically per request for actual token requests
         });
-        console.log("GDM: GIS Token Client initialized.");
+        console.log('GDM: GIS Token Client initialized.');
         resolve();
       } catch (error) {
-        console.error("GDM: Error initializing GIS Token Client:", error);
+        console.error('GDM: Error initializing GIS Token Client:', error);
         reject(error);
       }
     });
@@ -99,32 +89,32 @@ export class GoogleDriveManager {
    */
   handleSignIn(callback) {
     if (!this.tokenClient) {
-      console.error("GIS Token Client not initialized.");
-      if (callback) callback(new Error("GIS Token Client not initialized."));
+      console.error('GIS Token Client not initialized.');
+      if (callback) callback(new Error('GIS Token Client not initialized.'));
       return;
     }
 
     // Set a dynamic callback for this specific sign-in attempt
     this.tokenClient.callback = (resp) => {
       if (resp.error) {
-        console.error("Google Sign-In error:", resp.error);
+        console.error('Google Sign-In error:', resp.error);
         if (callback) callback(new Error(resp.error));
         return;
       }
       // GIS automatically manages token refresh.
       // No need to manually get user profile here, gapi.client will use the token.
       // The app can check gapi.auth.getToken() to see if it's signed in.
-      console.log("Sign-in successful, token obtained.");
+      console.log('Sign-in successful, token obtained.');
       if (callback) callback(null, { signedIn: true }); // Indicate success
     };
 
     // Prompt the user to select an account and grant access
     // Check if already has an access token
     if (gapi.client.getToken() === null) {
-      this.tokenClient.requestAccessToken({ prompt: "consent" });
+      this.tokenClient.requestAccessToken({ prompt: 'consent' });
     } else {
       // Already has a token, consider as signed in
-      this.tokenClient.requestAccessToken({ prompt: "" }); // Try to get token without prompt
+      this.tokenClient.requestAccessToken({ prompt: '' }); // Try to get token without prompt
     }
   }
 
@@ -136,8 +126,8 @@ export class GoogleDriveManager {
     const token = gapi.client.getToken();
     if (token !== null) {
       google.accounts.oauth2.revoke(token.access_token, () => {
-        gapi.client.setToken(""); // Clear GAPI's token
-        console.log("User signed out and token revoked.");
+        gapi.client.setToken(''); // Clear GAPI's token
+        console.log('User signed out and token revoked.');
         if (callback) callback();
       });
     } else {
@@ -154,21 +144,21 @@ export class GoogleDriveManager {
    */
   async createFolder(folderName) {
     if (!gapi.client || !gapi.client.drive) {
-      console.error("GAPI client or Drive API not loaded.");
+      console.error('GAPI client or Drive API not loaded.');
       return null;
     }
     try {
       const response = await gapi.client.drive.files.create({
         resource: {
           name: folderName,
-          mimeType: "application/vnd.google-apps.folder",
+          mimeType: 'application/vnd.google-apps.folder',
         },
-        fields: "id, name",
+        fields: 'id, name',
       });
-      console.log("Folder created successfully:", response.result);
+      console.log('Folder created successfully:', response.result);
       return response.result;
     } catch (error) {
-      console.error("Error creating folder:", error);
+      console.error('Error creating folder:', error);
       return null;
     }
   }
@@ -180,25 +170,25 @@ export class GoogleDriveManager {
    */
   async findFolder(folderName) {
     if (!gapi.client || !gapi.client.drive) {
-      console.error("GAPI client or Drive API not loaded.");
+      console.error('GAPI client or Drive API not loaded.');
       return null;
     }
     try {
       const response = await gapi.client.drive.files.list({
         q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`,
-        fields: "files(id, name)",
-        spaces: "drive",
+        fields: 'files(id, name)',
+        spaces: 'drive',
       });
       const files = response.result.files;
       if (files && files.length > 0) {
-        console.log("Folder found:", files[0]);
+        console.log('Folder found:', files[0]);
         return files[0];
       } else {
-        console.log("Folder not found:", folderName);
+        console.log('Folder not found:', folderName);
         return null;
       }
     } catch (error) {
-      console.error("Error finding folder:", error);
+      console.error('Error finding folder:', error);
       return null;
     }
   }
@@ -210,9 +200,7 @@ export class GoogleDriveManager {
    */
   async getOrCreateAppFolder(appFolderName) {
     if (!gapi.client || !gapi.client.drive) {
-      console.error(
-        "GAPI client or Drive API not loaded for getOrCreateAppFolder.",
-      );
+      console.error('GAPI client or Drive API not loaded for getOrCreateAppFolder.');
       return null;
     }
     try {
@@ -223,10 +211,7 @@ export class GoogleDriveManager {
       }
       return folderId;
     } catch (error) {
-      console.error(
-        `Error in getOrCreateAppFolder for "${appFolderName}":`,
-        error,
-      );
+      console.error(`Error in getOrCreateAppFolder for "${appFolderName}":`, error);
       return null;
     }
   }
@@ -237,20 +222,20 @@ export class GoogleDriveManager {
    * @param {string} mimeType - The MIME type of files to list.
    * @returns {Promise<Array<{id: string, name: string}>>} A list of files, or empty array on error.
    */
-  async listFiles(folderId, mimeType = "application/json") {
+  async listFiles(folderId, mimeType = 'application/json') {
     if (!gapi.client || !gapi.client.drive) {
-      console.error("GAPI client or Drive API not loaded for listFiles.");
+      console.error('GAPI client or Drive API not loaded for listFiles.');
       return [];
     }
     try {
       const response = await gapi.client.drive.files.list({
         q: `'${folderId}' in parents and mimeType='${mimeType}' and trashed=false`,
-        fields: "files(id, name)",
-        spaces: "drive",
+        fields: 'files(id, name)',
+        spaces: 'drive',
       });
       return response.result.files || [];
     } catch (error) {
-      console.error("Error listing files:", error);
+      console.error('Error listing files:', error);
       return [];
     }
   }
@@ -265,21 +250,21 @@ export class GoogleDriveManager {
    */
   async saveFile(folderId, fileName, fileContent, fileId = null) {
     if (!gapi.client || !gapi.client.drive) {
-      console.error("GAPI client or Drive API not loaded for saveFile.");
+      console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
     }
 
     if (fileId) {
       try {
-        const boundary = "-------314159265358979323846";
+        const boundary = '-------314159265358979323846';
         const delimiter = `\r\n--${boundary}\r\n`;
         const closeDelim = `\r\n--${boundary}--`;
-        const contentType = "application/json";
+        const contentType = 'application/json';
         const metadata = { name: fileName, mimeType: contentType };
 
         const multipartRequestBody =
           delimiter +
-          "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
           JSON.stringify(metadata) +
           delimiter +
           `Content-Type: ${contentType}\r\n\r\n` +
@@ -288,31 +273,26 @@ export class GoogleDriveManager {
 
         const response = await gapi.client.request({
           path: `/upload/drive/v3/files/${fileId}`,
-          method: "PATCH",
-          params: { uploadType: "multipart" },
+          method: 'PATCH',
+          params: { uploadType: 'multipart' },
           headers: {
-            "Content-Type": `multipart/related; boundary=${boundary}`,
+            'Content-Type': `multipart/related; boundary=${boundary}`,
           },
           body: multipartRequestBody,
         });
-        console.log("File updated successfully:", response.result);
+        console.log('File updated successfully:', response.result);
         return { id: response.result.id, name: response.result.name };
       } catch (error) {
         // 404エラーの場合、ファイルが存在しないと判断し、新規作成フローに進む
         if (error.status === 404) {
-          console.error(
-            "Error creating file: The parent folder was not found.",
-            error,
-          );
+          console.error('Error creating file: The parent folder was not found.', error);
           // UI側でハンドリングできるよう、具体的なエラーをスローする
-          throw new Error(
-            "Parent folder not found. Please select a new folder.",
-          );
+          throw new Error('Parent folder not found. Please select a new folder.');
         } else {
           // その他の作成エラー
-          console.error("Error creating new file:", error);
+          console.error('Error creating new file:', error);
           if (error.result && error.result.error) {
-            console.error("Detailed error:", error.result.error.message);
+            console.error('Detailed error:', error.result.error.message);
           }
           return null;
         }
@@ -320,10 +300,10 @@ export class GoogleDriveManager {
     }
 
     try {
-      const boundary = "-------314159265358979323846";
+      const boundary = '-------314159265358979323846';
       const delimiter = `\r\n--${boundary}\r\n`;
       const closeDelim = `\r\n--${boundary}--`;
-      const contentType = "application/json";
+      const contentType = 'application/json';
       const metadata = {
         name: fileName,
         parents: [folderId],
@@ -332,7 +312,7 @@ export class GoogleDriveManager {
 
       const multipartRequestBody =
         delimiter +
-        "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
         JSON.stringify(metadata) +
         delimiter +
         `Content-Type: ${contentType}\r\n\r\n` +
@@ -340,18 +320,18 @@ export class GoogleDriveManager {
         closeDelim;
 
       const response = await gapi.client.request({
-        path: "/upload/drive/v3/files",
-        method: "POST",
-        params: { uploadType: "multipart", fields: "id,name" },
-        headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+        path: '/upload/drive/v3/files',
+        method: 'POST',
+        params: { uploadType: 'multipart', fields: 'id,name' },
+        headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
         body: multipartRequestBody,
       });
-      console.log("File created successfully:", response.result);
+      console.log('File created successfully:', response.result);
       return { id: response.result.id, name: response.result.name };
     } catch (error) {
-      console.error("Error creating new file:", error);
+      console.error('Error creating new file:', error);
       if (error.result && error.result.error) {
-        console.error("Detailed error:", error.result.error.message);
+        console.error('Detailed error:', error.result.error.message);
       }
       return null;
     }
@@ -364,25 +344,25 @@ export class GoogleDriveManager {
    */
   async loadFileContent(fileId) {
     if (!gapi.client || !gapi.client.drive) {
-      console.error("GAPI client or Drive API not loaded for loadFileContent.");
+      console.error('GAPI client or Drive API not loaded for loadFileContent.');
       return null;
     }
     try {
       const response = await gapi.client.drive.files.get({
         fileId: fileId,
-        alt: "media",
+        alt: 'media',
       });
       // The response body for alt: 'media' is directly the content.
       // For JSON, it might already be parsed if GAPI client detects content type.
       // If it's a string, it's fine. If it's an object (parsed JSON), stringify it.
-      if (typeof response.body === "object") {
+      if (typeof response.body === 'object') {
         return JSON.stringify(response.body);
       }
       return response.body; // Should be string
     } catch (error) {
-      console.error("Error loading file content:", error);
+      console.error('Error loading file content:', error);
       if (error.result && error.result.error) {
-        console.error("Detailed error:", error.result.error.message);
+        console.error('Detailed error:', error.result.error.message);
       }
       return null;
     }
@@ -397,19 +377,17 @@ export class GoogleDriveManager {
    */
   async uploadAndShareFile(fileContent, fileName, mimeType) {
     if (!gapi.client || !gapi.client.drive) {
-      console.error(
-        "GAPI client or Drive API not loaded for uploadAndShareFile.",
-      );
+      console.error('GAPI client or Drive API not loaded for uploadAndShareFile.');
       return null;
     }
     try {
-      const boundary = "-------314159265358979323846";
+      const boundary = '-------314159265358979323846';
       const delimiter = `\r\n--${boundary}\r\n`;
       const closeDelim = `\r\n--${boundary}--`;
       const metadata = { name: fileName, mimeType };
       const multipartRequestBody =
         delimiter +
-        "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
         JSON.stringify(metadata) +
         delimiter +
         `Content-Type: ${mimeType}\r\n\r\n` +
@@ -417,20 +395,20 @@ export class GoogleDriveManager {
         closeDelim;
 
       const res = await gapi.client.request({
-        path: "/upload/drive/v3/files",
-        method: "POST",
-        params: { uploadType: "multipart", fields: "id" },
-        headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+        path: '/upload/drive/v3/files',
+        method: 'POST',
+        params: { uploadType: 'multipart', fields: 'id' },
+        headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
         body: multipartRequestBody,
       });
 
       await gapi.client.drive.permissions.create({
         fileId: res.result.id,
-        resource: { role: "reader", type: "anyone" },
+        resource: { role: 'reader', type: 'anyone' },
       });
       return res.result.id;
     } catch (error) {
-      console.error("Error uploading and sharing file:", error);
+      console.error('Error uploading and sharing file:', error);
       return null;
     }
   }
@@ -441,21 +419,17 @@ export class GoogleDriveManager {
    * @param {string|null} parentFolderId - Optional ID of the folder to start in.
    * @param {Array<string>} mimeTypes - Array of MIME types to filter by.
    */
-  showFilePicker(
-    callback,
-    parentFolderId = null,
-    mimeTypes = ["application/json"],
-  ) {
+  showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
     if (!this.pickerApiLoaded) {
-      console.error("Picker API not loaded yet.");
-      if (callback) callback(new Error("Picker API not loaded."));
+      console.error('Picker API not loaded yet.');
+      if (callback) callback(new Error('Picker API not loaded.'));
       return;
     }
 
     const token = gapi.client.getToken();
     if (!token) {
-      console.error("User not signed in or token not available for Picker.");
-      if (callback) callback(new Error("Not signed in or token unavailable."));
+      console.error('User not signed in or token not available for Picker.');
+      if (callback) callback(new Error('Not signed in or token unavailable.'));
       return;
     }
 
@@ -463,11 +437,9 @@ export class GoogleDriveManager {
       if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
         const doc = data[google.picker.Response.DOCUMENTS][0];
         if (callback) callback(null, { id: doc.id, name: doc.name });
-      } else if (
-        data[google.picker.Response.ACTION] === google.picker.Action.CANCEL
-      ) {
-        console.log("Picker cancelled by user.");
-        if (callback) callback(new Error("Picker cancelled by user."));
+      } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
+        console.log('Picker cancelled by user.');
+        if (callback) callback(new Error('Picker cancelled by user.'));
       }
     };
 
@@ -476,7 +448,7 @@ export class GoogleDriveManager {
       view.setParent(parentFolderId);
     }
     if (mimeTypes && mimeTypes.length > 0) {
-      view.setMimeTypes(mimeTypes.join(","));
+      view.setMimeTypes(mimeTypes.join(','));
     }
 
     const pickerBuilder = new google.picker.PickerBuilder()
@@ -500,17 +472,15 @@ export class GoogleDriveManager {
    */
   showFolderPicker(callback) {
     if (!this.pickerApiLoaded) {
-      console.error("Picker API not loaded yet for folder picker.");
-      if (callback) callback(new Error("Picker API not loaded."));
+      console.error('Picker API not loaded yet for folder picker.');
+      if (callback) callback(new Error('Picker API not loaded.'));
       return;
     }
 
     const token = gapi.client.getToken();
     if (!token) {
-      console.error(
-        "User not signed in or token not available for Folder Picker.",
-      );
-      if (callback) callback(new Error("Not signed in or token unavailable."));
+      console.error('User not signed in or token not available for Folder Picker.');
+      if (callback) callback(new Error('Not signed in or token unavailable.'));
       return;
     }
 
@@ -518,23 +488,21 @@ export class GoogleDriveManager {
       if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
         const folder = data[google.picker.Response.DOCUMENTS][0];
         if (callback) callback(null, { id: folder.id, name: folder.name });
-      } else if (
-        data[google.picker.Response.ACTION] === google.picker.Action.CANCEL
-      ) {
-        console.log("Folder Picker cancelled by user.");
-        if (callback) callback(new Error("Folder Picker cancelled by user."));
+      } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
+        console.log('Folder Picker cancelled by user.');
+        if (callback) callback(new Error('Folder Picker cancelled by user.'));
       }
     };
 
     const view = new google.picker.DocsView();
     view.setIncludeFolders(true);
     view.setSelectFolderEnabled(true);
-    view.setMimeTypes("application/vnd.google-apps.folder");
+    view.setMimeTypes('application/vnd.google-apps.folder');
 
     const pickerBuilder = new google.picker.PickerBuilder()
       .setOrigin(window.location.origin)
       .addView(view)
-      .setTitle("Select a folder")
+      .setTitle('Select a folder')
       .setOAuthToken(token.access_token)
       .setCallback(pickerCallback);
 
@@ -551,8 +519,8 @@ export class GoogleDriveManager {
       (
         await gapi.client.drive.files.list({
           q: "name='character_index.json' and trashed=false",
-          spaces: "appDataFolder",
-          fields: "files(id,name)",
+          spaces: 'appDataFolder',
+          fields: 'files(id,name)',
         })
       ).result.files || [];
 
@@ -561,11 +529,7 @@ export class GoogleDriveManager {
       return fileList[0];
     }
 
-    const created = await this.saveFile(
-      "appDataFolder",
-      "character_index.json",
-      "[]",
-    );
+    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
     if (created) this.indexFileId = created.id;
     return created;
   }
@@ -579,7 +543,7 @@ export class GoogleDriveManager {
     if (!info) return [];
     const content = await this.loadFileContent(info.id);
     try {
-      return JSON.parse(content || "[]");
+      return JSON.parse(content || '[]');
     } catch {
       return [];
     }
@@ -592,12 +556,7 @@ export class GoogleDriveManager {
   async writeIndexFile(indexData) {
     const info = await this.ensureIndexFile();
     if (!info) return null;
-    return this.saveFile(
-      "appDataFolder",
-      "character_index.json",
-      JSON.stringify(indexData, null, 2),
-      info.id,
-    );
+    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
   }
 
   async addIndexEntry(entry) {
@@ -629,16 +588,11 @@ export class GoogleDriveManager {
    * @param {string} name file name
    */
   async createCharacterFile(data, name) {
-    return this.saveFile("appDataFolder", name, JSON.stringify(data, null, 2));
+    return this.saveFile('appDataFolder', name, JSON.stringify(data, null, 2));
   }
 
   async updateCharacterFile(id, data, name) {
-    return this.saveFile(
-      "appDataFolder",
-      name,
-      JSON.stringify(data, null, 2),
-      id,
-    );
+    return this.saveFile('appDataFolder', name, JSON.stringify(data, null, 2), id);
   }
 
   async loadCharacterFile(id) {

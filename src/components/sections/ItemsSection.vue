@@ -1,7 +1,7 @@
 <template>
   <div id="items_section" class="items">
     <div class="box-title">所持品<LoadIndicator /></div>
-    
+
     <div class="box-content">
       <div class="equipment-wrapper">
         <div class="equipment-container">
@@ -15,11 +15,7 @@
                   class="flex-item-1"
                   :disabled="uiStore.isViewingShared"
                 >
-                  <option
-                    v-for="option in gameData.weaponOptions"
-                    :key="option.value"
-                    :value="option.value"
-                  >{{ option.label }}</option>
+                  <option v-for="option in gameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
                 <input
                   type="text"
@@ -40,11 +36,7 @@
                   class="flex-item-1"
                   :disabled="uiStore.isViewingShared"
                 >
-                  <option
-                    v-for="option in gameData.weaponOptions"
-                    :key="option.value"
-                    :value="option.value"
-                  >{{ option.label }}</option>
+                  <option v-for="option in gameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
                 <input
                   type="text"
@@ -59,17 +51,8 @@
             <div class="equipment-item">
               <label for="armor">防具</label>
               <div class="flex-group">
-                <select
-                  id="armor"
-                  v-model="characterStore.equipments.armor.group"
-                  class="flex-item-1"
-                  :disabled="uiStore.isViewingShared"
-                >
-                  <option
-                    v-for="option in gameData.armorOptions"
-                    :key="option.value"
-                    :value="option.value"
-                  >{{ option.label }}</option>
+                <select id="armor" v-model="characterStore.equipments.armor.group" class="flex-item-1" :disabled="uiStore.isViewingShared">
+                  <option v-for="option in gameData.armorOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
                 <input
                   type="text"
@@ -98,17 +81,16 @@
 </template>
 
 <script setup>
-import { AioniaGameData as gameData } from '../../data/gameData.js'
-import { useCharacterStore } from '../../stores/characterStore.js'
-import { useUiStore } from '../../stores/uiStore.js'
-import LoadIndicator from '../ui/LoadIndicator.vue'
+import { AioniaGameData as gameData } from '../../data/gameData.js';
+import { useCharacterStore } from '../../stores/characterStore.js';
+import { useUiStore } from '../../stores/uiStore.js';
+import LoadIndicator from '../ui/LoadIndicator.vue';
 
-const characterStore = useCharacterStore()
-const uiStore = useUiStore()
+const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 </script>
 
 <style scoped>
-
 .equipment-wrapper {
   margin-bottom: 15px;
 }
@@ -137,5 +119,4 @@ const uiStore = useUiStore()
   min-height: 100px;
   resize: vertical;
 }
-
 </style>

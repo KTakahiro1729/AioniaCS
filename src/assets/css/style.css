@@ -1,16 +1,16 @@
 /* assets/css/style.css */
 
 /* 変数定義を最初にインポート */
-@import url("_variables.css");
+@import url('_variables.css');
 
 /* ベーススタイル、リセット、共通的な設定 */
-@import url("_base.css");
+@import url('_base.css');
 
 /* ページ全体のレイアウト（グリッド、フッターなど） */
-@import url("_layout.css");
+@import url('_layout.css');
 
 /* 再利用可能なUIコンポーネント（ボタン、フォームなど） */
-@import url("_components.css");
+@import url('_components.css');
 
 /* 特定のセクション（画像、傷痕、スキルなど） */
-@import url("_notifications.css");
+@import url('_notifications.css');

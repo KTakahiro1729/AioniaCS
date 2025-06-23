@@ -1,6 +1,6 @@
 // tests/unit/imageManager.test.js
 
-import { vi } from "vitest";
+import { vi } from 'vitest';
 // Mocking FileReader
 global.FileReader = class {
   constructor() {
@@ -9,10 +9,10 @@ global.FileReader = class {
   }
 
   readAsDataURL(file) {
-    if (file && file.name === "error.png") {
+    if (file && file.name === 'error.png') {
       // Simulate an error
       if (this.onerror) {
-        this.onerror(new Error("Simulated FileReader error"));
+        this.onerror(new Error('Simulated FileReader error'));
       }
     } else if (file) {
       // Simulate a successful read
@@ -25,7 +25,7 @@ global.FileReader = class {
       }
     } else {
       if (this.onerror) {
-        this.onerror(new Error("No file provided to FileReader mock"));
+        this.onerror(new Error('No file provided to FileReader mock'));
       }
     }
   }
@@ -38,7 +38,7 @@ global.FileReader = class {
 
 // If src/imageManager.js is not automatically available in the test runner,
 // you might need to manually load it or mock its structure:
-if (typeof window.ImageManager === "undefined") {
+if (typeof window.ImageManager === 'undefined') {
   window.ImageManager = {
     loadImage: vi.fn((file) => {
       return new Promise((resolve, reject) => {
@@ -48,7 +48,7 @@ if (typeof window.ImageManager === "undefined") {
         if (file) {
           reader.readAsDataURL(file);
         } else {
-          reject(new Error("No file provided."));
+          reject(new Error('No file provided.'));
         }
       });
     }),
@@ -56,33 +56,29 @@ if (typeof window.ImageManager === "undefined") {
   };
 }
 
-describe("ImageManager", () => {
-  describe("loadImage", () => {
-    it("should resolve with a base64 data URL for a valid file", async () => {
-      const mockFile = { name: "sample.png", type: "image/png" };
+describe('ImageManager', () => {
+  describe('loadImage', () => {
+    it('should resolve with a base64 data URL for a valid file', async () => {
+      const mockFile = { name: 'sample.png', type: 'image/png' };
       // Use the actual ImageManager.loadImage if available and properly set up,
       // otherwise the mock defined above will be used.
       const imageData = await window.ImageManager.loadImage(mockFile);
       expect(imageData).toMatch(/^data:image\/png;base64,/);
-      expect(imageData).toContain("mock_base64_data_for_sample.png");
+      expect(imageData).toContain('mock_base64_data_for_sample.png');
     });
 
-    it("should reject if no file is provided", async () => {
-      await expect(window.ImageManager.loadImage(null)).rejects.toThrow(
-        "No file provided.",
-      );
+    it('should reject if no file is provided', async () => {
+      await expect(window.ImageManager.loadImage(null)).rejects.toThrow('No file provided.');
     });
 
-    it("should reject if FileReader encounters an error", async () => {
-      const mockErrorFile = { name: "error.png", type: "image/png" };
-      await expect(
-        window.ImageManager.loadImage(mockErrorFile),
-      ).rejects.toThrow("Simulated FileReader error");
+    it('should reject if FileReader encounters an error', async () => {
+      const mockErrorFile = { name: 'error.png', type: 'image/png' };
+      await expect(window.ImageManager.loadImage(mockErrorFile)).rejects.toThrow('Simulated FileReader error');
     });
 
     // Example of how you might test with a real instance if imageManager.js was loaded
     // This requires a proper JSDOM setup where src/imageManager.js can execute.
-    it("should process file using mocked FileReader successfully (alternative)", () => {
+    it('should process file using mocked FileReader successfully (alternative)', () => {
       // This test assumes ImageManager is the actual implementation from src/imageManager.js
       // and that imageManager.js has been loaded into the test environment (e.g., by JSDOM)
       // For this to work, the ImageManager mock above should be conditional or removed if
@@ -91,11 +87,9 @@ describe("ImageManager", () => {
       // const actualImageManager = require('../../src/imageManager'); // This won't work directly due to window
       // For now, we rely on the global window.ImageManager which might be the mock or the real one.
 
-      const mockFile = { name: "another.jpeg", type: "image/jpeg" };
+      const mockFile = { name: 'another.jpeg', type: 'image/jpeg' };
       return window.ImageManager.loadImage(mockFile).then((data) => {
-        expect(data).toBe(
-          `data:image/png;base64,mock_base64_data_for_${mockFile.name}`,
-        );
+        expect(data).toBe(`data:image/png;base64,mock_base64_data_for_${mockFile.name}`);
       });
     });
   });

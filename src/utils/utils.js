@@ -5,5 +5,5 @@ export function deepClone(obj) {
 export function createWeaknessArray(max) {
   return Array(max)
     .fill(null)
-    .map(() => ({ text: "", acquired: "--" }));
+    .map(() => ({ text: '', acquired: '--' }));
 }

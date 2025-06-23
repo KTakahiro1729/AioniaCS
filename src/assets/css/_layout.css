@@ -2,7 +2,7 @@
 
 /* タイトル */
 .tool-title {
-  font-family: "Cinzel Decorative", cursive;
+  font-family: 'Cinzel Decorative', cursive;
   text-align: center;
   margin: 25px 0 40px;
   font-size: 2.2em;
@@ -17,11 +17,11 @@
   grid-template-columns: 1fr 1fr;
   gap: 30px 10px;
   grid-template-areas:
-    "character-info scar-weakness"
-    "skills special-skills"
-    "items items"
-    "memo memo"
-    "history history";
+    'character-info scar-weakness'
+    'skills special-skills'
+    'items items'
+    'memo memo'
+    'history history';
 }
 
 .character-info {
@@ -184,7 +184,7 @@
 }
 
 .help-panel h4 {
-  font-family: "Noto Serif JP", serif;
+  font-family: 'Noto Serif JP', serif;
   color: var(--color-accent);
   margin-top: 0;
   margin-bottom: 10px;
@@ -298,13 +298,13 @@
   .main-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "character-info"
-      "scar-weakness"
-      "skills"
-      "special-skills"
-      "items"
-      "memo"
-      "history";
+      'character-info'
+      'scar-weakness'
+      'skills'
+      'special-skills'
+      'items'
+      'memo'
+      'history';
     gap: 20px;
   }
 

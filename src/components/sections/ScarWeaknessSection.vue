@@ -49,18 +49,15 @@
             <div class="flex-weakness-acquired"><label>獲得</label></div>
           </li>
           <li v-for="(weakness, index) in characterStore.character.weaknesses" :key="index" class="base-list-item">
-            <div class="flex-weakness-number">{{ (index < 9) ? index + 1 : "X"}}</div>
+            <div class="flex-weakness-number">{{ index < 9 ? index + 1 : 'X' }}</div>
             <div class="flex-weakness-text">
               <input type="text" v-model="weakness.text" :disabled="uiStore.isViewingShared" />
             </div>
             <div class="flex-weakness-acquired">
               <select v-model="weakness.acquired" :disabled="uiStore.isViewingShared">
-                <option
-                  v-for="option in sessionNames"
-                  :key="option.value"
-                  :value="option.value"
-                  :disabled="option.disabled"
-                >{{ option.text }}</option>
+                <option v-for="option in sessionNames" :key="option.value" :value="option.value" :disabled="option.disabled">
+                  {{ option.text }}
+                </option>
               </select>
             </div>
           </li>
@@ -82,17 +79,13 @@ const sessionNames = computed(() => characterStore.sessionNamesForWeaknessDropdo
 function handleCurrentScarInput(event) {
   const enteredValue = parseInt(event.target.value, 10);
   if (Number.isNaN(enteredValue)) return;
-  if (
-    characterStore.character.linkCurrentToInitialScar &&
-    enteredValue !== characterStore.character.initialScar
-  ) {
+  if (characterStore.character.linkCurrentToInitialScar && enteredValue !== characterStore.character.initialScar) {
     characterStore.character.linkCurrentToInitialScar = false;
   }
 }
 </script>
 
 <style scoped>
-
 .box-content {
   padding-top: 0;
 }
@@ -146,7 +139,7 @@ function handleCurrentScarInput(event) {
 }
 
 .flex-weakness-number {
-  font-family: "Cinzel Decorative", serif;
+  font-family: 'Cinzel Decorative', serif;
   color: var(--color-accent);
   font-weight: 700;
   width: 20px;

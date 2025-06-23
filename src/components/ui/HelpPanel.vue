@@ -3,25 +3,14 @@
     <div class="help-panel" v-if="isVisible" ref="panelEl">
       <button class="help-close close-cross" @click="$emit('close')">×</button>
       <div class="accordion">
-        <div
-          v-for="(section, index) in sections"
-          :key="section.title"
-          class="accordion__item"
-        >
-          <button
-            class="accordion__header"
-            @click="toggle(index)"
-          >
+        <div v-for="(section, index) in sections" :key="section.title" class="accordion__item">
+          <button class="accordion__header" @click="toggle(index)">
             {{ section.title }}
             <span class="accordion__indicator">
               {{ activeSection === index ? '−' : '+' }}
             </span>
           </button>
-          <div
-            class="accordion__body"
-            v-show="activeSection === index"
-            v-html="section.html"
-          ></div>
+          <div class="accordion__body" v-show="activeSection === index" v-html="section.html"></div>
         </div>
       </div>
     </div>
@@ -50,9 +39,7 @@ watch(
     if (sections.value[0]) {
       const { marked } = await import('marked');
       const { default: DOMPurify } = await import('dompurify');
-      sections.value[0].html = DOMPurify.sanitize(
-        marked.parse(sections.value[0].content),
-      );
+      sections.value[0].html = DOMPurify.sanitize(marked.parse(sections.value[0].content));
     }
   },
   { immediate: true },
@@ -74,7 +61,7 @@ async function toggle(index) {
     activeSection.value = -1;
     return;
   }
-  
+
   activeSection.value = index;
   const section = sections.value[index];
 
@@ -87,6 +74,4 @@ async function toggle(index) {
 defineExpose({ panelEl });
 </script>
 
-<style scoped>
-</style>
-
+<style scoped></style>

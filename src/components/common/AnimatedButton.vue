@@ -42,11 +42,14 @@ watch(
   },
 );
 
-watch(() => props.defaultLabel, (newLabel) => {
-  if (!isAnimating.value) {
-    currentLabel.value = newLabel;
-  }
-});
+watch(
+  () => props.defaultLabel,
+  (newLabel) => {
+    if (!isAnimating.value) {
+      currentLabel.value = newLabel;
+    }
+  },
+);
 
 function startAnimation() {
   if (isAnimating.value) {
@@ -61,30 +64,34 @@ function startAnimation() {
   setTimeout(() => {
     stateClass.value = 'state-3';
   }, props.timings.state1_bgFill + props.timings.state2_textHold);
-  setTimeout(() => {
-    stateClass.value = 'state-4';
-    currentLabel.value = props.successLabel;
-  },
-  props.timings.state1_bgFill +
-    props.timings.state2_textHold +
-    props.timings.state3_textFadeOut);
-  setTimeout(() => {
-    stateClass.value = '';
-    currentLabel.value = props.defaultLabel;
-    isAnimating.value = false;
-    emit('finished');
-  },
-  props.timings.state1_bgFill +
-    props.timings.state2_textHold +
-    props.timings.state3_textFadeOut +
-    props.timings.state4_bgReset +
-    props.timings.state5_successHold);
+  setTimeout(
+    () => {
+      stateClass.value = 'state-4';
+      currentLabel.value = props.successLabel;
+    },
+    props.timings.state1_bgFill + props.timings.state2_textHold + props.timings.state3_textFadeOut,
+  );
+  setTimeout(
+    () => {
+      stateClass.value = '';
+      currentLabel.value = props.defaultLabel;
+      isAnimating.value = false;
+      emit('finished');
+    },
+    props.timings.state1_bgFill +
+      props.timings.state2_textHold +
+      props.timings.state3_textFadeOut +
+      props.timings.state4_bgReset +
+      props.timings.state5_successHold,
+  );
 }
 </script>
 
 <style scoped>
 .animated-button.state-1 {
-  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+  transition:
+    background-color 0.5s ease-in-out,
+    color 0.5s ease-in-out;
   background-color: var(--color-accent-light);
   color: var(--color-accent-light);
 }
@@ -99,7 +106,9 @@ function startAnimation() {
   color: var(--color-accent-light);
 }
 .animated-button.state-4 {
-  transition: background-color 0.7s ease-in-out, color 0.2s ease-in-out 0.5s;
+  transition:
+    background-color 0.7s ease-in-out,
+    color 0.2s ease-in-out 0.5s;
   background-color: transparent;
   color: var(--color-accent);
 }

@@ -1,9 +1,9 @@
-import { ref, computed, onMounted } from "vue";
-import { GoogleDriveManager } from "../services/googleDriveManager.js";
-import { useUiStore } from "../stores/uiStore.js";
-import { useCharacterStore } from "../stores/characterStore.js";
-import { useNotifications } from "./useNotifications.js";
-import { messages } from "../locales/ja.js";
+import { ref, computed, onMounted } from 'vue';
+import { GoogleDriveManager } from '../services/googleDriveManager.js';
+import { useUiStore } from '../stores/uiStore.js';
+import { useCharacterStore } from '../stores/characterStore.js';
+import { useNotifications } from './useNotifications.js';
+import { messages } from '../locales/ja.js';
 
 export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
@@ -19,7 +19,7 @@ export function useGoogleDrive(dataManager) {
       googleDriveManager.value.handleSignIn((error, authResult) => {
         if (error || !authResult || !authResult.signedIn) {
           uiStore.isSignedIn = false;
-          reject(error || new Error("Ensure pop-ups are enabled."));
+          reject(error || new Error('Ensure pop-ups are enabled.'));
         } else {
           uiStore.isSignedIn = true;
           uiStore.refreshDriveCharacters(googleDriveManager.value);
@@ -39,7 +39,7 @@ export function useGoogleDrive(dataManager) {
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
       uiStore.clearDriveCharacters();
-      showToast({ type: "success", ...messages.googleDrive.signOut.success() });
+      showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
     });
   }
 
@@ -49,7 +49,7 @@ export function useGoogleDrive(dataManager) {
     gdm.showFolderPicker((err, folder) => {
       if (err || !folder) {
         showToast({
-          type: "error",
+          type: 'error',
           ...messages.googleDrive.folderPicker.error(err),
         });
         return;
@@ -152,18 +152,13 @@ export function useGoogleDrive(dataManager) {
   }
 
   function handleSaveToDriveClick() {
-    return saveCharacterToDrive(
-      uiStore.currentDriveFileId,
-      uiStore.currentDriveFileName,
-    );
+    return saveCharacterToDrive(uiStore.currentDriveFileId, uiStore.currentDriveFileName);
   }
 
   function saveOrUpdateCurrentCharacterInDrive() {
     return saveCharacterToDrive(
       uiStore.currentDriveFileId,
-      uiStore.currentDriveFileId
-        ? uiStore.currentDriveFileName
-        : characterStore.character.name,
+      uiStore.currentDriveFileId ? uiStore.currentDriveFileName : characterStore.character.name,
     );
   }
 
@@ -176,24 +171,24 @@ export function useGoogleDrive(dataManager) {
     const handleGapiLoaded = async () => {
       if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
       uiStore.isGapiInitialized = true;
-      console.info("Google API Loading...");
+      console.info('Google API Loading...');
       try {
         await googleDriveManager.value.onGapiLoad();
-        console.info("Google API Ready");
+        console.info('Google API Ready');
       } catch {
-        showToast({ type: "error", ...messages.googleDrive.apiInitError() });
+        showToast({ type: 'error', ...messages.googleDrive.apiInitError() });
       }
     };
 
     const handleGisLoaded = async () => {
       if (uiStore.isGisInitialized || !googleDriveManager.value) return;
       uiStore.isGisInitialized = true;
-      console.info("Google Sign-In Loading...");
+      console.info('Google Sign-In Loading...');
       try {
         await googleDriveManager.value.onGisLoad();
-        console.info("Google Sign-In Ready");
+        console.info('Google Sign-In Ready');
       } catch {
-        showToast({ type: "error", ...messages.googleDrive.signInInitError() });
+        showToast({ type: 'error', ...messages.googleDrive.signInInitError() });
       }
     };
 
@@ -205,35 +200,21 @@ export function useGoogleDrive(dataManager) {
         }
         const script = document.querySelector(selector);
         if (!script) {
-          reject(new Error("Script not found"));
+          reject(new Error('Script not found'));
           return;
         }
-        script.addEventListener("load", resolve, { once: true });
-        script.addEventListener(
-          "error",
-          () => reject(new Error("Script load failed")),
-          { once: true },
-        );
+        script.addEventListener('load', resolve, { once: true });
+        script.addEventListener('error', () => reject(new Error('Script load failed')), { once: true });
       });
     }
 
-    waitForScript(
-      'script[src="https://apis.google.com/js/api.js"]',
-      () => window.gapi && window.gapi.load,
-    )
+    waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
       .then(handleGapiLoaded)
-      .catch(() =>
-        showToast({ type: "error", ...messages.googleDrive.apiInitError() }),
-      );
+      .catch(() => showToast({ type: 'error', ...messages.googleDrive.apiInitError() }));
 
-    waitForScript(
-      'script[src="https://accounts.google.com/gsi/client"]',
-      () => window.google && window.google.accounts,
-    )
+    waitForScript('script[src="https://accounts.google.com/gsi/client"]', () => window.google && window.google.accounts)
       .then(handleGisLoaded)
-      .catch(() =>
-        showToast({ type: "error", ...messages.googleDrive.signInInitError() }),
-      );
+      .catch(() => showToast({ type: 'error', ...messages.googleDrive.signInInitError() }));
   }
 
   onMounted(() => {

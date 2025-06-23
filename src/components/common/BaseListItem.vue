@@ -25,4 +25,3 @@ function emitDelete() {
   emit('delete-item');
 }
 </script>
-

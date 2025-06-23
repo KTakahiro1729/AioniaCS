@@ -13,5 +13,4 @@ const selected = ref('never');
 defineExpose({ selected });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

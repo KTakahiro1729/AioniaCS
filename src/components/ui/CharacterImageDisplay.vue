@@ -2,43 +2,38 @@
   <div class="character-image-container">
     <div class="image-display-area">
       <div class="image-display-wrapper" v-if="imagesInternal.length > 0">
-        <img
-          v-if="currentImageSrc"
-          :src="currentImageSrc"
-          class="character-image-display"
-          alt="Character Image"
-        />
+        <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" alt="Character Image" />
         <button
           @click="previousImage"
           class="button-base button-imagenav button-imagenav--prev"
           :disabled="imagesInternal.length <= 1"
           aria-label="前の画像"
-        >&lt;</button>
+        >
+          &lt;
+        </button>
         <button
           @click="nextImage"
           class="button-base button-imagenav button-imagenav--next"
           :disabled="imagesInternal.length <= 1"
           aria-label="次の画像"
-        >&gt;</button>
+        >
+          &gt;
+        </button>
         <div class="image-count-display">{{ currentImageIndex + 1 }} / {{ imagesInternal.length }}</div>
       </div>
       <div class="character-image-placeholder" v-else>No Image</div>
     </div>
     <div class="image-controls" v-if="!uiStore.isViewingShared">
-      <input
-        type="file"
-        id="character_image_upload"
-        @change="handleImageUpload"
-        accept="image/*"
-        style="display: none"
-      />
+      <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none" />
       <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">画像を追加</label>
       <button
         :disabled="!currentImageSrc"
         @click="removeCurrentImage"
         class="button-base imagefile-button imagefile-button--delete"
         aria-label="現在の画像を削除"
-      >削除</button>
+      >
+        削除
+      </button>
     </div>
   </div>
 </template>
@@ -72,7 +67,7 @@ watch(
       updatingFromParent = false;
     });
   },
-  { deep: true }
+  { deep: true },
 );
 
 watch(
@@ -82,17 +77,13 @@ watch(
       emit('update:images', val);
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 const currentImageIndex = ref(0);
 
 const currentImageSrc = computed(() => {
-  if (
-    imagesInternal.value.length > 0 &&
-    currentImageIndex.value >= 0 &&
-    currentImageIndex.value < imagesInternal.value.length
-  ) {
+  if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0 && currentImageIndex.value < imagesInternal.value.length) {
     return imagesInternal.value[currentImageIndex.value];
   }
   return null;
@@ -100,16 +91,13 @@ const currentImageSrc = computed(() => {
 
 const nextImage = () => {
   if (imagesInternal.value.length > 0) {
-    currentImageIndex.value =
-      (currentImageIndex.value + 1) % imagesInternal.value.length;
+    currentImageIndex.value = (currentImageIndex.value + 1) % imagesInternal.value.length;
   }
 };
 
 const previousImage = () => {
   if (imagesInternal.value.length > 0) {
-    currentImageIndex.value =
-      (currentImageIndex.value - 1 + imagesInternal.value.length) %
-      imagesInternal.value.length;
+    currentImageIndex.value = (currentImageIndex.value - 1 + imagesInternal.value.length) % imagesInternal.value.length;
   }
 };
 
@@ -141,7 +129,6 @@ const handleImageUpload = async (event) => {
 </script>
 
 <style scoped>
-
 .character-image-container {
   display: flex;
   flex-direction: column;
@@ -264,7 +251,6 @@ const handleImageUpload = async (event) => {
   padding: 10px 0;
 }
 
-
 .imagefile-button--add:hover:not(:disabled) {
   border-color: var(--color-accent);
 }
@@ -290,6 +276,4 @@ const handleImageUpload = async (event) => {
   box-shadow: none;
   text-shadow: none;
 }
-
 </style>
-
