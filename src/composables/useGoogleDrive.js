@@ -89,7 +89,6 @@ export function useGoogleDrive(dataManager) {
           characterStore.equipments,
           characterStore.histories,
           fileId,
-          fileName,
         )
         .then((result) => {
           if (!token.canceled && result) {
@@ -132,7 +131,6 @@ export function useGoogleDrive(dataManager) {
           characterStore.equipments,
           characterStore.histories,
           fileId,
-          fileName,
         )
         .then((result) => {
           if (result) {

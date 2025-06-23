@@ -38,19 +38,20 @@ export const useUiStore = defineStore('ui', {
     async refreshDriveCharacters(gdm) {
       if (!gdm) return;
       const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await gdm.readIndexFile();
-      const serverIds = new Set(serverList.map((c) => c.id));
+      const serverList = await gdm.listCharacters();
+      const serverIds = new Set(serverList.map((c) => c.fileId));
 
       // Keep local entries that still exist on server
       let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
 
       // Add or update server entries
       serverList.forEach((srv) => {
-        const idx = merged.findIndex((c) => c.id === srv.id);
+        const idx = merged.findIndex((c) => c.id === srv.fileId);
+        const data = { id: srv.fileId, characterName: srv.characterName, updatedAt: srv.lastModified };
         if (idx !== -1) {
-          merged[idx] = { ...merged[idx], ...srv };
+          merged[idx] = { ...merged[idx], ...data };
         } else {
-          merged.push(srv);
+          merged.push(data);
         }
       });
 

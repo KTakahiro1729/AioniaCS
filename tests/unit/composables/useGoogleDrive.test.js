@@ -10,7 +10,7 @@ describe('useGoogleDrive', () => {
 
   test('handleSaveToDriveClick calls saveDataToAppData with store data', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
+      saveDataToAppData: vi.fn().mockResolvedValue({ fileId: '1', characterName: 'c' }),
       googleDriveManager: {},
     };
 
@@ -31,13 +31,12 @@ describe('useGoogleDrive', () => {
       charStore.equipments,
       charStore.histories,
       null,
-      'c',
     );
   });
 
   test('saveCharacterToDrive uses provided id and name', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: '1', name: 'a.json' }),
+      saveDataToAppData: vi.fn().mockResolvedValue({ fileId: '1', characterName: 'a' }),
       googleDriveManager: {},
     };
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
@@ -53,30 +52,27 @@ describe('useGoogleDrive', () => {
       charStore.equipments,
       charStore.histories,
       'abc',
-      'foo',
     );
   });
 
   test('saveOrUpdateCurrentCharacterInDrive chooses create or update', async () => {
-    const createFile = vi.fn().mockResolvedValue({ id: '1' });
-    const updateFile = vi.fn().mockResolvedValue({ id: '2' });
+    const saveCharacter = vi.fn().mockResolvedValue({ fileId: '1' });
     const dataManager = {
       googleDriveManager: {
-        createCharacterFile: createFile,
-        updateCharacterFile: updateFile,
+        saveCharacter,
       },
-      saveDataToAppData: vi.fn((c, s, ss, e, h, id, name) => {
-        return id ? updateFile(id, {}, name) : createFile({}, name);
+      saveDataToAppData: vi.fn((c, s, ss, e, h, id) => {
+        return saveCharacter({}, id);
       }),
     };
     const { saveOrUpdateCurrentCharacterInDrive } = useGoogleDrive(dataManager);
     const uiStore = useUiStore();
     uiStore.currentDriveFileId = null;
     await saveOrUpdateCurrentCharacterInDrive();
-    expect(createFile).toHaveBeenCalled();
+    expect(saveCharacter).toHaveBeenCalled();
     uiStore.currentDriveFileId = 'abc';
     uiStore.currentDriveFileName = 'c.json';
     await saveOrUpdateCurrentCharacterInDrive();
-    expect(updateFile).toHaveBeenCalledWith('abc', expect.any(Object), 'c.json');
+    expect(saveCharacter).toHaveBeenCalledWith(expect.any(Object), 'abc');
   });
 });

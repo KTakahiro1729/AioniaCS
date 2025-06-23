@@ -2,8 +2,8 @@ export class MockGoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
     this.clientId = clientId;
-    this.storageKey = "mockGoogleDriveData";
-    console.log("MockGoogleDriveManager is active and uses localStorage.");
+    this.storageKey = 'mockGoogleDriveData';
+    console.log('MockGoogleDriveManager is active and uses localStorage.');
     this._loadState();
   }
 
@@ -21,10 +21,7 @@ export class MockGoogleDriveManager {
         this._initState();
       }
     } catch (e) {
-      console.error(
-        "Failed to load mock state from localStorage, resetting.",
-        e,
-      );
+      console.error('Failed to load mock state from localStorage, resetting.', e);
       this._initState();
     }
     this.pickerApiLoaded = true;
@@ -70,10 +67,8 @@ export class MockGoogleDriveManager {
     if (callback) callback();
   }
 
-  async createFolder(folderName) {
-    const existing = Object.values(this.folders).find(
-      (f) => f.name === folderName,
-    );
+  async _createFolder(folderName) {
+    const existing = Object.values(this.folders).find((f) => f.name === folderName);
     if (existing) return existing;
     const id = `folder-${this.fileCounter++}`;
     const folder = { id, name: folderName };
@@ -82,25 +77,23 @@ export class MockGoogleDriveManager {
     return folder;
   }
 
-  async findFolder(folderName) {
-    return (
-      Object.values(this.folders).find((f) => f.name === folderName) || null
-    );
+  async _findFolder(folderName) {
+    return Object.values(this.folders).find((f) => f.name === folderName) || null;
   }
 
-  async getOrCreateAppFolder(appFolderName) {
-    let folder = await this.findFolder(appFolderName);
-    if (!folder) folder = await this.createFolder(appFolderName);
+  async _getOrCreateAppFolder(appFolderName) {
+    let folder = await this._findFolder(appFolderName);
+    if (!folder) folder = await this._createFolder(appFolderName);
     return folder;
   }
 
-  async listFiles(folderId, mimeType = "application/json") {
+  async _listFiles(folderId, mimeType = 'application/json') {
     return Object.values(this.appData)
       .filter((f) => f.parentId === folderId)
       .map((f) => ({ id: f.id, name: f.name }));
   }
 
-  async saveFile(folderId, fileName, fileContent, fileId = null) {
+  async _saveFile(folderId, fileName, fileContent, fileId = null) {
     const id = fileId || `file-${this.fileCounter++}`;
     this.appData[id] = {
       id,
@@ -112,29 +105,23 @@ export class MockGoogleDriveManager {
     return { id, name: fileName };
   }
 
-  async loadFileContent(fileId) {
+  async _loadFileContent(fileId) {
     const file = this.appData[fileId];
     return file ? file.content : null;
   }
 
-  async uploadAndShareFile(fileContent, fileName, mimeType) {
-    const info = await this.saveFile("drive", fileName, fileContent);
+  async _uploadAndShareFile(fileContent, fileName, mimeType) {
+    const info = await this._saveFile('drive', fileName, fileContent);
     return info.id;
   }
 
-  showFilePicker(
-    callback,
-    parentFolderId = null,
-    mimeTypes = ["application/json"],
-  ) {
-    const files = Object.values(this.appData).filter(
-      (f) => !parentFolderId || f.parentId === parentFolderId,
-    );
+  showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
+    const files = Object.values(this.appData).filter((f) => !parentFolderId || f.parentId === parentFolderId);
     const first = files[0];
     if (first) {
       if (callback) callback(null, { id: first.id, name: first.name });
     } else if (callback) {
-      callback(new Error("No files available."));
+      callback(new Error('No files available.'));
     }
   }
 
@@ -143,97 +130,137 @@ export class MockGoogleDriveManager {
     if (first) {
       if (callback) callback(null, { id: first.id, name: first.name });
     } else if (callback) {
-      callback(new Error("No folders available."));
+      callback(new Error('No folders available.'));
     }
   }
 
-  async ensureIndexFile() {
+  async _ensureIndexFile() {
     if (this.indexFileId && this.appData[this.indexFileId]) {
-      return { id: this.indexFileId, name: "character_index.json" };
+      return { id: this.indexFileId, name: 'character_index.json' };
     }
-    const foundId = Object.keys(this.appData).find(
-      (id) => this.appData[id].name === "character_index.json",
-    );
+    const foundId = Object.keys(this.appData).find((id) => this.appData[id].name === 'character_index.json');
     if (foundId) {
       this.indexFileId = foundId;
       this._saveState();
-      return { id: foundId, name: "character_index.json" };
+      return { id: foundId, name: 'character_index.json' };
     }
-    const created = await this.saveFile(
-      "appDataFolder",
-      "character_index.json",
-      "[]",
-    );
+    const created = await this._saveFile('appDataFolder', 'character_index.json', '[]');
     this.indexFileId = created.id;
     this._saveState();
     return created;
   }
 
-  async readIndexFile() {
-    const info = await this.ensureIndexFile();
-    const content = await this.loadFileContent(info.id);
+  async _readIndexFile() {
+    const info = await this._ensureIndexFile();
+    const content = await this._loadFileContent(info.id);
     try {
-      return JSON.parse(content || "[]");
+      return JSON.parse(content || '[]');
     } catch {
       return [];
     }
   }
 
-  async writeIndexFile(indexData) {
-    const info = await this.ensureIndexFile();
-    return this.saveFile(
-      "appDataFolder",
-      "character_index.json",
-      JSON.stringify(indexData, null, 2),
-      info.id,
-    );
+  async _writeIndexFile(indexData) {
+    const info = await this._ensureIndexFile();
+    return this._saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
   }
 
-  async addIndexEntry(entry) {
-    const index = await this.readIndexFile();
+  async _addIndexEntry(entry) {
+    const index = await this._readIndexFile();
     index.push({ ...entry, updatedAt: new Date().toISOString() });
-    await this.writeIndexFile(index);
+    await this._writeIndexFile(index);
   }
 
-  async renameIndexEntry(id, newName) {
-    const index = await this.readIndexFile();
+  async _renameIndexEntry(id, newName) {
+    const index = await this._readIndexFile();
     index.forEach((e) => {
       if (e.id === id) {
         e.characterName = newName;
         e.updatedAt = new Date().toISOString();
       }
     });
-    await this.writeIndexFile(index);
+    await this._writeIndexFile(index);
   }
 
-  async removeIndexEntry(id) {
-    const index = await this.readIndexFile();
+  async _removeIndexEntry(id) {
+    const index = await this._readIndexFile();
     const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
+    await this._writeIndexFile(filtered);
   }
 
-  async createCharacterFile(data, name) {
-    return this.saveFile("appDataFolder", name, JSON.stringify(data, null, 2));
+  async _createCharacterFile(data, name) {
+    return this._saveFile('appDataFolder', name, JSON.stringify(data, null, 2));
   }
 
-  async updateCharacterFile(id, data, name) {
-    return this.saveFile(
-      "appDataFolder",
-      name,
-      JSON.stringify(data, null, 2),
-      id,
-    );
+  async _updateCharacterFile(id, data, name) {
+    return this._saveFile('appDataFolder', name, JSON.stringify(data, null, 2), id);
   }
 
-  async loadCharacterFile(id) {
-    const content = await this.loadFileContent(id);
+  async _loadCharacterFile(id) {
+    const content = await this._loadFileContent(id);
     return content ? JSON.parse(content) : null;
   }
 
-  async deleteCharacterFile(id) {
+  async _deleteCharacterFile(id) {
     delete this.appData[id];
     this._saveState();
-    await this.removeIndexEntry(id);
+    await this._removeIndexEntry(id);
+  }
+
+  _sanitizeFileName(name) {
+    const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
+    return sanitized || '名もなき冒険者';
+  }
+
+  async listCharacters() {
+    const index = await this._readIndexFile();
+    const valid = [];
+    for (const entry of index) {
+      const data = await this._loadCharacterFile(entry.id);
+      if (data) {
+        valid.push({
+          fileId: entry.id,
+          characterName: entry.characterName,
+          lastModified: entry.updatedAt,
+        });
+      }
+    }
+    return valid;
+  }
+
+  async getCharacter(fileId) {
+    return this._loadCharacterFile(fileId);
+  }
+
+  async saveCharacter(characterData, fileId = null) {
+    const fileName = this._sanitizeFileName(characterData.name) + '.json';
+    if (fileId) {
+      await this._updateCharacterFile(fileId, characterData, fileName);
+      await this._renameIndexEntry(fileId, characterData.name || '名もなき冒険者');
+      return {
+        fileId,
+        characterName: characterData.name || '名もなき冒険者',
+        lastModified: new Date().toISOString(),
+      };
+    }
+    const created = await this._createCharacterFile(characterData, fileName);
+    if (created) {
+      await this._addIndexEntry({
+        id: created.id,
+        name: created.name,
+        characterName: characterData.name || '名もなき冒険者',
+      });
+      return {
+        fileId: created.id,
+        characterName: characterData.name || '名もなき冒険者',
+        lastModified: new Date().toISOString(),
+      };
+    }
+    return null;
+  }
+
+  async deleteCharacter(fileId) {
+    await this._deleteCharacterFile(fileId);
   }
 }
 

@@ -274,29 +274,19 @@ describe('DataManager', () => {
   describe('saveDataToAppData', () => {
     beforeEach(() => {
       dm.googleDriveManager = {
-        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        addIndexEntry: vi.fn().mockResolvedValue(),
-        renameIndexEntry: vi.fn().mockResolvedValue(),
+        saveCharacter: vi.fn().mockResolvedValue({ fileId: '1', characterName: 'TestChar' }),
       };
     });
 
-    test('creates new file and adds index when no id', async () => {
-      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null, 'c');
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
-      expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
-        id: '1',
-        name: 'c.json',
-        characterName: 'TestChar',
-      });
-      expect(res.id).toBe('1');
+    test('creates new file when no id', async () => {
+      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
+      expect(dm.googleDriveManager.saveCharacter).toHaveBeenCalled();
+      expect(res.fileId).toBe('1');
     });
 
-    test('updates file when id exists and renames index', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1', 'c');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object), 'c.json');
-      expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith('1', 'TestChar');
-      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
+    test('updates file when id exists', async () => {
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      expect(dm.googleDriveManager.saveCharacter).toHaveBeenCalledWith(expect.any(Object), '1');
     });
   });
 });

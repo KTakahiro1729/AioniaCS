@@ -122,7 +122,7 @@ async function executeDelete() {
     } else {
       const previous = [...uiStore.driveCharacters];
       uiStore.removeDriveCharacter(ch.id);
-      const deletePromise = props.dataManager.googleDriveManager.deleteCharacterFile(ch.id).catch((err) => {
+      const deletePromise = props.dataManager.googleDriveManager.deleteCharacter(ch.id).catch((err) => {
         uiStore.driveCharacters = previous;
         throw err;
       });
@@ -141,7 +141,7 @@ async function executeDelete() {
 async function exportLocal(ch) {
   const gdm = props.dataManager.googleDriveManager;
   if (!gdm) return;
-  const exportPromise = gdm.loadCharacterFile(ch.id).then(async (data) => {
+  const exportPromise = gdm.getCharacter(ch.id).then(async (data) => {
     if (data) {
       await props.dataManager.saveData(data.character, data.skills, data.specialSkills, data.equipments, data.histories);
     }

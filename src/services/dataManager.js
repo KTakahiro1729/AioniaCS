@@ -257,7 +257,7 @@ export class DataManager {
    * Saves character data to the user's appDataFolder.
    * Adds an index entry when creating a new file.
    */
-  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId, fileName) {
+  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
@@ -276,23 +276,8 @@ export class DataManager {
       histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
     };
 
-    const sanitizedFileName = (fileName || character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
-
-    if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave, sanitizedFileName);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
-      return res;
-    }
-
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave, sanitizedFileName);
-    if (created) {
-      await this.googleDriveManager.addIndexEntry({
-        id: created.id,
-        name: created.name,
-        characterName: character.name || '名もなき冒険者',
-      });
-    }
-    return created;
+    const metadata = await this.googleDriveManager.saveCharacter(dataToSave, currentFileId);
+    return metadata;
   }
 
   /**
@@ -307,10 +292,9 @@ export class DataManager {
     }
 
     try {
-      const fileContent = await this.googleDriveManager.loadFileContent(fileId);
-      if (fileContent) {
-        const rawJsonData = JSON.parse(fileContent);
-        const parsedData = this.parseLoadedData(rawJsonData);
+      const rawData = await this.googleDriveManager.getCharacter(fileId);
+      if (rawData) {
+        const parsedData = this.parseLoadedData(rawData);
         return parsedData;
       }
       return null;
@@ -334,23 +318,7 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const index = await this.googleDriveManager.readIndexFile();
-    const valid = [];
-
-    for (const entry of index) {
-      try {
-        const data = await this.loadDataFromDrive(entry.id);
-        if (data) {
-          valid.push(entry);
-        } else {
-          console.error(`Character file not found or invalid: ${entry.id}`);
-        }
-      } catch (err) {
-        console.error(`Failed to load character file ${entry.id}:`, err);
-      }
-    }
-
-    return valid;
+    return this.googleDriveManager.listCharacters();
   }
 
   /**

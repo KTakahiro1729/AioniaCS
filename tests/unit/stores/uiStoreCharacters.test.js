@@ -12,7 +12,7 @@ describe('uiStore character cache', () => {
       { id: '2', name: 'b.json' },
       { id: 'temp-1', name: 'temp.json' },
     ];
-    const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: '1' }]) };
+    const gdm = { listCharacters: vi.fn().mockResolvedValue([{ fileId: '1', characterName: 'A' }]) };
     await store.refreshDriveCharacters(gdm);
     expect(store.driveCharacters).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', name: 'temp.json' })]),

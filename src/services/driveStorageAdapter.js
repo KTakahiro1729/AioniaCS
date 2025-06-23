@@ -7,19 +7,19 @@ export class DriveStorageAdapter {
 
   async create(data) {
     const content = this._serializeData(data);
-    const res = await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content);
+    const res = await this.gdm._saveFile('appDataFolder', `sls_${Date.now()}.json`, content);
     return res && res.id ? res.id : null;
   }
 
   async read(id) {
-    const text = await this.gdm.loadFileContent(id);
+    const text = await this.gdm._loadFileContent(id);
     if (!text) return null;
     return this._deserializeData(text);
   }
 
   async update(id, data) {
     const content = this._serializeData(data);
-    await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content, id);
+    await this.gdm._saveFile('appDataFolder', `sls_${Date.now()}.json`, content, id);
   }
 
   _serializeData(data) {
