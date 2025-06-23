@@ -1,5 +1,6 @@
 import { ref, computed, onMounted } from "vue";
-import { GoogleDriveManager } from "../services/googleDriveManager.js";
+// import { GoogleDriveManager } from "../services/googleDriveManager.js";
+import { MockGoogleDriveManager as GoogleDriveManager } from "../services/mockGoogleDriveManager.js"; // Used for mock
 import { useUiStore } from "../stores/uiStore.js";
 import { useCharacterStore } from "../stores/characterStore.js";
 import { useNotifications } from "./useNotifications.js";
