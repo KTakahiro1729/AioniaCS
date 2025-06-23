@@ -101,28 +101,40 @@ async function confirmLoad(ch) {
   }
 }
 
-async function deleteChar(ch) {
-  const result = await showModal(messages.characterHub.deleteConfirm(ch.characterName || ch.name));
-  if (result.value === 'delete' && props.dataManager.googleDriveManager) {
+function startDelete(ch) {
+  characterToDelete.value = ch;
+}
+
+function cancelDelete() {
+  characterToDelete.value = null;
+}
+
+async function executeDelete() {
+  const ch = characterToDelete.value;
+  if (!ch) return;
+
+  if (props.dataManager.googleDriveManager) {
     if (ch.id.startsWith('temp-')) {
       uiStore.cancelPendingDriveSave(ch.id);
       uiStore.removeDriveCharacter(ch.id);
       showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
-      return;
+    } else {
+      const previous = [...uiStore.driveCharacters];
+      uiStore.removeDriveCharacter(ch.id);
+      const deletePromise = props.dataManager.googleDriveManager.deleteCharacterFile(ch.id).catch((err) => {
+        uiStore.driveCharacters = previous;
+        throw err;
+      });
+      showAsyncToast(deletePromise, {
+        loading: messages.characterHub.delete.asyncToast.loading(),
+        success: messages.characterHub.delete.asyncToast.success(),
+        error: (err) => messages.characterHub.delete.asyncToast.error(err),
+      });
+      await deletePromise;
     }
-    const previous = [...uiStore.driveCharacters];
-    uiStore.removeDriveCharacter(ch.id);
-    const deletePromise = props.dataManager.googleDriveManager.deleteCharacterFile(ch.id).catch((err) => {
-      uiStore.driveCharacters = previous;
-      throw err;
-    });
-    showAsyncToast(deletePromise, {
-      loading: messages.characterHub.delete.asyncToast.loading(),
-      success: messages.characterHub.delete.asyncToast.success(),
-      error: (err) => messages.characterHub.delete.asyncToast.error(err),
-    });
-    await deletePromise;
   }
+
+  characterToDelete.value = null;
 }
 
 async function exportLocal(ch) {
@@ -211,5 +223,15 @@ async function exportLocal(ch) {
   box-shadow:
     inset 0 0 2px var(--color-accent),
     0 0 6px var(--color-accent);
+}
+
+.character-hub--confirmation-box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.character-hub--confirmation-message {
+  margin: 0 30px 0 0;
 }
 </style>
