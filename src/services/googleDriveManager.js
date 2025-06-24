@@ -248,7 +248,7 @@ export class GoogleDriveManager {
    * @param {string|null} fileId - The ID of the file to update, or null to create a new file.
    * @returns {Promise<{id: string, name: string}|null>} File ID and name, or null on error.
    */
-  async saveFile(folderId, fileName, fileContent, fileId = null) {
+  async _saveFile(folderId, fileName, fileContent, fileId = null) {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
@@ -514,7 +514,7 @@ export class GoogleDriveManager {
    * Ensures the character index file exists in appDataFolder.
    * @returns {Promise<{id:string,name:string}|null>} index file info
    */
-  async ensureIndexFile() {
+  async _ensureIndexFile() {
     const fileList =
       (
         await gapi.client.drive.files.list({
@@ -529,7 +529,7 @@ export class GoogleDriveManager {
       return fileList[0];
     }
 
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
+    const created = await this._saveFile('appDataFolder', 'character_index.json', '[]');
     if (created) this.indexFileId = created.id;
     return created;
   }
@@ -538,8 +538,8 @@ export class GoogleDriveManager {
    * Reads and parses the character index file.
    * @returns {Promise<Array>}
    */
-  async readIndexFile() {
-    const info = await this.ensureIndexFile();
+  async _readIndexFile() {
+    const info = await this._ensureIndexFile();
     if (!info) return [];
     const content = await this.loadFileContent(info.id);
     try {
@@ -553,33 +553,33 @@ export class GoogleDriveManager {
    * Writes the given index array back to the index file.
    * @param {Array} indexData
    */
-  async writeIndexFile(indexData) {
-    const info = await this.ensureIndexFile();
+  async _writeIndexFile(indexData) {
+    const info = await this._ensureIndexFile();
     if (!info) return null;
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
+    return this._saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
   }
 
-  async addIndexEntry(entry) {
-    const index = await this.readIndexFile();
+  async _addIndexEntry(entry) {
+    const index = await this._readIndexFile();
     index.push({ ...entry, updatedAt: new Date().toISOString() });
-    await this.writeIndexFile(index);
+    await this._writeIndexFile(index);
   }
 
-  async renameIndexEntry(id, newName) {
-    const index = await this.readIndexFile();
+  async _renameIndexEntry(id, newName) {
+    const index = await this._readIndexFile();
     index.forEach((e) => {
       if (e.id === id) {
         e.characterName = newName;
         e.updatedAt = new Date().toISOString();
       }
     });
-    await this.writeIndexFile(index);
+    await this._writeIndexFile(index);
   }
 
-  async removeIndexEntry(id) {
-    const index = await this.readIndexFile();
+  async _removeIndexEntry(id) {
+    const index = await this._readIndexFile();
     const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
+    await this._writeIndexFile(filtered);
   }
 
   /**
@@ -587,23 +587,67 @@ export class GoogleDriveManager {
    * @param {object} data character JSON object
    * @param {string} name file name
    */
-  async createCharacterFile(data, name) {
-    return this.saveFile('appDataFolder', name, JSON.stringify(data, null, 2));
+  async _createCharacterFile(data, name) {
+    return this._saveFile('appDataFolder', name, JSON.stringify(data, null, 2));
   }
 
-  async updateCharacterFile(id, data, name) {
-    return this.saveFile('appDataFolder', name, JSON.stringify(data, null, 2), id);
+  async _updateCharacterFile(id, data, name) {
+    return this._saveFile('appDataFolder', name, JSON.stringify(data, null, 2), id);
   }
 
-  async loadCharacterFile(id) {
+  async _loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
     return content ? JSON.parse(content) : null;
   }
 
-  async deleteCharacterFile(id) {
+  async _deleteCharacterFile(id) {
     if (!gapi.client || !gapi.client.drive) return null;
     await gapi.client.drive.files.delete({ fileId: id });
-    await this.removeIndexEntry(id);
+    await this._removeIndexEntry(id);
+  }
+
+  async listCharacters() {
+    const info = await this._ensureIndexFile();
+    if (!info) return [];
+    const text = await this.loadFileContent(info.id);
+    if (!text) return [];
+    let arr;
+    try {
+      arr = JSON.parse(text);
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((e) => e.id && e.characterName)
+      .map((e) => ({ fileId: e.id, characterName: e.characterName, lastModified: e.updatedAt }));
+  }
+
+  async getCharacter(fileId) {
+    const data = await this._loadCharacterFile(fileId);
+    return data || null;
+  }
+
+  async saveCharacter(characterData, fileId) {
+    const fileName = `${(characterData.name || 'character').replace(/[^\w.-]/g, '_')}.json`;
+    if (fileId) {
+      await this._updateCharacterFile(fileId, characterData, fileName);
+      await this._renameIndexEntry(fileId, characterData.name || '');
+    } else {
+      const created = await this._createCharacterFile(characterData, fileName);
+      if (created) {
+        fileId = created.id;
+        await this._addIndexEntry({ id: created.id, name: created.name, characterName: characterData.name || '' });
+      }
+    }
+    const index = await this._readIndexFile();
+    const entry = index.find((e) => e.id === fileId);
+    return { fileId, characterName: entry?.characterName || characterData.name || '', lastModified: entry?.updatedAt };
+  }
+
+  async deleteCharacter(fileId) {
+    await this._deleteCharacterFile(fileId);
   }
 }
 

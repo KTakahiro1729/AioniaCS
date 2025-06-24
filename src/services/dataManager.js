@@ -18,6 +18,11 @@ export class DataManager {
     this.googleDriveManager = driveManager;
   }
 
+  async loadCharacterListFromDrive() {
+    if (!this.googleDriveManager) return [];
+    return this.googleDriveManager.listCharacters();
+  }
+
   _sanitizeFileName(name) {
     const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
     return sanitized || 'Aionia_Character';
@@ -257,42 +262,10 @@ export class DataManager {
    * Saves character data to the user's appDataFolder.
    * Adds an index entry when creating a new file.
    */
-  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId, fileName) {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
-
-    const dataToSave = {
-      character: character,
-      skills: skills.map((s) => ({
-        id: s.id,
-        checked: s.checked,
-        canHaveExperts: s.canHaveExperts,
-        experts: s.canHaveExperts ? s.experts.filter((e) => e.value && e.value.trim() !== '').map((e) => ({ value: e.value })) : [],
-      })),
-      specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
-      equipments: equipments,
-      histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
-    };
-
-    const sanitizedFileName = (fileName || character.name || 'Aionia_Character_Sheet').replace(/[\\/:*?"<>|]/g, '_') + '.json';
-
-    if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave, sanitizedFileName);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '\u540D\u79F0\u672A\u8A2D\u5B9A');
-      return res;
-    }
-
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave, sanitizedFileName);
-    if (created) {
-      await this.googleDriveManager.addIndexEntry({
-        id: created.id,
-        name: created.name,
-        characterName: character.name || '\u540D\u79F0\u672A\u8A2D\u5B9A',
-      });
-    }
-    return created;
+  async saveDataToAppData(character, skills, specialSkills, equipments, histories, fileId = null) {
+    if (!this.googleDriveManager) return null;
+    const characterData = { character, skills, specialSkills, equipments, histories };
+    return this.googleDriveManager.saveCharacter(characterData, fileId);
   }
 
   /**
@@ -301,26 +274,20 @@ export class DataManager {
    * @returns {Promise<object|null>} Parsed character data or null on error.
    */
   async loadDataFromDrive(fileId) {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
+    if (!this.googleDriveManager) return null;
+    return this.googleDriveManager.getCharacter(fileId);
+  }
 
-    try {
-      const fileContent = await this.googleDriveManager.loadFileContent(fileId);
-      if (fileContent) {
-        const rawJsonData = JSON.parse(fileContent);
-        const parsedData = this.parseLoadedData(rawJsonData);
-        return parsedData;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error loading data from Google Drive:', error);
-      // Check if it's a parsing error from JSON.parse or from parseLoadedData
-      if (error instanceof SyntaxError) {
-        throw new Error(messages.file.loadError);
-      }
-      throw error; // Re-throw other errors
+  async deleteCharacter(fileId) {
+    if (!this.googleDriveManager) return;
+    await this.googleDriveManager.deleteCharacter(fileId);
+  }
+
+  promptForDriveFolder(callback) {
+    if (this.googleDriveManager?.showFolderPicker) {
+      this.googleDriveManager.showFolderPicker(callback);
+    } else if (callback) {
+      callback(new Error('GoogleDriveManager not initialized')); // fallback error
     }
   }
 

@@ -4,11 +4,11 @@
       <ul class="character-hub--list">
         <li
           v-for="ch in characters"
-          :key="ch.id"
-          :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
+          :key="ch.fileId"
+          :class="['character-hub--item', { 'character-hub--item--highlighted': ch.fileId === uiStore.currentDriveFileId }]"
         >
           <button class="character-hub--name" @click="confirmLoad(ch)">
-            {{ ch.characterName || ch.name }}
+            {{ ch.characterName }}
           </button>
 
           <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
@@ -57,24 +57,24 @@ const characters = computed(() =>
 onMounted(ensureCharacters);
 
 async function ensureCharacters() {
-  if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0 && props.dataManager.googleDriveManager) {
-    await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
+  if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0 && props.dataManager) {
+    await uiStore.refreshDriveCharacters(props.dataManager);
   }
 }
 
 function refreshList() {
-  uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
+  uiStore.refreshDriveCharacters(props.dataManager);
 }
 
 async function saveNew() {
   if (props.saveToDrive) {
-    await props.saveToDrive(null, characterStore.character.name);
+    await props.saveToDrive(null);
   }
 }
 
 async function overwrite(ch) {
   if (props.saveToDrive) {
-    await props.saveToDrive(ch.id, ch.name);
+    await props.saveToDrive(ch.fileId);
   }
 }
 
@@ -84,24 +84,24 @@ function formatDate(date) {
 }
 
 async function confirmLoad(ch) {
-  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName || ch.name));
+  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName));
   if (result.value === 'load') {
-    await props.loadCharacter(ch.id, ch.name);
+    await props.loadCharacter(ch.fileId);
   }
 }
 
 async function deleteChar(ch) {
-  const result = await showModal(messages.characterHub.deleteConfirm(ch.characterName || ch.name));
-  if (result.value === 'delete' && props.dataManager.googleDriveManager) {
-    if (ch.id.startsWith('temp-')) {
-      uiStore.cancelPendingDriveSave(ch.id);
-      uiStore.removeDriveCharacter(ch.id);
+  const result = await showModal(messages.characterHub.deleteConfirm(ch.characterName));
+  if (result.value === 'delete' && props.dataManager) {
+    if (ch.fileId.startsWith('temp-')) {
+      uiStore.cancelPendingDriveSave(ch.fileId);
+      uiStore.removeDriveCharacter(ch.fileId);
       showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
       return;
     }
     const previous = [...uiStore.driveCharacters];
-    uiStore.removeDriveCharacter(ch.id);
-    const deletePromise = props.dataManager.googleDriveManager.deleteCharacterFile(ch.id).catch((err) => {
+    uiStore.removeDriveCharacter(ch.fileId);
+    const deletePromise = props.dataManager.deleteCharacter(ch.fileId).catch((err) => {
       uiStore.driveCharacters = previous;
       throw err;
     });
@@ -115,9 +115,8 @@ async function deleteChar(ch) {
 }
 
 async function exportLocal(ch) {
-  const gdm = props.dataManager.googleDriveManager;
-  if (!gdm) return;
-  const exportPromise = gdm.loadCharacterFile(ch.id).then(async (data) => {
+  if (!props.dataManager) return;
+  const exportPromise = props.dataManager.loadDataFromDrive(ch.fileId).then(async (data) => {
     if (data) {
       await props.dataManager.saveData(data.character, data.skills, data.specialSkills, data.equipments, data.histories);
     }

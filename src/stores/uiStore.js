@@ -35,33 +35,12 @@ export const useUiStore = defineStore('ui', {
     setLoading(flag) {
       this.isLoading = flag;
     },
-    async refreshDriveCharacters(gdm) {
-      if (!gdm) return;
-      const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await gdm.readIndexFile();
-      const serverIds = new Set(serverList.map((c) => c.id));
-
-      // Keep local entries that still exist on server
-      let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
-
-      // Add or update server entries
-      serverList.forEach((srv) => {
-        const idx = merged.findIndex((c) => c.id === srv.id);
-        if (idx !== -1) {
-          merged[idx] = { ...merged[idx], ...srv };
-        } else {
-          merged.push(srv);
-        }
-      });
-
-      // Ensure temps remain
-      temps.forEach((t) => {
-        if (!merged.some((c) => c.id === t.id)) {
-          merged.push(t);
-        }
-      });
-
-      this.driveCharacters = merged;
+    async refreshDriveCharacters(dataManager) {
+      if (!dataManager) return;
+      const list = await dataManager.loadCharacterListFromDrive();
+      if (Array.isArray(list)) {
+        this.driveCharacters = list.filter((c) => c && c.fileId && c.characterName);
+      }
     },
     clearDriveCharacters() {
       this.driveCharacters = [];
@@ -70,7 +49,7 @@ export const useUiStore = defineStore('ui', {
       this.driveCharacters.push(ch);
     },
     updateDriveCharacter(id, updates) {
-      const idx = this.driveCharacters.findIndex((c) => c.id === id);
+      const idx = this.driveCharacters.findIndex((c) => c.fileId === id);
       if (idx !== -1) {
         this.driveCharacters[idx] = {
           ...this.driveCharacters[idx],
@@ -79,7 +58,7 @@ export const useUiStore = defineStore('ui', {
       }
     },
     removeDriveCharacter(id) {
-      this.driveCharacters = this.driveCharacters.filter((c) => c.id !== id);
+      this.driveCharacters = this.driveCharacters.filter((c) => c.fileId !== id);
     },
     registerPendingDriveSave(id) {
       this.pendingDriveSaves[id] = { canceled: false };

@@ -22,7 +22,7 @@ export function useGoogleDrive(dataManager) {
           reject(error || new Error('Ensure pop-ups are enabled.'));
         } else {
           uiStore.isSignedIn = true;
-          uiStore.refreshDriveCharacters(googleDriveManager.value);
+          uiStore.refreshDriveCharacters(dataManager);
           resolve();
         }
       });
@@ -44,9 +44,7 @@ export function useGoogleDrive(dataManager) {
   }
 
   function promptForDriveFolder() {
-    const gdm = dataManager.googleDriveManager;
-    if (!gdm) return;
-    gdm.showFolderPicker((err, folder) => {
+    dataManager.promptForDriveFolder((err, folder) => {
       if (err || !folder) {
         showToast({
           type: 'error',
@@ -59,18 +57,18 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
-  async function saveCharacterToDrive(fileId, fileName) {
+  async function saveCharacterToDrive(fileId) {
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
 
-    const charName = characterStore.character.name || fileName;
+    const charName = characterStore.character.name;
     const now = new Date().toISOString();
 
     if (!fileId) {
       const tempId = `temp-${Date.now()}`;
       uiStore.addDriveCharacter({
-        id: tempId,
-        name: fileName,
+        fileId: tempId,
+        name: '',
         characterName: charName,
         updatedAt: now,
       });
@@ -84,16 +82,16 @@ export function useGoogleDrive(dataManager) {
           characterStore.specialSkills,
           characterStore.equipments,
           characterStore.histories,
-          fileId,
-          fileName,
+          null,
         )
         .then((result) => {
           if (!token.canceled && result) {
             uiStore.isCloudSaveSuccess = true;
             uiStore.updateDriveCharacter(tempId, {
-              id: result.id,
-              name: result.name,
-              updatedAt: now,
+              fileId: result.fileId,
+              name: '',
+              characterName: result.characterName,
+              updatedAt: result.lastModified,
             });
           }
           uiStore.completePendingDriveSave(tempId);
@@ -113,7 +111,7 @@ export function useGoogleDrive(dataManager) {
       });
       return savePromise;
     } else {
-      const idx = uiStore.driveCharacters.findIndex((c) => c.id === fileId);
+      const idx = uiStore.driveCharacters.findIndex((c) => c.fileId === fileId);
       const prev = idx !== -1 ? { ...uiStore.driveCharacters[idx] } : null;
       uiStore.updateDriveCharacter(fileId, {
         characterName: charName,
@@ -128,7 +126,6 @@ export function useGoogleDrive(dataManager) {
           characterStore.equipments,
           characterStore.histories,
           fileId,
-          fileName,
         )
         .then((result) => {
           if (result) {
@@ -152,14 +149,11 @@ export function useGoogleDrive(dataManager) {
   }
 
   function handleSaveToDriveClick() {
-    return saveCharacterToDrive(uiStore.currentDriveFileId, uiStore.currentDriveFileName);
+    return saveCharacterToDrive(uiStore.currentDriveFileId);
   }
 
   function saveOrUpdateCurrentCharacterInDrive() {
-    return saveCharacterToDrive(
-      uiStore.currentDriveFileId,
-      uiStore.currentDriveFileId ? uiStore.currentDriveFileName : characterStore.character.name,
-    );
+    return saveCharacterToDrive(uiStore.currentDriveFileId);
   }
 
   function initializeGoogleDrive() {

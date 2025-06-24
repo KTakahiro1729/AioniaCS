@@ -51,14 +51,14 @@ const { showAsyncToast } = useNotifications();
 const { showModal } = useModal();
 
 function refreshHubList() {
-  uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
+  uiStore.refreshDriveCharacters(dataManager);
 }
 
 async function saveNewCharacter() {
-  await saveCharacterToDrive(null, characterStore.character.name);
+  await saveCharacterToDrive(null);
 }
 
-async function loadCharacterById(id, name) {
+async function loadCharacterById(id) {
   const loadPromise = dataManager.loadDataFromDrive(id).then((parsedData) => {
     if (parsedData) {
       Object.assign(characterStore.character, parsedData.character);
@@ -67,12 +67,11 @@ async function loadCharacterById(id, name) {
       Object.assign(characterStore.equipments, parsedData.equipments);
       characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
       uiStore.currentDriveFileId = id;
-      uiStore.currentDriveFileName = name;
     }
   });
   showAsyncToast(loadPromise, {
-    loading: messages.googleDrive.load.loading(name),
-    success: messages.googleDrive.load.success(name),
+    loading: messages.googleDrive.load.loading(''),
+    success: messages.googleDrive.load.success(''),
     error: (err) => messages.googleDrive.load.error(err),
   });
 }

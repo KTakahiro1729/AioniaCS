@@ -29,7 +29,7 @@ describe('GoogleDriveManager appDataFolder', () => {
     gapi.client.request.mockResolvedValue({
       result: { id: '1', name: 'character_index.json' },
     });
-    const info = await gdm.ensureIndexFile();
+    const info = await gdm._ensureIndexFile();
     expect(info.id).toBe('1');
     expect(gapi.client.request).toHaveBeenCalled();
   });
@@ -41,7 +41,7 @@ describe('GoogleDriveManager appDataFolder', () => {
     gapi.client.drive.files.get.mockResolvedValue({
       body: '[{"id":"a","name":"Alice"}]',
     });
-    const index = await gdm.readIndexFile();
+    const index = await gdm._readIndexFile();
     expect(index).toEqual([{ id: 'a', name: 'Alice' }]);
     expect(gapi.client.drive.files.get).toHaveBeenCalledWith({
       fileId: '10',
@@ -54,28 +54,28 @@ describe('GoogleDriveManager appDataFolder', () => {
       result: { id: 'c1', name: 'char.json' },
     });
     const data = { foo: 'bar' };
-    const res = await gdm.createCharacterFile(data, 'char.json');
+    const res = await gdm._createCharacterFile(data, 'char.json');
     expect(res.id).toBe('c1');
     expect(gapi.client.request).toHaveBeenCalled();
   });
 
   test('deleteCharacterFile removes file and index entry', async () => {
-    vi.spyOn(gdm, 'removeIndexEntry').mockResolvedValue();
+    vi.spyOn(gdm, '_removeIndexEntry').mockResolvedValue();
     gapi.client.drive.files.delete.mockResolvedValue({});
-    await gdm.deleteCharacterFile('d1');
+    await gdm._deleteCharacterFile('d1');
     expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({
       fileId: 'd1',
     });
-    expect(gdm.removeIndexEntry).toHaveBeenCalledWith('d1');
+    expect(gdm._removeIndexEntry).toHaveBeenCalledWith('d1');
   });
 
   test('renameIndexEntry updates characterName and timestamp', async () => {
     const now = new Date('2024-01-01T00:00:00.000Z');
     vi.useFakeTimers().setSystemTime(now);
-    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([{ id: 'a', name: 'a.json', characterName: 'Old' }]);
-    vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
-    await gdm.renameIndexEntry('a', 'New');
-    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
+    vi.spyOn(gdm, '_readIndexFile').mockResolvedValue([{ id: 'a', name: 'a.json', characterName: 'Old' }]);
+    vi.spyOn(gdm, '_writeIndexFile').mockResolvedValue();
+    await gdm._renameIndexEntry('a', 'New');
+    expect(gdm._writeIndexFile).toHaveBeenCalledWith([
       {
         id: 'a',
         name: 'a.json',
@@ -89,10 +89,10 @@ describe('GoogleDriveManager appDataFolder', () => {
   test('addIndexEntry sets updatedAt', async () => {
     const now = new Date('2024-01-02T00:00:00.000Z');
     vi.useFakeTimers().setSystemTime(now);
-    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([]);
-    vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
-    await gdm.addIndexEntry({ id: 'b', name: 'b.json', characterName: 'Bob' });
-    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
+    vi.spyOn(gdm, '_readIndexFile').mockResolvedValue([]);
+    vi.spyOn(gdm, '_writeIndexFile').mockResolvedValue();
+    await gdm._addIndexEntry({ id: 'b', name: 'b.json', characterName: 'Bob' });
+    expect(gdm._writeIndexFile).toHaveBeenCalledWith([
       {
         id: 'b',
         name: 'b.json',

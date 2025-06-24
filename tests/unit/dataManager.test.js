@@ -274,29 +274,62 @@ describe('DataManager', () => {
   describe('saveDataToAppData', () => {
     beforeEach(() => {
       dm.googleDriveManager = {
-        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        addIndexEntry: vi.fn().mockResolvedValue(),
-        renameIndexEntry: vi.fn().mockResolvedValue(),
+        saveCharacter: vi.fn().mockResolvedValue({ fileId: '1', characterName: 'TestChar', lastModified: 'now' }),
+        listCharacters: vi.fn(),
+        getCharacter: vi.fn(),
+        deleteCharacter: vi.fn(),
       };
     });
 
-    test('creates new file and adds index when no id', async () => {
-      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null, 'c');
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
-      expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
-        id: '1',
-        name: 'c.json',
-        characterName: 'TestChar',
-      });
-      expect(res.id).toBe('1');
+    test('calls saveCharacter with data and null id when creating', async () => {
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories);
+      expect(dm.googleDriveManager.saveCharacter).toHaveBeenCalledTimes(1);
+      expect(dm.googleDriveManager.saveCharacter).toHaveBeenCalledWith(expect.objectContaining({ character: mockCharacter }), null);
     });
 
-    test('updates file when id exists and renames index', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1', 'c');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object), 'c.json');
-      expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith('1', 'TestChar');
-      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
+    test('calls saveCharacter with id when updating', async () => {
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      expect(dm.googleDriveManager.saveCharacter).toHaveBeenCalledTimes(1);
+      expect(dm.googleDriveManager.saveCharacter).toHaveBeenCalledWith(expect.objectContaining({ character: mockCharacter }), '1');
+    });
+  });
+
+  describe('loadCharacterListFromDrive', () => {
+    test('calls listCharacters and returns result', async () => {
+      const list = [{ fileId: 'a', characterName: 'name', lastModified: 'now' }];
+      dm.googleDriveManager = {
+        listCharacters: vi.fn().mockResolvedValue(list),
+        saveCharacter: vi.fn(),
+        getCharacter: vi.fn(),
+        deleteCharacter: vi.fn(),
+      };
+      const res = await dm.loadCharacterListFromDrive();
+      expect(dm.googleDriveManager.listCharacters).toHaveBeenCalledTimes(1);
+      expect(res).toBe(list);
+    });
+  });
+
+  describe('loadDataFromDrive', () => {
+    test('calls getCharacter with fileId', async () => {
+      const data = { character: { name: 'x' } };
+      dm.googleDriveManager = {
+        getCharacter: vi.fn().mockResolvedValue(data),
+        saveCharacter: vi.fn(),
+        listCharacters: vi.fn(),
+        deleteCharacter: vi.fn(),
+      };
+      const res = await dm.loadDataFromDrive('id');
+      expect(dm.googleDriveManager.getCharacter).toHaveBeenCalledWith('id');
+      expect(res).toBe(data);
+    });
+  });
+
+  describe('deleteCharacter', () => {
+    test('calls deleteCharacter on drive manager', async () => {
+      const gdm = { deleteCharacter: vi.fn(), saveCharacter: vi.fn(), listCharacters: vi.fn(), getCharacter: vi.fn() };
+      dm.googleDriveManager = gdm;
+      await dm.deleteCharacter('x');
+      expect(gdm.deleteCharacter).toHaveBeenCalledWith('x');
     });
   });
 });
