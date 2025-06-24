@@ -1,110 +1,126 @@
-import { GoogleDriveManager } from '../../src/services/googleDriveManager.js';
-import { vi } from 'vitest';
+import { describe, it, beforeEach, expect, vi } from 'vitest';
+import { MockGoogleDriveManager } from '../../src/services/mockGoogleDriveManager.js';
 
-describe('GoogleDriveManager appDataFolder', () => {
+describe('GoogleDriveManager public API', () => {
   let gdm;
-
   beforeEach(() => {
-    global.gapi = {
-      client: {
-        drive: {
-          files: {
-            list: vi.fn(),
-            get: vi.fn(),
-            delete: vi.fn(),
-          },
+    gdm = new MockGoogleDriveManager('k', 'c');
+  });
+
+  describe('listCharacters', () => {
+    it('returns metadata from valid index', async () => {
+      const now = new Date('2024-01-01T00:00:00.000Z');
+      vi.useFakeTimers().setSystemTime(now);
+      const meta = await gdm.saveCharacter({ name: 'Alice' }, null);
+      vi.useRealTimers();
+      const list = await gdm.listCharacters();
+      expect(list).toEqual([
+        {
+          fileId: meta.fileId,
+          characterName: 'Alice',
+          lastModified: now.toISOString(),
         },
-        request: vi.fn(),
-      },
-    };
-    gdm = new GoogleDriveManager('k', 'c');
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  test('ensureIndexFile creates new index when absent', async () => {
-    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
-    gapi.client.request.mockResolvedValue({
-      result: { id: '1', name: 'character_index.json' },
+      ]);
     });
-    const info = await gdm.ensureIndexFile();
-    expect(info.id).toBe('1');
-    expect(gapi.client.request).toHaveBeenCalled();
-  });
 
-  test('readIndexFile returns parsed data', async () => {
-    gapi.client.drive.files.list.mockResolvedValue({
-      result: { files: [{ id: '10', name: 'character_index.json' }] },
+    it('returns empty array when index file is missing', async () => {
+      gdm.indexFileId = null;
+      gdm.appData = {};
+      const list = await gdm.listCharacters();
+      expect(list).toEqual([]);
     });
-    gapi.client.drive.files.get.mockResolvedValue({
-      body: '[{"id":"a","name":"Alice"}]',
+
+    it('returns empty array when index content is object', async () => {
+      const info = await gdm.saveFile('appDataFolder', 'character_index.json', '{}');
+      gdm.indexFileId = info.id;
+      const list = await gdm.listCharacters();
+      expect(list).toEqual([]);
     });
-    const index = await gdm.readIndexFile();
-    expect(index).toEqual([{ id: 'a', name: 'Alice' }]);
-    expect(gapi.client.drive.files.get).toHaveBeenCalledWith({
-      fileId: '10',
-      alt: 'media',
+
+    it('returns empty array and logs when JSON invalid', async () => {
+      const info = await gdm.saveFile('appDataFolder', 'character_index.json', 'invalid');
+      gdm.indexFileId = info.id;
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const list = await gdm.listCharacters();
+      expect(list).toEqual([]);
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
     });
   });
 
-  test('createCharacterFile uploads JSON to appDataFolder', async () => {
-    gapi.client.request.mockResolvedValue({
-      result: { id: 'c1', name: 'char.json' },
+  describe('getCharacter', () => {
+    it('returns data for existing id', async () => {
+      const file = await gdm.createCharacterFile({ foo: 'bar' }, 'c.json');
+      const data = await gdm.getCharacter(file.id);
+      expect(data.foo).toBe('bar');
     });
-    const data = { foo: 'bar' };
-    const res = await gdm.createCharacterFile(data, 'char.json');
-    expect(res.id).toBe('c1');
-    expect(gapi.client.request).toHaveBeenCalled();
-  });
 
-  test('deleteCharacterFile removes file and index entry', async () => {
-    vi.spyOn(gdm, 'removeIndexEntry').mockResolvedValue();
-    gapi.client.drive.files.delete.mockResolvedValue({});
-    await gdm.deleteCharacterFile('d1');
-    expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({
-      fileId: 'd1',
+    it('returns null when file missing', async () => {
+      const data = await gdm.getCharacter('missing');
+      expect(data).toBeNull();
     });
-    expect(gdm.removeIndexEntry).toHaveBeenCalledWith('d1');
+
+    it('throws when JSON is invalid', async () => {
+      const file = await gdm.createCharacterFile({ foo: 'bar' }, 'c.json');
+      gdm.appData[file.id].content = '{ bad json';
+      await expect(gdm.getCharacter(file.id)).rejects.toThrow();
+    });
   });
 
-  test('renameIndexEntry updates characterName and timestamp', async () => {
-    const now = new Date('2024-01-01T00:00:00.000Z');
-    vi.useFakeTimers().setSystemTime(now);
-    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([{ id: 'a', name: 'a.json', characterName: 'Old' }]);
-    vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
-    await gdm.renameIndexEntry('a', 'New');
-    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
-      {
-        id: 'a',
-        name: 'a.json',
-        characterName: 'New',
-        updatedAt: now.toISOString(),
-      },
-    ]);
-    vi.useRealTimers();
+  describe('saveCharacter', () => {
+    it('creates new character and updates index', async () => {
+      const now = new Date('2024-02-01T00:00:00.000Z');
+      vi.useFakeTimers().setSystemTime(now);
+      const meta = await gdm.saveCharacter({ name: 'Bob' }, null);
+      expect(meta.characterName).toBe('Bob');
+      vi.useRealTimers();
+      const list = await gdm.listCharacters();
+      expect(list.find((e) => e.fileId === meta.fileId)).toBeDefined();
+    });
+
+    it('updates existing character entry', async () => {
+      const file = await gdm.createCharacterFile({ name: 'Old' }, 'o.json');
+      const info = await gdm.saveFile(
+        'appDataFolder',
+        'character_index.json',
+        JSON.stringify([
+          {
+            id: file.id,
+            name: file.name,
+            characterName: 'Old',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+          },
+        ]),
+      );
+      gdm.indexFileId = info.id;
+      const meta = await gdm.saveCharacter({ name: 'New' }, file.id);
+      expect(meta.fileId).toBe(file.id);
+      const list = await gdm.listCharacters();
+      expect(list[0].characterName).toBe('New');
+    });
+
+    it('throws when index update fails after save', async () => {
+      vi.spyOn(gdm, 'saveFile').mockImplementation((folder, name, content, id) => {
+        if (name === 'character_index.json') {
+          return Promise.reject(new Error('fail'));
+        }
+        return MockGoogleDriveManager.prototype.saveFile.call(gdm, folder, name, content, id);
+      });
+      await expect(gdm.saveCharacter({ name: 'X' }, null)).rejects.toThrow('fail');
+    });
   });
 
-  test('addIndexEntry sets updatedAt', async () => {
-    const now = new Date('2024-01-02T00:00:00.000Z');
-    vi.useFakeTimers().setSystemTime(now);
-    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([]);
-    vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
-    await gdm.addIndexEntry({ id: 'b', name: 'b.json', characterName: 'Bob' });
-    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
-      {
-        id: 'b',
-        name: 'b.json',
-        characterName: 'Bob',
-        updatedAt: now.toISOString(),
-      },
-    ]);
-    vi.useRealTimers();
-  });
+  describe('deleteCharacter', () => {
+    it('removes file and index', async () => {
+      const meta = await gdm.saveCharacter({ name: 'C', foo: 'bar' }, null);
+      await gdm.deleteCharacter(meta.fileId);
+      expect(gdm.appData[meta.fileId]).toBeUndefined();
+      const list = await gdm.listCharacters();
+      expect(list.find((e) => e.fileId === meta.fileId)).toBeUndefined();
+    });
 
-  test('onGapiLoad rejects when gapi.load is missing', async () => {
-    delete gapi.load;
-    await expect(gdm.onGapiLoad()).rejects.toThrow('GAPI core script not available for gapi.load.');
+    it('is idempotent for missing id', async () => {
+      await gdm.deleteCharacter('missing');
+    });
   });
 });

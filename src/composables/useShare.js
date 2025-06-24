@@ -38,7 +38,7 @@ export function useShare(dataManager) {
       ciphertext: arrayBufferToBase64(data.ciphertext),
       iv: arrayBufferToBase64(data.iv),
     });
-    const id = await dataManager.googleDriveManager.uploadAndShareFile(payload, 'share.enc', 'application/json');
+    const id = await dataManager.uploadAndShareFile(payload, 'share.enc', 'application/json');
     return id;
   }
 
@@ -46,7 +46,7 @@ export function useShare(dataManager) {
     const { type, includeFull, password, expiresInDays } = options;
     const data = _collectData(includeFull);
     if (type === 'dynamic') {
-      const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
+      const adapter = new DriveStorageAdapter(dataManager);
       const { shareLink } = await createDynamicLink({
         data,
         adapter,

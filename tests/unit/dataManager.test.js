@@ -271,32 +271,37 @@ describe('DataManager', () => {
     });
   });
 
-  describe('saveDataToAppData', () => {
+  describe('facade methods', () => {
     beforeEach(() => {
       dm.googleDriveManager = {
-        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        addIndexEntry: vi.fn().mockResolvedValue(),
-        renameIndexEntry: vi.fn().mockResolvedValue(),
+        listCharacters: vi.fn().mockResolvedValue(['a']),
+        getCharacter: vi.fn().mockResolvedValue({ foo: 'bar' }),
+        saveCharacter: vi.fn().mockResolvedValue({ fileId: '1' }),
+        deleteCharacter: vi.fn().mockResolvedValue(),
       };
     });
 
-    test('creates new file and adds index when no id', async () => {
-      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null, 'c');
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
-      expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
-        id: '1',
-        name: 'c.json',
-        characterName: 'TestChar',
-      });
-      expect(res.id).toBe('1');
+    it('delegates listCharacters', async () => {
+      const res = await dm.listCharacters();
+      expect(dm.googleDriveManager.listCharacters).toHaveBeenCalled();
+      expect(res).toEqual(['a']);
     });
 
-    test('updates file when id exists and renames index', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1', 'c');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object), 'c.json');
-      expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith('1', 'TestChar');
-      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
+    it('delegates getCharacter', async () => {
+      const res = await dm.getCharacter('x');
+      expect(dm.googleDriveManager.getCharacter).toHaveBeenCalledWith('x');
+      expect(res.foo).toBe('bar');
+    });
+
+    it('delegates saveCharacter', async () => {
+      const meta = await dm.saveCharacter({ name: 'A' }, null);
+      expect(dm.googleDriveManager.saveCharacter).toHaveBeenCalled();
+      expect(meta.fileId).toBe('1');
+    });
+
+    it('delegates deleteCharacter', async () => {
+      await dm.deleteCharacter('x');
+      expect(dm.googleDriveManager.deleteCharacter).toHaveBeenCalledWith('x');
     });
   });
 });

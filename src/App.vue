@@ -53,7 +53,7 @@ const { showModal } = useModal();
 const modalStore = useModalStore();
 
 function refreshHubList() {
-  uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
+  uiStore.refreshDriveCharacters(dataManager);
 }
 
 async function saveNewCharacter() {

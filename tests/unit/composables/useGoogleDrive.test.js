@@ -8,10 +8,9 @@ describe('useGoogleDrive', () => {
     setActivePinia(createPinia());
   });
 
-  test('handleSaveToDriveClick calls saveDataToAppData with store data', async () => {
+  test('handleSaveToDriveClick calls saveCharacter with store data', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-      googleDriveManager: {},
+      saveCharacter: vi.fn().mockResolvedValue({ fileId: '1', characterName: 'Hero', lastModified: 'd' }),
     };
 
     const { handleSaveToDriveClick } = useGoogleDrive(dataManager);
@@ -24,21 +23,21 @@ describe('useGoogleDrive', () => {
 
     await handleSaveToDriveClick();
 
-    expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
-      charStore.character,
-      charStore.skills,
-      charStore.specialSkills,
-      charStore.equipments,
-      charStore.histories,
+    expect(dataManager.saveCharacter).toHaveBeenCalledWith(
+      {
+        character: charStore.character,
+        skills: charStore.skills,
+        specialSkills: charStore.specialSkills,
+        equipments: charStore.equipments,
+        histories: charStore.histories,
+      },
       null,
-      'c',
     );
   });
 
   test('saveCharacterToDrive uses provided id and name', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: '1', name: 'a.json' }),
-      googleDriveManager: {},
+      saveCharacter: vi.fn().mockResolvedValue({ fileId: '1', characterName: 'Brave', lastModified: 'd' }),
     };
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
@@ -46,14 +45,15 @@ describe('useGoogleDrive', () => {
 
     await saveCharacterToDrive('abc', 'foo');
 
-    expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
-      charStore.character,
-      charStore.skills,
-      charStore.specialSkills,
-      charStore.equipments,
-      charStore.histories,
+    expect(dataManager.saveCharacter).toHaveBeenCalledWith(
+      {
+        character: charStore.character,
+        skills: charStore.skills,
+        specialSkills: charStore.specialSkills,
+        equipments: charStore.equipments,
+        histories: charStore.histories,
+      },
       'abc',
-      'foo',
     );
   });
 
@@ -61,12 +61,8 @@ describe('useGoogleDrive', () => {
     const createFile = vi.fn().mockResolvedValue({ id: '1' });
     const updateFile = vi.fn().mockResolvedValue({ id: '2' });
     const dataManager = {
-      googleDriveManager: {
-        createCharacterFile: createFile,
-        updateCharacterFile: updateFile,
-      },
-      saveDataToAppData: vi.fn((c, s, ss, e, h, id, name) => {
-        return id ? updateFile(id, {}, name) : createFile({}, name);
+      saveCharacter: vi.fn((data, id) => {
+        return id ? updateFile(id, data, 'c.json') : createFile(data, 'c.json');
       }),
     };
     const { saveOrUpdateCurrentCharacterInDrive } = useGoogleDrive(dataManager);

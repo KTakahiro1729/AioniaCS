@@ -43,7 +43,7 @@ describe('useAppInitialization', () => {
     const buffer = Uint8Array.from(Buffer.from(JSON.stringify(payload))).buffer;
     receiveSharedData.mockResolvedValue(buffer);
 
-    const dataManager = { googleDriveManager: {} };
+    const dataManager = {};
     const { initialize } = useAppInitialization(dataManager);
     await initialize();
 
@@ -58,7 +58,7 @@ describe('useAppInitialization', () => {
   test('does nothing when no params', async () => {
     const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
     parseShareUrl.mockReturnValue(null);
-    const dataManager = { googleDriveManager: {} };
+    const dataManager = {};
     const { initialize } = useAppInitialization(dataManager);
     const charStore = useCharacterStore();
     charStore.character.name = 'Default';
@@ -78,7 +78,7 @@ describe('useAppInitialization', () => {
         resolve = r;
       }),
     );
-    const { initialize } = useAppInitialization({ googleDriveManager: {} });
+    const { initialize } = useAppInitialization({});
     const uiStore = useUiStore();
     const p = initialize();
     expect(uiStore.isLoading).toBe(true);

@@ -26,7 +26,7 @@ export function useAppInitialization(dataManager) {
     try {
       let buffer;
       if (params.mode === 'dynamic') {
-        const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
+        const adapter = new DriveStorageAdapter(dataManager);
         async function promptPassword() {
           const result = await showModal({
             component: PasswordPromptModal,
@@ -68,7 +68,7 @@ export function useAppInitialization(dataManager) {
         buffer = await receiveSharedData({
           location: window.location,
           downloadHandler: async (id) => {
-            const text = await dataManager.googleDriveManager.loadFileContent(id);
+            const text = await dataManager.loadFileContent(id);
             if (!text) throw new Error('no data');
             const { ciphertext, iv } = JSON.parse(text);
             return {

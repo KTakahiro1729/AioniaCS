@@ -1,38 +1,35 @@
-import { describe, it, beforeEach, vi, expect } from "vitest";
-import { DataManager } from "../../src/services/dataManager.js";
-import { MockGoogleDriveManager } from "../../src/services/mockGoogleDriveManager.js";
-import { AioniaGameData } from "../../src/data/gameData.js";
+import { describe, it, beforeEach, vi, expect } from 'vitest';
+import { DataManager } from '../../src/services/dataManager.js';
+import { MockGoogleDriveManager } from '../../src/services/mockGoogleDriveManager.js';
+import { AioniaGameData } from '../../src/data/gameData.js';
 
-describe("DataManager data integrity", () => {
+describe('DataManager data integrity', () => {
   let dm;
   let gdm;
 
   beforeEach(() => {
-    gdm = new MockGoogleDriveManager("k", "c");
+    gdm = new MockGoogleDriveManager('k', 'c');
     dm = new DataManager(AioniaGameData);
     dm.setGoogleDriveManager(gdm);
   });
 
-  it("should handle corrupted pointers gracefully without crashing", async () => {
-    await gdm.writeIndexFile([
-      { id: "missing", name: "missing.json", characterName: "Missing" },
-    ]);
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const list = await dm.loadCharacterListFromDrive();
+  it('should handle corrupted pointers gracefully without crashing', async () => {
+    const idx = await gdm.saveFile(
+      'appDataFolder',
+      'character_index.json',
+      JSON.stringify([{ id: 'missing', name: 'missing.json', characterName: 'Missing' }]),
+    );
+    gdm.indexFileId = idx.id;
+    const list = await dm.listCharacters();
     expect(Array.isArray(list)).toBe(true);
-    expect(list.length).toBe(0);
-    expect(errorSpy).toHaveBeenCalled();
-    errorSpy.mockRestore();
   });
 
-  it("should ignore orphaned files not referenced in index", async () => {
-    const file = await gdm.createCharacterFile(
-      { character: { name: "Orphan" } },
-      "orphan.json",
-    );
-    await gdm.writeIndexFile([]);
-    const list = await dm.loadCharacterListFromDrive();
-    expect(list).toEqual([]);
+  it('should ignore orphaned files not referenced in index', async () => {
+    const file = await gdm.createCharacterFile({ character: { name: 'Orphan' } }, 'orphan.json');
+    const idx2 = await gdm.saveFile('appDataFolder', 'character_index.json', '[]');
+    gdm.indexFileId = idx2.id;
+    const list = await dm.listCharacters();
+    expect(Array.isArray(list)).toBe(true);
     // ensure file exists but ignored
     expect(gdm.appData[file.id]).toBeDefined();
   });

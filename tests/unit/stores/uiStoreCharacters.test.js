@@ -1,4 +1,5 @@
 import { setActivePinia, createPinia } from 'pinia';
+import { vi } from 'vitest';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
 describe('uiStore character cache', () => {
@@ -12,11 +13,22 @@ describe('uiStore character cache', () => {
       { id: '2', name: 'b.json' },
       { id: 'temp-1', name: 'temp.json' },
     ];
-    const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: '1' }]) };
-    await store.refreshDriveCharacters(gdm);
+    const dm = {
+      listCharacters: vi.fn().mockResolvedValue([{ fileId: '1', characterName: 'A', lastModified: 'now' }]),
+    };
+    await store.refreshDriveCharacters(dm);
     expect(store.driveCharacters).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', name: 'temp.json' })]),
     );
+  });
+
+  test('deleteCharacter calls dataManager and refreshes', async () => {
+    const store = useUiStore();
+    const dm = { deleteCharacter: vi.fn().mockResolvedValue(), listCharacters: vi.fn().mockResolvedValue([]) };
+    const refreshSpy = vi.spyOn(store, 'refreshDriveCharacters');
+    await store.deleteCharacter(dm, 'a');
+    expect(dm.deleteCharacter).toHaveBeenCalledWith('a');
+    expect(refreshSpy).toHaveBeenCalledWith(dm);
   });
 
   test('clearDriveCharacters empties cache', () => {

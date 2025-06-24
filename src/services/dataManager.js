@@ -18,6 +18,91 @@ export class DataManager {
     this.googleDriveManager = driveManager;
   }
 
+  async initGoogleDrive(apiKey, clientId, useMock = false) {
+    const Manager = useMock
+      ? (await import('./mockGoogleDriveManager.js')).MockGoogleDriveManager
+      : (await import('./googleDriveManager.js')).GoogleDriveManager;
+    this.googleDriveManager = new Manager(apiKey, clientId);
+    return this.googleDriveManager;
+  }
+
+  async onGapiLoad() {
+    if (this.googleDriveManager && this.googleDriveManager.onGapiLoad) {
+      await this.googleDriveManager.onGapiLoad();
+    }
+  }
+
+  async onGisLoad() {
+    if (this.googleDriveManager && this.googleDriveManager.onGisLoad) {
+      await this.googleDriveManager.onGisLoad();
+    }
+  }
+
+  handleSignIn(cb) {
+    if (this.googleDriveManager && this.googleDriveManager.handleSignIn) {
+      this.googleDriveManager.handleSignIn(cb);
+    }
+  }
+
+  handleSignOut(cb) {
+    if (this.googleDriveManager && this.googleDriveManager.handleSignOut) {
+      this.googleDriveManager.handleSignOut(cb);
+    }
+  }
+
+  showFolderPicker(cb) {
+    if (this.googleDriveManager && this.googleDriveManager.showFolderPicker) {
+      this.googleDriveManager.showFolderPicker(cb);
+    }
+  }
+
+  loadFileContent(id) {
+    if (!this.googleDriveManager) return Promise.resolve(null);
+    return this.googleDriveManager.loadFileContent(id);
+  }
+
+  saveFile(folderId, name, content, id = null) {
+    if (!this.googleDriveManager) return Promise.resolve(null);
+    return this.googleDriveManager.saveFile(folderId, name, content, id);
+  }
+
+  uploadAndShareFile(content, name, type) {
+    if (!this.googleDriveManager) return Promise.resolve(null);
+    return this.googleDriveManager.uploadAndShareFile(content, name, type);
+  }
+
+  async listCharacters() {
+    if (!this.googleDriveManager) {
+      console.error('GoogleDriveManager not set in DataManager.');
+      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+    return this.googleDriveManager.listCharacters();
+  }
+
+  async getCharacter(fileId) {
+    if (!this.googleDriveManager) {
+      console.error('GoogleDriveManager not set in DataManager.');
+      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+    return this.googleDriveManager.getCharacter(fileId);
+  }
+
+  async saveCharacter(characterData, fileId = null) {
+    if (!this.googleDriveManager) {
+      console.error('GoogleDriveManager not set in DataManager.');
+      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+    return this.googleDriveManager.saveCharacter(characterData, fileId);
+  }
+
+  async deleteCharacter(fileId) {
+    if (!this.googleDriveManager) {
+      console.error('GoogleDriveManager not set in DataManager.');
+      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+    await this.googleDriveManager.deleteCharacter(fileId);
+  }
+
   _sanitizeFileName(name) {
     const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
     return sanitized || '名もなき冒険者';
@@ -257,43 +342,6 @@ export class DataManager {
    * Saves character data to the user's appDataFolder.
    * Adds an index entry when creating a new file.
    */
-  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId, fileName) {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
-
-    const dataToSave = {
-      character: character,
-      skills: skills.map((s) => ({
-        id: s.id,
-        checked: s.checked,
-        canHaveExperts: s.canHaveExperts,
-        experts: s.canHaveExperts ? s.experts.filter((e) => e.value && e.value.trim() !== '').map((e) => ({ value: e.value })) : [],
-      })),
-      specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
-      equipments: equipments,
-      histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
-    };
-
-    const sanitizedFileName = (fileName || character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
-
-    if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave, sanitizedFileName);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
-      return res;
-    }
-
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave, sanitizedFileName);
-    if (created) {
-      await this.googleDriveManager.addIndexEntry({
-        id: created.id,
-        name: created.name,
-        characterName: character.name || '名もなき冒険者',
-      });
-    }
-    return created;
-  }
 
   /**
    * Loads data from a file in Google Drive.
@@ -328,30 +376,6 @@ export class DataManager {
    * Loads the character index and returns only valid entries.
    * @returns {Promise<Array>} Array of valid index entries
    */
-  async loadCharacterListFromDrive() {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
-
-    const index = await this.googleDriveManager.readIndexFile();
-    const valid = [];
-
-    for (const entry of index) {
-      try {
-        const data = await this.loadDataFromDrive(entry.id);
-        if (data) {
-          valid.push(entry);
-        } else {
-          console.error(`Character file not found or invalid: ${entry.id}`);
-        }
-      } catch (err) {
-        console.error(`Failed to load character file ${entry.id}:`, err);
-      }
-    }
-
-    return valid;
-  }
 
   /**
    * 外部JSONフォーマットを内部フォーマットに変換

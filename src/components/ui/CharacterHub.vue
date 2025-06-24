@@ -69,13 +69,13 @@ const characters = computed(() =>
 onMounted(ensureCharacters);
 
 async function ensureCharacters() {
-  if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0 && props.dataManager.googleDriveManager) {
-    await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
+  if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0) {
+    await uiStore.refreshDriveCharacters(props.dataManager);
   }
 }
 
 function refreshList() {
-  props.dataManager.loadCharacterListFromDrive().then((list) => (uiStore.driveCharacters = list));
+  uiStore.refreshDriveCharacters(props.dataManager);
 }
 
 async function saveNew() {
@@ -114,34 +114,32 @@ async function executeDelete() {
   const ch = characterToDelete.value;
   if (!ch) return;
 
-  if (props.dataManager.googleDriveManager) {
-    if (ch.id.startsWith('temp-')) {
-      uiStore.cancelPendingDriveSave(ch.id);
-      uiStore.removeDriveCharacter(ch.id);
-      showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
-    } else {
-      const previous = [...uiStore.driveCharacters];
-      uiStore.removeDriveCharacter(ch.id);
-      const deletePromise = props.dataManager.googleDriveManager.deleteCharacterFile(ch.id).catch((err) => {
+  if (ch.id.startsWith('temp-')) {
+    uiStore.cancelPendingDriveSave(ch.id);
+    uiStore.removeDriveCharacter(ch.id);
+    showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
+  } else {
+    const previous = [...uiStore.driveCharacters];
+    uiStore.removeDriveCharacter(ch.id);
+    const deletePromise = uiStore
+      .deleteCharacter(props.dataManager, ch.id)
+      .catch((err) => {
         uiStore.driveCharacters = previous;
         throw err;
       });
-      showAsyncToast(deletePromise, {
-        loading: messages.characterHub.delete.asyncToast.loading(),
-        success: messages.characterHub.delete.asyncToast.success(),
-        error: (err) => messages.characterHub.delete.asyncToast.error(err),
-      });
-      await deletePromise;
-    }
+    showAsyncToast(deletePromise, {
+      loading: messages.characterHub.delete.asyncToast.loading(),
+      success: messages.characterHub.delete.asyncToast.success(),
+      error: (err) => messages.characterHub.delete.asyncToast.error(err),
+    });
+    await deletePromise;
   }
 
   characterToDelete.value = null;
 }
 
 async function exportLocal(ch) {
-  const gdm = props.dataManager.googleDriveManager;
-  if (!gdm) return;
-  const exportPromise = gdm.loadCharacterFile(ch.id).then(async (data) => {
+  const exportPromise = props.dataManager.getCharacter(ch.id).then(async (data) => {
     if (data) {
       await props.dataManager.saveData(data.character, data.skills, data.specialSkills, data.equipments, data.histories);
     }

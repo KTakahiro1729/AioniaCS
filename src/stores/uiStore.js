@@ -35,22 +35,33 @@ export const useUiStore = defineStore('ui', {
     setLoading(flag) {
       this.isLoading = flag;
     },
-    async refreshDriveCharacters(gdm) {
-      if (!gdm) return;
+    async refreshDriveCharacters(dataManager) {
+      if (!dataManager) return;
       const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await gdm.readIndexFile();
-      const serverIds = new Set(serverList.map((c) => c.id));
+      const list = await dataManager.listCharacters();
+      const valid = list.filter((e) => {
+        const ok = e && e.fileId && e.characterName && e.lastModified;
+        if (!ok) console.error('Invalid metadata entry', e);
+        return ok;
+      });
+      const serverIds = new Set(valid.map((c) => c.fileId));
 
       // Keep local entries that still exist on server
       let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
 
       // Add or update server entries
-      serverList.forEach((srv) => {
-        const idx = merged.findIndex((c) => c.id === srv.id);
+      valid.forEach((srv) => {
+        const entry = {
+          id: srv.fileId,
+          name: `${srv.fileId}.json`,
+          characterName: srv.characterName,
+          updatedAt: srv.lastModified,
+        };
+        const idx = merged.findIndex((c) => c.id === entry.id);
         if (idx !== -1) {
-          merged[idx] = { ...merged[idx], ...srv };
+          merged[idx] = { ...merged[idx], ...entry };
         } else {
-          merged.push(srv);
+          merged.push(entry);
         }
       });
 
@@ -80,6 +91,11 @@ export const useUiStore = defineStore('ui', {
     },
     removeDriveCharacter(id) {
       this.driveCharacters = this.driveCharacters.filter((c) => c.id !== id);
+    },
+    async deleteCharacter(dataManager, fileId) {
+      if (!dataManager) return;
+      await dataManager.deleteCharacter(fileId);
+      await this.refreshDriveCharacters(dataManager);
     },
     registerPendingDriveSave(id) {
       this.pendingDriveSaves[id] = { canceled: false };
