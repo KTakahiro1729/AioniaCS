@@ -587,12 +587,14 @@ export class GoogleDriveManager {
    * @param {object} data character JSON object
    * @param {string} name file name
    */
-  async createCharacterFile(data, name) {
-    return this.saveFile('appDataFolder', name, JSON.stringify(data, null, 2));
+  async createCharacterFile(data) {
+    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
   }
 
-  async updateCharacterFile(id, data, name) {
-    return this.saveFile('appDataFolder', name, JSON.stringify(data, null, 2), id);
+  async updateCharacterFile(id, data) {
+    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
   }
 
   async loadCharacterFile(id) {

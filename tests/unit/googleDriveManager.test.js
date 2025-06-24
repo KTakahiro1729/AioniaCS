@@ -39,10 +39,10 @@ describe('GoogleDriveManager appDataFolder', () => {
       result: { files: [{ id: '10', name: 'character_index.json' }] },
     });
     gapi.client.drive.files.get.mockResolvedValue({
-      body: '[{"id":"a","name":"Alice"}]',
+      body: '[{"id":"a","characterName":"Alice"}]',
     });
     const index = await gdm.readIndexFile();
-    expect(index).toEqual([{ id: 'a', name: 'Alice' }]);
+    expect(index).toEqual([{ id: 'a', characterName: 'Alice' }]);
     expect(gapi.client.drive.files.get).toHaveBeenCalledWith({
       fileId: '10',
       alt: 'media',
@@ -51,10 +51,10 @@ describe('GoogleDriveManager appDataFolder', () => {
 
   test('createCharacterFile uploads JSON to appDataFolder', async () => {
     gapi.client.request.mockResolvedValue({
-      result: { id: 'c1', name: 'char.json' },
+      result: { id: 'c1', name: 'Test.json' },
     });
-    const data = { foo: 'bar' };
-    const res = await gdm.createCharacterFile(data, 'char.json');
+    const data = { character: { name: 'Test' } };
+    const res = await gdm.createCharacterFile(data);
     expect(res.id).toBe('c1');
     expect(gapi.client.request).toHaveBeenCalled();
   });
@@ -72,13 +72,12 @@ describe('GoogleDriveManager appDataFolder', () => {
   test('renameIndexEntry updates characterName and timestamp', async () => {
     const now = new Date('2024-01-01T00:00:00.000Z');
     vi.useFakeTimers().setSystemTime(now);
-    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([{ id: 'a', name: 'a.json', characterName: 'Old' }]);
+    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([{ id: 'a', characterName: 'Old' }]);
     vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
     await gdm.renameIndexEntry('a', 'New');
     expect(gdm.writeIndexFile).toHaveBeenCalledWith([
       {
         id: 'a',
-        name: 'a.json',
         characterName: 'New',
         updatedAt: now.toISOString(),
       },
@@ -91,11 +90,10 @@ describe('GoogleDriveManager appDataFolder', () => {
     vi.useFakeTimers().setSystemTime(now);
     vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([]);
     vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
-    await gdm.addIndexEntry({ id: 'b', name: 'b.json', characterName: 'Bob' });
+    await gdm.addIndexEntry({ id: 'b', characterName: 'Bob' });
     expect(gdm.writeIndexFile).toHaveBeenCalledWith([
       {
         id: 'b',
-        name: 'b.json',
         characterName: 'Bob',
         updatedAt: now.toISOString(),
       },
