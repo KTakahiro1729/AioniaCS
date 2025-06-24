@@ -80,13 +80,13 @@ function refreshList() {
 
 async function saveNew() {
   if (props.saveToDrive) {
-    await props.saveToDrive(null, characterStore.character.name);
+    await props.saveToDrive(null);
   }
 }
 
 async function overwrite(ch) {
   if (props.saveToDrive) {
-    await props.saveToDrive(ch.id, ch.name);
+    await props.saveToDrive(ch.id);
   }
 }
 
@@ -96,9 +96,9 @@ function formatDate(date) {
 }
 
 async function confirmLoad(ch) {
-  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName || ch.name));
+  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName));
   if (result.value === 'load') {
-    await props.loadCharacter(ch.id, ch.name);
+    await props.loadCharacter(ch.id, ch.characterName);
   }
 }
 

@@ -9,13 +9,13 @@ describe('uiStore character cache', () => {
   test('refreshDriveCharacters merges lists', async () => {
     const store = useUiStore();
     store.driveCharacters = [
-      { id: '2', name: 'b.json' },
-      { id: 'temp-1', name: 'temp.json' },
+      { id: '2', characterName: 'B' },
+      { id: 'temp-1', characterName: 'Temp' },
     ];
     const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: '1' }]) };
     await store.refreshDriveCharacters(gdm);
     expect(store.driveCharacters).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', name: 'temp.json' })]),
+      expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', characterName: 'Temp' })]),
     );
   });
 
@@ -28,7 +28,7 @@ describe('uiStore character cache', () => {
 
   test('drive character add, update, remove', () => {
     const store = useUiStore();
-    store.addDriveCharacter({ id: 'a', name: 'a.json', characterName: 'A' });
+    store.addDriveCharacter({ id: 'a', characterName: 'A' });
     expect(store.driveCharacters).toHaveLength(1);
     store.updateDriveCharacter('a', { characterName: 'B' });
     expect(store.driveCharacters[0].characterName).toBe('B');

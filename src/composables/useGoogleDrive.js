@@ -63,18 +63,17 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
-  async function saveCharacterToDrive(fileId, fileName) {
+  async function saveCharacterToDrive(fileId) {
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
 
-    const charName = characterStore.character.name || fileName;
+    const charName = characterStore.character.name || '名もなき冒険者';
     const now = new Date().toISOString();
 
     if (!fileId) {
       const tempId = `temp-${Date.now()}`;
       uiStore.addDriveCharacter({
         id: tempId,
-        name: fileName,
         characterName: charName,
         updatedAt: now,
       });
@@ -89,14 +88,12 @@ export function useGoogleDrive(dataManager) {
           characterStore.equipments,
           characterStore.histories,
           fileId,
-          fileName,
         )
         .then((result) => {
           if (!token.canceled && result) {
             uiStore.isCloudSaveSuccess = true;
             uiStore.updateDriveCharacter(tempId, {
               id: result.id,
-              name: result.name,
               updatedAt: now,
             });
           }
@@ -132,7 +129,6 @@ export function useGoogleDrive(dataManager) {
           characterStore.equipments,
           characterStore.histories,
           fileId,
-          fileName,
         )
         .then((result) => {
           if (result) {
@@ -156,14 +152,11 @@ export function useGoogleDrive(dataManager) {
   }
 
   function handleSaveToDriveClick() {
-    return saveCharacterToDrive(uiStore.currentDriveFileId, uiStore.currentDriveFileName);
+    return saveCharacterToDrive(uiStore.currentDriveFileId);
   }
 
   function saveOrUpdateCurrentCharacterInDrive() {
-    return saveCharacterToDrive(
-      uiStore.currentDriveFileId,
-      uiStore.currentDriveFileId ? uiStore.currentDriveFileName : characterStore.character.name,
-    );
+    return saveCharacterToDrive(uiStore.currentDriveFileId);
   }
 
   function initializeGoogleDrive() {

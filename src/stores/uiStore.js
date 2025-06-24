@@ -11,7 +11,6 @@ export const useUiStore = defineStore('ui', {
     driveFolderId: null,
     driveFolderName: '',
     currentDriveFileId: null,
-    currentDriveFileName: '',
     isViewingShared: false,
     driveCharacters: [],
     pendingDriveSaves: {},
