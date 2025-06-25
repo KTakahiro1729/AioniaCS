@@ -96,6 +96,7 @@ export function useGoogleDrive(dataManager) {
               id: result.id,
               updatedAt: now,
             });
+            uiStore.currentDriveFileId = result.id;
           }
           uiStore.completePendingDriveSave(tempId);
         })
