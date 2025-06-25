@@ -13,14 +13,14 @@ export const messages = {
         title: 'Google Drive',
         message: 'サインインしています...',
       }),
-      success: () => ({ title: 'サインイン完了', message: '', duration: 1 }),
+      success: () => ({ title: 'サインイン完了', message: '' }),
       error: (err) => ({
         title: 'サインイン失敗',
         message: err.message || err.details || 'もう一度お試しください。',
       }),
     },
     signOut: {
-      success: () => ({ title: 'サインアウトしました', message: '', duration: 1 }),
+      success: () => ({ title: 'サインアウトしました', message: '' }),
     },
     folderPicker: {
       error: (err) => ({
@@ -30,7 +30,7 @@ export const messages = {
     },
     save: {
       loading: () => ({ title: 'Google Drive', message: '保存中...' }),
-      success: () => ({ title: '保存完了', message: '', duration: 1 }),
+      success: () => ({ title: '保存完了', message: '' }),
       error: (err) => ({ title: '保存失敗', message: err.message || '' }),
     },
     load: {
@@ -96,7 +96,7 @@ export const messages = {
       successToast: () => ({ title: '削除完了', message: '' }),
       asyncToast: {
         loading: () => ({ title: '削除', message: '削除中...' }),
-        success: () => ({ title: '削除完了', message: '', duration: 1 }),
+        success: () => ({ title: '削除完了', message: '' }),
         error: (err) => ({ title: '削除失敗', message: err.message || '' }),
       },
     },

@@ -7,7 +7,7 @@ export const useNotificationStore = defineStore('notification', {
   actions: {
     addToast(options) {
       const id = Date.now() + Math.random();
-      const toast = { id, duration: 5000, type: 'info', ...options };
+      const toast = { id, duration: 1000, type: 'info', ...options };
       this.toasts.push(toast);
       if (toast.duration > 0) {
         setTimeout(() => {

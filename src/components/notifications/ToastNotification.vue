@@ -6,7 +6,7 @@
       <div class="toast-message">{{ toast.message }}</div>
     </div>
     <button class="toast-close" @click="$emit('close')">×</button>
-    <div class="toast-progress" v-if="toast.duration && toast.duration > 0"></div>
+    <div class="toast-progress" v-if="toast.duration && toast.duration > 0" :style="{ animationDuration: `${toast.duration}ms` }"></div>
   </div>
 </template>
 
@@ -14,5 +14,3 @@
 const props = defineProps({ toast: Object });
 const emit = defineEmits(['close']);
 </script>
-
-<style scoped></style>

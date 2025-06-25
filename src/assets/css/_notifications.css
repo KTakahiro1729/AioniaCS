@@ -144,7 +144,9 @@
   height: 3px;
   background: linear-gradient(90deg, rgb(192 154 105 / 80%) 0%, rgb(228 202 168 / 60%) 50%, rgb(192 154 105 / 40%) 100%);
   box-shadow: 0 0 6px rgb(192 154 105 / 50%);
-  animation: progressBar 5s linear forwards;
+  animation-name: progressBar;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 
 @keyframes progressBar {

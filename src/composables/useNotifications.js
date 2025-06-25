@@ -14,7 +14,8 @@ export function useNotifications() {
       ...(messages.loading || {}),
     });
     const finalize = (opts, type) => {
-      const duration = opts.duration === null ? 5000 : opts.duration;
+      const duration = opts.duration === undefined ? 1000 : opts.duration;
+      console.log(opts.duration, opts.duration === undefined, duration);
       store.updateToast(id, { duration: duration, type, ...opts });
     };
     promise
