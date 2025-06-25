@@ -323,7 +323,7 @@ export const AioniaGameData = {
     expertSkillDisabled: '専門技能 (技能選択で有効)',
     weaponName: '装備名',
     armorName: '装備名',
-    specialSkillNote: '追記事項',
+    specialSkillNote: '詳細',
     characterMemo: 'キャラクター背景、設定、その他メモを記入',
   },
 

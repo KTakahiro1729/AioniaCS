@@ -124,4 +124,9 @@ function updateSpecialSkillNoteVisibility(index) {
 .special-skill-note-input {
   margin-top: 3px;
 }
+
+textarea.special-skill-note-input {
+  min-height: 45px;
+  resize: vertical;
+}
 </style>
