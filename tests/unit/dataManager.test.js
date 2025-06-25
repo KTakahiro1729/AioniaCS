@@ -282,19 +282,18 @@ describe('DataManager', () => {
     });
 
     test('creates new file and adds index when no id', async () => {
-      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null, 'c');
+      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
       expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
       expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
         id: '1',
-        name: 'c.json',
         characterName: 'TestChar',
       });
       expect(res.id).toBe('1');
     });
 
     test('updates file when id exists and renames index', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1', 'c');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object), 'c.json');
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object));
       expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith('1', 'TestChar');
       expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
     });

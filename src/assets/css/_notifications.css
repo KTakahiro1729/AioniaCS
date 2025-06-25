@@ -200,6 +200,9 @@
     0 0 0 1px rgb(192 154 105 / 10%),
     inset 0 1px 0 rgb(255 255 255 / 5%);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
 }
 .modal-close {
   position: absolute;
@@ -272,10 +275,10 @@
   color: var(--color-text-normal);
 }
 
-.moda-content {
-  display: flex;
+.modal .modal-content {
+  overflow-y: auto;
+  flex-grow: 1;
 }
-
 .modal-message {
   margin-bottom: 25px;
   color: var(--color-text-muted);

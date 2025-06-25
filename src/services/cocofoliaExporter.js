@@ -15,7 +15,7 @@ export class CocofoliaExporter {
     const lines = [];
 
     // 名前とプレイヤー名
-    lines.push(`名前：${character.name || '名無し'}${character.playerName ? `（${character.playerName}）` : ''}`);
+    lines.push(`名前：${character.name || '名もなき冒険者'}${character.playerName ? `（${character.playerName}）` : ''}`);
 
     // 種族情報
     const speciesText = speciesLabelMap[character.species] || character.species;
@@ -242,7 +242,7 @@ export class CocofoliaExporter {
           { label: '傷痕', value: scar },
           { label: 'ストレス', value: stress },
         ],
-        name: character.name || '名無し',
+        name: character.name || '名もなき冒険者',
         initiative: currentWeight * -1,
         memo: memo,
         externalUrl: '',

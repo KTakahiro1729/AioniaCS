@@ -19,7 +19,6 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
 
     uiStore.currentDriveFileId = null;
-    uiStore.currentDriveFileName = 'c';
     charStore.character.name = 'Hero';
 
     await handleSaveToDriveClick();
@@ -31,11 +30,10 @@ describe('useGoogleDrive', () => {
       charStore.equipments,
       charStore.histories,
       null,
-      'c',
     );
   });
 
-  test('saveCharacterToDrive uses provided id and name', async () => {
+  test('saveCharacterToDrive uses provided id', async () => {
     const dataManager = {
       saveDataToAppData: vi.fn().mockResolvedValue({ id: '1', name: 'a.json' }),
       googleDriveManager: {},
@@ -44,7 +42,7 @@ describe('useGoogleDrive', () => {
     const charStore = useCharacterStore();
     charStore.character.name = 'Brave';
 
-    await saveCharacterToDrive('abc', 'foo');
+    await saveCharacterToDrive('abc');
 
     expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
       charStore.character,
@@ -53,7 +51,6 @@ describe('useGoogleDrive', () => {
       charStore.equipments,
       charStore.histories,
       'abc',
-      'foo',
     );
   });
 
@@ -65,8 +62,8 @@ describe('useGoogleDrive', () => {
         createCharacterFile: createFile,
         updateCharacterFile: updateFile,
       },
-      saveDataToAppData: vi.fn((c, s, ss, e, h, id, name) => {
-        return id ? updateFile(id, {}, name) : createFile({}, name);
+      saveDataToAppData: vi.fn((c, s, ss, e, h, id) => {
+        return id ? updateFile(id, {}) : createFile({});
       }),
     };
     const { saveOrUpdateCurrentCharacterInDrive } = useGoogleDrive(dataManager);
@@ -75,8 +72,7 @@ describe('useGoogleDrive', () => {
     await saveOrUpdateCurrentCharacterInDrive();
     expect(createFile).toHaveBeenCalled();
     uiStore.currentDriveFileId = 'abc';
-    uiStore.currentDriveFileName = 'c.json';
     await saveOrUpdateCurrentCharacterInDrive();
-    expect(updateFile).toHaveBeenCalledWith('abc', expect.any(Object), 'c.json');
+    expect(updateFile).toHaveBeenCalledWith('abc', expect.any(Object));
   });
 });

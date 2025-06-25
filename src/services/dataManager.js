@@ -20,7 +20,7 @@ export class DataManager {
 
   _sanitizeFileName(name) {
     const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
-    return sanitized || 'Aionia_Character';
+    return sanitized || '名もなき冒険者';
   }
 
   /**
@@ -222,7 +222,7 @@ export class DataManager {
    * @param {string} fileName - The desired name for the file.
    * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
    */
-  async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId, fileName) {
+  async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
@@ -242,7 +242,7 @@ export class DataManager {
     };
 
     const jsonData = JSON.stringify(dataToSave, null, 2);
-    const sanitizedFileName = (fileName || character.name || 'Aionia_Character_Sheet').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+    const sanitizedFileName = (character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
 
     try {
       const result = await this.googleDriveManager.saveFile(targetFolderId, sanitizedFileName, jsonData, currentFileId);
@@ -257,7 +257,7 @@ export class DataManager {
    * Saves character data to the user's appDataFolder.
    * Adds an index entry when creating a new file.
    */
-  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId, fileName) {
+  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
@@ -276,20 +276,17 @@ export class DataManager {
       histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
     };
 
-    const sanitizedFileName = (fileName || character.name || 'Aionia_Character_Sheet').replace(/[\\/:*?"<>|]/g, '_') + '.json';
-
     if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave, sanitizedFileName);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '\u540D\u79F0\u672A\u8A2D\u5B9A');
+      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave);
+      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
       return res;
     }
 
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave, sanitizedFileName);
+    const created = await this.googleDriveManager.createCharacterFile(dataToSave);
     if (created) {
       await this.googleDriveManager.addIndexEntry({
         id: created.id,
-        name: created.name,
-        characterName: character.name || '\u540D\u79F0\u672A\u8A2D\u5B9A',
+        characterName: character.name || '名もなき冒険者',
       });
     }
     return created;
@@ -322,6 +319,35 @@ export class DataManager {
       }
       throw error; // Re-throw other errors
     }
+  }
+
+  /**
+   * Loads the character index and returns only valid entries.
+   * @returns {Promise<Array>} Array of valid index entries
+   */
+  async loadCharacterListFromDrive() {
+    if (!this.googleDriveManager) {
+      console.error('GoogleDriveManager not set in DataManager.');
+      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+
+    const index = await this.googleDriveManager.readIndexFile();
+    const valid = [];
+
+    for (const entry of index) {
+      try {
+        const data = await this.loadDataFromDrive(entry.id);
+        if (data) {
+          valid.push(entry);
+        } else {
+          console.error(`Character file not found or invalid: ${entry.id}`);
+        }
+      } catch (err) {
+        console.error(`Failed to load character file ${entry.id}:`, err);
+      }
+    }
+
+    return valid;
   }
 
   /**
