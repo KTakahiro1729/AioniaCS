@@ -28,3 +28,4 @@ test-results/
 *.patch
 .VSCodeCounter
 stats.html
+.env
