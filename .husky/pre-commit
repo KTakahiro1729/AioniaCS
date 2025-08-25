@@ -3,5 +3,5 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 echo "Running pre-commit checks with lint-staged..."
-npx lint-staged || { echo "Pre-commit checks failed!"; exit 1; }
+npx lint-staged --allow-empty || { echo "Pre-commit checks failed!"; exit 1; }
 echo "Pre-commit checks passed."

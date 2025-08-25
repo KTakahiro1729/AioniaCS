@@ -1,22 +1,39 @@
-const vue = require('eslint-plugin-vue');
+import globals from 'globals';
+import pluginVue from 'eslint-plugin-vue';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
-module.exports = [
+export default [
   {
-    files: ['src/**/*.js', 'tests/**/*.js', './*.js'], // Updated line
+    files: ['src/**/*.js', 'tests/**/*.js', './*.js', 'vite.config.js'],
     languageOptions: {
-      globals: {
-        Vue: 'readonly',
-        window: 'readonly'
-      },
+      sourceType: 'module',
       ecmaVersion: 'latest',
-      sourceType: 'script'
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.vitest,
+        // プロジェクト固有のグローバル変数
+        AioniaGameData: 'readonly',
+        deepClone: 'readonly',
+        createWeaknessArray: 'readonly',
+        ImageManager: 'readonly',
+        DataManager: 'readonly',
+        CocofoliaExporter: 'readonly',
+        GoogleDriveManager: 'readonly',
+        Vue: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+      },
     },
     plugins: {
-      vue
+      vue: pluginVue,
     },
     rules: {
       semi: ['error', 'always'],
-      'no-unused-vars': 'warn'
-    }
-  }
+      'no-unused-vars': 'warn',
+    },
+  },
+  ...pluginVue.configs['flat/essential'],
+  eslintConfigPrettier,
 ];

@@ -1,4 +1,6 @@
 # AGENT Instructions
+
+- First run `npm install` after cloning.
 - Follow the following steps during development.
   1. run npm lint, test, e2e
   2. evaluate the goal given to AGENT and assess whether they are met.

@@ -1,0 +1,394 @@
+/* assets/css/_layout.css */
+
+/* タイトル */
+.tool-title {
+  font-family: 'Cinzel Decorative', cursive;
+  text-align: center;
+  margin: 25px 0 40px;
+  font-size: 2.2em;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-shadow: 1px 1px 3px rgb(0 0 0 / 70%);
+}
+
+/* メイングリッドレイアウト */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px 10px;
+  grid-template-areas:
+    'character-info scar-weakness'
+    'skills special-skills'
+    'items items'
+    'memo memo'
+    'history history';
+}
+
+.character-info {
+  grid-area: character-info;
+}
+
+.scar-weakness {
+  grid-area: scar-weakness;
+}
+
+.skills {
+  grid-area: skills;
+}
+
+.special-skills {
+  grid-area: special-skills;
+}
+
+.items {
+  grid-area: items;
+}
+
+.character-memo {
+  grid-area: memo;
+}
+
+.adventure-log-section {
+  grid-area: history;
+}
+
+/* レイアウトユーティリティ (Flexbox, 表示制御) */
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-group {
+  display: flex;
+  gap: 5px;
+}
+
+.flex-item-1 {
+  flex: 1;
+}
+
+.flex-item-2 {
+  flex: 2;
+}
+
+.block-label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* フォーム行レイアウト */
+.info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-item {
+  flex: 1 1 auto;
+}
+
+.info-item--full {
+  flex-basis: 100%;
+}
+
+.info-item--double {
+  flex: 1 1 calc(50% - 7.5px);
+  min-width: 80px;
+}
+
+.info-item--triple {
+  flex: 1 1 calc(33.333% - 10px);
+  min-width: 90px;
+}
+
+.info-item--quadruple {
+  flex: 1 1 calc(25% - 12.5px);
+  min-width: 65px;
+}
+
+/* フッター */
+.main-footer {
+  display: flex;
+  align-items: center;
+  padding: 15px 25px;
+  border-top: 1px solid var(--color-border-normal);
+  background-color: var(--color-background);
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 15px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-normal) var(--color-background);
+}
+
+.main-footer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.main-footer::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-radius: 4px;
+}
+
+.main-footer::-webkit-scrollbar-thumb {
+  background: var(--color-border-normal);
+  border-radius: 4px;
+}
+
+.main-footer::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+.build-info {
+  margin-left: auto;
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ヘルプ表示 */
+.help-panel {
+  position: fixed;
+  top: 92px;
+  right: 20px;
+  background-color: var(--color-panel-body);
+  border: 1px solid var(--color-border-normal);
+  padding: 30px;
+  border-radius: 4px;
+  box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
+  z-index: 1000;
+  max-width: 90%;
+  width: 400px;
+  font-size: 0.9em;
+  color: var(--color-text-normal);
+}
+
+.help-panel h4 {
+  font-family: 'Noto Serif JP', serif;
+  color: var(--color-accent);
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.help-panel ul {
+  padding-left: 20px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+.help-panel li {
+  margin-bottom: 5px;
+}
+
+.help-panel p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* HelpPanel accordion */
+.accordion__item + .accordion__item {
+  margin-top: 10px;
+}
+
+.accordion__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: var(--color-panel-header);
+  color: var(--color-accent);
+  padding: 8px 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 3px;
+}
+
+.accordion__indicator {
+  margin-left: 10px;
+}
+
+.accordion__body {
+  padding-top: 5px;
+}
+
+.help-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+/* フッター（著作権表示） */
+.copyright-footer {
+  text-align: center;
+  padding: 15px;
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+  background-color: var(--color-background);
+  border-top: 1px solid var(--color-panel-header);
+  margin-top: 25px;
+  box-sizing: border-box;
+}
+
+.copyright-footer p {
+  margin: 0.2em 0;
+}
+
+/* カスタムアラートモーダル */
+.custom-alert-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-panel-header);
+  color: #fff;
+  padding: 20px;
+  border: 1px solid var(--color-border-normal);
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgb(0 0 0 / 50%);
+  z-index: 2000;
+  white-space: pre-wrap;
+  display: none;
+}
+
+.custom-alert-modal p {
+  margin: 0 0 15px;
+}
+
+.custom-alert-modal button {
+  padding: 8px 15px;
+  background-color: var(--color-accent);
+  color: var(--color-background);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   レスポンシブデザイン
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'character-info'
+      'scar-weakness'
+      'skills'
+      'special-skills'
+      'items'
+      'memo'
+      'history';
+    gap: 20px;
+  }
+
+  .adventure-log-section .history-item-inputs {
+    flex-flow: row nowrap;
+  }
+
+  .flex-weakness-acquired {
+    width: 35%;
+    min-width: 110px;
+  }
+
+  .flex-weakness-acquired select {
+    width: 100%;
+  }
+
+  .help-panel {
+    width: calc(100% - 80px);
+    max-width: none;
+    top: 92px;
+    right: 20px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-item,
+  .info-item--triple,
+  .info-item--double,
+  .info-item--quadruple {
+    flex-basis: auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .equipment-section {
+    min-width: 100%;
+  }
+
+  .top-left-controls {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1050;
+  }
+
+  .icon-button {
+    width: 72px;
+    height: 72px;
+    padding: 12px;
+  }
+
+  .icon-button img.icon-svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .floating-menu {
+    min-width: 180px;
+  }
+
+  .main-footer {
+    padding: 10px 15px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tool-title {
+    font-size: 1.8em;
+  }
+
+  .flex-weakness-acquired {
+    width: 40%;
+    min-width: 100px;
+  }
+
+  .floating-menu {
+    font-size: 0.9em;
+  }
+
+  .footer-dropdown-menu {
+    font-size: 0.9em;
+  }
+}

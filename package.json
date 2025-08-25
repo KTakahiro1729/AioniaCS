@@ -3,62 +3,71 @@
   "version": "1.0.0",
   "description": "慈悲なきアイオニアのための非公式キャラクターシート作成ツールです",
   "main": "src/main.js",
+  "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
     "lint:js": "eslint src/ tests/ --ext .js",
     "lint:css": "stylelint \"**/*.css\"",
     "lint:html": "htmlhint \"**/*.html\"",
-    "test": "jest",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
     "e2e": "playwright test",
     "pree2e": "playwright install",
-    "prepare": "husky"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "type": "commonjs",
-  "devDependencies": {
-    "@playwright/test": "^1.52.0",
-    "eslint": "^9.28.0",
-    "eslint-plugin-vue": "^10.1.0",
-    "htmlhint": "^1.4.0",
-    "husky": "^9.1.7",
-    "jest": "^29.7.0",
-    "lint-staged": "^16.1.0",
-    "prettier": "^3.5.3",
-    "stylelint": "^16.20.0",
-    "stylelint-config-standard": "^38.0.0"
-  },
-  "jest": {
-    "testPathIgnorePatterns": [
-      "<rootDir>/tests/e2e/"
-    ],
-    "roots": [
-      "<rootDir>/tests/unit"
-    ],
-    "testEnvironment": "jsdom"
+    "prepare": "husky",
+    "format": "prettier --write ."
   },
   "dependencies": {
-    "jest-environment-jsdom": "^30.0.0-beta.3"
+    "@noble/hashes": "^1.8.0",
+    "@vue/compiler-sfc": "^3.5.16",
+    "@vue/test-utils": "^2.4.6",
+    "dompurify": "^3.2.6",
+    "jsdom": "^24.0.0",
+    "jszip": "^3.10.1",
+    "marked": "^15.0.12",
+    "pako": "^2.1.0",
+    "pinia": "^2.1.7",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.24.7",
+    "@playwright/test": "^1.52.0",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/ui": "^1.4.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-vue": "^10.1.0",
+    "globals": "^16.2.0",
+    "htmlhint": "^1.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
+    "prettier": "^3.5.3",
+    "rollup-plugin-visualizer": "^6.0.3",
+    "stylelint": "^16.20.0",
+    "stylelint-config-standard": "^38.0.0",
+    "vite": "^6.3.5",
+    "vitest": "^1.4.0"
   },
   "lint-staged": {
     "*.js": [
       "eslint --fix",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ],
     "*.css": [
       "stylelint --fix",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ],
     "*.html": [
       "htmlhint",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ],
     "src/**/*.{js,jsx,ts,tsx}, tests/unit/**/*.{js,jsx,ts,tsx}": [
-      "jest --findRelatedTests"
+      "vitest --run"
     ]
-  }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
 }
