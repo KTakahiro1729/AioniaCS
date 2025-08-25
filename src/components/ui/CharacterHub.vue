@@ -31,7 +31,9 @@
       </ul>
     </template>
     <template v-else>
-      <p class="character-hub--description">Google Driveと連携して、キャラクターを保存・共有できます。</p>
+      <p class="character-hub--description">
+        Google Driveと連携して、キャラクターを保存・共有できます。ベータ版のため、データの破損・消失の危険性があります。
+      </p>
     </template>
   </div>
 </template>
