@@ -147,7 +147,7 @@ export const messages = {
       sharedDataPassword: '共有データのパスワードを入力してください',
     },
     modal: {
-      hubTitle: 'クラウドキャラクター管理',
+      hubTitle: 'β　クラウドキャラクター管理',
       generate: '生成',
       shareTitle: '共有リンクを生成',
       cancel: 'キャンセル',
