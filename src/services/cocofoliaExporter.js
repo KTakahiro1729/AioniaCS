@@ -192,7 +192,7 @@ export class CocofoliaExporter {
    */
   buildCocofoliaCommands(character, skills, equipments, weaponDamage) {
     const scar = Number(character.currentScar) || 0;
-    let commands = `1d100>={ダメージ}+${scar} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕=${scar}+{ダメージ}/2 〈治癒①〉\n:ダメージ=0                 〈治癒②〉\n`;
+    let commands = `1d100>={ダメージ}+{傷痕} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕={傷痕}+{ダメージ}/2 〈治癒①〉\n:ダメージ=0                 〈治癒②〉\n`;
 
     // 技能チェックコマンド
     skills.forEach((skill) => {
@@ -201,7 +201,10 @@ export class CocofoliaExporter {
 
       // 防御技能の場合は防具ありバージョンも追加
       if (skill.name === '防御') {
-        commands += `${dice}+2 〈${skill.name}（防具）〉\n`;
+        commands += `${dice} 〈${skill.name}（防具なし）〉\n`;
+        commands += `${dice}+2 〈${skill.name}（防具あり）〉\n`;
+      } else {
+        commands += `${dice} 〈${skill.name}〉\n`;
       }
 
       // 専門技能コマンド
