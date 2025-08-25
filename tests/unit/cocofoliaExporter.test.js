@@ -52,7 +52,7 @@ describe('CocofoliaExporter', () => {
     const commands = exporter.buildCocofoliaCommands(character, skills, equipments, { sword: '2d6' });
     expect(commands).toContain('2d10 〈運動〉');
     expect(commands).toContain('2d10 〈防御〉');
-    expect(commands).toContain('2d10+2 〈防御（防具）〉');
+    expect(commands).toContain('2d10+2 〈防御（防具あり）〉');
     expect(commands).toContain('3d10 〈白兵：剣〉');
     expect(commands).toContain('2d6 〈ダメージ判定（剣）〉');
   });
