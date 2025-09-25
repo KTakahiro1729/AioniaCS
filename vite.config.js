@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-  base: '/aioniacs/', 
+  base: './', 
   plugins: [vue(), visualizer({ open: true })],
   resolve: {
     alias: {
