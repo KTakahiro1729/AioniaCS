@@ -29,3 +29,6 @@ test-results/
 .VSCodeCounter
 stats.html
 .env
+
+# Local Netlify folder
+.netlify

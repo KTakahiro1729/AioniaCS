@@ -50,6 +50,14 @@ export class ApiManager {
   async request(endpoint, options = {}) {
     const auth = this._ensureAuth();
     const token = await auth();
+    if (!token) {
+      const errorMessage = 'アクセストークンを取得できませんでした。認証が完了していない可能性があります。';
+      console.error(errorMessage);
+      // より明確なエラーをフロントエンドに伝える
+      const error = new Error(errorMessage);
+      error.status = 401;
+      throw error;
+    }
 
     const method = options.method || 'GET';
     const url = buildUrl(endpoint, options.params);
