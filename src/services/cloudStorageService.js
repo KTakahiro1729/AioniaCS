@@ -1,96 +1,157 @@
-const STORAGE_PREFIX = 'aionia-cloud:';
-const DEFAULT_DATA = { characters: {}, shares: {} };
+import { ApiManager } from './apiManager.js';
 
-function getStorage() {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    return window.localStorage;
-  }
-  const memory = new Map();
-  return {
-    getItem(key) {
-      return memory.has(key) ? memory.get(key) : null;
-    },
-    setItem(key, value) {
-      memory.set(key, value);
-    },
-    removeItem(key) {
-      memory.delete(key);
-    },
-  };
+const DEFAULT_CHARACTER_NAME = '名もなき冒険者';
+const ID_PREFIX = 'cloud';
+
+function generateId() {
+  return `${ID_PREFIX}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-const storage = getStorage();
-
-function readUserData(userId) {
-  if (!userId) {
-    throw new Error('User ID is required for cloud operations.');
+function resolveCharacterName(payload) {
+  const name = payload?.character?.name;
+  if (typeof name === 'string') {
+    const trimmed = name.trim();
+    if (trimmed) {
+      return trimmed;
+    }
   }
-  const raw = storage.getItem(STORAGE_PREFIX + userId);
-  if (!raw) {
-    return JSON.parse(JSON.stringify(DEFAULT_DATA));
-  }
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      characters: parsed.characters || {},
-      shares: parsed.shares || {},
-    };
-  } catch (error) {
-    console.error('Failed to parse stored cloud data. Resetting storage.', error);
-    return JSON.parse(JSON.stringify(DEFAULT_DATA));
-  }
+  return DEFAULT_CHARACTER_NAME;
 }
 
-function writeUserData(userId, data) {
-  if (!userId) {
-    throw new Error('User ID is required for cloud operations.');
+function createApiManager(config) {
+  if (config && typeof config === 'object') {
+    const { apiManager, getAccessTokenSilently } = config;
+    if (apiManager) {
+      return apiManager;
+    }
+    if (typeof getAccessTokenSilently === 'function') {
+      return new ApiManager(getAccessTokenSilently);
+    }
   }
-  storage.setItem(STORAGE_PREFIX + userId, JSON.stringify(data));
-}
 
-function generateId(prefix) {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  if (typeof config === 'function') {
+    return new ApiManager(config);
+  }
+
+  return new ApiManager();
 }
 
 export class CloudStorageService {
-  async listCharacters(userId) {
-    const data = readUserData(userId);
-    return Object.values(data.characters).map(({ id, characterName, updatedAt }) => ({
-      id,
-      characterName,
-      updatedAt,
-    }));
+  constructor(config) {
+    this.apiManager = createApiManager(config);
+    this.metadataCache = new Map();
+  }
+
+  async listCharacters() {
+    try {
+      const response = await this.apiManager.listCharacters();
+      const entries = Array.isArray(response?.characters) ? response.characters : [];
+
+      if (entries.length === 0) {
+        return [];
+      }
+
+      const results = await Promise.allSettled(
+        entries.map(async (entry) => {
+          const cached = this.metadataCache.get(entry.id);
+          if (cached) {
+            return {
+              id: entry.id,
+              characterName: cached.characterName,
+              updatedAt: cached.updatedAt || entry.lastModified || null,
+            };
+          }
+
+          const data = await this.apiManager.getCharacter(entry.id);
+          const payload = data?.payload ?? data;
+          const characterName = data?.characterName ?? resolveCharacterName(payload);
+          const updatedAt = data?.updatedAt ?? entry.lastModified ?? null;
+
+          this.metadataCache.set(entry.id, { characterName, updatedAt });
+
+          return {
+            id: data?.id ?? entry.id,
+            characterName,
+            updatedAt,
+          };
+        }),
+      );
+
+      return results.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        }
+
+        console.error('Failed to load character metadata:', result.reason);
+        const fallback = entries[index];
+        return {
+          id: fallback?.id,
+          characterName: DEFAULT_CHARACTER_NAME,
+          updatedAt: fallback?.lastModified ?? null,
+        };
+      });
+    } catch (error) {
+      console.error('Failed to list characters from cloud storage:', error);
+      throw error;
+    }
   }
 
   async saveCharacter(userId, payload, fileId) {
-    const data = readUserData(userId);
-    const id = fileId || generateId('cloud');
+    const id = fileId || generateId();
     const updatedAt = new Date().toISOString();
-    const characterName = payload?.character?.name || '名もなき冒険者';
+    const characterName = resolveCharacterName(payload);
 
-    data.characters[id] = {
+    const body = {
       id,
-      characterName,
       updatedAt,
+      characterName,
       payload,
     };
 
-    writeUserData(userId, data);
-
-    return { id, characterName, updatedAt };
+    try {
+      await this.apiManager.saveCharacter(body);
+      this.metadataCache.set(id, { characterName, updatedAt });
+      return { id, characterName, updatedAt };
+    } catch (error) {
+      console.error('Failed to save character to cloud storage:', error);
+      throw error;
+    }
   }
 
   async loadCharacter(userId, fileId) {
-    const data = readUserData(userId);
-    const entry = data.characters[fileId];
-    return entry ? entry.payload : null;
+    if (!fileId) {
+      throw new Error('Character ID is required.');
+    }
+
+    try {
+      const data = await this.apiManager.getCharacter(fileId);
+      if (!data) {
+        return null;
+      }
+
+      const payload = data.payload ?? data;
+      const characterName = data?.characterName ?? resolveCharacterName(payload);
+      const updatedAt = data?.updatedAt ?? null;
+      this.metadataCache.set(fileId, { characterName, updatedAt });
+
+      return payload;
+    } catch (error) {
+      console.error('Failed to load character from cloud storage:', error);
+      throw error;
+    }
   }
 
   async deleteCharacter(userId, fileId) {
-    const data = readUserData(userId);
-    if (data.characters[fileId]) {
-      delete data.characters[fileId];
-      writeUserData(userId, data);
+    if (!fileId) {
+      throw new Error('Character ID is required.');
+    }
+
+    try {
+      await this.apiManager.deleteCharacter(fileId);
+      this.metadataCache.delete(fileId);
+    } catch (error) {
+      console.error('Failed to delete character from cloud storage:', error);
+      throw error;
     }
   }
 }

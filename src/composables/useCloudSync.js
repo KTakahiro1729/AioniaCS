@@ -3,16 +3,15 @@ import { useAuth0 } from '@auth0/auth0-vue';
 import { useUiStore } from '../stores/uiStore.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
-import { CloudStorageService } from '../services/cloudStorageService.js';
 import { messages } from '../locales/ja.js';
-
-const cloudStorageService = new CloudStorageService();
+import { CloudStorageService } from '../services/cloudStorageService.js';
 
 export function useCloudSync(dataManager) {
   const uiStore = useUiStore();
   const characterStore = useCharacterStore();
   const { showToast, showAsyncToast } = useNotifications();
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated, user, getAccessTokenSilently } = useAuth0();
+  const cloudStorageService = new CloudStorageService(getAccessTokenSilently);
 
   dataManager.setCloudStorageService(cloudStorageService);
 
