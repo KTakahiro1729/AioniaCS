@@ -1,6 +1,6 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-const { VITE_AUTH0_DOMAIN } = process.env;
+const { VITE_AUTH0_DOMAIN, AUTH0_API_AUDIENCE } = process.env;
 const JWKS = createRemoteJWKSet(new URL(`https://${VITE_AUTH0_DOMAIN}/.well-known/jwks.json`));
 
 export async function verifyToken(event) {
@@ -14,7 +14,7 @@ export async function verifyToken(event) {
   try {
     const { payload } = await jwtVerify(token, JWKS, {
       issuer: `https://${VITE_AUTH0_DOMAIN}/`,
-      audience: `https://${VITE_AUTH0_DOMAIN}/api/v2/`,
+      audience: AUTH0_API_AUDIENCE || `https://${VITE_AUTH0_DOMAIN}/api/v2/`,
     });
     return { statusCode: 200, userId: payload.sub };
   } catch (error) {
