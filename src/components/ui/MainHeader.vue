@@ -1,9 +1,5 @@
 <template>
   <header class="main-header" ref="headerEl">
-    <button class="button-base icon-button" :title="cloudHubLabel" @click="$emit('open-hub')">
-      <span class="icon-svg icon-svg-cloud" aria-label="cloud"></span>
-    </button>
-    <div class="main-header__title">{{ titleText }}</div>
     <div
       class="button-base header-help-icon"
       ref="helpIcon"
@@ -15,6 +11,12 @@
     >
       {{ helpLabel }}
     </div>
+
+    <div class="main-header__title">{{ titleText }}</div>
+
+    <button class="button-base icon-button" :title="accountIconLabel" @click="$emit('open-hub')">
+      <span class="icon-svg icon-svg-elf" aria-label="account"></span>
+    </button>
   </header>
 </template>
 
@@ -22,6 +24,9 @@
 import { ref, computed, defineExpose } from 'vue';
 import { useHeaderVisibility } from '../../composables/useHeaderVisibility.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
+import { useAuth0 } from '@auth0/auth0-vue';
+
+const { isAuthenticated } = useAuth0();
 
 const props = defineProps({
   helpState: String,
@@ -40,6 +45,7 @@ const characterStore = useCharacterStore();
 useHeaderVisibility(headerEl);
 
 const titleText = computed(() => characterStore.character.name || props.defaultTitle);
+const accountIconLabel = computed(() => (isAuthenticated.value ? props.cloudHubLabel : 'ログイン'));
 
 defineExpose({ headerEl, helpIcon });
 </script>

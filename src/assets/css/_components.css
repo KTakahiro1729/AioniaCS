@@ -235,3 +235,7 @@
 .icon-svg-share {
   mask-image: url('../svg/medieval_share.svg');
 }
+
+.icon-svg-elf {
+  mask-image: url('../svg/elf.svg');
+}

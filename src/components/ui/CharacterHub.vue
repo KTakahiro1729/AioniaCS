@@ -1,6 +1,18 @@
 <template>
   <div class="character-hub">
-    <template v-if="uiStore.isSignedIn">
+    <div v-if="!isAuthenticated" class="auth-section">
+      <h2>ログインが必要です</h2>
+      <p>キャラクターデータをクラウドに保存・読込するにはログインしてください。</p>
+      <button class="button-base login-button" @click="handleLogin">ログイン / 新規登録</button>
+    </div>
+
+    <div v-else class="hub-content">
+      <div class="account-info">
+        <span class="user-name">{{ user.name }}</span>
+        <button class="button-base button-compact logout-button" @click="handleLogout">ログアウト</button>
+      </div>
+      <hr class="divider" />
+
       <ul class="character-hub--list">
         <li
           v-for="ch in characters"
@@ -29,22 +41,28 @@
           </div>
         </li>
       </ul>
-    </template>
-    <template v-else>
-      <p class="character-hub--description">
-        Google Driveと連携して、キャラクターを保存・共有できます。ベータ版のため、データの破損・消失の危険性があります。
-      </p>
-    </template>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useAuth0 } from '@auth0/auth0-vue';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 import { useModal } from '../../composables/useModal.js';
 import { messages } from '../../locales/ja.js';
+
+const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+
+const handleLogin = () => {
+  loginWithRedirect();
+};
+
+const handleLogout = () => {
+  logout({ logoutParams: { returnTo: window.location.origin } });
+};
 
 const props = defineProps({
   dataManager: Object,
@@ -54,12 +72,11 @@ const props = defineProps({
 
 const characterToDelete = ref(null);
 
-const emit = defineEmits(['sign-in', 'sign-out']);
-
 const uiStore = useUiStore();
 const characterStore = useCharacterStore();
 const { showToast, showAsyncToast } = useNotifications();
 const { showModal } = useModal();
+
 const characters = computed(() =>
   [...uiStore.driveCharacters].sort((a, b) => {
     const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
@@ -68,10 +85,14 @@ const characters = computed(() =>
   }),
 );
 
-onMounted(ensureCharacters);
+onMounted(() => {
+  if (isAuthenticated.value) {
+    ensureCharacters();
+  }
+});
 
 async function ensureCharacters() {
-  if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0 && props.dataManager.googleDriveManager) {
+  if (isAuthenticated.value && uiStore.driveCharacters.length === 0 && props.dataManager.googleDriveManager) {
     await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
   }
 }
@@ -169,6 +190,8 @@ async function exportLocal(ch) {
   list-style: none;
   padding: 0;
   margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .character-hub--item {
@@ -238,5 +261,43 @@ async function exportLocal(ch) {
 
 .character-hub--confirmation-message {
   margin: 0 30px 0 0;
+}
+
+.auth-section {
+  padding: 30px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.login-button {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.account-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: var(--color-panel-header);
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.user-name {
+  font-size: 14px;
+  color: var(--color-text-normal);
+}
+
+.logout-button {
+  font-size: 12px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-border-normal);
+  margin: 0;
 }
 </style>
