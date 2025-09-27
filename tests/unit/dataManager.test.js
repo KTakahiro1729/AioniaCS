@@ -5,6 +5,40 @@ import { deepClone } from '../../src/utils/utils.js';
 import JSZip from 'jszip';
 import { CloudStorageService } from '../../src/services/cloudStorageService.js';
 
+class MockApiManager {
+  constructor() {
+    this.store = new Map();
+  }
+
+  async listCharacters() {
+    return {
+      characters: Array.from(this.store.values()).map((entry) => ({
+        id: entry.id,
+        lastModified: entry.updatedAt,
+      })),
+    };
+  }
+
+  async getCharacter(id) {
+    if (!this.store.has(id)) {
+      const error = new Error('Character not found');
+      error.status = 404;
+      throw error;
+    }
+    return JSON.parse(JSON.stringify(this.store.get(id)));
+  }
+
+  async saveCharacter(data) {
+    this.store.set(data.id, JSON.parse(JSON.stringify(data)));
+    return { id: data.id };
+  }
+
+  async deleteCharacter(id) {
+    this.store.delete(id);
+    return { id };
+  }
+}
+
 // vi.mock をファイルのトップレベルに記述します。
 // これにより、Jestは 'tests/unit/__mocks__/jszip.js' を自動的に読み込みます。
 vi.mock('jszip');
@@ -23,7 +57,7 @@ describe('DataManager', () => {
     vi.clearAllMocks();
 
     dm = new DataManager(AioniaGameData);
-    dm.setCloudStorageService(new CloudStorageService());
+    dm.setCloudStorageService(new CloudStorageService({ apiManager: new MockApiManager() }));
     dm.setCloudUserId(`test-user-${Math.random()}`);
     mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
     mockCharacter.name = 'TestChar';
