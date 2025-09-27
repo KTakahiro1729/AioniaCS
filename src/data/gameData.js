@@ -287,6 +287,7 @@ export const AioniaGameData = {
 
   // キャラクターの初期データ構造
   defaultCharacterData: {
+    imageFolderId: null,
     images: [],
     name: '',
     playerName: '',

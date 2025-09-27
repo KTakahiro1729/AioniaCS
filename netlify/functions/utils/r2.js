@@ -1,6 +1,6 @@
 import { S3Client } from '@aws-sdk/client-s3';
 
-const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = process.env;
+const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_BASE_URL } = process.env;
 
 let client;
 
@@ -38,6 +38,36 @@ export function buildCharacterKey(userId, characterId) {
     throw new Error('Character ID is required');
   }
   return `${userId}/${characterId}.json`;
+}
+
+export function buildCharacterImagePrefix(userId, imageFolderId) {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+  if (!imageFolderId) {
+    throw new Error('Image folder ID is required');
+  }
+  return `${userId}/images/${imageFolderId}/`;
+}
+
+export function buildCharacterImageKey(userId, imageFolderId, fileName) {
+  if (!fileName) {
+    throw new Error('Image file name is required');
+  }
+  return `${buildCharacterImagePrefix(userId, imageFolderId)}${fileName}`;
+}
+
+export function getPublicBaseUrl() {
+  return ensureEnv(R2_PUBLIC_BASE_URL, 'R2_PUBLIC_BASE_URL');
+}
+
+export function buildPublicImageUrl(key) {
+  const baseUrl = getPublicBaseUrl().replace(/\/$/, '');
+  const encodedKey = key
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  return `${baseUrl}/${encodedKey}`;
 }
 
 export async function streamToString(stream) {

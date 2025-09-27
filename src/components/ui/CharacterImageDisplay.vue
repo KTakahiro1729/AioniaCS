@@ -24,26 +24,49 @@
       <div class="character-image-placeholder" v-else>No Image</div>
     </div>
     <div class="image-controls" v-if="!uiStore.isViewingShared">
-      <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none" />
-      <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">画像を追加</label>
+      <input
+        type="file"
+        id="character_image_upload"
+        @change="handleImageUpload"
+        accept="image/*"
+        style="display: none"
+        :disabled="!canAddMore"
+      />
+      <label
+        for="character_image_upload"
+        class="button-base imagefile-button imagefile-button--upload"
+        :aria-disabled="!canAddMore"
+      >
+        {{ isUploading ? 'アップロード中…' : '画像を追加' }}
+      </label>
       <button
-        :disabled="!currentImageSrc"
+        :disabled="!currentImageSrc || isDeleting"
         @click="removeCurrentImage"
         class="button-base imagefile-button imagefile-button--delete"
         aria-label="現在の画像を削除"
       >
-        削除
+        {{ isDeleting ? '削除中…' : '削除' }}
       </button>
+      <div class="image-limit-text">{{ imagesInternal.length }} / {{ MAX_IMAGES_PER_CHARACTER }}</div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
-import { ImageManager } from '../../services/imageManager.js';
+import { useAuth0 } from '@auth0/auth0-vue';
+import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 import { messages } from '../../locales/ja.js';
+import {
+  MAX_IMAGES_PER_CHARACTER,
+  compressImageFile,
+  fileToDataUrl,
+  validateImageLimit,
+  validateImageType,
+} from '../../utils/imageProcessing.js';
+import { CharacterImageService } from '../../services/characterImageService.js';
 
 const props = defineProps({
   images: {
@@ -52,17 +75,59 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['update:images']);
+const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 const { showToast } = useNotifications();
+const imageService = new CharacterImageService(getAccessTokenSilently);
 
-const imagesInternal = ref([...props.images]);
+const normalizeImage = (entry) => {
+  if (!entry) {
+    return null;
+  }
+
+  if (typeof entry === 'string') {
+    return {
+      id: null,
+      key: null,
+      url: entry,
+      previewUrl: entry.startsWith('data:') ? entry : null,
+      contentType: null,
+      fileName: null,
+    };
+  }
+
+  if (typeof entry === 'object') {
+    const preview =
+      entry.previewUrl || entry.dataUrl || (typeof entry.url === 'string' && entry.url.startsWith('data:') ? entry.url : null);
+    return {
+      id: entry.id ?? null,
+      key: entry.key ?? null,
+      url: entry.url ?? preview ?? null,
+      previewUrl: preview,
+      contentType: entry.contentType ?? null,
+      fileName: entry.fileName ?? null,
+    };
+  }
+
+  return null;
+};
+
+const imagesInternal = ref((props.images || []).map(normalizeImage).filter(Boolean));
 let updatingFromParent = false;
 
 watch(
   () => props.images,
   (val) => {
     updatingFromParent = true;
-    imagesInternal.value = [...val];
+    imagesInternal.value = (val || []).map(normalizeImage).filter(Boolean);
+    if (imagesInternal.value.length === 0) {
+      currentImageIndex.value = -1;
+    } else if (currentImageIndex.value < 0) {
+      currentImageIndex.value = 0;
+    } else if (currentImageIndex.value >= imagesInternal.value.length) {
+      currentImageIndex.value = imagesInternal.value.length - 1;
+    }
     nextTick(() => {
       updatingFromParent = false;
     });
@@ -70,8 +135,23 @@ watch(
   { deep: true },
 );
 
+const sanitizedImages = computed(() =>
+  imagesInternal.value
+    .map((image) => {
+      if (!image || !image.url) return null;
+      return {
+        id: image.id,
+        key: image.key,
+        url: image.url,
+        contentType: image.contentType,
+        fileName: image.fileName,
+      };
+    })
+    .filter(Boolean),
+);
+
 watch(
-  imagesInternal,
+  sanitizedImages,
   (val) => {
     if (!updatingFromParent) {
       emit('update:images', val);
@@ -80,14 +160,20 @@ watch(
   { deep: true },
 );
 
-const currentImageIndex = ref(0);
+const currentImageIndex = ref(imagesInternal.value.length > 0 ? 0 : -1);
 
 const currentImageSrc = computed(() => {
   if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0 && currentImageIndex.value < imagesInternal.value.length) {
-    return imagesInternal.value[currentImageIndex.value];
+    const current = imagesInternal.value[currentImageIndex.value];
+    return current?.previewUrl || current?.url || null;
   }
   return null;
 });
+
+const isUploading = ref(false);
+const isDeleting = ref(false);
+
+const canAddMore = computed(() => imagesInternal.value.length < MAX_IMAGES_PER_CHARACTER && !isUploading.value);
 
 const nextImage = () => {
   if (imagesInternal.value.length > 0) {
@@ -101,29 +187,101 @@ const previousImage = () => {
   }
 };
 
-const removeCurrentImage = () => {
-  if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0) {
+const removeCurrentImage = async () => {
+  if (imagesInternal.value.length === 0 || currentImageIndex.value < 0) {
+    return;
+  }
+
+  const image = imagesInternal.value[currentImageIndex.value];
+  if (!image) {
+    return;
+  }
+
+  if (!image.key) {
     imagesInternal.value.splice(currentImageIndex.value, 1);
     if (imagesInternal.value.length === 0) {
       currentImageIndex.value = -1;
     } else if (currentImageIndex.value >= imagesInternal.value.length) {
       currentImageIndex.value = imagesInternal.value.length - 1;
     }
+    return;
+  }
+
+  isDeleting.value = true;
+  try {
+    await imageService.deleteImage({
+      imageFolderId: characterStore.character.imageFolderId,
+      key: image.key,
+      imageId: image.id,
+    });
+    imagesInternal.value.splice(currentImageIndex.value, 1);
+    if (imagesInternal.value.length === 0) {
+      currentImageIndex.value = -1;
+    } else if (currentImageIndex.value >= imagesInternal.value.length) {
+      currentImageIndex.value = imagesInternal.value.length - 1;
+    }
+  } catch (error) {
+    console.error('Failed to delete image:', error);
+    showToast({ type: 'error', ...messages.image.deleteError(error) });
+  } finally {
+    isDeleting.value = false;
   }
 };
 
 const handleImageUpload = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+  const files = Array.from(event.target.files || []);
+  event.target.value = null;
+  if (!files.length) return;
+
+  const file = files[0];
   try {
-    const imageData = await ImageManager.loadImage(file);
-    imagesInternal.value.push(imageData);
-    currentImageIndex.value = imagesInternal.value.length - 1;
+    validateImageLimit(imagesInternal.value.length, files.length);
+    validateImageType(file);
   } catch (error) {
-    console.error('Error loading image:', error);
-    showToast({ type: 'error', ...messages.image.loadError(error) });
+    showToast({ type: 'error', ...messages.image.validationError(error) });
+    return;
+  }
+
+  if (!isAuthenticated.value) {
+    showToast({ type: 'error', ...messages.image.notSignedIn() });
+    return;
+  }
+
+  if (!characterStore.character.imageFolderId) {
+    showToast({ type: 'error', ...messages.image.missingFolderId() });
+    return;
+  }
+
+  isUploading.value = true;
+  try {
+    const compressed = await compressImageFile(file);
+    const dataUrl = await fileToDataUrl(compressed);
+    const base64Data = dataUrl.split(',')[1];
+    const response = await imageService.uploadImage({
+      imageFolderId: characterStore.character.imageFolderId,
+      data: base64Data,
+      contentType: compressed.type || file.type,
+      fileName: file.name,
+    });
+
+    const uploadedImage = normalizeImage({
+      id: response?.id ?? null,
+      key: response?.key ?? null,
+      url: response?.url ?? null,
+      previewUrl: dataUrl,
+      contentType: response?.contentType ?? compressed.type ?? file.type ?? null,
+      fileName: response?.fileName ?? file.name,
+    });
+
+    if (uploadedImage) {
+      imagesInternal.value.push(uploadedImage);
+      currentImageIndex.value = imagesInternal.value.length - 1;
+    }
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    showToast({ type: 'error', ...messages.image.uploadError(error) });
   } finally {
-    event.target.value = null;
+    isUploading.value = false;
   }
 };
 </script>
@@ -198,82 +356,55 @@ const handleImageUpload = async (event) => {
   border: none;
   padding: 6px 10px;
   font-size: 1.2em;
-  line-height: 1;
-  min-width: auto;
-  height: auto;
-  font-weight: bold;
-  border-radius: 4px;
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.button-imagenav:hover {
-  background-color: var(--color-panel-sub-header);
+.button-imagenav--prev {
+  left: 5px;
 }
 
-.button-imagenav.button-imagenav--prev {
-  left: 10px;
-}
-
-.button-imagenav.button-imagenav--next {
-  right: 10px;
+.button-imagenav--next {
+  right: 5px;
 }
 
 .button-imagenav:disabled {
-  cursor: default;
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .image-count-display {
   position: absolute;
-  top: 10px;
+  bottom: 10px;
   right: 10px;
-  z-index: 10;
-  background-color: var(--color-panel-header);
-  color: white;
-  padding: 3px 8px;
-  font-size: 0.9em;
-  border-radius: 3px;
-  opacity: 0.3;
-  transition: opacity 0.3s ease;
-  cursor: default;
-}
-
-.image-display-wrapper:hover .image-count-display:hover {
-  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .image-controls {
   display: flex;
-  gap: 10px;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 10px 0;
+  gap: 8px;
+  padding: 10px;
 }
 
-.imagefile-button--add:hover:not(:disabled) {
-  border-color: var(--color-accent);
+.imagefile-button {
+  min-width: 120px;
+  text-align: center;
 }
 
-.imagefile-button--delete {
-  color: var(--color-delete-text);
-  border-color: var(--color-delete-border);
+.imagefile-button[aria-disabled='true'] {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
-.imagefile-button--delete:hover:not(:disabled) {
-  border-color: var(--color-delete-text);
-  box-shadow:
-    inset 0 0 3px var(--color-delete-text),
-    0 0 6px var(--color-delete-text);
-  text-shadow: 0 0 2px var(--color-delete-text);
-}
-
-.imagefile-button--delete:disabled {
-  cursor: default;
-  background-color: transparent;
-  color: var(--color-border-normal);
-  border-color: var(--color-border-normal);
-  box-shadow: none;
-  text-shadow: none;
+.image-limit-text {
+  font-size: 0.85em;
+  color: var(--color-text-subtle);
 }
 </style>

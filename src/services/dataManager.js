@@ -1,4 +1,5 @@
 import { createWeaknessArray, deepClone } from '../utils/utils.js';
+import { createRandomId } from '../utils/id.js';
 import { messages } from '../locales/ja.js';
 
 /**
@@ -42,7 +43,7 @@ export class DataManager {
     const characterDataForJson = { ...character };
     let imagesToSave = null;
 
-    if (characterDataForJson.images && characterDataForJson.images.length > 0) {
+    if (Array.isArray(characterDataForJson.images) && characterDataForJson.images.length > 0) {
       imagesToSave = [...characterDataForJson.images]; // Store images separately
       delete characterDataForJson.images; // Remove images from JSON part
     }
@@ -80,14 +81,18 @@ export class DataManager {
         zip.file('character_data.json', jsonData);
         const imageFolder = zip.folder('images');
 
-        imagesToSave.forEach((imageDataUrl, index) => {
-          const base64Data = imageDataUrl.substring(imageDataUrl.indexOf(',') + 1);
-          // Simple extension, could be improved by parsing imageDataUrl
-          const extension = imageDataUrl.substring(imageDataUrl.indexOf('/') + 1, imageDataUrl.indexOf(';'));
-          imageFolder.file(`image_${index}.${extension || 'png'}`, base64Data, {
-            base64: true,
+        const resolvedImages = await Promise.all(imagesToSave.map((imageEntry, index) => this._resolveImageForExport(imageEntry, index)));
+
+        resolvedImages
+          .filter((img) => img && img.dataUrl)
+          .forEach((image, index) => {
+            const dataUrl = image.dataUrl;
+            const base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
+            const fileName = image.fileName || `image_${index}.${image.extension || 'png'}`;
+            imageFolder.file(fileName, base64Data, {
+              base64: true,
+            });
           });
-        });
 
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         const url = URL.createObjectURL(zipBlob);
@@ -115,6 +120,87 @@ export class DataManager {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+  }
+
+  async _resolveImageForExport(imageEntry, index) {
+    const fallbackExtension = 'png';
+
+    if (typeof imageEntry === 'string') {
+      return {
+        dataUrl: imageEntry,
+        extension: this._extractExtensionFromDataUrl(imageEntry) || fallbackExtension,
+        fileName: `image_${index}.${this._extractExtensionFromDataUrl(imageEntry) || fallbackExtension}`,
+      };
+    }
+
+    if (!imageEntry || typeof imageEntry !== 'object') {
+      return null;
+    }
+
+    const candidateUrl = imageEntry.previewUrl || imageEntry.dataUrl || imageEntry.url;
+    if (typeof candidateUrl === 'string' && candidateUrl.startsWith('data:')) {
+      const extension = this._extractExtensionFromDataUrl(candidateUrl) || fallbackExtension;
+      return {
+        dataUrl: candidateUrl,
+        extension,
+        fileName: imageEntry.fileName || `image_${index}.${extension}`,
+      };
+    }
+
+    if (typeof imageEntry.url === 'string') {
+      try {
+        const response = await fetch(imageEntry.url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const blob = await response.blob();
+        const dataUrl = await this._blobToDataUrl(blob);
+        const contentType = imageEntry.contentType || response.headers.get('content-type') || 'image/png';
+        const extension = this._extensionFromContentType(contentType) || fallbackExtension;
+        return {
+          dataUrl,
+          extension,
+          fileName: imageEntry.fileName || `image_${index}.${extension}`,
+        };
+      } catch (error) {
+        console.error('Failed to fetch image for export:', error);
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  _extractExtensionFromDataUrl(dataUrl) {
+    if (typeof dataUrl !== 'string') {
+      return null;
+    }
+    const match = /^data:image\/(.+?);/i.exec(dataUrl);
+    if (!match) {
+      return null;
+    }
+    const extension = match[1].toLowerCase();
+    return extension === 'jpeg' ? 'jpg' : extension;
+  }
+
+  _extensionFromContentType(contentType) {
+    if (!contentType) return null;
+    const map = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+    };
+    return map[contentType.toLowerCase()] || null;
+  }
+
+  _blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(blob);
+    });
   }
 
   /**
@@ -567,6 +653,9 @@ export class DataManager {
     };
     if (!Array.isArray(characterData.images)) {
       characterData.images = [];
+    }
+    if (!characterData.imageFolderId) {
+      characterData.imageFolderId = createRandomId('imgfld');
     }
 
     const normalizedData = {

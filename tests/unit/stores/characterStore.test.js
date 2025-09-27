@@ -17,6 +17,12 @@ describe('characterStore', () => {
     expect(store.specialSkills.length).toBeLessThanOrEqual(max);
   });
 
+  test('creates a unique image folder id for characters', () => {
+    const store = useCharacterStore();
+    expect(typeof store.character.imageFolderId).toBe('string');
+    expect(store.character.imageFolderId).toMatch(/^imgfld-/);
+  });
+
   test('currentWeight calculates equipment weight', () => {
     const store = useCharacterStore();
     store.equipments.weapon1.group = 'combat_small';

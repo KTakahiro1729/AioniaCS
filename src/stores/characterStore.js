@@ -2,10 +2,14 @@ import { defineStore } from 'pinia';
 import { AioniaGameData } from '../data/gameData.js';
 import { messages } from '../locales/ja.js';
 import { deepClone, createWeaknessArray } from '../utils/utils.js';
+import { createRandomId } from '../utils/id.js';
 
 function createCharacter() {
   const base = deepClone(AioniaGameData.defaultCharacterData);
   base.weaknesses = createWeaknessArray(AioniaGameData.config.maxWeaknesses);
+  if (!base.imageFolderId) {
+    base.imageFolderId = createRandomId('imgfld');
+  }
   return base;
 }
 

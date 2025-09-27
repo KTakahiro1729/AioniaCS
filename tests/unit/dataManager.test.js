@@ -208,7 +208,7 @@ describe('DataManager', () => {
       // fileメソッドの呼び出しを検証
       expect(mockZipInstance.file).toHaveBeenCalledWith('character_data.json', expect.any(String));
       expect(mockZipInstance.file).toHaveBeenCalledWith('image_0.png', 'mockimgdata1', { base64: true });
-      expect(mockZipInstance.file).toHaveBeenCalledWith('image_1.jpeg', 'mockimgdata2', { base64: true });
+      expect(mockZipInstance.file).toHaveBeenCalledWith('image_1.jpg', 'mockimgdata2', { base64: true });
 
       const jsonDataCall = mockZipInstance.file.mock.calls.find((call) => call[0] === 'character_data.json');
       const jsonDataInZip = JSON.parse(jsonDataCall[1]);

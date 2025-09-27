@@ -111,6 +111,14 @@ export const messages = {
   },
   image: {
     loadError: (err) => ({ title: '画像読み込み失敗', message: err.message }),
+    validationError: (err) => ({ title: '画像の検証失敗', message: err.message }),
+    notSignedIn: () => ({ title: '画像をアップロードできません', message: '画像アップロードにはサインインが必要です。' }),
+    missingFolderId: () => ({
+      title: '画像フォルダー未設定',
+      message: '画像保存用のフォルダーIDが見つかりません。ページを再読み込みしてください。',
+    }),
+    uploadError: (err) => ({ title: '画像アップロード失敗', message: err.message || '画像のアップロードに失敗しました。' }),
+    deleteError: (err) => ({ title: '画像削除失敗', message: err.message || '画像の削除に失敗しました。' }),
   },
   dataExport: {
     loadError: (msg) => ({ title: '読み込み失敗', message: msg }),
