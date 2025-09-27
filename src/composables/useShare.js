@@ -1,12 +1,9 @@
 import { createShareLink } from '../libs/sabalessshare/src/index.js';
-import { createDynamicLink } from '../libs/sabalessshare/src/dynamic.js';
-import { arrayBufferToBase64 } from '../libs/sabalessshare/src/crypto.js';
-import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
 
-export function useShare(dataManager) {
+export function useShare() {
   const characterStore = useCharacterStore();
   const { showToast } = useNotifications();
 
@@ -33,33 +30,19 @@ export function useShare(dataManager) {
     return payload.length > 7000; // rough threshold
   }
 
-  async function _uploadHandler(data) {
-    const payload = JSON.stringify({
-      ciphertext: arrayBufferToBase64(data.ciphertext),
-      iv: arrayBufferToBase64(data.iv),
-    });
-    const id = await dataManager.googleDriveManager.uploadAndShareFile(payload, 'share.enc', 'application/json');
-    return id;
-  }
-
   async function generateShare(options) {
     const { type, includeFull, password, expiresInDays } = options;
     const data = _collectData(includeFull);
     if (type === 'dynamic') {
-      const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
-      const { shareLink } = await createDynamicLink({
-        data,
-        adapter,
-        password: password || undefined,
-        expiresInDays,
-      });
-      return shareLink;
+      throw new Error('クラウド連携が必要な共有リンクは現在利用できません。');
     }
-    const mode = includeFull ? 'cloud' : 'simple';
+    if (includeFull) {
+      throw new Error('画像や長文を含む共有は現在利用できません。');
+    }
+    const mode = 'simple';
     return createShareLink({
       data,
       mode,
-      uploadHandler: _uploadHandler,
       shortenUrlHandler: async (longUrl) => {
         try {
           // TinyURLのAPIエンドポイントにリクエストを送信

@@ -90,7 +90,7 @@ export function useAppModals(options) {
       }
       return;
     }
-    const { generateShare, copyLink, isLongData } = useShare(dataManager);
+    const { generateShare, copyLink, isLongData } = useShare();
     const { showToast } = useNotifications();
     const modalStore = useModalStore();
     window.__driveSignIn = handleSignInClick;

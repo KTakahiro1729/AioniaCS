@@ -3,6 +3,7 @@ import { DataManager } from '../../src/services/dataManager.js';
 import { AioniaGameData } from '../../src/data/gameData.js';
 import { deepClone } from '../../src/utils/utils.js';
 import JSZip from 'jszip';
+import { CloudStorageService } from '../../src/services/cloudStorageService.js';
 
 // vi.mock をファイルのトップレベルに記述します。
 // これにより、Jestは 'tests/unit/__mocks__/jszip.js' を自動的に読み込みます。
@@ -22,6 +23,8 @@ describe('DataManager', () => {
     vi.clearAllMocks();
 
     dm = new DataManager(AioniaGameData);
+    dm.setCloudStorageService(new CloudStorageService());
+    dm.setCloudUserId(`test-user-${Math.random()}`);
     mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
     mockCharacter.name = 'TestChar';
     mockSkills = deepClone(AioniaGameData.baseSkills);
@@ -272,30 +275,22 @@ describe('DataManager', () => {
   });
 
   describe('saveDataToAppData', () => {
-    beforeEach(() => {
-      dm.googleDriveManager = {
-        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        addIndexEntry: vi.fn().mockResolvedValue(),
-        renameIndexEntry: vi.fn().mockResolvedValue(),
-      };
-    });
-
     test('creates new file and adds index when no id', async () => {
       const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
-      expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
-        id: '1',
-        characterName: 'TestChar',
-      });
-      expect(res.id).toBe('1');
+      expect(res).toHaveProperty('id');
+      const list = await dm.loadCharacterListFromDrive();
+      expect(list).toEqual(expect.arrayContaining([expect.objectContaining({ id: res.id, characterName: 'TestChar' })]));
     });
 
     test('updates file when id exists and renames index', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object));
-      expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith('1', 'TestChar');
-      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
+      const created = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
+      mockCharacter.name = 'Updated Name';
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, created.id);
+      const list = await dm.loadCharacterListFromDrive();
+      expect(list).toHaveLength(1);
+      expect(list[0]).toEqual(expect.objectContaining({ id: created.id, characterName: 'Updated Name' }));
+      const stored = await dm.loadCloudCharacter(created.id);
+      expect(stored.character.name).toBe('Updated Name');
     });
   });
 });

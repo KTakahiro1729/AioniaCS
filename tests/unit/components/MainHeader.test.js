@@ -2,9 +2,17 @@ import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
+import { ref } from 'vue';
+import { vi } from 'vitest';
 import MainHeader from '../../../src/components/ui/MainHeader.vue';
 import { useCharacterStore } from '../../../src/stores/characterStore.js';
 import { useUiStore } from '../../../src/stores/uiStore.js';
+
+const isAuthenticatedMock = ref(false);
+
+vi.mock('@auth0/auth0-vue', () => ({
+  useAuth0: () => ({ isAuthenticated: isAuthenticatedMock }),
+}));
 
 describe('MainHeader', () => {
   beforeEach(() => {
@@ -12,6 +20,7 @@ describe('MainHeader', () => {
   });
 
   test('shows character name when provided', async () => {
+    isAuthenticatedMock.value = true;
     const wrapper = mount(MainHeader, {
       props: {
         defaultTitle: 'Default',
@@ -27,6 +36,7 @@ describe('MainHeader', () => {
   });
 
   test('cloud hub hidden when not signed in', async () => {
+    isAuthenticatedMock.value = false;
     const wrapper = mount(MainHeader, {
       props: {
         defaultTitle: 'Default',

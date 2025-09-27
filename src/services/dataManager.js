@@ -7,15 +7,27 @@ import { messages } from '../locales/ja.js';
 export class DataManager {
   constructor(gameData) {
     this.gameData = gameData;
-    this.googleDriveManager = null;
+    this.cloudStorageService = null;
+    this.cloudUserId = null;
   }
 
   /**
-   * Sets the GoogleDriveManager instance.
-   * @param {GoogleDriveManager} driveManager - The GoogleDriveManager instance.
+   * Sets the cloud storage service instance.
+   * @param {CloudStorageService} service - The cloud storage service instance.
    */
-  setGoogleDriveManager(driveManager) {
-    this.googleDriveManager = driveManager;
+  setCloudStorageService(service) {
+    this.cloudStorageService = service;
+  }
+
+  setCloudUserId(userId) {
+    this.cloudUserId = userId;
+  }
+
+  _ensureCloudReady() {
+    if (!this.cloudStorageService || !this.cloudUserId) {
+      console.error('Cloud storage service not configured.');
+      throw new Error('クラウドストレージが利用できません。ログイン状態を確認してください。');
+    }
   }
 
   _sanitizeFileName(name) {
@@ -223,10 +235,7 @@ export class DataManager {
    * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
    */
   async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId) {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
+    this._ensureCloudReady();
 
     const dataToSave = {
       character: character,
@@ -245,10 +254,11 @@ export class DataManager {
     const sanitizedFileName = (character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
 
     try {
-      const result = await this.googleDriveManager.saveFile(targetFolderId, sanitizedFileName, jsonData, currentFileId);
-      return result;
+      const payload = JSON.parse(jsonData);
+      const result = await this.cloudStorageService.saveCharacter(this.cloudUserId, payload, currentFileId);
+      return result ? { id: result.id, name: sanitizedFileName } : null;
     } catch (error) {
-      console.error('Error saving data to Google Drive:', error);
+      console.error('Error saving data to cloud storage:', error);
       throw error; // Re-throw to be caught by the caller UI
     }
   }
@@ -258,10 +268,7 @@ export class DataManager {
    * Adds an index entry when creating a new file.
    */
   async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId) {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
+    this._ensureCloudReady();
 
     const dataToSave = {
       character: character,
@@ -276,20 +283,7 @@ export class DataManager {
       histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
     };
 
-    if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
-      return res;
-    }
-
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave);
-    if (created) {
-      await this.googleDriveManager.addIndexEntry({
-        id: created.id,
-        characterName: character.name || '名もなき冒険者',
-      });
-    }
-    return created;
+    return this.cloudStorageService.saveCharacter(this.cloudUserId, dataToSave, currentFileId);
   }
 
   /**
@@ -298,21 +292,17 @@ export class DataManager {
    * @returns {Promise<object|null>} Parsed character data or null on error.
    */
   async loadDataFromDrive(fileId) {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
+    this._ensureCloudReady();
 
     try {
-      const fileContent = await this.googleDriveManager.loadFileContent(fileId);
-      if (fileContent) {
-        const rawJsonData = JSON.parse(fileContent);
-        const parsedData = this.parseLoadedData(rawJsonData);
+      const stored = await this.cloudStorageService.loadCharacter(this.cloudUserId, fileId);
+      if (stored) {
+        const parsedData = this.parseLoadedData(stored);
         return parsedData;
       }
       return null;
     } catch (error) {
-      console.error('Error loading data from Google Drive:', error);
+      console.error('Error loading data from cloud storage:', error);
       // Check if it's a parsing error from JSON.parse or from parseLoadedData
       if (error instanceof SyntaxError) {
         throw new Error(messages.file.loadError);
@@ -326,28 +316,19 @@ export class DataManager {
    * @returns {Promise<Array>} Array of valid index entries
    */
   async loadCharacterListFromDrive() {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
+    this._ensureCloudReady();
 
-    const index = await this.googleDriveManager.readIndexFile();
-    const valid = [];
+    return this.cloudStorageService.listCharacters(this.cloudUserId);
+  }
 
-    for (const entry of index) {
-      try {
-        const data = await this.loadDataFromDrive(entry.id);
-        if (data) {
-          valid.push(entry);
-        } else {
-          console.error(`Character file not found or invalid: ${entry.id}`);
-        }
-      } catch (err) {
-        console.error(`Failed to load character file ${entry.id}:`, err);
-      }
-    }
+  async deleteCloudCharacter(fileId) {
+    this._ensureCloudReady();
+    await this.cloudStorageService.deleteCharacter(this.cloudUserId, fileId);
+  }
 
-    return valid;
+  async loadCloudCharacter(fileId) {
+    this._ensureCloudReady();
+    return this.cloudStorageService.loadCharacter(this.cloudUserId, fileId);
   }
 
   /**

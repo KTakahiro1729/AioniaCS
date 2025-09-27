@@ -2,7 +2,6 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useCharacterStore } from './stores/characterStore.js';
 import { useUiStore } from './stores/uiStore.js';
-import { useGoogleDrive } from './composables/useGoogleDrive.js';
 import { useHelp } from './composables/useHelp.js';
 import { useDataExport } from './composables/useDataExport.js';
 import { useKeyboardHandling } from './composables/useKeyboardHandling.js';
@@ -10,6 +9,7 @@ import { usePrint } from './composables/usePrint.js';
 import { messages } from './locales/ja.js';
 import { useAppModals } from './composables/useAppModals.js';
 import { useAppInitialization } from './composables/useAppInitialization.js';
+import { useCloudSync } from './composables/useCloudSync.js';
 
 // --- Module Imports ---
 // This approach is standard for Vite/ESM projects, making dependencies explicit.
@@ -35,13 +35,13 @@ const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataEx
 const { printCharacterSheet, openPreviewPage } = usePrint();
 
 const {
-  canSignInToGoogle,
   handleSignInClick,
   handleSignOutClick,
   promptForDriveFolder,
   saveCharacterToDrive,
   saveOrUpdateCurrentCharacterInDrive,
-} = useGoogleDrive(dataManager);
+  refreshHubList,
+} = useCloudSync(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
   helpPanelRef,
@@ -51,10 +51,6 @@ const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLe
 const { showAsyncToast } = useNotifications();
 const { showModal } = useModal();
 const modalStore = useModalStore();
-
-function refreshHubList() {
-  uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
-}
 
 async function saveNewCharacter() {
   await saveCharacterToDrive(null);
@@ -144,7 +140,7 @@ watch(
 );
 
 // --- Lifecycle Hooks ---
-const { initialize } = useAppInitialization(dataManager);
+const { initialize } = useAppInitialization();
 onMounted(initialize);
 </script>
 
