@@ -13,7 +13,7 @@ export function useDynamicButtons() {
         icon: 'icon-svg-local-download',
       };
     }
-    if (!uiStore.currentDriveFileId) {
+    if (!uiStore.currentCloudFileId) {
       return {
         label: messages.ui.buttons.saveCloudNew,
         title: messages.ui.buttons.saveCloudTitle,

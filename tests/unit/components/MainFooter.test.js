@@ -23,7 +23,7 @@ describe('MainFooter', () => {
         saveLocal,
         handleFileUpload: fileUpload,
         openHub: vi.fn(),
-        saveToDrive: vi.fn(),
+        saveToCloud: vi.fn(),
         ioLabel: 'io',
         shareLabel: 'share',
         copyEditLabel: 'copy',
@@ -37,8 +37,8 @@ describe('MainFooter', () => {
     expect(fileUpload).toHaveBeenCalled();
   });
 
-  test('drive actions when signed in', async () => {
-    const saveDrive = vi.fn();
+  test('cloud actions when signed in', async () => {
+    const saveCloud = vi.fn();
     const openHub = vi.fn();
     const wrapper = mount(MainFooter, {
       props: {
@@ -50,7 +50,7 @@ describe('MainFooter', () => {
         saveLocal: vi.fn(),
         handleFileUpload: vi.fn(),
         openHub,
-        saveToDrive: saveDrive,
+        saveToCloud: saveCloud,
         ioLabel: 'io',
         shareLabel: 'share',
         copyEditLabel: 'copy',
@@ -58,13 +58,13 @@ describe('MainFooter', () => {
     });
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
-    uiStore.currentDriveFileId = null;
+    uiStore.currentCloudFileId = null;
     await wrapper.find('.footer-button--save').trigger('click');
-    expect(saveDrive).toHaveBeenCalled();
+    expect(saveCloud).toHaveBeenCalled();
     await wrapper.find('.footer-button--load').trigger('click');
     expect(openHub).toHaveBeenCalled();
-    uiStore.currentDriveFileId = 'id';
+    uiStore.currentCloudFileId = 'id';
     await wrapper.find('.footer-button--save').trigger('click');
-    expect(saveDrive).toHaveBeenCalledTimes(2);
+    expect(saveCloud).toHaveBeenCalledTimes(2);
   });
 });

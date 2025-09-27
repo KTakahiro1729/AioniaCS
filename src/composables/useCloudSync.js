@@ -26,18 +26,18 @@ export function useCloudSync(dataManager) {
         const userId = user.value?.sub || 'guest';
         dataManager.setCloudUserId(userId);
         try {
-          await uiStore.refreshDriveCharacters(dataManager);
+          await uiStore.refreshCloudCharacters(dataManager);
         } catch (error) {
           console.error('Failed to refresh characters on auth change:', error);
           // 必要であれば、ユーザーにエラー通知を表示
-          showToast({ type: 'error', ...messages.googleDrive.load.error(error) });
+          showToast({ type: 'error', ...messages.cloudStorage.load.error(error) });
         }
       } else if (!signedIn && !stillLoading) {
         // サインアウト済みで、ロードが完了している場合
         uiStore.isSignedIn = false;
         dataManager.setCloudUserId(null);
-        uiStore.clearDriveCharacters();
-        uiStore.currentDriveFileId = null;
+        uiStore.clearCloudCharacters();
+        uiStore.currentCloudFileId = null;
       }
     },
     { immediate: true },
@@ -45,10 +45,10 @@ export function useCloudSync(dataManager) {
 
   async function refreshHubList() {
     if (!canUseCloud.value) return;
-    await uiStore.refreshDriveCharacters(dataManager);
+    await uiStore.refreshCloudCharacters(dataManager);
   }
 
-  async function saveCharacterToDrive(fileId) {
+  async function saveCharacterToCloud(fileId) {
     if (!canUseCloud.value) {
       showToast({ type: 'error', ...messages.share.needSignIn() });
       return;
@@ -68,22 +68,22 @@ export function useCloudSync(dataManager) {
       .then((result) => {
         if (result?.id) {
           uiStore.isCloudSaveSuccess = true;
-          uiStore.currentDriveFileId = result.id;
+          uiStore.currentCloudFileId = result.id;
         }
       })
       .then(() => refreshHubList());
 
     showAsyncToast(savePromise, {
-      loading: messages.googleDrive.save.loading(),
-      success: messages.googleDrive.save.success(),
-      error: (err) => messages.googleDrive.save.error(err),
+      loading: messages.cloudStorage.save.loading(),
+      success: messages.cloudStorage.save.success(),
+      error: (err) => messages.cloudStorage.save.error(err),
     });
 
     return savePromise;
   }
 
-  function saveOrUpdateCurrentCharacterInDrive() {
-    return saveCharacterToDrive(uiStore.currentDriveFileId);
+  function saveOrUpdateCurrentCharacterInCloud() {
+    return saveCharacterToCloud(uiStore.currentCloudFileId);
   }
 
   function handleSignInClick() {
@@ -94,20 +94,12 @@ export function useCloudSync(dataManager) {
     logout({ logoutParams: { returnTo: window.location.origin } });
   }
 
-  function promptForDriveFolder() {
-    showToast({
-      type: 'error',
-      ...messages.googleDrive.folderPicker.error(new Error('フォルダ選択は現在利用できません。')),
-    });
-  }
-
   return {
     canUseCloud,
     handleSignInClick,
     handleSignOutClick,
-    promptForDriveFolder,
-    saveCharacterToDrive,
-    saveOrUpdateCurrentCharacterInDrive,
+    saveCharacterToCloud,
+    saveOrUpdateCurrentCharacterInCloud,
     refreshHubList,
   };
 }

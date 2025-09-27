@@ -24,17 +24,13 @@ describe('useAppModals', () => {
     const { openIoModal } = useAppModals({
       dataManager: {},
       loadCharacterById: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
+      saveCharacterToCloud: vi.fn(),
       handleSignInClick: vi.fn(),
-      handleSignOutClick: vi.fn(),
-      refreshHubList: vi.fn(),
-      saveNewCharacter: vi.fn(),
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),
       printCharacterSheet,
       openPreviewPage,
-      promptForDriveFolder: vi.fn(),
       copyEditCallback: vi.fn(),
     });
     await openIoModal();
@@ -49,17 +45,13 @@ describe('useAppModals', () => {
     const { openIoModal } = useAppModals({
       dataManager: {},
       loadCharacterById: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
+      saveCharacterToCloud: vi.fn(),
       handleSignInClick: vi.fn(),
-      handleSignOutClick: vi.fn(),
-      refreshHubList: vi.fn(),
-      saveNewCharacter: vi.fn(),
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),
       printCharacterSheet,
       openPreviewPage,
-      promptForDriveFolder: vi.fn(),
       copyEditCallback: vi.fn(),
     });
     await openIoModal();

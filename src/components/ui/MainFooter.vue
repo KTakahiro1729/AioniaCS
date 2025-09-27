@@ -54,7 +54,7 @@ const props = defineProps({
   saveLocal: Function,
   handleFileUpload: Function,
   openHub: Function,
-  saveToDrive: Function,
+  saveToCloud: Function,
   ioLabel: String,
   shareLabel: String,
   copyEditLabel: String,
@@ -65,7 +65,7 @@ const { saveButton, loadButton } = useDynamicButtons();
 
 function handleSave() {
   if (uiStore.isSignedIn) {
-    props.saveToDrive();
+    props.saveToCloud();
   } else {
     props.saveLocal();
   }

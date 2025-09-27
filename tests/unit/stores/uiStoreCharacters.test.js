@@ -7,43 +7,43 @@ describe('uiStore character cache', () => {
     setActivePinia(createPinia());
   });
 
-  test('refreshDriveCharacters merges lists', async () => {
+  test('refreshCloudCharacters merges lists', async () => {
     const store = useUiStore();
-    store.driveCharacters = [
+    store.cloudCharacters = [
       { id: '2', characterName: 'B' },
       { id: 'temp-1', characterName: 'Temp' },
     ];
-    const dataManager = { loadCharacterListFromDrive: vi.fn().mockResolvedValue([{ id: '1' }]) };
-    await store.refreshDriveCharacters(dataManager);
-    expect(store.driveCharacters).toEqual(
+    const dataManager = { loadCharacterListFromCloud: vi.fn().mockResolvedValue([{ id: '1' }]) };
+    await store.refreshCloudCharacters(dataManager);
+    expect(store.cloudCharacters).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', characterName: 'Temp' })]),
     );
   });
 
-  test('clearDriveCharacters empties cache', () => {
+  test('clearCloudCharacters empties cache', () => {
     const store = useUiStore();
-    store.driveCharacters = [{ id: '1' }];
-    store.clearDriveCharacters();
-    expect(store.driveCharacters).toEqual([]);
+    store.cloudCharacters = [{ id: '1' }];
+    store.clearCloudCharacters();
+    expect(store.cloudCharacters).toEqual([]);
   });
 
-  test('drive character add, update, remove', () => {
+  test('cloud character add, update, remove', () => {
     const store = useUiStore();
-    store.addDriveCharacter({ id: 'a', characterName: 'A' });
-    expect(store.driveCharacters).toHaveLength(1);
-    store.updateDriveCharacter('a', { characterName: 'B' });
-    expect(store.driveCharacters[0].characterName).toBe('B');
-    store.removeDriveCharacter('a');
-    expect(store.driveCharacters).toHaveLength(0);
+    store.addCloudCharacter({ id: 'a', characterName: 'A' });
+    expect(store.cloudCharacters).toHaveLength(1);
+    store.updateCloudCharacter('a', { characterName: 'B' });
+    expect(store.cloudCharacters[0].characterName).toBe('B');
+    store.removeCloudCharacter('a');
+    expect(store.cloudCharacters).toHaveLength(0);
   });
 
-  test('pending drive save lifecycle', () => {
+  test('pending cloud save lifecycle', () => {
     const store = useUiStore();
-    const token = store.registerPendingDriveSave('temp-1');
-    expect(store.pendingDriveSaves['temp-1']).toBe(token);
-    store.cancelPendingDriveSave('temp-1');
+    const token = store.registerPendingCloudSave('temp-1');
+    expect(store.pendingCloudSaves['temp-1']).toBe(token);
+    store.cancelPendingCloudSave('temp-1');
     expect(token.canceled).toBe(true);
-    store.completePendingDriveSave('temp-1');
-    expect(store.pendingDriveSaves['temp-1']).toBeUndefined();
+    store.completePendingCloudSave('temp-1');
+    expect(store.pendingCloudSaves['temp-1']).toBeUndefined();
   });
 });

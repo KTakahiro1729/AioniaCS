@@ -7,10 +7,10 @@ const shareLoadErrorTexts = {
 };
 
 export const messages = {
-  googleDrive: {
+  cloudStorage: {
     signIn: {
       loading: () => ({
-        title: 'Google Drive',
+        title: 'クラウドストレージ',
         message: 'サインインしています...',
       }),
       success: () => ({ title: 'サインイン完了', message: '' }),
@@ -24,18 +24,18 @@ export const messages = {
     },
     folderPicker: {
       error: (err) => ({
-        title: 'Google Drive',
+        title: 'クラウドストレージ',
         message: err?.message || 'フォルダ選択をキャンセルしました',
       }),
     },
     save: {
-      loading: () => ({ title: 'Google Drive', message: '保存中...' }),
+      loading: () => ({ title: 'クラウドストレージ', message: '保存中...' }),
       success: () => ({ title: '保存完了', message: '' }),
       error: (err) => ({ title: '保存失敗', message: err.message || '' }),
     },
     load: {
       loading: (name) => ({
-        title: 'Google Drive',
+        title: 'クラウドストレージ',
         message: `${name} を読み込み中...`,
       }),
       success: (name) => ({
@@ -48,11 +48,11 @@ export const messages = {
       }),
     },
     apiInitError: () => ({
-      title: 'Google API エラー',
+      title: 'クラウド API エラー',
       message: '初期化に失敗しました',
     }),
     signInInitError: () => ({
-      title: 'Google サインインエラー',
+      title: 'クラウドサインインエラー',
       message: '初期化に失敗しました',
     }),
   },
@@ -60,7 +60,7 @@ export const messages = {
     copied: (link) => ({ title: '共有リンクをコピーしました', message: link }),
     copyFailed: (err) => ({ title: 'コピー失敗', message: err.message }),
     needSignIn: () => ({
-      title: 'Google Drive',
+      title: 'クラウドストレージ',
       message: 'サインインしてください',
     }),
     generateFailed: (err) => ({
@@ -132,12 +132,12 @@ export const messages = {
     },
     viewModeBanner: '閲覧モードで表示中',
     buttons: {
-      saveCloud: 'Drive保存',
+      saveCloud: 'クラウド保存',
       saveCloudNew: '新規保存',
       saveCloudOverwrite: '上書保存',
-      saveCloudTitle: 'Google Driveに保存',
-      loadCloud: 'Drive読込',
-      loadCloudTitle: 'Google Driveから読込む',
+      saveCloudTitle: 'クラウドストレージに保存',
+      loadCloud: 'クラウド読込',
+      loadCloudTitle: 'クラウドストレージから読み込む',
       saveLocal: '端末保存',
       saveLocalTitle: '端末に保存',
       loadLocal: '読み込み',
@@ -159,7 +159,6 @@ export const messages = {
           loadLocal: '端末読込',
           output: '駒出力',
           print: '印刷',
-          driveFolder: 'フォルダ変更',
         },
       },
     },

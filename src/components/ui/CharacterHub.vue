@@ -41,7 +41,7 @@
           <li
             v-for="ch in characters"
             :key="ch.id"
-            :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
+            :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentCloudFileId }]"
           >
             <div class="character-hub--item-main">
               <button class="character-hub--name" @click="confirmLoad(ch)">
@@ -91,7 +91,7 @@ const handleLogout = () => {
 const props = defineProps({
   dataManager: Object,
   loadCharacter: Function,
-  saveToDrive: Function,
+  saveToCloud: Function,
 });
 
 const characterToDelete = ref(null);
@@ -101,7 +101,7 @@ const { showToast, showAsyncToast } = useNotifications();
 const { showModal } = useModal();
 
 const characters = computed(() =>
-  [...uiStore.driveCharacters].sort((a, b) => {
+  [...uiStore.cloudCharacters].sort((a, b) => {
     const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
     const tB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
     return tB - tA;
@@ -115,24 +115,24 @@ onMounted(() => {
 });
 
 async function ensureCharacters() {
-  if (isAuthenticated.value && uiStore.driveCharacters.length === 0) {
-    await uiStore.refreshDriveCharacters(props.dataManager);
+  if (isAuthenticated.value && uiStore.cloudCharacters.length === 0) {
+    await uiStore.refreshCloudCharacters(props.dataManager);
   }
 }
 
 function refreshList() {
-  return uiStore.refreshDriveCharacters(props.dataManager);
+  return uiStore.refreshCloudCharacters(props.dataManager);
 }
 
 async function saveNew() {
-  if (props.saveToDrive) {
-    await props.saveToDrive(null);
+  if (props.saveToCloud) {
+    await props.saveToCloud(null);
   }
 }
 
 async function overwrite(ch) {
-  if (props.saveToDrive) {
-    await props.saveToDrive(ch.id);
+  if (props.saveToCloud) {
+    await props.saveToCloud(ch.id);
   }
 }
 
@@ -161,14 +161,14 @@ async function executeDelete() {
   if (!ch) return;
 
   if (ch.id.startsWith('temp-')) {
-    uiStore.cancelPendingDriveSave(ch.id);
-    uiStore.removeDriveCharacter(ch.id);
+    uiStore.cancelPendingCloudSave(ch.id);
+    uiStore.removeCloudCharacter(ch.id);
     showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
   } else {
-    const previous = [...uiStore.driveCharacters];
-    uiStore.removeDriveCharacter(ch.id);
+    const previous = [...uiStore.cloudCharacters];
+    uiStore.removeCloudCharacter(ch.id);
     const deletePromise = props.dataManager.deleteCloudCharacter(ch.id).catch((err) => {
-      uiStore.driveCharacters = previous;
+      uiStore.cloudCharacters = previous;
       throw err;
     });
     showAsyncToast(deletePromise, {

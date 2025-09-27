@@ -76,10 +76,6 @@ defineExpose({ headerEl, helpIcon });
   font-size: min(4vw, 30px);
 }
 
-.google-drive-button-container {
-  position: relative;
-}
-
 .icon-button {
   padding: 8px;
   background-color: var(--color-panel-body);

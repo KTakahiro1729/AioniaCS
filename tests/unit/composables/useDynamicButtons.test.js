@@ -19,7 +19,7 @@ describe('useDynamicButtons', () => {
   test('new save label when no file id', () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
-    uiStore.currentDriveFileId = null;
+    uiStore.currentCloudFileId = null;
     const { saveButton } = useDynamicButtons();
     expect(saveButton.value.label).toBe(messages.ui.buttons.saveCloudNew);
   });
@@ -27,12 +27,12 @@ describe('useDynamicButtons', () => {
   test('overwrite label when file exists', () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
-    uiStore.currentDriveFileId = '1';
+    uiStore.currentCloudFileId = '1';
     const { saveButton } = useDynamicButtons();
     expect(saveButton.value.label).toBe(messages.ui.buttons.saveCloudOverwrite);
   });
 
-  test('load button uses drive when signed in', () => {
+  test('load button uses cloud when signed in', () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
     const { loadButton } = useDynamicButtons();
