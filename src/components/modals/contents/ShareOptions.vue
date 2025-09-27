@@ -8,7 +8,7 @@
       <div class="share-options__row">
         <label class="share-options__option">
           <input type="radio" value="dynamic" v-model="type" />反映する
-          <div class="share-options__note">Google Drive連携が必要です</div>
+          <div class="share-options__note">クラウド同期が必要です</div>
         </label>
       </div>
     </section>
@@ -17,7 +17,7 @@
       <div class="share-options__row">
         <label class="share-options__option">
           <input type="checkbox" v-model="includeFull" />画像・メモ（長文の場合）を含める
-          <div class="share-options__note">Google Drive連携が必要です</div>
+          <div class="share-options__note">クラウド同期が必要です</div>
         </label>
       </div>
       <p v-if="showTruncateWarning" class="share-options__warning">内容が一部省略される可能性があります</p>
@@ -38,7 +38,7 @@
         </label>
       </div>
     </section>
-    <button class="button-base share-options__signin" v-if="needSignin" @click="handleSignin">Google Drive にサインイン</button>
+    <button class="button-base share-options__signin" v-if="needSignin" @click="handleSignin">クラウドにサインイン</button>
   </div>
 </template>
 
@@ -61,7 +61,7 @@ watchEffect(() => {
 defineExpose({ type, includeFull, password, expires, enablePassword });
 
 function handleSignin() {
-  if (window.__driveSignIn) window.__driveSignIn();
+  if (window.__cloudSignIn) window.__cloudSignIn();
 }
 </script>
 

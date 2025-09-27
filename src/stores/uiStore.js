@@ -6,10 +6,10 @@ export const useUiStore = defineStore('ui', {
     isCloudSaveSuccess: false,
     isSignedIn: false,
     isLoading: false,
-    currentDriveFileId: null,
+    currentCloudFileId: null,
     isViewingShared: false,
-    driveCharacters: [],
-    pendingDriveSaves: {},
+    cloudCharacters: [],
+    pendingCloudSaves: {},
     showHeader: true,
   }),
   getters: {
@@ -24,14 +24,14 @@ export const useUiStore = defineStore('ui', {
     setLoading(flag) {
       this.isLoading = flag;
     },
-    async refreshDriveCharacters(dataManager) {
+    async refreshCloudCharacters(dataManager) {
       if (!dataManager) return;
-      const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await dataManager.loadCharacterListFromDrive();
+      const temps = this.cloudCharacters.filter((c) => c.id.startsWith('temp-'));
+      const serverList = await dataManager.loadCharacterListFromCloud();
       const serverIds = new Set(serverList.map((c) => c.id));
 
       // Keep local entries that still exist on server
-      let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
+      let merged = this.cloudCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
 
       // Add or update server entries
       serverList.forEach((srv) => {
@@ -50,37 +50,37 @@ export const useUiStore = defineStore('ui', {
         }
       });
 
-      this.driveCharacters = merged;
+      this.cloudCharacters = merged;
     },
-    clearDriveCharacters() {
-      this.driveCharacters = [];
+    clearCloudCharacters() {
+      this.cloudCharacters = [];
     },
-    addDriveCharacter(ch) {
-      this.driveCharacters.push(ch);
+    addCloudCharacter(ch) {
+      this.cloudCharacters.push(ch);
     },
-    updateDriveCharacter(id, updates) {
-      const idx = this.driveCharacters.findIndex((c) => c.id === id);
+    updateCloudCharacter(id, updates) {
+      const idx = this.cloudCharacters.findIndex((c) => c.id === id);
       if (idx !== -1) {
-        this.driveCharacters[idx] = {
-          ...this.driveCharacters[idx],
+        this.cloudCharacters[idx] = {
+          ...this.cloudCharacters[idx],
           ...updates,
         };
       }
     },
-    removeDriveCharacter(id) {
-      this.driveCharacters = this.driveCharacters.filter((c) => c.id !== id);
+    removeCloudCharacter(id) {
+      this.cloudCharacters = this.cloudCharacters.filter((c) => c.id !== id);
     },
-    registerPendingDriveSave(id) {
-      this.pendingDriveSaves[id] = { canceled: false };
-      return this.pendingDriveSaves[id];
+    registerPendingCloudSave(id) {
+      this.pendingCloudSaves[id] = { canceled: false };
+      return this.pendingCloudSaves[id];
     },
-    cancelPendingDriveSave(id) {
-      if (this.pendingDriveSaves[id]) {
-        this.pendingDriveSaves[id].canceled = true;
+    cancelPendingCloudSave(id) {
+      if (this.pendingCloudSaves[id]) {
+        this.pendingCloudSaves[id].canceled = true;
       }
     },
-    completePendingDriveSave(id) {
-      delete this.pendingDriveSaves[id];
+    completePendingCloudSave(id) {
+      delete this.pendingCloudSaves[id];
     },
   },
 });

@@ -312,7 +312,7 @@ describe('DataManager', () => {
     test('creates new file and adds index when no id', async () => {
       const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
       expect(res).toHaveProperty('id');
-      const list = await dm.loadCharacterListFromDrive();
+      const list = await dm.loadCharacterListFromCloud();
       expect(list).toEqual(expect.arrayContaining([expect.objectContaining({ id: res.id, characterName: 'TestChar' })]));
     });
 
@@ -320,7 +320,7 @@ describe('DataManager', () => {
       const created = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
       mockCharacter.name = 'Updated Name';
       await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, created.id);
-      const list = await dm.loadCharacterListFromDrive();
+      const list = await dm.loadCharacterListFromCloud();
       expect(list).toHaveLength(1);
       expect(list[0]).toEqual(expect.objectContaining({ id: created.id, characterName: 'Updated Name' }));
       const stored = await dm.loadCloudCharacter(created.id);

@@ -223,7 +223,7 @@ export class DataManager {
   }
 
   /**
-   * Exports character data to a user selected Drive folder.
+   * Exports character data to a user selected cloud folder.
    * @param {object} character - The character data.
    * @param {Array} skills - The skills data.
    * @param {Array} specialSkills - The special skills data.
@@ -232,9 +232,9 @@ export class DataManager {
    * @param {string} targetFolderId - The ID of the folder to save to.
    * @param {string|null} currentFileId - The ID of the file if it exists (for updating).
    * @param {string} fileName - The desired name for the file.
-   * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
+   * @returns {Promise<object|null>} Result from CloudStorageService.saveCharacter or null on error.
    */
-  async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId) {
+  async exportDataToCloudFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId) {
     this._ensureCloudReady();
 
     const dataToSave = {
@@ -287,11 +287,11 @@ export class DataManager {
   }
 
   /**
-   * Loads data from a file in Google Drive.
+   * Loads data from a file in cloud storage.
    * @param {string} fileId - The ID of the file to load.
    * @returns {Promise<object|null>} Parsed character data or null on error.
    */
-  async loadDataFromDrive(fileId) {
+  async loadDataFromCloud(fileId) {
     this._ensureCloudReady();
 
     try {
@@ -312,10 +312,10 @@ export class DataManager {
   }
 
   /**
-   * Loads the character index and returns only valid entries.
+   * Loads the cloud character index and returns only valid entries.
    * @returns {Promise<Array>} Array of valid index entries
    */
-  async loadCharacterListFromDrive() {
+  async loadCharacterListFromCloud() {
     this._ensureCloudReady();
 
     return this.cloudStorageService.listCharacters(this.cloudUserId);

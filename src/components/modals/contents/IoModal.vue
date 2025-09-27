@@ -19,9 +19,6 @@
     <button class="button-base" @click="$emit('print')">
       {{ printLabel }}
     </button>
-    <button class="button-base" v-if="signedIn" @click="$emit('drive-folder')">
-      {{ driveFolderLabel }}
-    </button>
   </div>
 </template>
 
@@ -30,16 +27,14 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import AnimatedButton from '../../common/AnimatedButton.vue';
 
 defineProps({
-  signedIn: Boolean,
   saveLocalLabel: String,
   loadLocalLabel: String,
   outputLabels: Object,
   outputTimings: Object,
   printLabel: String,
-  driveFolderLabel: String,
 });
 
-defineEmits(['save-local', 'load-local', 'output-cocofolia', 'print', 'drive-folder']);
+defineEmits(['save-local', 'load-local', 'output-cocofolia', 'print']);
 
 const triggerKey = ref(0);
 function triggerAnimation() {

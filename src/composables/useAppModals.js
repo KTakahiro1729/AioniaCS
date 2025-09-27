@@ -2,7 +2,6 @@ import { reactive, defineAsyncComponent } from 'vue';
 import { useModal } from './useModal.js';
 import { useUiStore } from '../stores/uiStore.js';
 const CharacterHub = defineAsyncComponent(() => import('../components/ui/CharacterHub.vue'));
-const CharacterHubControls = defineAsyncComponent(() => import('../components/ui/CharacterHubControls.vue'));
 const IoModal = defineAsyncComponent(() => import('../components/modals/contents/IoModal.vue'));
 const ShareOptions = defineAsyncComponent(() => import('../components/modals/contents/ShareOptions.vue'));
 
@@ -18,17 +17,13 @@ export function useAppModals(options) {
   const {
     dataManager,
     loadCharacterById,
-    saveCharacterToDrive,
+    saveCharacterToCloud,
     handleSignInClick,
-    handleSignOutClick,
-    refreshHubList,
-    saveNewCharacter,
     saveData,
     handleFileUpload,
     outputToCocofolia,
     printCharacterSheet,
     openPreviewPage,
-    promptForDriveFolder,
     copyEditCallback,
   } = options;
 
@@ -39,16 +34,7 @@ export function useAppModals(options) {
       props: {
         dataManager,
         loadCharacter: loadCharacterById,
-        saveToDrive: saveCharacterToDrive,
-      },
-      globalActions: {
-        component: CharacterHubControls,
-        on: {
-          'sign-in': handleSignInClick,
-          'sign-out': handleSignOutClick,
-          refresh: refreshHubList,
-          new: saveNewCharacter,
-        },
+        saveToCloud: saveCharacterToCloud,
       },
       buttons: [],
     });
@@ -60,7 +46,6 @@ export function useAppModals(options) {
       component: IoModal,
       title: messages.ui.modal.io.title,
       props: {
-        signedIn: uiStore.isSignedIn,
         saveLocalLabel: messages.ui.modal.io.buttons.saveLocal,
         loadLocalLabel: messages.ui.modal.io.buttons.loadLocal,
         outputLabels: {
@@ -70,7 +55,6 @@ export function useAppModals(options) {
         },
         outputTimings: messages.outputButton.animationTimings,
         printLabel: messages.ui.modal.io.buttons.print,
-        driveFolderLabel: messages.ui.modal.io.buttons.driveFolder,
       },
       buttons: [],
       on: {
@@ -78,7 +62,6 @@ export function useAppModals(options) {
         'load-local': handleFileUpload,
         'output-cocofolia': outputToCocofolia,
         print: handlePrint,
-        'drive-folder': promptForDriveFolder,
       },
     });
   }
@@ -93,7 +76,7 @@ export function useAppModals(options) {
     const { generateShare, copyLink, isLongData } = useShare();
     const { showToast } = useNotifications();
     const modalStore = useModalStore();
-    window.__driveSignIn = handleSignInClick;
+    window.__cloudSignIn = handleSignInClick;
     const generateButton = reactive({
       label: messages.ui.modal.generate,
       value: 'generate',
@@ -117,7 +100,7 @@ export function useAppModals(options) {
       ],
       on: { 'update:canGenerate': updateCanGenerate },
     });
-    delete window.__driveSignIn;
+    delete window.__cloudSignIn;
     if (result.value !== 'generate' || !result.component) return;
     const optsComp = result.component;
     const opts = {

@@ -34,14 +34,7 @@ useKeyboardHandling();
 const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataExport();
 const { printCharacterSheet, openPreviewPage } = usePrint();
 
-const {
-  handleSignInClick,
-  handleSignOutClick,
-  promptForDriveFolder,
-  saveCharacterToDrive,
-  saveOrUpdateCurrentCharacterInDrive,
-  refreshHubList,
-} = useCloudSync(dataManager);
+const { handleSignInClick, saveCharacterToCloud, saveOrUpdateCurrentCharacterInCloud } = useCloudSync(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
   helpPanelRef,
@@ -52,42 +45,34 @@ const { showAsyncToast } = useNotifications();
 const { showModal } = useModal();
 const modalStore = useModalStore();
 
-async function saveNewCharacter() {
-  await saveCharacterToDrive(null);
-}
-
 async function loadCharacterById(id, characterName) {
-  const loadPromise = dataManager.loadDataFromDrive(id).then((parsedData) => {
+  const loadPromise = dataManager.loadDataFromCloud(id).then((parsedData) => {
     if (parsedData) {
       Object.assign(characterStore.character, parsedData.character);
       characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
       characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
       Object.assign(characterStore.equipments, parsedData.equipments);
       characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
-      uiStore.currentDriveFileId = id;
+      uiStore.currentCloudFileId = id;
     }
   });
   showAsyncToast(loadPromise, {
-    loading: messages.googleDrive.load.loading(characterName),
-    success: messages.googleDrive.load.success(characterName),
-    error: (err) => messages.googleDrive.load.error(err),
+    loading: messages.cloudStorage.load.loading(characterName),
+    success: messages.cloudStorage.load.success(characterName),
+    error: (err) => messages.cloudStorage.load.error(err),
   });
 }
 
 const { openHub, openIoModal, openShareModal } = useAppModals({
   dataManager,
   loadCharacterById,
-  saveCharacterToDrive,
+  saveCharacterToCloud,
   handleSignInClick,
-  handleSignOutClick,
-  refreshHubList,
-  saveNewCharacter,
   saveData,
   handleFileUpload,
   outputToCocofolia,
   printCharacterSheet,
   openPreviewPage,
-  promptForDriveFolder,
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
@@ -168,7 +153,7 @@ onMounted(initialize);
     :save-local="saveData"
     :handle-file-upload="handleFileUpload"
     :open-hub="openHub"
-    :save-to-drive="saveOrUpdateCurrentCharacterInDrive"
+    :save-to-cloud="saveOrUpdateCurrentCharacterInCloud"
     :experience-label="messages.ui.footer.experience"
     :io-label="messages.ui.footer.io"
     :share-label="messages.ui.footer.share"
