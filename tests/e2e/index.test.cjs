@@ -6,6 +6,14 @@ const SAMPLE_IMAGE_PATH = path.resolve(__dirname, '../fixtures/sample.png');
 const SAMPLE_IMAGE_PATH_2 = path.resolve(__dirname, '../fixtures/sample2.png'); // Assume another sample image for multi-image tests
 const TEST_ZIP_PATH = path.resolve(__dirname, '../fixtures/test_char.zip');
 
+const waitForUploadResponse = (page) =>
+  page.waitForResponse(
+    (response) =>
+      response.url().includes('/.netlify/functions/upload-character-image') &&
+      response.request().method() === 'POST' &&
+      response.status() === 200,
+  );
+
 // Helper to create a dummy file if sample2.png doesn't exist (Playwright needs actual files for upload)
 const fs = require('fs');
 if (!fs.existsSync(SAMPLE_IMAGE_PATH_2)) {
@@ -39,7 +47,9 @@ test.describe('Character Sheet E2E Tests', () => {
 
       // 2. Upload image
       const imageUploadInput = page.locator('#character_image_upload');
+      const uploadResponsePromise = waitForUploadResponse(page);
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
+      await uploadResponsePromise;
 
       // 3. Verify image display
       const imageDisplay = page.locator('.character-image-display');
@@ -62,16 +72,22 @@ test.describe('Character Sheet E2E Tests', () => {
       const removeButton = page.locator('.imagefile-button--delete:has-text("削除")');
 
       // Upload 3 images (using sample & sample2, then sample again for a third distinct one in array)
+      let uploadResponsePromise = waitForUploadResponse(page);
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
+      await uploadResponsePromise;
       await expect(imageCountDisplay).toHaveText('1 / 1');
       let firstImageSrc = await imageDisplay.getAttribute('src');
 
+      uploadResponsePromise = waitForUploadResponse(page);
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH_2);
+      await uploadResponsePromise;
       await expect(imageCountDisplay).toHaveText('2 / 2'); // Should be current index + 1 / length
       let secondImageSrc = await imageDisplay.getAttribute('src');
       expect(secondImageSrc).not.toBe(firstImageSrc); // Check if src changed
 
+      uploadResponsePromise = waitForUploadResponse(page);
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH); // Upload a third image
+      await uploadResponsePromise;
       await expect(imageCountDisplay).toHaveText('3 / 3');
       let thirdImageSrc = await imageDisplay.getAttribute('src');
       expect(thirdImageSrc).not.toBe(secondImageSrc);
@@ -119,7 +135,9 @@ test.describe('Character Sheet E2E Tests', () => {
     test('saves as ZIP when images are present', async ({ page }) => {
       await page.locator('#name').fill('ZipSaveChar');
       const imageUploadInput = page.locator('#character_image_upload');
+      const uploadResponsePromise = waitForUploadResponse(page);
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
+      await uploadResponsePromise;
       await expect(page.locator('.character-image-display')).toBeVisible();
 
       const [zipDownload] = await Promise.all([
