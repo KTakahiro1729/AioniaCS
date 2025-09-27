@@ -1,46 +1,71 @@
 <template>
   <div class="character-hub">
     <div v-if="!isAuthenticated" class="auth-section">
-      <h2>ログインが必要です</h2>
-      <p>キャラクターデータをクラウドに保存・読込するにはログインしてください。</p>
+      <h2>クラウド同期にはログインが必要です</h2>
+      <p>
+        Cloudflare R2 に保存されたキャラクターデータを利用するには、アカウントにログインしてください。
+      </p>
       <button class="button-base login-button" @click="handleLogin">ログイン / 新規登録</button>
     </div>
 
     <div v-else class="hub-content">
-      <div class="account-info">
-        <span class="user-name">{{ user.name }}</span>
-        <button class="button-base button-compact logout-button" @click="handleLogout">ログアウト</button>
-      </div>
-      <hr class="divider" />
+      <header class="hub-header">
+        <div class="hub-header__text">
+          <h2 class="hub-title">クラウドキャラクターハブ</h2>
+          <p class="hub-description">
+            Cloudflare R2 に保存されたキャラクターの保存・読込・エクスポートをここで管理できます。
+          </p>
+        </div>
+        <div class="account-info">
+          <span class="user-name">{{ user.name }}</span>
+          <button class="button-base button-compact logout-button" @click="handleLogout">ログアウト</button>
+        </div>
+      </header>
 
-      <ul class="character-hub--list">
-        <li
-          v-for="ch in characters"
-          :key="ch.id"
-          :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
-        >
-          <span>
-            <button class="character-hub--name" @click="confirmLoad(ch)">
-              {{ ch.characterName || '名もなき冒険者' }}
-            </button>
-            <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
-          </span>
-          <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--actions-container">
-            <p class="character-hub--confirmation-message">本当に削除しますか？</p>
-            <div class="character-hub--confirmation-actions">
-              <button class="button-base button-compact" @click="executeDelete">はい</button>
-              <button class="button-base button-compact button-secondary" @click="cancelDelete">いいえ</button>
+      <section class="hub-actions" aria-label="クラウド操作">
+        <button class="button-base button-compact" @click="saveNew">クラウドに新規保存</button>
+        <button class="button-base button-compact button-secondary" @click="refreshList">一覧を更新</button>
+      </section>
+
+      <section class="hub-list" aria-label="保存済みキャラクター">
+        <header class="hub-list__header">
+          <h3 class="hub-list__title">保存済みキャラクター</h3>
+          <span class="hub-list__count">全 {{ characters.length }} 件</span>
+        </header>
+
+        <p v-if="characters.length === 0" class="hub-empty">
+          まだクラウドに保存されたキャラクターはありません。現在のシートを保存してクラウド同期を開始しましょう。
+        </p>
+
+        <ul v-else class="character-hub--list">
+          <li
+            v-for="ch in characters"
+            :key="ch.id"
+            :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
+          >
+            <div class="character-hub--item-main">
+              <button class="character-hub--name" @click="confirmLoad(ch)">
+                {{ ch.characterName || '名もなき冒険者' }}
+              </button>
+              <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
             </div>
-          </div>
-          <div v-else class="character-hub--actions-container">
-            <div class="character-hub--actions-inline">
-              <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
-              <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
-              <button class="button-base button-compact" @click="startDelete(ch)">削除</button>
+            <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--actions-container">
+              <p class="character-hub--confirmation-message">本当に削除しますか？</p>
+              <div class="character-hub--confirmation-actions">
+                <button class="button-base button-compact" @click="executeDelete">はい</button>
+                <button class="button-base button-compact button-secondary" @click="cancelDelete">いいえ</button>
+              </div>
             </div>
-          </div>
-        </li>
-      </ul>
+            <div v-else class="character-hub--actions-container">
+              <div class="character-hub--actions-inline" aria-label="保存データに対する操作">
+                <button class="button-base button-compact" @click="overwrite(ch)">クラウドを上書き</button>
+                <button class="button-base button-compact" @click="exportLocal(ch)">端末へ保存</button>
+                <button class="button-base button-compact" @click="startDelete(ch)">削除</button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </section>
     </div>
   </div>
 </template>
@@ -49,7 +74,6 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAuth0 } from '@auth0/auth0-vue';
 import { useUiStore } from '../../stores/uiStore.js';
-import { useCharacterStore } from '../../stores/characterStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 import { useModal } from '../../composables/useModal.js';
 import { messages } from '../../locales/ja.js';
@@ -73,7 +97,6 @@ const props = defineProps({
 const characterToDelete = ref(null);
 
 const uiStore = useUiStore();
-const characterStore = useCharacterStore();
 const { showToast, showAsyncToast } = useNotifications();
 const { showModal } = useModal();
 
@@ -177,47 +200,185 @@ async function exportLocal(ch) {
 <style scoped>
 .character-hub {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.character-hub--description {
-  text-align: center;
+.hub-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hub-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px;
+  background-color: var(--color-panel-header);
+  border: 1px solid var(--color-border-dark);
+  border-radius: 8px;
+}
+
+@media (min-width: 720px) {
+  .hub-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.hub-header__text {
+  max-width: 60ch;
+}
+
+.hub-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.hub-description {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.user-name {
+  font-size: 14px;
+  color: var(--color-text-normal);
+}
+
+.hub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.hub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hub-list__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.hub-list__title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.hub-list__count {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.hub-empty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--color-border-normal);
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
 }
 
 .character-hub--list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   max-height: 400px;
   overflow-y: auto;
 }
 
 .character-hub--item {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  align-content: space-around;
-  gap: 3px;
-  padding: 4px;
-  margin-top: 4px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-normal);
+  border-radius: 10px;
+  background-color: var(--color-panel-body);
 }
+
+.character-hub--item--highlighted {
+  box-shadow:
+    inset 0 0 0 1px var(--color-accent),
+    0 0 6px var(--color-accent);
+}
+
+.character-hub--item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (min-width: 640px) {
+  .character-hub--item-main {
+    flex-direction: row;
+    align-items: baseline;
+  }
+}
+
 .character-hub--name {
   background: none;
   border: none;
   color: var(--color-accent);
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  padding-right: 15px;
+  padding: 0;
   text-align: left;
   overflow-wrap: break-word;
   word-break: break-all;
 }
 
+.character-hub--date {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.character-hub--actions-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.character-hub--actions-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.character-hub--confirmation-message {
+  margin: 0;
+  margin-right: 16px;
+  color: var(--color-text-muted);
+}
+
 .button-compact {
-  padding: 3px 4px;
+  padding: 6px 10px;
   font-size: 0.9em;
-  border-radius: 0px;
-  font-weight: 400;
+  border-radius: 4px;
+  font-weight: 500;
   height: auto;
   width: auto;
 }
@@ -228,36 +389,6 @@ async function exportLocal(ch) {
   background-color: transparent;
   box-shadow: none;
   text-shadow: none;
-}
-
-.button-compact:not(:first-of-type) {
-  border-left: none;
-}
-
-.character-hub--date {
-  color: var(--color-text-muted);
-  flex-grow: 1;
-}
-.character-hub--actions-container {
-  display: flex;
-  margin: 0 0 0 auto;
-  justify-content: flex-end;
-  flex-direction: row;
-  align-items: center;
-}
-
-.character-hub--actions-inline {
-  display: flex;
-}
-.character-hub--item--highlighted {
-  background-color: var(--color-panel-body);
-  box-shadow:
-    inset 0 0 2px var(--color-accent),
-    0 0 6px var(--color-accent);
-}
-
-.character-hub--confirmation-message {
-  margin: 0 30px 0 0;
 }
 
 .auth-section {
@@ -274,27 +405,7 @@ async function exportLocal(ch) {
   font-size: 16px;
 }
 
-.account-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: var(--color-panel-header);
-  border-bottom: 1px solid var(--color-border-dark);
-}
-
-.user-name {
-  font-size: 14px;
-  color: var(--color-text-normal);
-}
-
 .logout-button {
   font-size: 12px;
-}
-
-.divider {
-  border: none;
-  border-top: 1px solid var(--color-border-normal);
-  margin: 0;
 }
 </style>
