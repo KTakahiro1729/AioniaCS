@@ -1,4 +1,5 @@
 import { setActivePinia, createPinia } from 'pinia';
+import { vi } from 'vitest';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
 describe('uiStore character cache', () => {
@@ -12,8 +13,8 @@ describe('uiStore character cache', () => {
       { id: '2', characterName: 'B' },
       { id: 'temp-1', characterName: 'Temp' },
     ];
-    const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: '1' }]) };
-    await store.refreshDriveCharacters(gdm);
+    const dataManager = { loadCharacterListFromDrive: vi.fn().mockResolvedValue([{ id: '1' }]) };
+    await store.refreshDriveCharacters(dataManager);
     expect(store.driveCharacters).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', characterName: 'Temp' })]),
     );

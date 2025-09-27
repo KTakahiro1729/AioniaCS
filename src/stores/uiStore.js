@@ -5,11 +5,7 @@ export const useUiStore = defineStore('ui', {
   state: () => ({
     isCloudSaveSuccess: false,
     isSignedIn: false,
-    isGapiInitialized: false,
-    isGisInitialized: false,
     isLoading: false,
-    driveFolderId: null,
-    driveFolderName: '',
     currentDriveFileId: null,
     isViewingShared: false,
     driveCharacters: [],
@@ -23,21 +19,15 @@ export const useUiStore = defineStore('ui', {
         ? 'status-display--experience-over'
         : 'status-display--experience-ok';
     },
-    canSignInToGoogle(state) {
-      return state.isGapiInitialized && state.isGisInitialized && !state.isSignedIn;
-    },
-    canOperateDrive(state) {
-      return state.isSignedIn && state.driveFolderId;
-    },
   },
   actions: {
     setLoading(flag) {
       this.isLoading = flag;
     },
-    async refreshDriveCharacters(gdm) {
-      if (!gdm) return;
+    async refreshDriveCharacters(dataManager) {
+      if (!dataManager) return;
       const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await gdm.readIndexFile();
+      const serverList = await dataManager.loadCharacterListFromDrive();
       const serverIds = new Set(serverList.map((c) => c.id));
 
       // Keep local entries that still exist on server
