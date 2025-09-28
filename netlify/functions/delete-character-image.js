@@ -1,6 +1,6 @@
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { verifyToken } from './utils/auth.js';
-import { getBucketName, getR2Client, extractKeyFromUrl, ensureImageOwnership } from './utils/r2.js';
+import { getBucketName, getR2Client, assertValidImageKey, ensureImageOwnership } from './utils/r2.js';
 
 const client = getR2Client();
 const bucket = getBucketName();
@@ -38,18 +38,17 @@ export const handler = async (event) => {
     };
   }
 
-  const { url } = payload;
-  if (!url) {
+  const { key } = payload;
+  if (!key) {
     return {
       statusCode: 400,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: '画像URLが必要です。' }),
+      body: JSON.stringify({ error: '画像キーが必要です。' }),
     };
   }
 
-  let key;
   try {
-    key = extractKeyFromUrl(url);
+    assertValidImageKey(key);
     ensureImageOwnership(auth.userId, key);
   } catch (error) {
     return {
@@ -69,7 +68,7 @@ export const handler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Image deleted', url }),
+      body: JSON.stringify({ message: 'Image deleted', key }),
     };
   } catch (error) {
     console.error('Failed to delete image:', error);

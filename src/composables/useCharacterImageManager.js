@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { useAuth0 } from '@auth0/auth0-vue';
 import { CloudStorageService } from '../services/cloudStorageService.js';
 import { ImageManager } from '../services/imageManager.js';
+import { extractCharacterImageKey } from '../utils/imageProxy.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
 
@@ -57,10 +58,10 @@ export function useCharacterImageManager() {
 
     try {
       const result = await uploadPromise;
-      if (!result?.url) {
-        throw new Error('画像URLの取得に失敗しました。');
+      if (!result?.key) {
+        throw new Error('画像キーの取得に失敗しました。');
       }
-      return result.url;
+      return result.key;
     } catch (error) {
       console.error('Character image upload failed:', error);
       return null;
@@ -69,8 +70,8 @@ export function useCharacterImageManager() {
     }
   }
 
-  async function deleteImage(url) {
-    if (!url) {
+  async function deleteImage(imageKey) {
+    if (!imageKey) {
       return false;
     }
 
@@ -78,9 +79,15 @@ export function useCharacterImageManager() {
       return false;
     }
 
+    const normalizedKey = extractCharacterImageKey(imageKey);
+    if (!normalizedKey) {
+      showToast({ type: 'error', ...messages.image.delete.error(new Error('画像キーが無効です。')) });
+      return false;
+    }
+
     isDeleting.value = true;
     const service = ensureService(getAccessTokenSilently);
-    const deletePromise = service.deleteCharacterImage(url);
+    const deletePromise = service.deleteCharacterImage(normalizedKey);
 
     showAsyncToast(deletePromise, {
       loading: messages.image.delete.loading(),

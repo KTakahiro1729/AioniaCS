@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { IMAGE_SETTINGS } from '../config/imageSettings.js';
 import { messages } from '../locales/ja.js';
+import { buildCharacterImageUrl } from '../utils/imageProxy.js';
 import { useCharacterImageManager } from './useCharacterImageManager.js';
 
 // 画像関連のロジックを提供するコンポーザブル関数
@@ -10,7 +11,8 @@ export function useImages(character, showCustomAlert) {
 
   const currentImageSrc = computed(() => {
     if (character.value?.images?.length > 0 && currentImageIndex.value < character.value.images.length) {
-      return character.value.images[currentImageIndex.value];
+      const key = character.value.images[currentImageIndex.value];
+      return buildCharacterImageUrl(key) || null;
     }
     return null;
   });
@@ -30,9 +32,9 @@ export function useImages(character, showCustomAlert) {
     }
 
     try {
-      const imageUrl = await uploadImage(file);
-      if (imageUrl) {
-        character.value.images.push(imageUrl);
+      const imageKey = await uploadImage(file);
+      if (imageKey) {
+        character.value.images.push(imageKey);
         currentImageIndex.value = character.value.images.length - 1;
       }
     } catch (error) {
@@ -54,8 +56,8 @@ export function useImages(character, showCustomAlert) {
 
   async function removeCurrentImage() {
     if (character.value?.images?.length > 0 && currentImageIndex.value >= 0) {
-      const targetUrl = character.value.images[currentImageIndex.value];
-      const success = await deleteImage(targetUrl);
+      const targetKey = character.value.images[currentImageIndex.value];
+      const success = await deleteImage(targetKey);
       if (!success) {
         return;
       }

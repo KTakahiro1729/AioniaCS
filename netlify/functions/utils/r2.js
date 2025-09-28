@@ -1,9 +1,12 @@
 import { S3Client } from '@aws-sdk/client-s3';
 
-const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_BASE_URL } = process.env;
+const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = process.env;
 
 let client;
 const IMAGE_FOLDER = 'images';
+const KEY_ALLOWED_PATTERN = /^[A-Za-z0-9@._|:/+\-]+$/;
+const KEY_FORBIDDEN_PATTERN = /(?:\.\.)|\\/;
+const MAX_KEY_LENGTH = 512;
 
 function ensureEnv(value, name) {
   if (!value) {
@@ -56,43 +59,100 @@ export function ensureImageOwnership(userId, key) {
     throw new Error('User ID and image key are required.');
   }
 
+  assertValidImageKey(key);
+
   const prefix = `${userId}/${IMAGE_FOLDER}/`;
   if (!key.startsWith(prefix)) {
     throw new Error('You do not have permission to modify this image.');
   }
 }
 
-function getPublicBaseUrl() {
-  const base = ensureEnv(R2_PUBLIC_BASE_URL, 'R2_PUBLIC_BASE_URL');
-  return base.endsWith('/') ? base.slice(0, -1) : base;
-}
-
-export function buildPublicUrl(key) {
-  const base = getPublicBaseUrl();
-  return `${base}/${key}`;
-}
-
-export function extractKeyFromUrl(url) {
-  if (!url) {
-    throw new Error('Image URL is required');
+export function isValidImageKey(key) {
+  if (typeof key !== 'string') {
+    return false;
   }
 
-  const base = `${getPublicBaseUrl()}/`;
-  if (!url.startsWith(base)) {
-    throw new Error('Invalid image URL');
+  if (!key || key.length > MAX_KEY_LENGTH) {
+    return false;
   }
 
-  return url.slice(base.length);
+  if (key.startsWith('/')) {
+    return false;
+  }
+
+  if (key.includes('?') || key.includes('#')) {
+    return false;
+  }
+
+  if (KEY_FORBIDDEN_PATTERN.test(key) || key.includes('//')) {
+    return false;
+  }
+
+  return KEY_ALLOWED_PATTERN.test(key);
 }
 
-export async function streamToString(stream) {
-  if (typeof stream.text === 'function') {
-    return stream.text();
+export function assertValidImageKey(key) {
+  if (!isValidImageKey(key)) {
+    throw new Error('Invalid image key.');
+  }
+}
+
+export async function streamToBuffer(stream) {
+  if (!stream) {
+    return Buffer.alloc(0);
+  }
+
+  if (Buffer.isBuffer(stream)) {
+    return stream;
+  }
+
+  if (stream instanceof Uint8Array) {
+    return Buffer.from(stream);
+  }
+
+  if (typeof stream.arrayBuffer === 'function') {
+    const arrayBuffer = await stream.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  }
+
+  if (typeof stream.getReader === 'function') {
+    const reader = stream.getReader();
+    const chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(Buffer.isBuffer(value) ? value : Buffer.from(value));
+      }
+    }
+    return Buffer.concat(chunks);
   }
 
   const chunks = [];
   for await (const chunk of stream) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+    if (!chunk) {
+      continue;
+    }
+
+    if (Buffer.isBuffer(chunk)) {
+      chunks.push(chunk);
+    } else if (chunk instanceof Uint8Array) {
+      chunks.push(Buffer.from(chunk));
+    } else if (typeof chunk === 'string') {
+      chunks.push(Buffer.from(chunk));
+    } else {
+      chunks.push(Buffer.from(chunk));
+    }
   }
-  return Buffer.concat(chunks).toString('utf-8');
+
+  return Buffer.concat(chunks);
+}
+
+export async function streamToString(stream) {
+  if (typeof stream?.text === 'function') {
+    return stream.text();
+  }
+
+  const buffer = await streamToBuffer(stream);
+  return buffer.toString('utf-8');
 }

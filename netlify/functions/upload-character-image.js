@@ -1,6 +1,6 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { verifyToken } from './utils/auth.js';
-import { getBucketName, getR2Client, generateImageKey, buildPublicUrl } from './utils/r2.js';
+import { getBucketName, getR2Client, generateImageKey } from './utils/r2.js';
 import { parseMultipartForm } from './utils/form.js';
 import { IMAGE_SETTINGS } from '../../src/config/imageSettings.js';
 
@@ -79,7 +79,7 @@ export const handler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: buildPublicUrl(key), key }),
+      body: JSON.stringify({ key }),
     };
   } catch (error) {
     console.error('Failed to upload image:', error);
