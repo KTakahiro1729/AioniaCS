@@ -3,10 +3,14 @@
     <div class="image-display-area">
       <div class="image-display-wrapper" v-if="imagesInternal.length > 0">
         <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" alt="Character Image" />
+        <div v-if="isUploading" class="image-upload-overlay">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <span class="loading-text">{{ messages.image.upload.inProgress }}</span>
+        </div>
         <button
           @click="previousImage"
           class="button-base button-imagenav button-imagenav--prev"
-          :disabled="imagesInternal.length <= 1"
+          :disabled="!canNavigate"
           aria-label="前の画像"
         >
           &lt;
@@ -14,7 +18,7 @@
         <button
           @click="nextImage"
           class="button-base button-imagenav button-imagenav--next"
-          :disabled="imagesInternal.length <= 1"
+          :disabled="!canNavigate"
           aria-label="次の画像"
         >
           &gt;
@@ -24,26 +28,42 @@
       <div class="character-image-placeholder" v-else>No Image</div>
     </div>
     <div class="image-controls" v-if="!uiStore.isViewingShared">
-      <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none" />
-      <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">画像を追加</label>
+      <input
+        type="file"
+        id="character_image_upload"
+        @change="handleImageUpload"
+        accept="image/*"
+        style="display: none"
+        :disabled="limitReached || isUploading || isDeleting"
+      />
+      <label
+        for="character_image_upload"
+        class="button-base imagefile-button imagefile-button--upload"
+        :class="{ 'imagefile-button--disabled': limitReached || isUploading || isDeleting }"
+        :aria-disabled="limitReached || isUploading || isDeleting"
+      >
+        画像を追加
+      </label>
       <button
-        :disabled="!currentImageSrc"
+        :disabled="!currentImageSrc || isUploading || isDeleting"
         @click="removeCurrentImage"
         class="button-base imagefile-button imagefile-button--delete"
         aria-label="現在の画像を削除"
       >
         削除
       </button>
+      <p v-if="limitReached" class="image-limit-message">{{ messages.image.limitNotice(IMAGE_SETTINGS.MAX_COUNT) }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
-import { ImageManager } from '../../services/imageManager.js';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 import { messages } from '../../locales/ja.js';
+import { IMAGE_SETTINGS } from '../../config/imageSettings.js';
+import { useCharacterImageManager } from '../../composables/useCharacterImageManager.js';
 
 const props = defineProps({
   images: {
@@ -54,6 +74,7 @@ const props = defineProps({
 const emit = defineEmits(['update:images']);
 const uiStore = useUiStore();
 const { showToast } = useNotifications();
+const { uploadImage, deleteImage, isUploading, isDeleting } = useCharacterImageManager();
 
 const imagesInternal = ref([...props.images]);
 let updatingFromParent = false;
@@ -80,7 +101,7 @@ watch(
   { deep: true },
 );
 
-const currentImageIndex = ref(0);
+const currentImageIndex = ref(imagesInternal.value.length > 0 ? 0 : -1);
 
 const currentImageSrc = computed(() => {
   if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0 && currentImageIndex.value < imagesInternal.value.length) {
@@ -89,41 +110,67 @@ const currentImageSrc = computed(() => {
   return null;
 });
 
+const limitReached = computed(() => imagesInternal.value.length >= IMAGE_SETTINGS.MAX_COUNT);
+const canNavigate = computed(() => imagesInternal.value.length > 1 && !isUploading.value && !isDeleting.value);
+
+watch(
+  () => imagesInternal.value.length,
+  (length) => {
+    if (length === 0) {
+      currentImageIndex.value = -1;
+    } else if (currentImageIndex.value < 0) {
+      currentImageIndex.value = 0;
+    } else if (currentImageIndex.value >= length) {
+      currentImageIndex.value = length - 1;
+    }
+  },
+);
+
 const nextImage = () => {
-  if (imagesInternal.value.length > 0) {
+  if (imagesInternal.value.length > 0 && !isUploading.value && !isDeleting.value) {
     currentImageIndex.value = (currentImageIndex.value + 1) % imagesInternal.value.length;
   }
 };
 
 const previousImage = () => {
-  if (imagesInternal.value.length > 0) {
+  if (imagesInternal.value.length > 0 && !isUploading.value && !isDeleting.value) {
     currentImageIndex.value = (currentImageIndex.value - 1 + imagesInternal.value.length) % imagesInternal.value.length;
   }
 };
 
-const removeCurrentImage = () => {
-  if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0) {
-    imagesInternal.value.splice(currentImageIndex.value, 1);
-    if (imagesInternal.value.length === 0) {
-      currentImageIndex.value = -1;
-    } else if (currentImageIndex.value >= imagesInternal.value.length) {
-      currentImageIndex.value = imagesInternal.value.length - 1;
-    }
+const removeCurrentImage = async () => {
+  if (imagesInternal.value.length === 0 || currentImageIndex.value < 0) {
+    return;
+  }
+
+  const targetUrl = imagesInternal.value[currentImageIndex.value];
+  const success = await deleteImage(targetUrl);
+  if (!success) {
+    return;
+  }
+
+  imagesInternal.value.splice(currentImageIndex.value, 1);
+  if (imagesInternal.value.length === 0) {
+    currentImageIndex.value = -1;
+  } else if (currentImageIndex.value >= imagesInternal.value.length) {
+    currentImageIndex.value = imagesInternal.value.length - 1;
   }
 };
 
 const handleImageUpload = async (event) => {
   const file = event.target.files[0];
+  event.target.value = null;
   if (!file) return;
-  try {
-    const imageData = await ImageManager.loadImage(file);
-    imagesInternal.value.push(imageData);
+
+  if (limitReached.value) {
+    showToast({ type: 'error', ...messages.image.limitReached(IMAGE_SETTINGS.MAX_COUNT) });
+    return;
+  }
+
+  const uploadedUrl = await uploadImage(file);
+  if (uploadedUrl) {
+    imagesInternal.value.push(uploadedUrl);
     currentImageIndex.value = imagesInternal.value.length - 1;
-  } catch (error) {
-    console.error('Error loading image:', error);
-    showToast({ type: 'error', ...messages.image.loadError(error) });
-  } finally {
-    event.target.value = null;
   }
 };
 </script>
@@ -179,6 +226,41 @@ const handleImageUpload = async (event) => {
 
 .image-display-wrapper .character-image-display {
   display: block;
+}
+
+.image-upload-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--color-text-inverse, #fff);
+  gap: 0.5rem;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--color-accent, #f5c518);
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .image-display-wrapper:hover .button-imagenav:not(:disabled) {
@@ -275,5 +357,19 @@ const handleImageUpload = async (event) => {
   border-color: var(--color-border-normal);
   box-shadow: none;
   text-shadow: none;
+}
+
+.imagefile-button--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.image-limit-message {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #b0b0b0);
+  margin: 0;
 }
 </style>

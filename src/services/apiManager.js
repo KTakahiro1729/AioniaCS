@@ -68,10 +68,16 @@ export class ApiManager {
     const fetchOptions = { method, headers };
 
     if (options.body !== undefined) {
-      if (!headers.has('Content-Type')) {
-        headers.set('Content-Type', 'application/json');
+      const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+      if (isFormData) {
+        headers.delete('Content-Type');
+        fetchOptions.body = options.body;
+      } else {
+        if (!headers.has('Content-Type')) {
+          headers.set('Content-Type', 'application/json');
+        }
+        fetchOptions.body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
       }
-      fetchOptions.body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
     }
 
     const response = await fetch(url, fetchOptions);
@@ -108,6 +114,20 @@ export class ApiManager {
       throw new Error('Character ID is required.');
     }
     return this.request('delete-character', { method: 'DELETE', params: { id } });
+  }
+
+  uploadCharacterImage(formData) {
+    if (!(typeof FormData !== 'undefined' && formData instanceof FormData)) {
+      throw new Error('FormData payload is required for image upload.');
+    }
+    return this.request('upload-character-image', { method: 'POST', body: formData });
+  }
+
+  deleteCharacterImage(url) {
+    if (!url) {
+      throw new Error('Image URL is required.');
+    }
+    return this.request('delete-character-image', { method: 'DELETE', body: { url } });
   }
 
   _ensureAuth() {

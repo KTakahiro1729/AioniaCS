@@ -3,14 +3,7 @@ const path = require('path');
 
 const INDEX_HTML_PATH = 'http://localhost:4173/AioniaCS/';
 const SAMPLE_IMAGE_PATH = path.resolve(__dirname, '../fixtures/sample.png');
-const SAMPLE_IMAGE_PATH_2 = path.resolve(__dirname, '../fixtures/sample2.png'); // Assume another sample image for multi-image tests
 const TEST_ZIP_PATH = path.resolve(__dirname, '../fixtures/test_char.zip');
-
-// Helper to create a dummy file if sample2.png doesn't exist (Playwright needs actual files for upload)
-const fs = require('fs');
-if (!fs.existsSync(SAMPLE_IMAGE_PATH_2)) {
-  fs.copyFileSync(SAMPLE_IMAGE_PATH, SAMPLE_IMAGE_PATH_2);
-}
 
 test.describe('Character Sheet E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -24,7 +17,7 @@ test.describe('Character Sheet E2E Tests', () => {
   });
 
   test.describe('Image Handling', () => {
-    test('uploads, displays image, and saves JSON (no images initially, then one image)', async ({ page }) => {
+    test('displays error toast when attempting image upload while signed out', async ({ page }) => {
       const characterNameInput = page.locator('#name');
       await characterNameInput.fill('JsonSaveChar');
 
@@ -41,93 +34,11 @@ test.describe('Character Sheet E2E Tests', () => {
       const imageUploadInput = page.locator('#character_image_upload');
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
 
-      // 3. Verify image display
+      // 3. Verify that no image is shown and an error toast is displayed
       const imageDisplay = page.locator('.character-image-display');
-      await expect(imageDisplay).toBeVisible();
-      const imageSrc = await imageDisplay.getAttribute('src');
-      expect(imageSrc).toMatch(/^data:image\/png;base64,/); // Or whatever type sample.png is if specific
-
-      // 4. Verify image count
-      const imageCountDisplay = page.locator('.image-count-display');
-      await expect(imageCountDisplay).toHaveText('1 / 1');
-    });
-
-    test('image navigation and removal', async ({ page }) => {
-      const imageUploadInput = page.locator('#character_image_upload');
-      const imageDisplay = page.locator('.character-image-display');
-      const imageCountDisplay = page.locator('.image-count-display');
-      const nextButton = page.locator('.button-imagenav:has-text(">")');
-      const prevButton = page.locator('.button-imagenav:has-text("<")');
-      // const removeButton = page.locator('.button-remove:has-text("Remove Current Image")');
-      const removeButton = page.locator('.imagefile-button--delete:has-text("削除")');
-
-      // Upload 3 images (using sample & sample2, then sample again for a third distinct one in array)
-      await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
-      await expect(imageCountDisplay).toHaveText('1 / 1');
-      let firstImageSrc = await imageDisplay.getAttribute('src');
-
-      await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH_2);
-      await expect(imageCountDisplay).toHaveText('2 / 2'); // Should be current index + 1 / length
-      let secondImageSrc = await imageDisplay.getAttribute('src');
-      expect(secondImageSrc).not.toBe(firstImageSrc); // Check if src changed
-
-      await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH); // Upload a third image
-      await expect(imageCountDisplay).toHaveText('3 / 3');
-      let thirdImageSrc = await imageDisplay.getAttribute('src');
-      expect(thirdImageSrc).not.toBe(secondImageSrc);
-
-      // Initial state: image 3 of 3 is shown (index 2)
-      await expect(imageDisplay).toHaveAttribute('src', thirdImageSrc);
-
-      // Navigate previous to image 2 (index 1)
-      await prevButton.click();
-      await expect(imageCountDisplay).toHaveText('2 / 3');
-      await expect(imageDisplay).toHaveAttribute('src', secondImageSrc);
-
-      // Navigate previous to image 1 (index 0)
-      await prevButton.click();
-      await expect(imageCountDisplay).toHaveText('1 / 3');
-      await expect(imageDisplay).toHaveAttribute('src', firstImageSrc);
-
-      // Try to go previous from first image (should loop to last)
-      await prevButton.click();
-      await expect(imageCountDisplay).toHaveText('3 / 3');
-      await expect(imageDisplay).toHaveAttribute('src', thirdImageSrc);
-
-      // Go to next from last image (should loop to first)
-      await nextButton.click();
-      await expect(imageCountDisplay).toHaveText('1 / 3');
-      await expect(imageDisplay).toHaveAttribute('src', firstImageSrc);
-
-      // Remove current image (image 1 at index 0)
-      await removeButton.click();
-      await expect(imageCountDisplay).toHaveText('1 / 2'); // Now showing new image at index 0 (old image 2)
-      await expect(imageDisplay).toHaveAttribute('src', secondImageSrc); // secondImageSrc was originally at index 1, now at 0
-
-      // Remove current image (new image at index 0, old image 2)
-      await removeButton.click();
-      await expect(imageCountDisplay).toHaveText('1 / 1'); // Now showing last remaining image (old image 3)
-      await expect(imageDisplay).toHaveAttribute('src', thirdImageSrc); // thirdImageSrc was originally at index 2, now at 0
-
-      // Remove last image
-      await removeButton.click();
-      await expect(page.locator('.character-image-placeholder')).toBeVisible();
-      await expect(imageCountDisplay).not.toBeVisible();
-      await expect(removeButton).toBeDisabled();
-    });
-
-    test('saves as ZIP when images are present', async ({ page }) => {
-      await page.locator('#name').fill('ZipSaveChar');
-      const imageUploadInput = page.locator('#character_image_upload');
-      await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
-      await expect(page.locator('.character-image-display')).toBeVisible();
-
-      const [zipDownload] = await Promise.all([
-        page.waitForEvent('download'),
-        page.locator('button.footer-button--save:has-text("端末保存")').click(),
-      ]);
-      // expect(zipDownload.suggestedFilename()).toBe('ZipSaveChar_AioniaSheet.zip');
-      expect(zipDownload.suggestedFilename()).toMatch(/^ZipSaveChar_\d{14}\.zip$/);
+      await expect(imageDisplay).toBeHidden();
+      const toast = page.locator('.toast.toast--error .toast-message');
+      await expect(toast).toContainText('画像を操作するにはログインしてください。');
     });
 
     // Skipping this test as it requires a pre-made ZIP file with specific internal structure,

@@ -39,16 +39,8 @@ export class DataManager {
    * キャラクターデータを保存
    */
   async saveData(character, skills, specialSkills, equipments, histories) {
-    const characterDataForJson = { ...character };
-    let imagesToSave = null;
-
-    if (characterDataForJson.images && characterDataForJson.images.length > 0) {
-      imagesToSave = [...characterDataForJson.images]; // Store images separately
-      delete characterDataForJson.images; // Remove images from JSON part
-    }
-
     const dataToSave = {
-      character: characterDataForJson,
+      character: deepClone(character),
       skills: skills.map((s) => ({
         id: s.id,
         checked: s.checked,
@@ -72,49 +64,15 @@ export class DataManager {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
 
-    if (imagesToSave) {
-      // Save as ZIP
-      try {
-        const { default: JSZip } = await import('jszip');
-        const zip = new JSZip();
-        zip.file('character_data.json', jsonData);
-        const imageFolder = zip.folder('images');
-
-        imagesToSave.forEach((imageDataUrl, index) => {
-          const base64Data = imageDataUrl.substring(imageDataUrl.indexOf(',') + 1);
-          // Simple extension, could be improved by parsing imageDataUrl
-          const extension = imageDataUrl.substring(imageDataUrl.indexOf('/') + 1, imageDataUrl.indexOf(';'));
-          imageFolder.file(`image_${index}.${extension || 'png'}`, base64Data, {
-            base64: true,
-          });
-        });
-
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(zipBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${charName}_${timestamp}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Error saving ZIP file:', error);
-        // Consider showing an error to the user via main.js's alert
-        throw new Error('ZIPファイルの保存に失敗しました: ' + error.message);
-      }
-    } else {
-      // Save as JSON (original behavior)
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${charName}_${timestamp}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${charName}_${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   /**
