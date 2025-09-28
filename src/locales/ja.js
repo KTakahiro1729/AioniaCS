@@ -76,81 +76,60 @@ export const messages = {
     },
   },
   characterHub: {
-    loadConfirm: (name) => ({
-      title: '読み込み確認',
-      message: name ? `「${name}」を読み込みますか？` : '記録を読み込みますか？',
-      buttons: [
-        { label: '読み込む', value: 'load', variant: 'primary' },
-        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
-      ],
-    }),
-    deleteConfirm: (name) => ({
-      title: '削除確認',
-      message: name ? `「${name}」を削除しますか？` : '記録を削除しますか？',
-      buttons: [
-        { label: '削除', value: 'delete', variant: 'primary' },
-        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
-      ],
-    }),
-    delete: {
-      successToast: () => ({ title: '削除しました', message: '' }),
-      asyncToast: {
-        loading: () => ({ title: '削除', message: '記録を削除しています...' }),
-        success: () => ({ title: '削除しました', message: '' }),
-        error: (err) => ({ title: '削除に失敗しました', message: err.message || '' }),
-      },
-    },
-    export: {
-      loading: () => ({ title: '端末へ保存', message: '書き出しています...' }),
-      success: () => ({ title: '端末へ保存', message: '保存しました' }),
-      error: (err) => ({
-        title: '端末へ保存に失敗しました',
-        message: err.message || '',
+    featureName: '冒険の記録',
+    modals: {
+      loadConfirm: (name) => ({
+        title: '読込確認',
+        message: name ? `「${name}」を読み込みますか？` : '記録を読み込みますか？',
+        buttons: [
+          { label: '読込', value: 'load', variant: 'primary' },
+          { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
+        ],
       }),
     },
-    listError: () => ({ title: '冒険の記録', message: '記録の読み込みに失敗しました' }),
-    ui: {
-      title: '冒険の記録',
-      subtitle: '旅路の記録をここで整えましょう。',
-      unauthenticated: {
-        description: '冒険の記録をクラウドに保存すれば、いつでも旅を再開できます。',
-        button: 'アカウントにログイン',
-        footer: 'クラウドの記録はログイン後に表示されます。',
+    notifications: {
+      listError: () => ({ title: '冒険の記録', message: '記録の読み込みに失敗しました。' }),
+      delete: {
+        success: () => ({ title: '削除しました', message: '' }),
+        async: {
+          loading: () => ({ title: '削除', message: '記録を削除しています...' }),
+          success: () => ({ title: '削除しました', message: '' }),
+          error: (err) => ({ title: '削除に失敗しました', message: err.message || '' }),
+        },
       },
-      loading: {
-        message: '記録を読み込んでいます...',
-        button: '(少しお待ちください) 記録を読み込んでいます...',
+      export: {
+        loading: () => ({ title: '端末保存', message: '書き出しています...' }),
+        success: () => ({ title: '端末保存', message: '保存しました' }),
+        error: (err) => ({ title: '端末保存に失敗しました', message: err.message || '' }),
       },
-      primary: {
-        unsavedMessage: 'このキャラクターはまだクラウドに記録されていません。',
-        savedMessage: 'このキャラクターはクラウドに記録されています。',
-        recordAction: 'このキャラクターを記録する',
-        updateAction: '記録を更新する',
-      },
-      list: {
-        title: 'クラウドの記録',
-        empty: 'クラウドの記録はまだありません。最初の冒険を記録しましょう！',
-        refresh: '記録を読み直す',
-        unnamed: '名もなき冒険者',
-        editing: '（編集中）',
-      },
-      actions: {
-        signOut: 'ログアウト',
-        load: '読み込む',
-        update: '記録を更新する',
-        export: '端末へ保存',
-        delete: '削除',
-        unknownUser: '旅人',
-      },
-      confirmDelete: {
-        message: 'この記録を削除しますか？',
-        confirm: 'はい',
-        cancel: 'いいえ',
-      },
-      errors: {
-        load: '[！] 記録の読み込み中に問題が発生しました。',
-        retry: 'もう一度試す',
-      },
+    },
+    texts: {
+      signInLead: 'クラウドに保存された冒険の記録を利用するには、ログインしてください。',
+      signInNote: 'ログイン後、クラウドに保存したキャラクターがここに表示されます。',
+      confirmDelete: 'この記録を削除しますか？',
+    },
+    labels: {
+      listTitle: 'クラウドの記録',
+      unnamed: '名もなき冒険者',
+      anonymous: '旅人',
+    },
+    states: {
+      editing: '（編集中）',
+      loading: '記録を読み込んでいます...',
+      empty: 'クラウドの記録はまだありません...',
+      error: '記録の読み込みに失敗しました。',
+    },
+    actions: {
+      login: 'ログイン',
+      logout: 'ログアウト',
+      refresh: '一覧を更新',
+      saveNew: '新規保存',
+      overwrite: '上書き保存',
+      load: '読込',
+      saveLocal: '端末保存',
+      delete: '削除',
+      retry: 'もう一度試す',
+      cancel: 'キャンセル',
     },
   },
   image: {

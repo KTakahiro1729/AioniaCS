@@ -34,7 +34,8 @@ useKeyboardHandling();
 const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataExport();
 const { printCharacterSheet, openPreviewPage } = usePrint();
 
-const { handleSignInClick, saveCharacterToCloud, saveOrUpdateCurrentCharacterInCloud } = useCloudSync(dataManager);
+const { handleSignInClick, handleSignOutClick, saveCharacterToCloud, saveOrUpdateCurrentCharacterInCloud } =
+  useCloudSync(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
   helpPanelRef,
@@ -68,6 +69,7 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
   loadCharacterById,
   saveCharacterToCloud,
   handleSignInClick,
+  handleSignOutClick,
   saveData,
   handleFileUpload,
   outputToCocofolia,
