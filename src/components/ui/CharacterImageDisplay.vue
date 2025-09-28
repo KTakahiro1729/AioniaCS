@@ -64,6 +64,7 @@ import { useNotifications } from '../../composables/useNotifications.js';
 import { messages } from '../../locales/ja.js';
 import { IMAGE_SETTINGS } from '../../config/imageSettings.js';
 import { useCharacterImageManager } from '../../composables/useCharacterImageManager.js';
+import { buildCharacterImageUrl } from '../../utils/imageProxy.js';
 
 const props = defineProps({
   images: {
@@ -105,7 +106,8 @@ const currentImageIndex = ref(imagesInternal.value.length > 0 ? 0 : -1);
 
 const currentImageSrc = computed(() => {
   if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0 && currentImageIndex.value < imagesInternal.value.length) {
-    return imagesInternal.value[currentImageIndex.value];
+    const key = imagesInternal.value[currentImageIndex.value];
+    return buildCharacterImageUrl(key) || null;
   }
   return null;
 });
@@ -143,8 +145,8 @@ const removeCurrentImage = async () => {
     return;
   }
 
-  const targetUrl = imagesInternal.value[currentImageIndex.value];
-  const success = await deleteImage(targetUrl);
+  const targetKey = imagesInternal.value[currentImageIndex.value];
+  const success = await deleteImage(targetKey);
   if (!success) {
     return;
   }
@@ -167,9 +169,9 @@ const handleImageUpload = async (event) => {
     return;
   }
 
-  const uploadedUrl = await uploadImage(file);
-  if (uploadedUrl) {
-    imagesInternal.value.push(uploadedUrl);
+  const uploadedKey = await uploadImage(file);
+  if (uploadedKey) {
+    imagesInternal.value.push(uploadedKey);
     currentImageIndex.value = imagesInternal.value.length - 1;
   }
 };
