@@ -1,113 +1,80 @@
 <template>
   <div class="character-hub">
-    <div v-if="!isAuthenticated" class="hub-card hub-card--center">
-      <h2 class="hub-title">{{ uiTexts.title }}</h2>
-      <p class="hub-lead">{{ uiTexts.unauthenticated.description }}</p>
-      <button class="button-base hub-button hub-button--accent" type="button" @click="handleLogin">
-        <span aria-hidden="true" class="hub-button__icon">★</span>
-        {{ uiTexts.unauthenticated.button }}
-      </button>
-      <p class="hub-note">{{ uiTexts.unauthenticated.footer }}</p>
+    <div v-if="!isAuthenticated" class="hub-unauth">
+      <p class="hub-unauth__lead">{{ texts.signInLead }}</p>
     </div>
 
     <div v-else class="hub-shell">
-      <header class="hub-header">
-        <div class="hub-header__texts">
-          <h2 class="hub-title">{{ uiTexts.title }}</h2>
-          <p class="hub-subtitle">{{ uiTexts.subtitle }}</p>
-        </div>
-        <div class="hub-account">
-          <span class="hub-account__name">{{ userName }}</span>
-          <button class="button-base button-compact hub-account__logout" type="button" @click="handleLogout">
-            {{ uiTexts.actions.signOut }}
-          </button>
-        </div>
-      </header>
-
-      <section class="hub-primary" aria-live="polite">
-        <p class="hub-primary__message">{{ primaryMessage }}</p>
-        <button
-          class="button-base hub-button hub-button--accent"
-          type="button"
-          :disabled="isPrimaryDisabled"
-          @click="handlePrimaryAction"
-        >
-          <span aria-hidden="true" class="hub-button__icon">★</span>
-          {{ primaryActionLabel }}
-        </button>
-      </section>
-
-      <section class="hub-list" aria-label="クラウドの記録">
+      <section class="hub-list" :aria-label="labels.listTitle">
         <header class="hub-list__header">
-          <h3 class="hub-list__title">{{ uiTexts.list.title }}</h3>
-          <button class="button-base button-compact" type="button" @click="refreshList" :disabled="isListLoading">
-            {{ uiTexts.list.refresh }}
-          </button>
+          <h2 class="hub-list__title">{{ labels.listTitle }}</h2>
+          <div class="hub-list__actions">
+            <button class="button-base list-button" type="button" :disabled="isListLoading" @click="refreshList">
+              <span class="icon-svg icon-svg-reload" aria-label="reload"></span>
+            </button>
+            <button class="button-base list-button list-button--add" type="button" :disabled="isListLoading" @click="handleSaveAction">
+              +
+            </button>
+          </div>
         </header>
 
-        <div v-if="listError" class="hub-state hub-state--error">
-          <span class="hub-state__text">{{ uiTexts.errors.load }}</span>
-          <button class="button-base button-compact" type="button" @click="refreshList">
-            {{ uiTexts.errors.retry }}
-          </button>
-        </div>
+        <div class="hub-list__body" aria-live="polite">
+          <div v-if="listError" class="hub-status hub-status--error">
+            <p class="hub-status__message">{{ states.error }}</p>
+            <button class="button-base button-compact" type="button" @click="refreshList">
+              {{ actions.retry }}
+            </button>
+          </div>
 
-        <div v-else-if="isListLoading && !hasLoadedOnce" class="hub-state hub-state--loading">
-          <span class="hub-state__text">{{ uiTexts.loading.message }}</span>
-        </div>
+          <div v-else-if="isListLoading && !hasLoadedOnce" class="hub-status hub-status--loading">
+            <p class="hub-status__message">{{ states.loading }}</p>
+          </div>
 
-        <div v-else-if="characters.length === 0" class="hub-state hub-state--empty">
-          <span class="hub-state__text">{{ uiTexts.list.empty }}</span>
-        </div>
+          <div v-else-if="characters.length === 0" class="hub-status hub-status--empty">
+            <p class="hub-status__message">{{ states.empty }}</p>
+          </div>
 
-        <div v-else class="hub-list__body">
-          <ul class="record-list">
-            <li
-              v-for="ch in characters"
-              :key="ch.id"
-              :class="['record-item', { 'record-item--active': ch.id === uiStore.currentCloudFileId }]"
-            >
-              <div class="record-item__top">
-                <div class="record-item__info">
-                  <span class="record-item__name">{{ ch.characterName || uiTexts.list.unnamed }}</span>
-                  <span class="record-item__meta">
-                    {{ ch.id === uiStore.currentCloudFileId ? uiTexts.list.editing : formatDate(ch.updatedAt) }}
-                  </span>
-                </div>
-                <button class="button-base button-compact record-item__load" type="button" @click="confirmLoad(ch)">
-                  {{ uiTexts.actions.load }}
+          <ul v-else class="record-list">
+            <li v-for="ch in characters" :key="ch.id" :class="['record-item', { 'record-item--active': isActive(ch.id) }]">
+              <div
+                class="record-item__info"
+                @click="confirmLoad(ch)"
+                role="button"
+                :aria-label="`${ch.characterName || labels.unnamed}を読み込む`"
+              >
+                <span class="record-item__name">{{ ch.characterName || labels.unnamed }}</span>
+                <span class="record-item__meta">
+                  {{ isActive(ch.id) ? states.editing : formatDate(ch.updatedAt) }}
+                </span>
+              </div>
+
+              <div v-if="isPendingDelete(ch.id)" class="record-item__actions">
+                <p class="record-item__confirm-message">{{ texts.confirmDelete }}</p>
+                <button class="button-base button-compact hub-button-danger" type="button" @click="executeDelete">
+                  {{ actions.delete }}
+                </button>
+                <button class="button-base button-compact" type="button" @click="cancelDelete">
+                  {{ actions.cancel }}
                 </button>
               </div>
 
-              <div v-if="characterToDelete && characterToDelete.id === ch.id" class="record-item__confirm">
-                <p class="record-item__confirm-text">{{ uiTexts.confirmDelete.message }}</p>
-                <div class="record-item__confirm-actions">
-                  <button class="button-base button-compact" type="button" @click="executeDelete">
-                    {{ uiTexts.confirmDelete.confirm }}
-                  </button>
-                  <button class="button-base button-compact button-secondary" type="button" @click="cancelDelete">
-                    {{ uiTexts.confirmDelete.cancel }}
-                  </button>
-                </div>
-              </div>
-
-              <div v-else class="record-item__actions" aria-label="記録に対する操作">
+              <div v-else class="record-item__actions">
                 <button class="button-base button-compact" type="button" @click="overwrite(ch)">
-                  {{ uiTexts.actions.update }}
+                  {{ actions.overwrite }}
                 </button>
                 <button class="button-base button-compact" type="button" @click="exportLocal(ch)">
-                  {{ uiTexts.actions.export }}
+                  {{ actions.saveLocal }}
                 </button>
                 <button class="button-base button-compact button-secondary" type="button" @click="startDelete(ch)">
-                  {{ uiTexts.actions.delete }}
+                  {{ actions.delete }}
                 </button>
               </div>
             </li>
           </ul>
         </div>
 
-        <div v-if="showListOverlay" class="hub-list__overlay" aria-live="polite" aria-busy="true">
-          <span class="hub-state__text">{{ uiTexts.loading.message }}</span>
+        <div v-if="showOverlay" class="hub-list__overlay" aria-live="polite" aria-busy="true">
+          <p class="hub-status__message">{{ states.loading }}</p>
         </div>
       </section>
     </div>
@@ -115,39 +82,44 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useAuth0 } from '@auth0/auth0-vue';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 import { useModal } from '../../composables/useModal.js';
 import { messages } from '../../locales/ja.js';
 
-const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
-
-const handleLogin = () => {
-  loginWithRedirect();
-};
-
-const handleLogout = () => {
-  logout({ logoutParams: { returnTo: window.location.origin } });
-};
-
 const props = defineProps({
-  dataManager: Object,
-  loadCharacter: Function,
-  saveToCloud: Function,
+  dataManager: {
+    type: Object,
+    required: true,
+  },
+  loadCharacter: {
+    type: Function,
+    required: true,
+  },
+  saveToCloud: {
+    type: Function,
+    required: true,
+  },
 });
+
+const { loginWithRedirect, isAuthenticated } = useAuth0();
+const uiStore = useUiStore();
+const { showToast, showAsyncToast } = useNotifications();
+const { showModal } = useModal();
+
+const texts = messages.characterHub.texts;
+const actions = messages.characterHub.actions;
+const labels = messages.characterHub.labels;
+const states = messages.characterHub.states;
+const notifications = messages.characterHub.notifications;
+const modals = messages.characterHub.modals;
 
 const characterToDelete = ref(null);
 const isListLoading = ref(false);
 const hasLoadedOnce = ref(false);
 const listError = ref(null);
-
-const uiStore = useUiStore();
-const { showToast, showAsyncToast } = useNotifications();
-const { showModal } = useModal();
-
-const uiTexts = messages.characterHub.ui;
 
 const characters = computed(() =>
   [...uiStore.cloudCharacters].sort((a, b) => {
@@ -157,44 +129,8 @@ const characters = computed(() =>
   }),
 );
 
-const userName = computed(() => user.value?.name || uiTexts.actions.unknownUser);
-const hasRecords = computed(() => characters.value.length > 0);
-const isCurrentRecorded = computed(() =>
-  !!uiStore.currentCloudFileId && characters.value.some((c) => c.id === uiStore.currentCloudFileId),
-);
-const showListOverlay = computed(() => isListLoading.value && hasLoadedOnce.value && !listError.value);
-
-const primaryState = computed(() => {
-  if (isListLoading.value) {
-    return 'loading';
-  }
-  if (!hasRecords.value) {
-    return 'unsaved';
-  }
-  return isCurrentRecorded.value ? 'recorded' : 'unsaved';
-});
-
-const primaryMessage = computed(() => {
-  if (primaryState.value === 'recorded') {
-    return uiTexts.primary.savedMessage;
-  }
-  if (primaryState.value === 'loading') {
-    return uiTexts.loading.message;
-  }
-  return uiTexts.primary.unsavedMessage;
-});
-
-const primaryActionLabel = computed(() => {
-  if (primaryState.value === 'recorded') {
-    return uiTexts.primary.updateAction;
-  }
-  if (primaryState.value === 'loading') {
-    return uiTexts.loading.button;
-  }
-  return uiTexts.primary.recordAction;
-});
-
-const isPrimaryDisabled = computed(() => primaryState.value === 'loading');
+const saveButtonLabel = computed(() => actions.saveNew);
+const showOverlay = computed(() => isListLoading.value && hasLoadedOnce.value && !listError.value);
 
 onMounted(() => {
   if (isAuthenticated.value) {
@@ -234,14 +170,27 @@ async function refreshList() {
   } catch (error) {
     console.error('Failed to refresh characters:', error);
     listError.value = error;
-    showToast({ type: 'error', ...messages.characterHub.listError() });
+    showToast({ type: 'error', ...notifications.listError() });
   } finally {
     isListLoading.value = false;
     hasLoadedOnce.value = true;
   }
 }
 
-async function saveNew() {
+function isActive(id) {
+  return uiStore.currentCloudFileId === id;
+}
+
+function isPendingDelete(id) {
+  return characterToDelete.value?.id === id;
+}
+
+function formatDate(date) {
+  if (!date) return '';
+  return new Date(date).toLocaleString();
+}
+
+async function handleSaveAction() {
   if (!props.saveToCloud) return;
   listError.value = null;
   isListLoading.value = true;
@@ -265,13 +214,8 @@ async function overwrite(ch) {
   }
 }
 
-function formatDate(date) {
-  if (!date) return '';
-  return new Date(date).toLocaleString();
-}
-
 async function confirmLoad(ch) {
-  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName));
+  const result = await showModal(modals.loadConfirm(ch.characterName));
   if (result.value === 'load') {
     await props.loadCharacter(ch.id, ch.characterName);
   }
@@ -292,7 +236,7 @@ async function executeDelete() {
   if (ch.id.startsWith('temp-')) {
     uiStore.cancelPendingCloudSave(ch.id);
     uiStore.removeCloudCharacter(ch.id);
-    showToast({ type: 'success', ...messages.characterHub.delete.successToast() });
+    showToast({ type: 'success', ...notifications.delete.success() });
   } else {
     const previous = [...uiStore.cloudCharacters];
     uiStore.removeCloudCharacter(ch.id);
@@ -301,9 +245,9 @@ async function executeDelete() {
       throw err;
     });
     showAsyncToast(deletePromise, {
-      loading: messages.characterHub.delete.asyncToast.loading(),
-      success: messages.characterHub.delete.asyncToast.success(),
-      error: (err) => messages.characterHub.delete.asyncToast.error(err),
+      loading: notifications.delete.async.loading(),
+      success: notifications.delete.async.success(),
+      error: (err) => notifications.delete.async.error(err),
     });
     try {
       await deletePromise;
@@ -318,41 +262,14 @@ async function executeDelete() {
 async function exportLocal(ch) {
   const exportPromise = props.dataManager.loadCloudCharacter(ch.id).then(async (data) => {
     if (data) {
-      await props.dataManager.saveData(
-        data.character,
-        data.skills,
-        data.specialSkills,
-        data.equipments,
-        data.histories,
-      );
+      await props.dataManager.saveData(data.character, data.skills, data.specialSkills, data.equipments, data.histories);
     }
   });
   showAsyncToast(exportPromise, {
-    loading: messages.characterHub.export.loading(),
-    success: messages.characterHub.export.success(),
-    error: (err) => messages.characterHub.export.error(err),
+    loading: notifications.export.loading(),
+    success: notifications.export.success(),
+    error: (err) => notifications.export.error(err),
   });
-}
-
-async function handlePrimaryAction() {
-  if (isPrimaryDisabled.value) return;
-  if (primaryState.value === 'recorded') {
-    await saveOrUpdateCurrentCharacter();
-  } else {
-    await saveNew();
-  }
-}
-
-async function saveOrUpdateCurrentCharacter() {
-  if (!props.saveToCloud) return;
-  listError.value = null;
-  isListLoading.value = true;
-  try {
-    await props.saveToCloud(uiStore.currentCloudFileId);
-  } finally {
-    isListLoading.value = false;
-    hasLoadedOnce.value = true;
-  }
 }
 </script>
 
@@ -361,138 +278,41 @@ async function saveOrUpdateCurrentCharacter() {
   display: flex;
   flex-direction: column;
   gap: 24px;
-}
-
-.hub-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  padding: 32px 24px;
-  border-radius: 16px;
-  border: 1px solid var(--color-border-dark);
-  background: linear-gradient(145deg, rgba(20, 22, 30, 0.95), rgba(12, 13, 18, 0.9));
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
-  text-align: center;
-}
-
-.hub-card--center {
-  justify-content: center;
-}
-
-.hub-title {
-  margin: 0;
-  font-size: 24px;
-  letter-spacing: 0.08em;
-}
-
-.hub-lead {
-  margin: 0;
-  max-width: 48ch;
-  line-height: 1.7;
-  color: var(--color-text-muted);
-}
-
-.hub-note {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: 14px;
-}
-
-.hub-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.hub-button--accent {
-  padding: 10px 22px;
-  font-size: 16px;
-}
-
-.hub-button__icon {
-  font-size: 18px;
+  width: 100%;
 }
 
 .hub-shell {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-}
-
-.hub-header {
-  display: flex;
-  flex-direction: column;
   gap: 16px;
-  padding: 22px 24px;
-  border-radius: 16px;
-  border: 1px solid var(--color-border-dark);
-  background: linear-gradient(160deg, rgba(26, 28, 38, 0.95), rgba(14, 15, 20, 0.92));
 }
 
-@media (min-width: 720px) {
-  .hub-header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-}
-
-.hub-header__texts {
+.hub-unauth {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 60ch;
-}
-
-.hub-subtitle {
-  margin: 0;
-  color: var(--color-text-muted);
-  line-height: 1.6;
-}
-
-.hub-account {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  text-align: right;
-}
-
-.hub-account__name {
-  font-size: 14px;
-  color: var(--color-text-muted);
-}
-
-.hub-account__logout {
-  align-self: flex-end;
-}
-
-.hub-primary {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 24px;
-  border-radius: 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 24px;
+  background: var(--color-panel-body);
   border: 1px solid var(--color-border-normal);
-  background: rgba(18, 19, 26, 0.85);
+  border-radius: 12px;
+  text-align: center;
 }
 
-.hub-primary__message {
+.hub-unauth__lead {
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 .hub-list {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   padding: 24px;
-  border-radius: 16px;
+  background: var(--color-panel-body);
   border: 1px solid var(--color-border-normal);
-  background: rgba(16, 17, 24, 0.88);
+  border-radius: 12px;
 }
 
 .hub-list__header {
@@ -505,11 +325,33 @@ async function saveOrUpdateCurrentCharacter() {
 
 .hub-list__title {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.1rem;
+}
+
+.hub-list__actions {
+  display: flex;
+  gap: 8px;
 }
 
 .hub-list__body {
   position: relative;
+}
+
+.hub-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 10px;
+  border: 1px dashed var(--color-border-normal);
+  background: var(--color-panel-sub-header);
+  text-align: center;
+}
+
+.hub-status__message {
+  margin: 0;
+  line-height: 1.6;
 }
 
 .record-list {
@@ -518,107 +360,72 @@ async function saveOrUpdateCurrentCharacter() {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
   max-height: 420px;
   overflow-y: auto;
 }
 
 .record-item {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 16px;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--color-border-dark);
-  background: rgba(22, 24, 32, 0.92);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-normal);
+  background: var(--color-panel-header);
 }
 
 .record-item--active {
   border-color: var(--color-accent);
-  box-shadow: inset 0 0 0 2px rgba(239, 176, 84, 0.6), 0 0 12px rgba(239, 176, 84, 0.35);
-  background: rgba(34, 25, 10, 0.45);
-}
-
-.record-item__top {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-@media (min-width: 640px) {
-  .record-item__top {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
+  box-shadow: inset 0 0 0 1px var(--color-accent);
 }
 
 .record-item__info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 60ch;
+  gap: 4px;
+  min-width: 0; /* Prevents overflow */
+  cursor: pointer;
 }
 
 .record-item__name {
-  font-size: 18px;
+  font-size: 1rem;
   font-weight: 700;
   word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .record-item__meta {
-  font-size: 13px;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
-}
-
-.record-item__load {
-  align-self: flex-start;
 }
 
 .record-item__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
 }
 
-.record-item__confirm {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
+.record-item__actions .button-compact {
+  padding: 4px 8px;
+  font-size: 0.8em;
 }
 
-.record-item__confirm-text {
+.record-item__confirm-message {
   margin: 0;
   color: var(--color-text-muted);
+  font-size: 0.85em;
+  white-space: nowrap;
+  align-self: center;
 }
 
-.record-item__confirm-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.hub-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 24px;
-  border-radius: 12px;
-  border: 1px dashed var(--color-border-normal);
-  background: rgba(18, 19, 26, 0.6);
-  text-align: center;
-}
-
-.hub-state__text {
-  margin: 0;
-  line-height: 1.6;
-}
-
-.hub-state--error {
-  border-color: var(--color-status-experience-over-border);
+.hub-button-danger {
+  background: var(--color-delete-border);
+  color: var(--color-text-normal);
 }
 
 .hub-list__overlay {
@@ -627,7 +434,12 @@ async function saveOrUpdateCurrentCharacter() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
-  background: rgba(10, 11, 16, 0.82);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-background) 80%, transparent);
+}
+
+.list-button .icon-svg {
+  width: 20px;
+  height: 20px;
 }
 </style>

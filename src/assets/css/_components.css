@@ -239,3 +239,7 @@
 .icon-svg-elf {
   mask-image: url('../svg/elf.svg');
 }
+
+.icon-svg-reload {
+  mask-image: url('../svg/reload.svg');
+}
