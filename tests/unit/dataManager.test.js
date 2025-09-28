@@ -80,12 +80,10 @@ describe('DataManager', () => {
         this.options = options;
       }
     };
-    global.Blob = class MockBlob {
-      constructor(parts, options) {
-        this.parts = parts;
-        this.options = options;
-      }
-    };
+    global.Blob = vi.fn(function (parts, options) {
+      this.parts = parts;
+      this.options = options;
+    });
     document.body.appendChild = vi.fn();
     document.body.removeChild = vi.fn();
     const mockAnchor = { click: vi.fn(), href: '', download: '' };
@@ -179,6 +177,7 @@ describe('DataManager', () => {
       const mockAnchor = document.createElement.mock.results[0].value;
       expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.json$/);
       expect(mockAnchor.click).toHaveBeenCalled();
+      expect(global.Blob).toHaveBeenCalledWith(expect.any(Array), { type: 'application/json' });
     });
 
     it('sanitizes character name before saving', async () => {
@@ -191,34 +190,19 @@ describe('DataManager', () => {
       expect(mockAnchor.download).toMatch(regex);
     });
 
-    it('should save as ZIP if images are present', async () => {
-      mockCharacter.images = ['data:image/png;base64,mockimgdata1', 'data:image/jpeg;base64,mockimgdata2'];
-      // `new JSZip()`が呼び出されたときのインスタンスの振る舞いを定義
-      const mockZipInstance = {
-        file: vi.fn(),
-        folder: vi.fn().mockReturnThis(),
-        generateAsync: vi.fn().mockResolvedValue(new Blob(['zip_blob_content'])),
-      };
-      JSZip.mockImplementation(() => mockZipInstance);
+    it('keeps image URLs inside the exported JSON payload', async () => {
+      mockCharacter.images = ['https://cdn.example.com/image1.png', 'https://cdn.example.com/image2.png'];
 
       await dm.saveData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories);
-      expect(JSZip).toHaveBeenCalledTimes(1);
-      expect(mockZipInstance.folder).toHaveBeenCalledWith('images');
 
-      // fileメソッドの呼び出しを検証
-      expect(mockZipInstance.file).toHaveBeenCalledWith('character_data.json', expect.any(String));
-      expect(mockZipInstance.file).toHaveBeenCalledWith('image_0.png', 'mockimgdata1', { base64: true });
-      expect(mockZipInstance.file).toHaveBeenCalledWith('image_1.jpeg', 'mockimgdata2', { base64: true });
+      expect(JSZip).not.toHaveBeenCalled();
+      const blobCall = global.Blob.mock.calls[0];
+      const jsonString = blobCall[0][0];
+      const parsed = JSON.parse(jsonString);
+      expect(parsed.character.images).toEqual(mockCharacter.images);
 
-      const jsonDataCall = mockZipInstance.file.mock.calls.find((call) => call[0] === 'character_data.json');
-      const jsonDataInZip = JSON.parse(jsonDataCall[1]);
-      expect(jsonDataInZip.character.images).toBeUndefined();
-      expect(mockZipInstance.generateAsync).toHaveBeenCalledWith({
-        type: 'blob',
-      });
       const mockAnchor = document.createElement.mock.results[0].value;
-      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
-      expect(mockAnchor.click).toHaveBeenCalled();
+      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.json$/);
     });
   });
 

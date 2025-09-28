@@ -154,4 +154,33 @@ export class CloudStorageService {
       throw error;
     }
   }
+
+  async uploadCharacterImage(file) {
+    if (!(file instanceof File)) {
+      throw new Error('有効な画像ファイルが必要です。');
+    }
+
+    const formData = new FormData();
+    formData.append('image', file, file.name);
+
+    try {
+      return await this.apiManager.uploadCharacterImage(formData);
+    } catch (error) {
+      console.error('Failed to upload character image:', error);
+      throw error;
+    }
+  }
+
+  async deleteCharacterImage(url) {
+    if (!url) {
+      throw new Error('画像URLが必要です。');
+    }
+
+    try {
+      return await this.apiManager.deleteCharacterImage(url);
+    } catch (error) {
+      console.error('Failed to delete character image:', error);
+      throw error;
+    }
+  }
 }

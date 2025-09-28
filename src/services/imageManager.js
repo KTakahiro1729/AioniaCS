@@ -1,63 +1,67 @@
-// src/imageManager.js
+import imageCompression from 'browser-image-compression';
+import { IMAGE_SETTINGS } from '../config/imageSettings.js';
+
+function ensureFileName(file, original) {
+  if (file instanceof File && file.name) {
+    return file;
+  }
+
+  const extension = (original?.name?.split('.').pop() || original?.type?.split('/').pop() || 'png').trim();
+  const safeExtension = extension.replace(/[^a-zA-Z0-9]/g, '') || 'png';
+  const baseName = 'character-image';
+  const name = `${baseName}.${safeExtension}`;
+  return new File([file], name, { type: file.type || original?.type || 'image/png' });
+}
 
 export const ImageManager = {
-  /**
-   * Loads an image file and returns a promise that resolves with the image data.
-   * @param {File} file - The image file to load.
-   * @returns {Promise<string>} A promise that resolves with the image data as a base64 string.
-   */
-  loadImage: function (file) {
-    return new Promise((resolve, reject) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-      const maxSize = 10 * 1024 * 1024; // 10 MB
+  validateFile(file) {
+    if (!(file instanceof File)) {
+      throw new Error('画像ファイルを選択してください。');
+    }
 
-      if (!file) {
-        reject(new Error('No file provided.'));
-        return;
-      }
+    if (!IMAGE_SETTINGS.ALLOWED_TYPES.includes(file.type)) {
+      throw new Error('対応していない画像形式です。JPEG / PNG / GIF / WebP / SVG を使用してください。');
+    }
 
-      if (!allowedTypes.includes(file.type)) {
-        reject(new Error('Unsupported file type. Please upload JPEG, PNG, GIF, or WebP images.'));
-        return;
-      }
-
-      if (file.size > maxSize) {
-        reject(new Error('File is too large. Maximum size is 10MB.'));
-        return;
-      }
-
-      // Placeholder for file reading logic
-      // In a real implementation, you would use FileReader API
-      // console.log(`Simulating loading image: ${file.name}`); // Original console log
-      // Simulate async operation using FileReader to get a base64 string
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        resolve(e.target.result);
-      };
-      reader.onerror = (e) => {
-        console.error('FileReader error:', e);
-        reject(new Error('Error reading file.'));
-      };
-      reader.readAsDataURL(file); // Reads the file as a base64 encoded string
-    });
+    if (file.size > IMAGE_SETTINGS.MAX_FILE_SIZE_BYTES) {
+      throw new Error('ファイルサイズが大きすぎます。10MB以下の画像を選択してください。');
+    }
   },
 
-  /**
-   * Removes an image from an array of images at the specified index.
-   * (This is a utility function, Vue component might directly splice)
-   * @param {Array<string>} imagesArray - The array of image data strings.
-   * @param {number} index - The index of the image to remove.
-   * @returns {Array<string>} A new array with the image removed.
-   */
-  removeImage: function (imagesArray, index) {
-    if (index >= 0 && index < imagesArray.length) {
-      const updatedImagesArray = [...imagesArray];
-      updatedImagesArray.splice(index, 1);
-      console.log(`Simulating removal of image at index: ${index}`);
-      return updatedImagesArray;
-    } else {
-      console.error('Invalid index for image removal.');
-      return imagesArray; // Return original array if index is invalid
+  async prepareForUpload(file) {
+    this.validateFile(file);
+
+    if (file.type === 'image/svg+xml') {
+      return ensureFileName(file, file);
     }
+
+    try {
+      const compressed = await imageCompression(file, {
+        maxWidthOrHeight: IMAGE_SETTINGS.MAX_DIMENSION,
+        initialQuality: IMAGE_SETTINGS.COMPRESSION_QUALITY,
+        useWebWorker: true,
+        fileType: file.type,
+        maxIteration: 10,
+      });
+
+      return ensureFileName(compressed, file);
+    } catch (error) {
+      console.error('Failed to compress image before upload:', error);
+      throw new Error('画像の圧縮に失敗しました。');
+    }
+  },
+
+  removeImage(imagesArray, index) {
+    if (!Array.isArray(imagesArray)) {
+      return [];
+    }
+
+    if (index >= 0 && index < imagesArray.length) {
+      const updated = [...imagesArray];
+      updated.splice(index, 1);
+      return updated;
+    }
+
+    return imagesArray;
   },
 };

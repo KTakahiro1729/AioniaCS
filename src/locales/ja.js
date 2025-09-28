@@ -133,6 +133,32 @@ export const messages = {
   },
   image: {
     loadError: (err) => ({ title: '画像読み込み失敗', message: err.message }),
+    upload: {
+      loading: () => ({ title: '画像アップロード', message: 'アップロードしています...' }),
+      success: () => ({ title: '画像アップロード', message: '画像を保存しました。' }),
+      error: (err) => ({
+        title: '画像アップロード失敗',
+        message: err?.message || '画像のアップロードに失敗しました。',
+      }),
+      inProgress: 'アップロード中...',
+    },
+    delete: {
+      loading: () => ({ title: '画像削除', message: '画像を削除しています...' }),
+      success: () => ({ title: '画像削除', message: '画像を削除しました。' }),
+      error: (err) => ({
+        title: '画像削除失敗',
+        message: err?.message || '画像の削除に失敗しました。',
+      }),
+    },
+    signInRequired: () => ({
+      title: '画像操作',
+      message: '画像を操作するにはログインしてください。',
+    }),
+    limitReached: (max) => ({
+      title: '画像の上限',
+      message: `画像は最大${max}枚まで追加できます。`,
+    }),
+    limitNotice: (max) => `画像は最大${max}枚まで追加できます。`,
   },
   dataExport: {
     loadError: (msg) => ({ title: '読み込み失敗', message: msg }),
