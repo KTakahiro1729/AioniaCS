@@ -14,7 +14,7 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "e2e": "playwright test",
-    "pree2e": "playwright install --with-deps",
+    "pree2e": "playwright install",
     "prepare": "husky",
     "format": "prettier --write ."
   },
