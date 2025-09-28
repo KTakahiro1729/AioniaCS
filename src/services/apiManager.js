@@ -123,11 +123,11 @@ export class ApiManager {
     return this.request('upload-character-image', { method: 'POST', body: formData });
   }
 
-  deleteCharacterImage(url) {
-    if (!url) {
-      throw new Error('Image URL is required.');
+  deleteCharacterImage(key) {
+    if (!key) {
+      throw new Error('Image key is required.');
     }
-    return this.request('delete-character-image', { method: 'DELETE', body: { url } });
+    return this.request('delete-character-image', { method: 'DELETE', body: { key } });
   }
 
   _ensureAuth() {

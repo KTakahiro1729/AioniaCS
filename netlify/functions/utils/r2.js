@@ -1,6 +1,6 @@
 import { S3Client } from '@aws-sdk/client-s3';
 
-const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_BASE_URL } = process.env;
+const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = process.env;
 
 let client;
 const IMAGE_FOLDER = 'images';
@@ -62,29 +62,6 @@ export function ensureImageOwnership(userId, key) {
   }
 }
 
-function getPublicBaseUrl() {
-  const base = ensureEnv(R2_PUBLIC_BASE_URL, 'R2_PUBLIC_BASE_URL');
-  return base.endsWith('/') ? base.slice(0, -1) : base;
-}
-
-export function buildPublicUrl(key) {
-  const base = getPublicBaseUrl();
-  return `${base}/${key}`;
-}
-
-export function extractKeyFromUrl(url) {
-  if (!url) {
-    throw new Error('Image URL is required');
-  }
-
-  const base = `${getPublicBaseUrl()}/`;
-  if (!url.startsWith(base)) {
-    throw new Error('Invalid image URL');
-  }
-
-  return url.slice(base.length);
-}
-
 export async function streamToString(stream) {
   if (typeof stream.text === 'function') {
     return stream.text();
@@ -95,4 +72,30 @@ export async function streamToString(stream) {
     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
   return Buffer.concat(chunks).toString('utf-8');
+}
+
+export async function streamToBuffer(stream) {
+  if (!stream) {
+    return Buffer.alloc(0);
+  }
+
+  if (Buffer.isBuffer(stream)) {
+    return stream;
+  }
+
+  if (typeof stream.arrayBuffer === 'function') {
+    const arrayBuffer = await stream.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  }
+
+  if (typeof stream.transformToByteArray === 'function') {
+    const byteArray = await stream.transformToByteArray();
+    return Buffer.from(byteArray);
+  }
+
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks);
 }

@@ -171,13 +171,13 @@ export class CloudStorageService {
     }
   }
 
-  async deleteCharacterImage(url) {
-    if (!url) {
-      throw new Error('画像URLが必要です。');
+  async deleteCharacterImage(key) {
+    if (!key) {
+      throw new Error('画像キーが必要です。');
     }
 
     try {
-      return await this.apiManager.deleteCharacterImage(url);
+      return await this.apiManager.deleteCharacterImage(key);
     } catch (error) {
       console.error('Failed to delete character image:', error);
       throw error;

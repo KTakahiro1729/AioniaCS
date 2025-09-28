@@ -57,10 +57,10 @@ export function useCharacterImageManager() {
 
     try {
       const result = await uploadPromise;
-      if (!result?.url) {
-        throw new Error('画像URLの取得に失敗しました。');
+      if (!result?.key) {
+        throw new Error('画像キーの取得に失敗しました。');
       }
-      return result.url;
+      return result.key;
     } catch (error) {
       console.error('Character image upload failed:', error);
       return null;
@@ -69,8 +69,8 @@ export function useCharacterImageManager() {
     }
   }
 
-  async function deleteImage(url) {
-    if (!url) {
+  async function deleteImage(key) {
+    if (!key) {
       return false;
     }
 
@@ -80,7 +80,7 @@ export function useCharacterImageManager() {
 
     isDeleting.value = true;
     const service = ensureService(getAccessTokenSilently);
-    const deletePromise = service.deleteCharacterImage(url);
+    const deletePromise = service.deleteCharacterImage(key);
 
     showAsyncToast(deletePromise, {
       loading: messages.image.delete.loading(),

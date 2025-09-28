@@ -103,9 +103,56 @@ watch(
 
 const currentImageIndex = ref(imagesInternal.value.length > 0 ? 0 : -1);
 
+const IMAGE_PROXY_ENDPOINT = '/.netlify/functions/get-character-image';
+
+function resolveImageSource(imageRef) {
+  if (typeof imageRef !== 'string') {
+    return null;
+  }
+
+  const trimmed = imageRef.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith(`${IMAGE_PROXY_ENDPOINT}?`) ||
+    /^https?:\/\//i.test(trimmed)
+  ) {
+    return trimmed;
+  }
+
+  return `${IMAGE_PROXY_ENDPOINT}?key=${encodeURIComponent(trimmed)}`;
+}
+
+function extractImageKey(imageRef) {
+  if (typeof imageRef !== 'string') {
+    return null;
+  }
+
+  const trimmed = imageRef.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.startsWith(`${IMAGE_PROXY_ENDPOINT}?`)) {
+    const query = trimmed.split('?')[1] || '';
+    const params = new URLSearchParams(query);
+    return params.get('key');
+  }
+
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:') || /^https?:\/\//i.test(trimmed)) {
+    return null;
+  }
+
+  return trimmed;
+}
+
 const currentImageSrc = computed(() => {
   if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0 && currentImageIndex.value < imagesInternal.value.length) {
-    return imagesInternal.value[currentImageIndex.value];
+    return resolveImageSource(imagesInternal.value[currentImageIndex.value]);
   }
   return null;
 });
@@ -143,10 +190,14 @@ const removeCurrentImage = async () => {
     return;
   }
 
-  const targetUrl = imagesInternal.value[currentImageIndex.value];
-  const success = await deleteImage(targetUrl);
-  if (!success) {
-    return;
+  const targetRef = imagesInternal.value[currentImageIndex.value];
+  const targetKey = extractImageKey(targetRef);
+
+  if (targetKey) {
+    const success = await deleteImage(targetKey);
+    if (!success) {
+      return;
+    }
   }
 
   imagesInternal.value.splice(currentImageIndex.value, 1);
@@ -167,9 +218,9 @@ const handleImageUpload = async (event) => {
     return;
   }
 
-  const uploadedUrl = await uploadImage(file);
-  if (uploadedUrl) {
-    imagesInternal.value.push(uploadedUrl);
+  const uploadedKey = await uploadImage(file);
+  if (uploadedKey) {
+    imagesInternal.value.push(uploadedKey);
     currentImageIndex.value = imagesInternal.value.length - 1;
   }
 };
