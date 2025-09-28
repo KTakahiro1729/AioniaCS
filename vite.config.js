@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-  base: './', 
+  base: './',
   plugins: [vue(), visualizer({ open: true })],
   resolve: {
     alias: {
@@ -20,12 +20,13 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: './tests/unit/setup.js',
+    setupFiles: './tests/vitest.setup.js',
     include: ['tests/unit/**/*.test.js', 'tests/integrity/**/*.test.js'],
     exclude: ['tests/e2e/**', 'src/libs/sabalessshare/**', 'node_modules/**'],
     alias: {
       '\\?raw$': resolve(__dirname, 'tests/unit/__mocks__/raw.js'),
       '@sabalessshare': resolve(__dirname, 'src/libs/sabalessshare/src'),
+      '@auth0/auth0-vue': resolve(__dirname, 'tests/__mocks__/auth0-vue.js'),
     },
   },
 });
