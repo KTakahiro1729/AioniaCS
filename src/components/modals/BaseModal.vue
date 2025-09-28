@@ -1,29 +1,16 @@
 <template>
   <transition name="modal-fade">
-    <div
-      v-if="modalStore.isVisible && modalStore.currentModal"
-      class="modal-overlay"
-      @click.self="handleClose"
-    >
+    <div v-if="modalStore.isVisible && modalStore.currentModal" class="modal-overlay" @click.self="handleClose">
       <div :class="['modal', modalTypeClass]" :style="modalStore.modalStyles">
         <header class="modal-header box-title">
           <div class="modal-header__title">{{ modalTitle }}</div>
           <div class="modal-header__actions">
-            <component
-              v-if="headerActions"
-              :is="headerActions"
-            />
+            <component v-if="headerActions" :is="headerActions" />
             <button class="modal-close close-cross" type="button" @click="handleClose">&times;</button>
           </div>
         </header>
         <section class="modal-body box-content">
-          <component
-            v-if="modalComponent"
-            :is="modalComponent"
-            v-bind="modalProps"
-            v-on="modalEvents"
-            ref="inner"
-          />
+          <component v-if="modalComponent" :is="modalComponent" v-bind="modalProps" v-on="modalEvents" ref="inner" />
         </section>
         <footer v-if="modalButtons.length" class="modal-footer">
           <button
@@ -62,9 +49,7 @@ const headerActions = computed(() => unwrapMaybeRef(modalStore.currentModal?.hea
 const modalProps = computed(() => modalStore.currentModal?.props ?? {});
 const modalEvents = computed(() => modalStore.currentModal?.on ?? {});
 const modalButtons = computed(() => modalStore.currentModal?.buttons ?? []);
-const modalTypeClass = computed(() =>
-  modalStore.currentModal?.type ? `modal--${modalStore.currentModal.type}` : '',
-);
+const modalTypeClass = computed(() => (modalStore.currentModal?.type ? `modal--${modalStore.currentModal.type}` : ''));
 
 function resolve(value) {
   modalStore.resolveModal({ value, component: inner.value });
@@ -90,7 +75,7 @@ function handleClose() {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-right: 14px;
+  padding-right: 44px;
 }
 
 .modal-header__actions {

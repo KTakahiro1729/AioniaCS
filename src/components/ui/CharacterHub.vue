@@ -2,10 +2,6 @@
   <div class="character-hub">
     <div v-if="!isAuthenticated" class="hub-unauth">
       <p class="hub-unauth__lead">{{ texts.signInLead }}</p>
-      <button class="button-base button-compact hub-unauth__button" type="button" @click="loginWithRedirect">
-        {{ actions.login }}
-      </button>
-      <p class="hub-unauth__note">{{ texts.signInNote }}</p>
     </div>
 
     <div v-else class="hub-shell">
@@ -13,16 +9,11 @@
         <header class="hub-list__header">
           <h2 class="hub-list__title">{{ labels.listTitle }}</h2>
           <div class="hub-list__actions">
-            <button class="button-base button-compact" type="button" :disabled="isListLoading" @click="refreshList">
-              {{ actions.refresh }}
+            <button class="button-base list-button" type="button" :disabled="isListLoading" @click="refreshList">
+              <span class="icon-svg icon-svg-reload" aria-label="reload"></span>
             </button>
-            <button
-              class="button-base button-compact hub-list__save"
-              type="button"
-              :disabled="isListLoading"
-              @click="handleSaveAction"
-            >
-              {{ saveButtonLabel }}
+            <button class="button-base list-button list-button--add" type="button" :disabled="isListLoading" @click="handleSaveAction">
+              +
             </button>
           </div>
         </header>
@@ -44,35 +35,27 @@
           </div>
 
           <ul v-else class="record-list">
-            <li
-              v-for="ch in characters"
-              :key="ch.id"
-              :class="['record-item', { 'record-item--active': isActive(ch.id) }]"
-            >
-              <div class="record-item__row">
-                <div class="record-item__info">
-                  <span class="record-item__name">{{ ch.characterName || labels.unnamed }}</span>
-                  <span class="record-item__meta">
-                    {{ isActive(ch.id) ? states.editing : formatDate(ch.updatedAt) }}
-                  </span>
-                </div>
-                <div class="record-item__main-actions">
-                  <button class="button-base button-compact" type="button" @click="confirmLoad(ch)">
-                    {{ actions.load }}
-                  </button>
-                </div>
+            <li v-for="ch in characters" :key="ch.id" :class="['record-item', { 'record-item--active': isActive(ch.id) }]">
+              <div
+                class="record-item__info"
+                @click="confirmLoad(ch)"
+                role="button"
+                :aria-label="`${ch.characterName || labels.unnamed}を読み込む`"
+              >
+                <span class="record-item__name">{{ ch.characterName || labels.unnamed }}</span>
+                <span class="record-item__meta">
+                  {{ isActive(ch.id) ? states.editing : formatDate(ch.updatedAt) }}
+                </span>
               </div>
 
-              <div v-if="isPendingDelete(ch.id)" class="record-item__confirm">
+              <div v-if="isPendingDelete(ch.id)" class="record-item__actions">
                 <p class="record-item__confirm-message">{{ texts.confirmDelete }}</p>
-                <div class="record-item__confirm-actions">
-                  <button class="button-base button-compact hub-button-danger" type="button" @click="executeDelete">
-                    {{ actions.delete }}
-                  </button>
-                  <button class="button-base button-compact" type="button" @click="cancelDelete">
-                    {{ actions.cancel }}
-                  </button>
-                </div>
+                <button class="button-base button-compact hub-button-danger" type="button" @click="executeDelete">
+                  {{ actions.delete }}
+                </button>
+                <button class="button-base button-compact" type="button" @click="cancelDelete">
+                  {{ actions.cancel }}
+                </button>
               </div>
 
               <div v-else class="record-item__actions">
@@ -146,11 +129,8 @@ const characters = computed(() =>
   }),
 );
 
-const hasLinkedRecord = computed(() => Boolean(uiStore.currentCloudFileId));
-const saveButtonLabel = computed(() => (hasLinkedRecord.value ? actions.overwrite : actions.saveNew));
-const showOverlay = computed(
-  () => isListLoading.value && hasLoadedOnce.value && !listError.value,
-);
+const saveButtonLabel = computed(() => actions.saveNew);
+const showOverlay = computed(() => isListLoading.value && hasLoadedOnce.value && !listError.value);
 
 onMounted(() => {
   if (isAuthenticated.value) {
@@ -215,7 +195,7 @@ async function handleSaveAction() {
   listError.value = null;
   isListLoading.value = true;
   try {
-    await props.saveToCloud(hasLinkedRecord.value ? uiStore.currentCloudFileId : null);
+    await props.saveToCloud(null);
   } finally {
     isListLoading.value = false;
     hasLoadedOnce.value = true;
@@ -282,13 +262,7 @@ async function executeDelete() {
 async function exportLocal(ch) {
   const exportPromise = props.dataManager.loadCloudCharacter(ch.id).then(async (data) => {
     if (data) {
-      await props.dataManager.saveData(
-        data.character,
-        data.skills,
-        data.specialSkills,
-        data.equipments,
-        data.histories,
-      );
+      await props.dataManager.saveData(data.character, data.skills, data.specialSkills, data.equipments, data.histories);
     }
   });
   showAsyncToast(exportPromise, {
@@ -330,16 +304,6 @@ async function exportLocal(ch) {
   line-height: 1.6;
 }
 
-.hub-unauth__button {
-  min-width: 140px;
-}
-
-.hub-unauth__note {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-}
-
 .hub-list {
   position: relative;
   display: flex;
@@ -369,11 +333,6 @@ async function exportLocal(ch) {
   gap: 8px;
 }
 
-.hub-list__save {
-  background: var(--color-accent);
-  color: var(--color-panel-specialskill);
-}
-
 .hub-list__body {
   position: relative;
 }
@@ -401,16 +360,17 @@ async function exportLocal(ch) {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   max-height: 420px;
   overflow-y: auto;
 }
 
 .record-item {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
   border-radius: 10px;
   border: 1px solid var(--color-border-normal);
   background: var(--color-panel-header);
@@ -421,30 +381,21 @@ async function exportLocal(ch) {
   box-shadow: inset 0 0 0 1px var(--color-accent);
 }
 
-.record-item__row {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-@media (min-width: 640px) {
-  .record-item__row {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-}
-
 .record-item__info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0; /* Prevents overflow */
+  cursor: pointer;
 }
 
 .record-item__name {
   font-size: 1rem;
   font-weight: 700;
   word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .record-item__meta {
@@ -452,33 +403,24 @@ async function exportLocal(ch) {
   color: var(--color-text-muted);
 }
 
-.record-item__main-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 .record-item__actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
-  justify-content: flex-end;
+  align-items: center;
 }
 
-.record-item__confirm {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
+.record-item__actions .button-compact {
+  padding: 4px 8px;
+  font-size: 0.8em;
 }
 
 .record-item__confirm-message {
   margin: 0;
   color: var(--color-text-muted);
-}
-
-.record-item__confirm-actions {
-  display: flex;
-  gap: 8px;
+  font-size: 0.85em;
+  white-space: nowrap;
+  align-self: center;
 }
 
 .hub-button-danger {
@@ -494,5 +436,10 @@ async function exportLocal(ch) {
   justify-content: center;
   border-radius: 12px;
   background: color-mix(in srgb, var(--color-background) 80%, transparent);
+}
+
+.list-button .icon-svg {
+  width: 20px;
+  height: 20px;
 }
 </style>

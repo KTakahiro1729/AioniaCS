@@ -10,32 +10,32 @@ export const messages = {
   cloudStorage: {
     signIn: {
       loading: () => ({
-        title: '冒険の記録',
+        title: '冒険者の記録',
         message: 'ログインしています...',
       }),
-      success: () => ({ title: '冒険の記録', message: 'ログインしました' }),
+      success: () => ({ title: '冒険者の記録', message: 'ログインしました' }),
       error: (err) => ({
         title: 'ログインに失敗しました',
         message: err.message || err.details || 'もう一度お試しください。',
       }),
     },
     signOut: {
-      success: () => ({ title: '冒険の記録', message: 'ログアウトしました' }),
+      success: () => ({ title: '冒険者の記録', message: 'ログアウトしました' }),
     },
     folderPicker: {
       error: (err) => ({
-        title: '冒険の記録',
+        title: '冒険者の記録',
         message: err?.message || 'フォルダ選択をキャンセルしました',
       }),
     },
     save: {
-      loading: () => ({ title: '冒険の記録', message: '記録中...' }),
+      loading: () => ({ title: '冒険者の記録', message: '記録中...' }),
       success: () => ({ title: '記録が完了しました', message: '' }),
       error: (err) => ({ title: '記録に失敗しました', message: err.message || '' }),
     },
     load: {
       loading: (name) => ({
-        title: '冒険の記録',
+        title: '冒険者の記録',
         message: `${name} を読み込んでいます...`,
       }),
       success: (name) => ({
@@ -48,11 +48,11 @@ export const messages = {
       }),
     },
     apiInitError: () => ({
-      title: '冒険の記録',
+      title: '冒険者の記録',
       message: '初期化に失敗しました',
     }),
     signInInitError: () => ({
-      title: '冒険の記録',
+      title: '冒険者の記録',
       message: '初期化に失敗しました',
     }),
   },
@@ -60,8 +60,8 @@ export const messages = {
     copied: (link) => ({ title: '共有リンクをコピーしました', message: link }),
     copyFailed: (err) => ({ title: 'コピー失敗', message: err.message }),
     needSignIn: () => ({
-      title: '冒険の記録',
-      message: '冒険の記録を利用するにはログインしてください',
+      title: '冒険者の記録',
+      message: '冒険者の記録を利用するにはログインしてください',
     }),
     generateFailed: (err) => ({
       title: '共有リンク生成失敗',
@@ -76,7 +76,7 @@ export const messages = {
     },
   },
   characterHub: {
-    featureName: '冒険の記録',
+    featureName: '冒険者の記録',
     modals: {
       loadConfirm: (name) => ({
         title: '読込確認',
@@ -88,7 +88,7 @@ export const messages = {
       }),
     },
     notifications: {
-      listError: () => ({ title: '冒険の記録', message: '記録の読み込みに失敗しました。' }),
+      listError: () => ({ title: '冒険者の記録', message: '記録の読み込みに失敗しました。' }),
       delete: {
         success: () => ({ title: '削除しました', message: '' }),
         async: {
@@ -104,12 +104,11 @@ export const messages = {
       },
     },
     texts: {
-      signInLead: 'クラウドに保存された冒険の記録を利用するには、ログインしてください。',
-      signInNote: 'ログイン後、クラウドに保存したキャラクターがここに表示されます。',
+      signInLead: 'クラウドに保存された冒険者の記録を利用するには、ログインしてください。',
       confirmDelete: 'この記録を削除しますか？',
     },
     labels: {
-      listTitle: 'クラウドの記録',
+      listTitle: '冒険者一覧',
       unnamed: '名もなき冒険者',
       anonymous: '旅人',
     },
@@ -124,7 +123,7 @@ export const messages = {
       logout: 'ログアウト',
       refresh: '一覧を更新',
       saveNew: '新規保存',
-      overwrite: '上書き保存',
+      overwrite: '上書保存',
       load: '読込',
       saveLocal: '端末保存',
       delete: '削除',
@@ -144,7 +143,7 @@ export const messages = {
   ui: {
     header: {
       defaultTitle: 'Aionia TRPG Character Sheet',
-      cloudHub: '冒険の記録',
+      cloudHub: '冒険者の記録',
       helpLabel: '?',
     },
     footer: {
@@ -155,12 +154,12 @@ export const messages = {
     },
     viewModeBanner: '閲覧モードで表示中',
     buttons: {
-      saveCloud: '冒険の記録',
-      saveCloudNew: '記録する',
+      saveCloud: '冒険者の記録',
+      saveCloudNew: '記録',
       saveCloudOverwrite: '記録を更新',
-      saveCloudTitle: '冒険の記録に保存',
-      loadCloud: '記録を読み込む',
-      loadCloudTitle: '冒険の記録から読み込む',
+      saveCloudTitle: 'サーバーに保存',
+      loadCloud: '読込',
+      loadCloudTitle: 'サーバーから読み込む',
       saveLocal: '端末保存',
       saveLocalTitle: '端末保存',
       loadLocal: '端末読込',
@@ -170,7 +169,7 @@ export const messages = {
       sharedDataPassword: '共有データのパスワードを入力してください',
     },
     modal: {
-      hubTitle: '冒険の記録',
+      hubTitle: '冒険者の記録',
       generate: '生成',
       shareTitle: '共有リンクを生成',
       cancel: 'キャンセル',
