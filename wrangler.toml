@@ -1,0 +1,6 @@
+name = "aioniacs-functions"
+main = "functions/src/index.js"
+compatibility_date = "2025-02-14"
+
+[build]
+command = "npm install"

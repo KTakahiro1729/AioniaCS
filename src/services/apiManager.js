@@ -1,6 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-vue';
 
-const API_BASE_PATH = '/.netlify/functions';
+const API_BASE_PATH = '/api';
 
 function buildUrl(endpoint, params) {
   const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;

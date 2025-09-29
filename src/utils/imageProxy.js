@@ -1,4 +1,4 @@
-const FUNCTION_BASE_PATH = '/.netlify/functions/get-character-image';
+const FUNCTION_BASE_PATH = '/api/get-character-image';
 const ABSOLUTE_URL_PATTERN = /^(?:https?:)?\/\//i;
 
 function isFunctionUrl(value) {
