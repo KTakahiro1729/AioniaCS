@@ -20,9 +20,7 @@ import MainFooter from './components/ui/MainFooter.vue';
 import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import BaseModal from './components/modals/BaseModal.vue';
-import { useModal } from './composables/useModal.js';
 import { useModalStore } from './stores/modalStore.js';
-import { useNotifications } from './composables/useNotifications.js';
 // --- Template Refs ---
 const mainHeader = ref(null);
 const helpPanelRef = ref(null);
@@ -48,44 +46,13 @@ const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLe
   mainHeader,
 );
 
-const { showAsyncToast } = useNotifications();
-const { showModal } = useModal();
 const modalStore = useModalStore();
-
-function refreshHubList() {
-  uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
-}
-
-async function saveNewCharacter() {
-  await saveCharacterToDrive(null);
-}
-
-async function loadCharacterById(id, characterName) {
-  const loadPromise = dataManager.loadDataFromDrive(id).then((parsedData) => {
-    if (parsedData) {
-      Object.assign(characterStore.character, parsedData.character);
-      characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
-      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
-      Object.assign(characterStore.equipments, parsedData.equipments);
-      characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
-      uiStore.currentDriveFileId = id;
-    }
-  });
-  showAsyncToast(loadPromise, {
-    loading: messages.googleDrive.load.loading(characterName),
-    success: messages.googleDrive.load.success(characterName),
-    error: (err) => messages.googleDrive.load.error(err),
-  });
-}
 
 const { openHub, openIoModal, openShareModal } = useAppModals({
   dataManager,
-  loadCharacterById,
   saveCharacterToDrive,
   handleSignInClick,
   handleSignOutClick,
-  refreshHubList,
-  saveNewCharacter,
   saveData,
   handleFileUpload,
   outputToCocofolia,

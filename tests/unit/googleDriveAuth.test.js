@@ -1,8 +1,9 @@
-import { GoogleDriveManager } from '../../src/services/googleDriveManager.js';
+import { initializeGoogleDriveManager, resetGoogleDriveManagerForTests } from '../../src/services/googleDriveManager.js';
 import { vi } from 'vitest';
 
 describe('GoogleDriveManager auth', () => {
   beforeEach(() => {
+    resetGoogleDriveManagerForTests();
     global.google = {
       accounts: {
         oauth2: {
@@ -22,7 +23,7 @@ describe('GoogleDriveManager auth', () => {
   });
 
   test('onGisLoad initializes token client with minimal scopes', async () => {
-    const gdm = new GoogleDriveManager('k', 'c');
+    const gdm = initializeGoogleDriveManager('k', 'c');
     await gdm.onGisLoad();
     expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalledWith({
       client_id: 'c',
@@ -32,7 +33,7 @@ describe('GoogleDriveManager auth', () => {
   });
 
   test('handleSignOut revokes token and clears gapi token', () => {
-    const gdm = new GoogleDriveManager('k', 'c');
+    const gdm = initializeGoogleDriveManager('k', 'c');
     gdm.tokenClient = { requestAccessToken: vi.fn() };
     gapi.client.getToken.mockReturnValue({ access_token: 't' });
     const cb = vi.fn();
@@ -40,5 +41,9 @@ describe('GoogleDriveManager auth', () => {
     expect(google.accounts.oauth2.revoke).toHaveBeenCalledWith('t', expect.any(Function));
     expect(gapi.client.setToken).toHaveBeenCalledWith('');
     expect(cb).toHaveBeenCalled();
+  });
+
+  afterEach(() => {
+    resetGoogleDriveManagerForTests();
   });
 });

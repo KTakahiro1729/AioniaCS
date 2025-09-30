@@ -23,6 +23,10 @@ export class DataManager {
     return sanitized || '名もなき冒険者';
   }
 
+  getDriveFileName(characterName) {
+    return `${this._sanitizeFileName(characterName)}.json`;
+  }
+
   /**
    * キャラクターデータを保存
    */
@@ -295,19 +299,20 @@ export class DataManager {
     };
 
     if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
-      return res;
+      return this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave);
     }
 
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave);
-    if (created) {
-      await this.googleDriveManager.addIndexEntry({
-        id: created.id,
-        characterName: character.name || '名もなき冒険者',
-      });
+    return this.googleDriveManager.createCharacterFile(dataToSave);
+  }
+
+  async findDriveFileByCharacterName(characterName) {
+    if (!this.googleDriveManager) {
+      console.error('GoogleDriveManager not set in DataManager.');
+      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
-    return created;
+
+    const fileName = this.getDriveFileName(characterName);
+    return this.googleDriveManager.findFileByName(fileName);
   }
 
   /**
@@ -343,31 +348,6 @@ export class DataManager {
    * Loads the character index and returns only valid entries.
    * @returns {Promise<Array>} Array of valid index entries
    */
-  async loadCharacterListFromDrive() {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
-
-    const index = await this.googleDriveManager.readIndexFile();
-    const valid = [];
-
-    for (const entry of index) {
-      try {
-        const data = await this.loadDataFromDrive(entry.id);
-        if (data) {
-          valid.push(entry);
-        } else {
-          console.error(`Character file not found or invalid: ${entry.id}`);
-        }
-      } catch (err) {
-        console.error(`Failed to load character file ${entry.id}:`, err);
-      }
-    }
-
-    return valid;
-  }
-
   /**
    * 外部JSONフォーマットを内部フォーマットに変換
    */

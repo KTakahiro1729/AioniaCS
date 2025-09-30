@@ -11,10 +11,34 @@ vi.mock('../../../src/utils/device.js', () => ({
 }));
 
 describe('useAppModals', () => {
+  let showModalMock;
+
   beforeEach(() => {
     vi.clearAllMocks();
     setActivePinia(createPinia());
-    useModal.mockReturnValue({ showModal: vi.fn().mockResolvedValue(null) });
+    showModalMock = vi.fn().mockResolvedValue(null);
+    useModal.mockReturnValue({ showModal: showModalMock });
+  });
+
+  test('openHub wires sign events', async () => {
+    const handleSignInClick = vi.fn();
+    const handleSignOutClick = vi.fn();
+    const { openHub } = useAppModals({
+      dataManager: {},
+      handleSignInClick,
+      handleSignOutClick,
+      saveData: vi.fn(),
+      handleFileUpload: vi.fn(),
+      outputToCocofolia: vi.fn(),
+      printCharacterSheet: vi.fn(),
+      openPreviewPage: vi.fn(),
+      promptForDriveFolder: vi.fn(),
+      copyEditCallback: vi.fn(),
+    });
+    await openHub();
+    const args = showModalMock.mock.calls[0][0];
+    expect(args.on['sign-in']).toBe(handleSignInClick);
+    expect(args.on['sign-out']).toBe(handleSignOutClick);
   });
 
   test('desktop uses direct print', async () => {
@@ -23,12 +47,8 @@ describe('useAppModals', () => {
     const openPreviewPage = vi.fn();
     const { openIoModal } = useAppModals({
       dataManager: {},
-      loadCharacterById: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
       handleSignInClick: vi.fn(),
       handleSignOutClick: vi.fn(),
-      refreshHubList: vi.fn(),
-      saveNewCharacter: vi.fn(),
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),
@@ -38,7 +58,7 @@ describe('useAppModals', () => {
       copyEditCallback: vi.fn(),
     });
     await openIoModal();
-    const args = useModal.mock.results[0].value.showModal.mock.calls[0][0];
+    const args = showModalMock.mock.calls[0][0];
     expect(args.on.print).toBe(printCharacterSheet);
   });
 
@@ -48,12 +68,8 @@ describe('useAppModals', () => {
     const openPreviewPage = vi.fn();
     const { openIoModal } = useAppModals({
       dataManager: {},
-      loadCharacterById: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
       handleSignInClick: vi.fn(),
       handleSignOutClick: vi.fn(),
-      refreshHubList: vi.fn(),
-      saveNewCharacter: vi.fn(),
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),
@@ -63,7 +79,7 @@ describe('useAppModals', () => {
       copyEditCallback: vi.fn(),
     });
     await openIoModal();
-    const args = useModal.mock.results[0].value.showModal.mock.calls[0][0];
+    const args = showModalMock.mock.calls[0][0];
     expect(args.on.print).toBe(openPreviewPage);
   });
 });

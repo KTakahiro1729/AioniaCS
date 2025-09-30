@@ -12,7 +12,6 @@ export const useUiStore = defineStore('ui', {
     driveFolderName: '',
     currentDriveFileId: null,
     isViewingShared: false,
-    driveCharacters: [],
     pendingDriveSaves: {},
     showHeader: true,
   }),
@@ -34,51 +33,11 @@ export const useUiStore = defineStore('ui', {
     setLoading(flag) {
       this.isLoading = flag;
     },
-    async refreshDriveCharacters(gdm) {
-      if (!gdm) return;
-      const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await gdm.readIndexFile();
-      const serverIds = new Set(serverList.map((c) => c.id));
-
-      // Keep local entries that still exist on server
-      let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
-
-      // Add or update server entries
-      serverList.forEach((srv) => {
-        const idx = merged.findIndex((c) => c.id === srv.id);
-        if (idx !== -1) {
-          merged[idx] = { ...merged[idx], ...srv };
-        } else {
-          merged.push(srv);
-        }
-      });
-
-      // Ensure temps remain
-      temps.forEach((t) => {
-        if (!merged.some((c) => c.id === t.id)) {
-          merged.push(t);
-        }
-      });
-
-      this.driveCharacters = merged;
+    setCurrentDriveFileId(id) {
+      this.currentDriveFileId = id;
     },
-    clearDriveCharacters() {
-      this.driveCharacters = [];
-    },
-    addDriveCharacter(ch) {
-      this.driveCharacters.push(ch);
-    },
-    updateDriveCharacter(id, updates) {
-      const idx = this.driveCharacters.findIndex((c) => c.id === id);
-      if (idx !== -1) {
-        this.driveCharacters[idx] = {
-          ...this.driveCharacters[idx],
-          ...updates,
-        };
-      }
-    },
-    removeDriveCharacter(id) {
-      this.driveCharacters = this.driveCharacters.filter((c) => c.id !== id);
+    clearCurrentDriveFileId() {
+      this.currentDriveFileId = null;
     },
     registerPendingDriveSave(id) {
       this.pendingDriveSaves[id] = { canceled: false };

@@ -47,6 +47,14 @@ export const messages = {
         message: err.message || '不明なエラー',
       }),
     },
+    overwriteConfirm: (name) => ({
+      title: '上書き確認',
+      message: `${name} は既に存在します。上書きしますか？`,
+      buttons: [
+        { label: '上書き', value: 'overwrite', variant: 'primary' },
+        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
+      ],
+    }),
     apiInitError: () => ({
       title: 'Google API エラー',
       message: '初期化に失敗しました',
@@ -54,6 +62,10 @@ export const messages = {
     signInInitError: () => ({
       title: 'Google サインインエラー',
       message: '初期化に失敗しました',
+    }),
+    initPending: () => ({
+      title: 'Google Drive',
+      message: '初期化が完了するまでお待ちください',
     }),
   },
   share: {
