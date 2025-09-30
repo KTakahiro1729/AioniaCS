@@ -277,6 +277,8 @@ describe('DataManager', () => {
       dm.googleDriveManager = {
         createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
         updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
+        findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-id'),
+        isFileInConfiguredFolder: vi.fn().mockResolvedValue(true),
       };
     });
 
@@ -289,6 +291,16 @@ describe('DataManager', () => {
     test('updates file when id exists', async () => {
       await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
       expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object));
+    });
+
+    test('creates new file when existing file is outside configured folder', async () => {
+      dm.googleDriveManager.isFileInConfiguredFolder.mockResolvedValue(false);
+
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+
+      expect(dm.googleDriveManager.isFileInConfiguredFolder).toHaveBeenCalledWith('1');
+      expect(dm.googleDriveManager.updateCharacterFile).not.toHaveBeenCalled();
+      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
     });
   });
 });

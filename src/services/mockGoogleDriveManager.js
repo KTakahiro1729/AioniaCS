@@ -8,105 +8,175 @@ export class MockGoogleDriveManager {
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.storageKey = 'mockGoogleDriveData';
-    console.log('MockGoogleDriveManager is active and uses localStorage.');
+    this.configFileId = 'mock-config';
+    this.pickerApiLoaded = true;
     this._loadState();
-
     singletonInstance = this;
   }
 
   _loadState() {
-    try {
-      const storedState = localStorage.getItem(this.storageKey);
-      if (storedState) {
-        const state = JSON.parse(storedState);
-        this.files = state.files || {};
-        this.folders = state.folders || {};
-        this.fileCounter = state.fileCounter || 1;
-        this.folderId = state.folderId || null;
-        this.signedIn = state.signedIn || false;
-      } else {
-        this._initState();
-      }
-    } catch (e) {
-      console.error('Failed to load mock state from localStorage, resetting.', e);
-      this._initState();
-    }
-    this.pickerApiLoaded = true;
-  }
-
-  _saveState() {
-    const stateToSave = {
-      files: this.files,
-      folders: this.folders,
-      fileCounter: this.fileCounter,
-      folderId: this.folderId,
-      signedIn: this.signedIn,
+    const defaultState = {
+      files: {},
+      folders: {},
+      fileCounter: 1,
+      folderCounter: 1,
+      signedIn: false,
+      config: this.getDefaultConfig(),
     };
-    localStorage.setItem(this.storageKey, JSON.stringify(stateToSave));
-  }
 
-  _initState() {
-    this.files = {};
-    this.folders = {};
-    this.fileCounter = 1;
-    this.folderId = null;
-    this.signedIn = false;
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      this.state = stored ? { ...defaultState, ...JSON.parse(stored) } : defaultState;
+    } catch (error) {
+      console.error('Failed to load mock state from localStorage, resetting.', error);
+      this.state = defaultState;
+    }
+
+    this.configuredFolderId = null;
+    this.cachedFolderPath = null;
     this._saveState();
   }
 
-  onGapiLoad() {
+  _saveState() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.state));
+  }
+
+  reset() {
+    this.state = {
+      files: {},
+      folders: {},
+      fileCounter: 1,
+      folderCounter: 1,
+      signedIn: false,
+      config: this.getDefaultConfig(),
+    };
+    this.configuredFolderId = null;
+    this.cachedFolderPath = null;
+    this._saveState();
+  }
+
+  getDefaultConfig() {
+    return { characterFolderPath: '慈悲なきアイオニア' };
+  }
+
+  normalizeFolderPath(rawPath) {
+    const defaultPath = this.getDefaultConfig().characterFolderPath;
+    if (typeof rawPath !== 'string') {
+      return defaultPath;
+    }
+    const unified = rawPath.replace(/\\/g, '/');
+    const segments = unified
+      .split('/')
+      .map((segment) => segment.trim())
+      .filter((segment) => segment.length > 0);
+    if (segments.length === 0) {
+      return defaultPath;
+    }
+    return segments.join('/');
+  }
+
+  getFolderSegments(path) {
+    return this.normalizeFolderPath(path).split('/');
+  }
+
+  async onGapiLoad() {
     return Promise.resolve();
   }
 
-  onGisLoad() {
+  async onGisLoad() {
     return Promise.resolve();
   }
 
   handleSignIn(callback) {
-    this.signedIn = true;
+    this.state.signedIn = true;
     this._saveState();
     if (callback) callback(null, { signedIn: true });
   }
 
   handleSignOut(callback) {
-    this.signedIn = false;
+    this.state.signedIn = false;
     this._saveState();
     if (callback) callback();
   }
 
-  async createFolder(folderName) {
-    const existing = Object.values(this.folders).find((f) => f.name === folderName);
-    if (existing) return existing;
-    const id = folderName === '.AioniaCS' ? this.folderId || 'mock-folder-id' : `folder-${this.fileCounter++}`;
-    const folder = { id, name: folderName };
-    this.folders[id] = folder;
-    if (folderName === '.AioniaCS') {
-      this.folderId = id;
+  async loadConfig() {
+    this.state.config.characterFolderPath = this.normalizeFolderPath(this.state.config.characterFolderPath);
+    return this.state.config;
+  }
+
+  async saveConfig() {
+    this._saveState();
+    return { id: this.configFileId, name: 'aioniacs.cfg' };
+  }
+
+  async setCharacterFolderPath(path) {
+    const normalized = this.normalizeFolderPath(path);
+    this.state.config.characterFolderPath = normalized;
+    this.configuredFolderId = null;
+    this.cachedFolderPath = null;
+    await this.saveConfig();
+    return normalized;
+  }
+
+  async createFolder(name, parentId = 'root') {
+    const existing = await this.findFolder(name, parentId);
+    if (existing) {
+      return existing;
     }
+    const id = `folder-${this.state.folderCounter++}`;
+    const folder = { id, name, parentId };
+    this.state.folders[id] = folder;
     this._saveState();
     return folder;
   }
 
-  async findFolder(folderName) {
-    if (folderName === '.AioniaCS' && this.folderId) {
-      return this.folders[this.folderId] || { id: this.folderId, name: folderName };
-    }
-    return Object.values(this.folders).find((f) => f.name === folderName) || null;
+  async findFolder(name, parentId = 'root') {
+    return Object.values(this.state.folders).find((folder) => folder.name === name && folder.parentId === parentId) || null;
   }
 
   async getOrCreateAppFolder() {
     return this.findOrCreateAioniaCSFolder();
   }
 
+  async ensureConfiguredFolder() {
+    const config = await this.loadConfig();
+    const path = this.normalizeFolderPath(config.characterFolderPath);
+    if (this.configuredFolderId && this.cachedFolderPath === path) {
+      return this.configuredFolderId;
+    }
+
+    let parentId = 'root';
+    let currentId = null;
+    for (const segment of this.getFolderSegments(path)) {
+      let folder = await this.findFolder(segment, parentId);
+      if (!folder) {
+        folder = await this.createFolder(segment, parentId);
+      }
+      if (!folder) {
+        return null;
+      }
+      currentId = folder.id;
+      parentId = currentId;
+    }
+    this.configuredFolderId = currentId;
+    this.cachedFolderPath = path;
+    this._saveState();
+    return currentId;
+  }
+
+  async findOrCreateAioniaCSFolder() {
+    return this.ensureConfiguredFolder();
+  }
+
   async listFiles(folderId) {
-    return Object.values(this.files)
-      .filter((f) => f.parentId === folderId)
-      .map((f) => ({ id: f.id, name: f.name }));
+    return Object.values(this.state.files)
+      .filter((file) => file.parentId === folderId)
+      .map((file) => ({ id: file.id, name: file.name }));
   }
 
   async saveFile(folderId, fileName, fileContent, fileId = null) {
-    const id = fileId || `file-${this.fileCounter++}`;
-    this.files[id] = {
+    const id = fileId || `file-${this.state.fileCounter++}`;
+    this.state.files[id] = {
       id,
       name: fileName,
       content: fileContent,
@@ -117,79 +187,60 @@ export class MockGoogleDriveManager {
   }
 
   async loadFileContent(fileId) {
-    const file = this.files[fileId];
+    const file = this.state.files[fileId];
     return file ? file.content : null;
   }
 
   async uploadAndShareFile(fileContent, fileName) {
-    const info = await this.saveFile('drive', fileName, fileContent);
+    const info = await this.saveFile('shared', fileName, fileContent);
     return info.id;
   }
 
   showFilePicker(callback, parentFolderId = null) {
-    const files = Object.values(this.files).filter((f) => !parentFolderId || f.parentId === parentFolderId);
+    const files = Object.values(this.state.files).filter((file) => (parentFolderId ? file.parentId === parentFolderId : true));
     const first = files[0];
     if (first) {
-      if (callback) callback(null, { id: first.id, name: first.name });
-    } else if (callback) {
-      callback(new Error('No files available.'));
+      callback?.(null, { id: first.id, name: first.name });
+    } else {
+      callback?.(new Error('No files available.'));
     }
   }
 
   showFolderPicker(callback) {
-    if (this.folderId) {
-      if (callback) callback(null, { id: this.folderId, name: '.AioniaCS' });
-    } else if (callback) {
-      callback(new Error('No folders available.'));
+    const folderId = this.configuredFolderId;
+    if (folderId) {
+      const folder = this.state.folders[folderId];
+      callback?.(null, { id: folder.id, name: folder.name });
+    } else {
+      callback?.(new Error('No folders available.'));
     }
-  }
-
-  async findOrCreateAioniaCSFolder() {
-    if (this.folderId) return this.folderId;
-    const existing = await this.findFolder('.AioniaCS');
-    if (existing) {
-      this.folderId = existing.id;
-      this._saveState();
-      return this.folderId;
-    }
-    const created = await this.createFolder('.AioniaCS');
-    this.folderId = created.id || 'mock-folder-id';
-    if (!this.folders[this.folderId]) {
-      this.folders[this.folderId] = { id: this.folderId, name: '.AioniaCS' };
-    }
-    this._saveState();
-    return this.folderId;
   }
 
   async findFileByName(fileName) {
     if (!fileName) return null;
     const folderId = await this.findOrCreateAioniaCSFolder();
-    const match = Object.values(this.files).find((f) => f.parentId === folderId && f.name === fileName);
-    return match ? { id: match.id, name: match.name } : null;
+    if (!folderId) return null;
+    const file = Object.values(this.state.files).find((entry) => entry.parentId === folderId && entry.name === fileName);
+    return file ? { id: file.id, name: file.name } : null;
   }
 
-  async readIndexFile() {
-    return [];
+  async isFileInConfiguredFolder(fileId) {
+    const folderId = await this.findOrCreateAioniaCSFolder();
+    if (!folderId) return false;
+    const file = this.state.files[fileId];
+    return file ? file.parentId === folderId : false;
   }
-
-  async writeIndexFile() {
-    return null;
-  }
-
-  async addIndexEntry() {}
-
-  async renameIndexEntry() {}
-
-  async removeIndexEntry() {}
 
   async createCharacterFile(data) {
     const folderId = await this.findOrCreateAioniaCSFolder();
+    if (!folderId) return null;
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
     return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
   }
 
   async updateCharacterFile(id, data) {
     const folderId = await this.findOrCreateAioniaCSFolder();
+    if (!folderId) return null;
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
     return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
   }
@@ -200,7 +251,7 @@ export class MockGoogleDriveManager {
   }
 
   async deleteCharacterFile(id) {
-    delete this.files[id];
+    delete this.state.files[id];
     this._saveState();
   }
 }
@@ -209,7 +260,6 @@ export function initializeMockGoogleDriveManager(apiKey, clientId) {
   if (singletonInstance) {
     return singletonInstance;
   }
-
   return new MockGoogleDriveManager(apiKey, clientId);
 }
 
@@ -217,13 +267,13 @@ export function getMockGoogleDriveManagerInstance() {
   if (!singletonInstance) {
     throw new Error('MockGoogleDriveManager has not been initialized. Call initializeMockGoogleDriveManager() first.');
   }
-
   return singletonInstance;
 }
 
 export function resetMockGoogleDriveManagerForTests() {
-  singletonInstance = null;
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem('mockGoogleDriveData');
+  if (singletonInstance) {
+    singletonInstance.reset();
+    singletonInstance = null;
   }
+  localStorage.removeItem('mockGoogleDriveData');
 }

@@ -6,7 +6,7 @@ import {
 } from '../../src/services/googleDriveManager.js';
 import { vi } from 'vitest';
 
-describe('GoogleDriveManager Drive folder management', () => {
+describe('GoogleDriveManager configuration and folder handling', () => {
   let gdm;
 
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('GoogleDriveManager Drive folder management', () => {
         request: vi.fn(),
       },
     };
-    gdm = initializeGoogleDriveManager('k', 'c');
+    gdm = initializeGoogleDriveManager('key', 'client');
   });
 
   afterEach(() => {
@@ -32,100 +32,174 @@ describe('GoogleDriveManager Drive folder management', () => {
     resetGoogleDriveManagerForTests();
   });
 
-  test('findOrCreateAioniaCSFolder returns existing folder id when present', async () => {
-    gapi.client.drive.files.list.mockResolvedValue({
-      result: { files: [{ id: 'folder-1', name: '.AioniaCS' }] },
-    });
+  test('loadConfig creates default config when missing', async () => {
+    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
+    gapi.client.request.mockResolvedValue({ result: { id: 'cfg-1', name: 'aioniacs.cfg' } });
 
-    const folderId = await gdm.findOrCreateAioniaCSFolder();
-    expect(folderId).toBe('folder-1');
-    expect(gapi.client.drive.files.create).not.toHaveBeenCalled();
+    const config = await gdm.loadConfig();
 
-    // Cached value should avoid additional list calls
-    gapi.client.drive.files.list.mockClear();
-    const cachedId = await gdm.findOrCreateAioniaCSFolder();
-    expect(cachedId).toBe('folder-1');
-    expect(gapi.client.drive.files.list).not.toHaveBeenCalled();
+    expect(config.characterFolderPath).toBe('慈悲なきアイオニア');
+    expect(gdm.configFileId).toBe('cfg-1');
+    expect(gapi.client.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'POST',
+        path: '/upload/drive/v3/files',
+      }),
+    );
   });
 
-  test('findOrCreateAioniaCSFolder creates folder when missing', async () => {
+  test('loadConfig reads existing config file', async () => {
+    gapi.client.drive.files.list.mockResolvedValue({
+      result: { files: [{ id: 'cfg-2', name: 'aioniacs.cfg' }] },
+    });
+    gapi.client.drive.files.get.mockResolvedValue({ body: JSON.stringify({ characterFolderPath: 'My Folder' }) });
+
+    const config = await gdm.loadConfig();
+
+    expect(config.characterFolderPath).toBe('My Folder');
+    expect(gdm.configFileId).toBe('cfg-2');
+    expect(gapi.client.request).not.toHaveBeenCalled();
+  });
+
+  test('setCharacterFolderPath updates config and clears cache', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'new-folder', name: '.AioniaCS' } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-3', name: 'aioniacs.cfg' } });
+
+    await gdm.loadConfig();
+    gdm.aioniaFolderId = 'old';
+    gdm.cachedFolderPath = 'Old Path';
+
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-3', name: 'aioniacs.cfg' } });
+
+    await gdm.setCharacterFolderPath('New Path');
+
+    expect(gdm.config.characterFolderPath).toBe('New Path');
+    expect(gdm.aioniaFolderId).toBeNull();
+    expect(gdm.cachedFolderPath).toBeNull();
+    expect(gapi.client.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: '/upload/drive/v3/files/cfg-3',
+        method: 'PATCH',
+      }),
+    );
+  });
+
+  test('findOrCreateAioniaCSFolder builds nested folders from configured path', async () => {
+    gapi.client.drive.files.list.mockImplementation(({ q }) => {
+      if (q.includes("name='aioniacs.cfg'")) {
+        return Promise.resolve({ result: { files: [] } });
+      }
+      if (q.includes("name='Parent'")) {
+        return Promise.resolve({ result: { files: [] } });
+      }
+      if (q.includes("name='Child'")) {
+        return Promise.resolve({ result: { files: [] } });
+      }
+      throw new Error(`Unexpected query: ${q}`);
+    });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-4', name: 'aioniacs.cfg' } });
+    gapi.client.request.mockResolvedValue({ result: { id: 'unused', name: 'cfg' } });
+
+    gapi.client.drive.files.create
+      .mockResolvedValueOnce({ result: { id: 'folder-parent', name: 'Parent' } })
+      .mockResolvedValueOnce({ result: { id: 'folder-child', name: 'Child' } });
+
+    await gdm.loadConfig();
+    await gdm.setCharacterFolderPath('Parent\\Child');
 
     const folderId = await gdm.findOrCreateAioniaCSFolder();
-    expect(folderId).toBe('new-folder');
-    expect(gapi.client.drive.files.create).toHaveBeenCalledWith({
+
+    expect(folderId).toBe('folder-child');
+    expect(gapi.client.drive.files.create).toHaveBeenNthCalledWith(1, {
       resource: {
-        name: '.AioniaCS',
+        name: 'Parent',
         mimeType: 'application/vnd.google-apps.folder',
         parents: ['root'],
       },
       fields: 'id, name',
     });
+    expect(gapi.client.drive.files.create).toHaveBeenNthCalledWith(2, {
+      resource: {
+        name: 'Child',
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: ['folder-parent'],
+      },
+      fields: 'id, name',
+    });
   });
 
-  test('findFileByName returns file info when found', async () => {
-    gdm.aioniaFolderId = 'folder-123';
-    gapi.client.drive.files.list.mockResolvedValue({
-      result: { files: [{ id: 'file-1', name: 'Test.json' }] },
-    });
+  test('createCharacterFile uploads to configured folder', async () => {
+    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-5', name: 'aioniacs.cfg' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-1', name: 'Hero.json' } });
 
-    const file = await gdm.findFileByName('Test.json');
-    expect(file).toEqual({ id: 'file-1', name: 'Test.json' });
+    const res = await gdm.createCharacterFile({ character: { name: 'Hero' } });
+
+    expect(res.id).toBe('file-1');
+    const requestCall = gapi.client.request.mock.calls.at(-1)[0];
+    expect(requestCall.body).toContain('"parents":["folder"]');
+  });
+
+  test('updateCharacterFile patches existing file', async () => {
+    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-6', name: 'aioniacs.cfg' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-1', name: 'Hero.json' } });
+
+    await gdm.updateCharacterFile('file-1', { character: { name: 'Hero' } });
+
+    const call = gapi.client.request.mock.calls.at(-1)[0];
+    expect(call.path).toBe('/upload/drive/v3/files/file-1');
+    expect(call.method).toBe('PATCH');
+  });
+
+  test('findFileByName queries configured folder', async () => {
+    gapi.client.drive.files.list
+      .mockResolvedValueOnce({ result: { files: [] } })
+      .mockResolvedValueOnce({ result: { files: [] } })
+      .mockResolvedValueOnce({
+        result: { files: [{ id: 'found', name: 'Hero.json' }] },
+      });
+    gapi.client.request.mockResolvedValue({ result: { id: 'cfg-7', name: 'aioniacs.cfg' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
+
+    const file = await gdm.findFileByName('Hero.json');
+
+    expect(file).toEqual({ id: 'found', name: 'Hero.json' });
     expect(gapi.client.drive.files.list).toHaveBeenCalledWith({
-      q: "'folder-123' in parents and name='Test.json' and trashed=false",
+      q: "'folder' in parents and name='Hero.json' and trashed=false",
       fields: 'files(id, name)',
       spaces: 'drive',
     });
   });
 
-  test('findFileByName returns null when not found', async () => {
-    gdm.aioniaFolderId = 'folder-123';
+  test('isFileInConfiguredFolder detects mismatched parent', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-8', name: 'aioniacs.cfg' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-x', name: '慈悲なきアイオニア' } });
+    gapi.client.drive.files.get.mockResolvedValue({ result: { parents: ['other-folder'] } });
 
-    const file = await gdm.findFileByName('Missing.json');
-    expect(file).toBeNull();
+    const result = await gdm.isFileInConfiguredFolder('file-xyz');
+
+    expect(result).toBe(false);
+    expect(gapi.client.drive.files.get).toHaveBeenCalledWith({ fileId: 'file-xyz', fields: 'id, parents' });
   });
 
-  test('createCharacterFile uploads JSON to .AioniaCS folder', async () => {
-    vi.spyOn(gdm, 'findOrCreateAioniaCSFolder').mockResolvedValue('folder-abc');
-    gapi.client.request.mockResolvedValue({ result: { id: 'c1', name: 'Test.json' } });
-    const data = { character: { name: 'Test' } };
-    const res = await gdm.createCharacterFile(data);
-    expect(res.id).toBe('c1');
-    expect(gdm.findOrCreateAioniaCSFolder).toHaveBeenCalled();
-    const call = gapi.client.request.mock.calls[0][0];
-    expect(call.body).toContain('"parents":["folder-abc"]');
-  });
-
-  test('updateCharacterFile patches existing file in .AioniaCS folder', async () => {
-    vi.spyOn(gdm, 'findOrCreateAioniaCSFolder').mockResolvedValue('folder-abc');
-    gapi.client.request.mockResolvedValue({ result: { id: 'c1', name: 'Test.json' } });
-
-    await gdm.updateCharacterFile('file-123', { character: { name: 'Test' } });
-
-    const call = gapi.client.request.mock.calls[0][0];
-    expect(call.path).toBe('/upload/drive/v3/files/file-123');
-    expect(call.method).toBe('PATCH');
-  });
-
-  test('deleteCharacterFile removes file only', async () => {
+  test('deleteCharacterFile removes file from drive', async () => {
     gapi.client.drive.files.delete.mockResolvedValue({});
-    await gdm.deleteCharacterFile('d1');
-    expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({
-      fileId: 'd1',
-    });
+    await gdm.deleteCharacterFile('del-1');
+    expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({ fileId: 'del-1' });
   });
 
-  test('onGapiLoad rejects when gapi.load is missing', async () => {
+  test('onGapiLoad rejects when gapi.load missing', async () => {
     delete gapi.load;
     await expect(gdm.onGapiLoad()).rejects.toThrow('GAPI core script not available for gapi.load.');
   });
 
-  test('prevents creating multiple GoogleDriveManager instances', () => {
+  test('singleton pattern remains enforced', () => {
     expect(() => new GoogleDriveManager('other', 'other')).toThrow('already been instantiated');
-    const again = initializeGoogleDriveManager('k', 'c');
-    expect(again).toBe(gdm);
+    expect(initializeGoogleDriveManager('second', 'second')).toBe(gdm);
     expect(getGoogleDriveManagerInstance()).toBe(gdm);
   });
 });

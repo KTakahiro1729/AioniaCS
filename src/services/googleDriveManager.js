@@ -20,12 +20,112 @@ export class GoogleDriveManager {
     this.aioniaFolderId = null;
     this.gapiLoadPromise = null;
     this.gisLoadPromise = null;
+    this.configFileName = 'aioniacs.cfg';
+    this.configFileId = null;
+    this.config = null;
+    this.cachedFolderPath = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
     this.handleSignOut = this.handleSignOut.bind(this);
 
     singletonInstance = this;
+  }
+
+  getDefaultConfig() {
+    return { characterFolderPath: '慈悲なきアイオニア' };
+  }
+
+  normalizeFolderPath(rawPath) {
+    const defaultPath = this.getDefaultConfig().characterFolderPath;
+    if (typeof rawPath !== 'string') {
+      return defaultPath;
+    }
+    const unified = rawPath.replace(/\\/g, '/');
+    const segments = unified
+      .split('/')
+      .map((segment) => segment.trim())
+      .filter((segment) => segment.length > 0);
+    if (segments.length === 0) {
+      return defaultPath;
+    }
+    return segments.join('/');
+  }
+
+  getFolderSegments(path) {
+    return this.normalizeFolderPath(path).split('/');
+  }
+
+  async loadConfig() {
+    if (this.config) {
+      return this.config;
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for loadConfig.');
+      this.config = this.getDefaultConfig();
+      return this.config;
+    }
+
+    const escapedName = this.configFileName.replace(/'/g, "\\'");
+
+    try {
+      const response = await gapi.client.drive.files.list({
+        q: `name='${escapedName}' and 'root' in parents and trashed=false`,
+        fields: 'files(id, name)',
+        spaces: 'drive',
+      });
+      const file = response.result.files?.[0];
+      if (file) {
+        this.configFileId = file.id;
+        const content = await this.loadFileContent(file.id);
+        if (content) {
+          try {
+            const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+            this.config = {
+              ...this.getDefaultConfig(),
+              ...parsed,
+              characterFolderPath: this.normalizeFolderPath(parsed.characterFolderPath),
+            };
+            return this.config;
+          } catch (error) {
+            console.error('Failed to parse config file. Using default config.', error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading config file:', error);
+    }
+
+    this.config = this.getDefaultConfig();
+    await this.saveConfig();
+    return this.config;
+  }
+
+  async saveConfig() {
+    if (!this.config) {
+      this.config = this.getDefaultConfig();
+    }
+    const payload = JSON.stringify(this.config, null, 2);
+    try {
+      const result = await this.saveFile('root', this.configFileName, payload, this.configFileId);
+      if (result) {
+        this.configFileId = result.id;
+      }
+      return result;
+    } catch (error) {
+      console.error('Error saving config file:', error);
+      return null;
+    }
+  }
+
+  async setCharacterFolderPath(path) {
+    const config = await this.loadConfig();
+    const normalized = this.normalizeFolderPath(path);
+    config.characterFolderPath = normalized;
+    await this.saveConfig();
+    this.aioniaFolderId = null;
+    this.cachedFolderPath = null;
+    return normalized;
   }
 
   /**
@@ -165,7 +265,7 @@ export class GoogleDriveManager {
    * @param {string} folderName - The name for the new folder.
    * @returns {Promise<string|null>} The ID of the created folder, or null on error.
    */
-  async createFolder(folderName) {
+  async createFolder(folderName, parentId = 'root') {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded.');
       return null;
@@ -175,6 +275,7 @@ export class GoogleDriveManager {
         resource: {
           name: folderName,
           mimeType: 'application/vnd.google-apps.folder',
+          parents: parentId ? [parentId] : undefined,
         },
         fields: 'id, name',
       });
@@ -191,14 +292,15 @@ export class GoogleDriveManager {
    * @param {string} folderName - The name of the folder to find.
    * @returns {Promise<string|null>} The ID of the folder if found, otherwise null.
    */
-  async findFolder(folderName) {
+  async findFolder(folderName, parentId = 'root') {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded.');
       return null;
     }
     try {
+      const escapedName = folderName.replace(/'/g, "\\'");
       const response = await gapi.client.drive.files.list({
-        q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`,
+        q: `mimeType='application/vnd.google-apps.folder' and name='${escapedName}' and '${parentId}' in parents and trashed=false`,
         fields: 'files(id, name)',
         spaces: 'drive',
       });
@@ -227,12 +329,12 @@ export class GoogleDriveManager {
       return null;
     }
     try {
-      let folderId = await this.findFolder(appFolderName);
-      if (!folderId) {
+      let folder = await this.findFolder(appFolderName, 'root');
+      if (!folder) {
         console.log(`Folder "${appFolderName}" not found, creating it.`);
-        folderId = await this.createFolder(appFolderName);
+        folder = await this.createFolder(appFolderName, 'root');
       }
-      return folderId;
+      return folder;
     } catch (error) {
       console.error(`Error in getOrCreateAppFolder for "${appFolderName}":`, error);
       return null;
@@ -396,47 +498,44 @@ export class GoogleDriveManager {
    * @returns {Promise<string|null>} The ID of the folder, or null if not available.
    */
   async findOrCreateAioniaCSFolder() {
-    if (this.aioniaFolderId) return this.aioniaFolderId;
+    const config = await this.loadConfig();
+    if (!config) {
+      return null;
+    }
+
+    const normalizedPath = this.normalizeFolderPath(config.characterFolderPath);
+    if (this.aioniaFolderId && this.cachedFolderPath === normalizedPath) {
+      return this.aioniaFolderId;
+    }
 
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for findOrCreateAioniaCSFolder.');
       return null;
     }
 
-    const folderName = '.AioniaCS';
+    const segments = this.getFolderSegments(normalizedPath);
+    let parentId = 'root';
+    let currentId = null;
 
-    try {
-      const response = await gapi.client.drive.files.list({
-        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false`,
-        fields: 'files(id, name)',
-        spaces: 'drive',
-      });
-
-      const existingFolder = response.result.files?.[0];
-      if (existingFolder) {
-        this.aioniaFolderId = existingFolder.id;
-        return existingFolder.id;
+    for (const segment of segments) {
+      const existing = await this.findFolder(segment, parentId);
+      if (existing && existing.id) {
+        currentId = existing.id;
+      } else {
+        const created = await this.createFolder(segment, parentId);
+        currentId = created?.id || null;
       }
-    } catch (error) {
-      console.error('Error searching for .AioniaCS folder:', error);
-      return null;
+
+      if (!currentId) {
+        console.error(`Failed to find or create folder segment: ${segment}`);
+        return null;
+      }
+      parentId = currentId;
     }
 
-    try {
-      const created = await gapi.client.drive.files.create({
-        resource: {
-          name: folderName,
-          mimeType: 'application/vnd.google-apps.folder',
-          parents: ['root'],
-        },
-        fields: 'id, name',
-      });
-      this.aioniaFolderId = created.result.id;
-      return created.result.id;
-    } catch (error) {
-      console.error('Error creating .AioniaCS folder:', error);
-      return null;
-    }
+    this.aioniaFolderId = currentId;
+    this.cachedFolderPath = normalizedPath;
+    return currentId;
   }
 
   /**
@@ -652,8 +751,37 @@ export class GoogleDriveManager {
     picker.setVisible(true);
   }
 
+  async isFileInConfiguredFolder(fileId) {
+    if (!fileId) {
+      return false;
+    }
+    const targetFolderId = await this.findOrCreateAioniaCSFolder();
+    if (!targetFolderId) {
+      return false;
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for isFileInConfiguredFolder.');
+      return false;
+    }
+
+    try {
+      const response = await gapi.client.drive.files.get({
+        fileId,
+        fields: 'id, parents',
+      });
+      const parents = response.result?.parents || response.body?.parents;
+      if (!Array.isArray(parents)) {
+        return false;
+      }
+      return parents.includes(targetFolderId);
+    } catch (error) {
+      console.error('Error checking file location:', error);
+      return false;
+    }
+  }
+
   /**
-   * Creates a character data file inside the .AioniaCS folder.
+   * Creates a character data file inside the configured Drive folder.
    * @param {object} data character JSON object
    */
   async createCharacterFile(data) {
@@ -664,7 +792,7 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Updates an existing character file inside the .AioniaCS folder.
+   * Updates an existing character file inside the configured Drive folder.
    * @param {string} id file ID
    * @param {object} data character JSON object
    */
