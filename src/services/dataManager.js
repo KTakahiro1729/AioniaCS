@@ -254,10 +254,9 @@ export class DataManager {
   }
 
   /**
-   * Saves character data to the user's appDataFolder.
-   * Adds an index entry when creating a new file.
+   * Saves character data to the user's Google Drive application folder.
    */
-  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId) {
+  async saveDataToDrive(character, skills, specialSkills, equipments, histories, currentFileId) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
@@ -276,20 +275,15 @@ export class DataManager {
       histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
     };
 
-    if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
-      return res;
+    try {
+      const fileName = `${(character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+      const payload = JSON.stringify(dataToSave, null, 2);
+      const result = await this.googleDriveManager.saveFile(null, fileName, payload, currentFileId);
+      return result;
+    } catch (error) {
+      console.error('Error saving data to Google Drive folder:', error);
+      throw error;
     }
-
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave);
-    if (created) {
-      await this.googleDriveManager.addIndexEntry({
-        id: created.id,
-        characterName: character.name || '名もなき冒険者',
-      });
-    }
-    return created;
   }
 
   /**
@@ -331,23 +325,28 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const index = await this.googleDriveManager.readIndexFile();
-    const valid = [];
-
-    for (const entry of index) {
-      try {
-        const data = await this.loadDataFromDrive(entry.id);
-        if (data) {
-          valid.push(entry);
-        } else {
-          console.error(`Character file not found or invalid: ${entry.id}`);
+    await this.googleDriveManager.ensureAppFolder();
+    const files = await this.googleDriveManager.listFiles(null, 'application/json');
+    const results = await Promise.all(
+      files.map(async (file) => {
+        try {
+          const data = await this.loadDataFromDrive(file.id);
+          if (!data) {
+            return null;
+          }
+          return {
+            id: file.id,
+            characterName: data.character?.name || file.name.replace(/\.json$/i, ''),
+            updatedAt: file.modifiedTime || new Date().toISOString(),
+          };
+        } catch (error) {
+          console.error(`Failed to load character file ${file.id}:`, error);
+          return null;
         }
-      } catch (err) {
-        console.error(`Failed to load character file ${entry.id}:`, err);
-      }
-    }
+      }),
+    );
 
-    return valid;
+    return results.filter(Boolean);
   }
 
   /**

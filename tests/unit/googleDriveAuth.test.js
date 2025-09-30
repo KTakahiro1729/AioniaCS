@@ -26,7 +26,7 @@ describe('GoogleDriveManager auth', () => {
     await gdm.onGisLoad();
     expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalledWith({
       client_id: 'c',
-      scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
+      scope: 'https://www.googleapis.com/auth/drive.file',
       callback: '',
     });
   });

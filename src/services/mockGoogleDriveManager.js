@@ -1,10 +1,22 @@
+const APP_FOLDER_NAME = 'AioniaCS';
+
 export class MockGoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.storageKey = 'mockGoogleDriveData';
-    console.log('MockGoogleDriveManager is active and uses localStorage.');
+    this.pickerApiLoaded = true;
     this._loadState();
+    console.log('MockGoogleDriveManager is active and uses localStorage.');
+  }
+
+  _initState() {
+    this.files = {};
+    this.folders = {};
+    this.fileCounter = 1;
+    this.appFolderId = null;
+    this.signedIn = false;
+    this._saveState();
   }
 
   _loadState() {
@@ -12,39 +24,29 @@ export class MockGoogleDriveManager {
       const storedState = localStorage.getItem(this.storageKey);
       if (storedState) {
         const state = JSON.parse(storedState);
-        this.appData = state.appData;
-        this.folders = state.folders;
-        this.fileCounter = state.fileCounter;
-        this.indexFileId = state.indexFileId;
-        this.signedIn = state.signedIn;
+        this.files = state.files || {};
+        this.folders = state.folders || {};
+        this.fileCounter = state.fileCounter || 1;
+        this.appFolderId = state.appFolderId || null;
+        this.signedIn = state.signedIn || false;
       } else {
         this._initState();
       }
-    } catch (e) {
-      console.error('Failed to load mock state from localStorage, resetting.', e);
+    } catch (error) {
+      console.error('Failed to load mock state from localStorage, resetting.', error);
       this._initState();
     }
-    this.pickerApiLoaded = true;
   }
 
   _saveState() {
     const stateToSave = {
-      appData: this.appData,
+      files: this.files,
       folders: this.folders,
       fileCounter: this.fileCounter,
-      indexFileId: this.indexFileId,
+      appFolderId: this.appFolderId,
       signedIn: this.signedIn,
     };
     localStorage.setItem(this.storageKey, JSON.stringify(stateToSave));
-  }
-
-  _initState() {
-    this.appData = {};
-    this.folders = {};
-    this.fileCounter = 1;
-    this.indexFileId = null;
-    this.signedIn = false;
-    this._saveState();
   }
 
   onGapiLoad() {
@@ -67,56 +69,88 @@ export class MockGoogleDriveManager {
     if (callback) callback();
   }
 
-  async createFolder(folderName) {
-    const existing = Object.values(this.folders).find((f) => f.name === folderName);
+  async createFolder(folderName, parentId = 'root') {
+    const existing = Object.values(this.folders).find((folder) => folder.name === folderName && folder.parentId === parentId);
     if (existing) return existing;
     const id = `folder-${this.fileCounter++}`;
-    const folder = { id, name: folderName };
+    const folder = { id, name: folderName, parentId };
     this.folders[id] = folder;
+    if (folderName === APP_FOLDER_NAME && parentId === 'root') {
+      this.appFolderId = id;
+    }
     this._saveState();
     return folder;
   }
 
-  async findFolder(folderName) {
-    return Object.values(this.folders).find((f) => f.name === folderName) || null;
+  async findFolder(folderName, parentId = 'root') {
+    return Object.values(this.folders).find((folder) => folder.name === folderName && folder.parentId === parentId) || null;
   }
 
-  async getOrCreateAppFolder(appFolderName) {
-    let folder = await this.findFolder(appFolderName);
-    if (!folder) folder = await this.createFolder(appFolderName);
-    return folder;
+  async getOrCreateAppFolder(appFolderName = APP_FOLDER_NAME) {
+    if (this.appFolderId && this.folders[this.appFolderId]) {
+      return this.appFolderId;
+    }
+    let folder = await this.findFolder(appFolderName, 'root');
+    if (!folder) {
+      folder = await this.createFolder(appFolderName, 'root');
+    }
+    this.appFolderId = folder ? folder.id : null;
+    this._saveState();
+    return this.appFolderId;
   }
 
-  async listFiles(folderId, mimeType = 'application/json') {
-    return Object.values(this.appData)
-      .filter((f) => f.parentId === folderId)
-      .map((f) => ({ id: f.id, name: f.name }));
+  async listFiles(folderId = null, mimeType = 'application/json') {
+    if (mimeType !== 'application/json') return [];
+    const targetFolderId = folderId || (await this.getOrCreateAppFolder());
+    if (!targetFolderId) return [];
+    return Object.values(this.files)
+      .filter((file) => file.parentId === targetFolderId)
+      .sort((a, b) => new Date(b.modifiedTime).getTime() - new Date(a.modifiedTime).getTime())
+      .map((file) => ({ id: file.id, name: file.name, modifiedTime: file.modifiedTime }));
   }
 
   async saveFile(folderId, fileName, fileContent, fileId = null) {
+    let targetFolderId = folderId;
     const id = fileId || `file-${this.fileCounter++}`;
-    this.appData[id] = {
+    if (!fileId) {
+      targetFolderId = targetFolderId || (await this.getOrCreateAppFolder());
+      if (!targetFolderId) return null;
+    } else {
+      targetFolderId = targetFolderId || (this.files[id]?.parentId ?? null);
+    }
+    const now = new Date().toISOString();
+    this.files[id] = {
       id,
       name: fileName,
       content: fileContent,
-      parentId: folderId,
+      parentId: targetFolderId,
+      modifiedTime: now,
     };
     this._saveState();
     return { id, name: fileName };
   }
 
   async loadFileContent(fileId) {
-    const file = this.appData[fileId];
-    return file ? file.content : null;
+    return this.files[fileId] ? this.files[fileId].content : null;
   }
 
   async uploadAndShareFile(fileContent, fileName, mimeType) {
-    const info = await this.saveFile('drive', fileName, fileContent);
-    return info.id;
+    void mimeType;
+    const info = await this.saveFile('shared', fileName, fileContent);
+    return info ? info.id : null;
   }
 
   showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
-    const files = Object.values(this.appData).filter((f) => !parentFolderId || f.parentId === parentFolderId);
+    if (!this.signedIn) {
+      if (callback) callback(new Error('Not signed in or token unavailable.'));
+      return;
+    }
+    if (mimeTypes && !mimeTypes.includes('application/json')) {
+      if (callback) callback(new Error('Unsupported mime type.'));
+      return;
+    }
+    const targetFolderId = parentFolderId || this.appFolderId;
+    const files = Object.values(this.files).filter((file) => !targetFolderId || file.parentId === targetFolderId);
     const first = files[0];
     if (first) {
       if (callback) callback(null, { id: first.id, name: first.name });
@@ -125,89 +159,12 @@ export class MockGoogleDriveManager {
     }
   }
 
-  showFolderPicker(callback) {
-    const first = Object.values(this.folders)[0];
-    if (first) {
-      if (callback) callback(null, { id: first.id, name: first.name });
-    } else if (callback) {
-      callback(new Error('No folders available.'));
-    }
+  async ensureAppFolder() {
+    return this.getOrCreateAppFolder();
   }
 
-  async ensureIndexFile() {
-    if (this.indexFileId && this.appData[this.indexFileId]) {
-      return { id: this.indexFileId, name: 'character_index.json' };
-    }
-    const foundId = Object.keys(this.appData).find((id) => this.appData[id].name === 'character_index.json');
-    if (foundId) {
-      this.indexFileId = foundId;
-      this._saveState();
-      return { id: foundId, name: 'character_index.json' };
-    }
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
-    this.indexFileId = created.id;
+  async deleteCharacterFile(fileId) {
+    delete this.files[fileId];
     this._saveState();
-    return created;
-  }
-
-  async readIndexFile() {
-    const info = await this.ensureIndexFile();
-    const content = await this.loadFileContent(info.id);
-    try {
-      return JSON.parse(content || '[]');
-    } catch {
-      return [];
-    }
-  }
-
-  async writeIndexFile(indexData) {
-    const info = await this.ensureIndexFile();
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
-  }
-
-  async addIndexEntry(entry) {
-    const index = await this.readIndexFile();
-    index.push({ ...entry, updatedAt: new Date().toISOString() });
-    await this.writeIndexFile(index);
-  }
-
-  async renameIndexEntry(id, newName) {
-    const index = await this.readIndexFile();
-    index.forEach((e) => {
-      if (e.id === id) {
-        e.characterName = newName;
-        e.updatedAt = new Date().toISOString();
-      }
-    });
-    await this.writeIndexFile(index);
-  }
-
-  async removeIndexEntry(id) {
-    const index = await this.readIndexFile();
-    const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
-  }
-
-  async createCharacterFile(data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
-  }
-
-  async updateCharacterFile(id, data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
-  }
-
-  async loadCharacterFile(id) {
-    const content = await this.loadFileContent(id);
-    return content ? JSON.parse(content) : null;
-  }
-
-  async deleteCharacterFile(id) {
-    delete this.appData[id];
-    this._saveState();
-    await this.removeIndexEntry(id);
   }
 }
-
-window.MockGoogleDriveManager = MockGoogleDriveManager;

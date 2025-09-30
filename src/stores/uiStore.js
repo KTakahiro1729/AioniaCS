@@ -34,33 +34,21 @@ export const useUiStore = defineStore('ui', {
     setLoading(flag) {
       this.isLoading = flag;
     },
-    async refreshDriveCharacters(gdm) {
-      if (!gdm) return;
+    async refreshDriveCharacters(dataManager) {
+      if (!dataManager || !dataManager.googleDriveManager) return;
       const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await gdm.readIndexFile();
-      const serverIds = new Set(serverList.map((c) => c.id));
-
-      // Keep local entries that still exist on server
-      let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
-
-      // Add or update server entries
-      serverList.forEach((srv) => {
-        const idx = merged.findIndex((c) => c.id === srv.id);
-        if (idx !== -1) {
-          merged[idx] = { ...merged[idx], ...srv };
-        } else {
-          merged.push(srv);
-        }
-      });
-
-      // Ensure temps remain
-      temps.forEach((t) => {
-        if (!merged.some((c) => c.id === t.id)) {
-          merged.push(t);
-        }
-      });
-
-      this.driveCharacters = merged;
+      try {
+        const serverList = await dataManager.loadCharacterListFromDrive();
+        const merged = [...serverList];
+        temps.forEach((temp) => {
+          if (!merged.some((item) => item.id === temp.id)) {
+            merged.push(temp);
+          }
+        });
+        this.driveCharacters = merged;
+      } catch (error) {
+        console.error('Failed to refresh Drive characters:', error);
+      }
     },
     clearDriveCharacters() {
       this.driveCharacters = [];

@@ -13,8 +13,8 @@ describe('DataManager data integrity', () => {
     dm.setGoogleDriveManager(gdm);
   });
 
-  it('should handle corrupted pointers gracefully without crashing', async () => {
-    await gdm.writeIndexFile([{ id: 'missing', characterName: 'Missing' }]);
+  it('should skip files that cannot be parsed', async () => {
+    await gdm.saveFile(null, 'Corrupt.json', 'not-json');
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const list = await dm.loadCharacterListFromDrive();
     expect(Array.isArray(list)).toBe(true);
@@ -23,12 +23,19 @@ describe('DataManager data integrity', () => {
     errorSpy.mockRestore();
   });
 
-  it('should ignore orphaned files not referenced in index', async () => {
-    const file = await gdm.createCharacterFile({ character: { name: 'Orphan' } });
-    await gdm.writeIndexFile([]);
+  it('should include valid files stored in Drive folder', async () => {
+    await gdm.saveFile(
+      null,
+      'Hero.json',
+      JSON.stringify({
+        character: { name: 'Hero' },
+        skills: [],
+        specialSkills: [],
+        equipments: {},
+        histories: [],
+      }),
+    );
     const list = await dm.loadCharacterListFromDrive();
-    expect(list).toEqual([]);
-    // ensure file exists but ignored
-    expect(gdm.appData[file.id]).toBeDefined();
+    expect(list).toEqual([expect.objectContaining({ id: expect.any(String), characterName: 'Hero' })]);
   });
 });

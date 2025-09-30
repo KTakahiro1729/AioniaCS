@@ -72,7 +72,7 @@ onMounted(ensureCharacters);
 
 async function ensureCharacters() {
   if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0 && props.dataManager.googleDriveManager) {
-    await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
+    await uiStore.refreshDriveCharacters(props.dataManager);
   }
 }
 
@@ -134,6 +134,7 @@ async function executeDelete() {
         error: (err) => messages.characterHub.delete.asyncToast.error(err),
       });
       await deletePromise;
+      await uiStore.refreshDriveCharacters(props.dataManager);
     }
   }
 
@@ -141,9 +142,7 @@ async function executeDelete() {
 }
 
 async function exportLocal(ch) {
-  const gdm = props.dataManager.googleDriveManager;
-  if (!gdm) return;
-  const exportPromise = gdm.loadCharacterFile(ch.id).then(async (data) => {
+  const exportPromise = props.dataManager.loadDataFromDrive(ch.id).then(async (data) => {
     if (data) {
       await props.dataManager.saveData(data.character, data.skills, data.specialSkills, data.equipments, data.histories);
     }

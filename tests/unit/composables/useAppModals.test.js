@@ -25,6 +25,8 @@ describe('useAppModals', () => {
       dataManager: {},
       loadCharacterById: vi.fn(),
       saveCharacterToDrive: vi.fn(),
+      saveNewDriveCharacter: vi.fn(),
+      openDriveFile: vi.fn(),
       handleSignInClick: vi.fn(),
       handleSignOutClick: vi.fn(),
       refreshHubList: vi.fn(),
@@ -34,7 +36,6 @@ describe('useAppModals', () => {
       outputToCocofolia: vi.fn(),
       printCharacterSheet,
       openPreviewPage,
-      promptForDriveFolder: vi.fn(),
       copyEditCallback: vi.fn(),
     });
     await openIoModal();
@@ -50,6 +51,8 @@ describe('useAppModals', () => {
       dataManager: {},
       loadCharacterById: vi.fn(),
       saveCharacterToDrive: vi.fn(),
+      saveNewDriveCharacter: vi.fn(),
+      openDriveFile: vi.fn(),
       handleSignInClick: vi.fn(),
       handleSignOutClick: vi.fn(),
       refreshHubList: vi.fn(),
@@ -59,7 +62,6 @@ describe('useAppModals', () => {
       outputToCocofolia: vi.fn(),
       printCharacterSheet,
       openPreviewPage,
-      promptForDriveFolder: vi.fn(),
       copyEditCallback: vi.fn(),
     });
     await openIoModal();

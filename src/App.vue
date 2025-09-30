@@ -38,9 +38,11 @@ const {
   canSignInToGoogle,
   handleSignInClick,
   handleSignOutClick,
-  promptForDriveFolder,
+  openDriveFile,
   saveCharacterToDrive,
   saveOrUpdateCurrentCharacterInDrive,
+  saveNewCharacterToDrive,
+  refreshDriveCharacters,
 } = useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
@@ -53,11 +55,11 @@ const { showModal } = useModal();
 const modalStore = useModalStore();
 
 function refreshHubList() {
-  uiStore.refreshDriveCharacters(dataManager.googleDriveManager);
+  refreshDriveCharacters();
 }
 
 async function saveNewCharacter() {
-  await saveCharacterToDrive(null);
+  await saveNewCharacterToDrive();
 }
 
 async function loadCharacterById(id, characterName) {
@@ -82,6 +84,8 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
   dataManager,
   loadCharacterById,
   saveCharacterToDrive,
+  saveNewDriveCharacter: saveNewCharacterToDrive,
+  openDriveFile,
   handleSignInClick,
   handleSignOutClick,
   refreshHubList,
@@ -91,7 +95,6 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
   outputToCocofolia,
   printCharacterSheet,
   openPreviewPage,
-  promptForDriveFolder,
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },

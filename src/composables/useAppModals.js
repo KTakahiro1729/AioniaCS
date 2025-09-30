@@ -19,6 +19,8 @@ export function useAppModals(options) {
     dataManager,
     loadCharacterById,
     saveCharacterToDrive,
+    saveNewDriveCharacter,
+    openDriveFile,
     handleSignInClick,
     handleSignOutClick,
     refreshHubList,
@@ -28,7 +30,6 @@ export function useAppModals(options) {
     outputToCocofolia,
     printCharacterSheet,
     openPreviewPage,
-    promptForDriveFolder,
     copyEditCallback,
   } = options;
 
@@ -61,6 +62,7 @@ export function useAppModals(options) {
       title: messages.ui.modal.io.title,
       props: {
         signedIn: uiStore.isSignedIn,
+        canOverwrite: Boolean(uiStore.currentDriveFileId),
         saveLocalLabel: messages.ui.modal.io.buttons.saveLocal,
         loadLocalLabel: messages.ui.modal.io.buttons.loadLocal,
         outputLabels: {
@@ -70,7 +72,12 @@ export function useAppModals(options) {
         },
         outputTimings: messages.outputButton.animationTimings,
         printLabel: messages.ui.modal.io.buttons.print,
-        driveFolderLabel: messages.ui.modal.io.buttons.driveFolder,
+        driveDescription: messages.ui.modal.io.driveDescription,
+        driveOpenLabel: messages.ui.modal.io.buttons.driveOpen,
+        driveNewLabel: messages.ui.modal.io.buttons.driveNew,
+        driveOverwriteLabel: messages.ui.modal.io.buttons.driveOverwrite,
+        signInLabel: messages.ui.modal.io.buttons.signIn,
+        signOutLabel: messages.ui.modal.io.buttons.signOut,
       },
       buttons: [],
       on: {
@@ -78,7 +85,11 @@ export function useAppModals(options) {
         'load-local': handleFileUpload,
         'output-cocofolia': outputToCocofolia,
         print: handlePrint,
-        'drive-folder': promptForDriveFolder,
+        'drive-open': openDriveFile,
+        'drive-save-new': saveNewDriveCharacter,
+        'drive-save-overwrite': saveCharacterToDrive,
+        'google-sign-in': handleSignInClick,
+        'google-sign-out': handleSignOutClick,
       },
     });
   }

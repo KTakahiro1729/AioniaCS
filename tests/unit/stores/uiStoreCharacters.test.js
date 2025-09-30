@@ -1,4 +1,5 @@
 import { setActivePinia, createPinia } from 'pinia';
+import { vi } from 'vitest';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
 describe('uiStore character cache', () => {
@@ -6,17 +7,24 @@ describe('uiStore character cache', () => {
     setActivePinia(createPinia());
   });
 
-  test('refreshDriveCharacters merges lists', async () => {
+  test('refreshDriveCharacters merges temporary entries with server list', async () => {
     const store = useUiStore();
     store.driveCharacters = [
-      { id: '2', characterName: 'B' },
       { id: 'temp-1', characterName: 'Temp' },
+      { id: 'stale', characterName: 'Stale' },
     ];
-    const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: '1' }]) };
-    await store.refreshDriveCharacters(gdm);
+    const dataManager = {
+      googleDriveManager: {},
+      loadCharacterListFromDrive: vi.fn().mockResolvedValue([{ id: 'srv', characterName: 'Server' }]),
+    };
+    await store.refreshDriveCharacters(dataManager);
     expect(store.driveCharacters).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', characterName: 'Temp' })]),
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'srv', characterName: 'Server' }),
+        expect.objectContaining({ id: 'temp-1', characterName: 'Temp' }),
+      ]),
     );
+    expect(store.driveCharacters.some((ch) => ch.id === 'stale')).toBe(false);
   });
 
   test('clearDriveCharacters empties cache', () => {

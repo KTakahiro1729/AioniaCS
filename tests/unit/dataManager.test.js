@@ -271,31 +271,27 @@ describe('DataManager', () => {
     });
   });
 
-  describe('saveDataToAppData', () => {
+  describe('saveDataToDrive', () => {
     beforeEach(() => {
       dm.googleDriveManager = {
-        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        addIndexEntry: vi.fn().mockResolvedValue(),
-        renameIndexEntry: vi.fn().mockResolvedValue(),
+        saveFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
       };
     });
 
-    test('creates new file and adds index when no id', async () => {
-      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
-      expect(dm.googleDriveManager.addIndexEntry).toHaveBeenCalledWith({
-        id: '1',
-        characterName: 'TestChar',
-      });
+    test('creates new file in Drive folder when no id', async () => {
+      const res = await dm.saveDataToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
+      expect(dm.googleDriveManager.saveFile).toHaveBeenCalledWith(
+        null,
+        'TestChar.json',
+        expect.stringContaining('"name": "TestChar"'),
+        null,
+      );
       expect(res.id).toBe('1');
     });
 
-    test('updates file when id exists and renames index', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object));
-      expect(dm.googleDriveManager.renameIndexEntry).toHaveBeenCalledWith('1', 'TestChar');
-      expect(dm.googleDriveManager.addIndexEntry).not.toHaveBeenCalled();
+    test('updates existing file when id is provided', async () => {
+      await dm.saveDataToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      expect(dm.googleDriveManager.saveFile).toHaveBeenCalledWith(null, 'TestChar.json', expect.any(String), '1');
     });
   });
 });

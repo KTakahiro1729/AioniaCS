@@ -17,16 +17,33 @@ export function useGoogleDrive(dataManager) {
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
 
+  async function refreshDriveCharacters() {
+    if (!uiStore.isSignedIn || !dataManager.googleDriveManager) {
+      return;
+    }
+    try {
+      const list = await dataManager.loadCharacterListFromDrive();
+      uiStore.driveCharacters = list;
+    } catch (error) {
+      console.error('Failed to refresh Drive character list:', error);
+    }
+  }
+
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
     const signInPromise = new Promise((resolve, reject) => {
-      googleDriveManager.value.handleSignIn((error, authResult) => {
+      googleDriveManager.value.handleSignIn(async (error, authResult) => {
         if (error || !authResult || !authResult.signedIn) {
           uiStore.isSignedIn = false;
           reject(error || new Error('Ensure pop-ups are enabled.'));
         } else {
           uiStore.isSignedIn = true;
-          dataManager.loadCharacterListFromDrive().then((list) => (uiStore.driveCharacters = list));
+          try {
+            await googleDriveManager.value.ensureAppFolder();
+            await refreshDriveCharacters();
+          } catch (folderError) {
+            console.error('Failed to prepare Drive folder:', folderError);
+          }
           resolve();
         }
       });
@@ -36,128 +53,126 @@ export function useGoogleDrive(dataManager) {
       success: messages.googleDrive.signIn.success(),
       error: (err) => messages.googleDrive.signIn.error(err),
     });
+    return signInPromise;
   }
 
   function handleSignOutClick() {
     if (!googleDriveManager.value) return;
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
+      uiStore.currentDriveFileId = null;
       uiStore.clearDriveCharacters();
+      uiStore.isCloudSaveSuccess = false;
       showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
     });
   }
 
-  function promptForDriveFolder() {
+  async function pickDriveFile() {
     const gdm = dataManager.googleDriveManager;
-    if (!gdm) return;
-    gdm.showFolderPicker((err, folder) => {
-      if (err || !folder) {
-        showToast({
-          type: 'error',
-          ...messages.googleDrive.folderPicker.error(err),
-        });
-        return;
-      }
-      uiStore.driveFolderId = folder.id;
-      uiStore.driveFolderName = folder.name;
+    if (!gdm) {
+      throw new Error('Google Drive is not initialized.');
+    }
+    const folderId = await gdm.ensureAppFolder();
+    if (!folderId) {
+      throw new Error('Google Drive folder could not be accessed.');
+    }
+    return new Promise((resolve, reject) => {
+      gdm.showFilePicker(
+        (err, file) => {
+          if (err || !file) {
+            reject(err || new Error('Picker cancelled by user.'));
+          } else {
+            resolve(file);
+          }
+        },
+        folderId,
+        ['application/json'],
+      );
     });
   }
 
-  async function saveCharacterToDrive(fileId) {
-    if (!dataManager.googleDriveManager) return;
-    uiStore.isCloudSaveSuccess = false;
+  function applyLoadedCharacter(parsedData) {
+    Object.assign(characterStore.character, parsedData.character);
+    characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
+    characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
+    Object.assign(characterStore.equipments, parsedData.equipments);
+    characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+  }
 
-    const charName = characterStore.character.name || '名もなき冒険者';
-    const now = new Date().toISOString();
-
-    if (!fileId) {
-      const tempId = `temp-${Date.now()}`;
-      uiStore.addDriveCharacter({
-        id: tempId,
-        characterName: charName,
-        updatedAt: now,
+  async function openDriveFile() {
+    let loadPromise = null;
+    try {
+      const file = await pickDriveFile();
+      const displayName = file.name.replace(/\.json$/i, '');
+      loadPromise = dataManager.loadDataFromDrive(file.id).then((parsedData) => {
+        if (!parsedData) {
+          throw new Error(messages.file.loadError);
+        }
+        applyLoadedCharacter(parsedData);
+        uiStore.currentDriveFileId = file.id;
+        uiStore.isCloudSaveSuccess = false;
+        return displayName;
       });
-
-      const token = uiStore.registerPendingDriveSave(tempId);
-
-      const savePromise = dataManager
-        .saveDataToAppData(
-          characterStore.character,
-          characterStore.skills,
-          characterStore.specialSkills,
-          characterStore.equipments,
-          characterStore.histories,
-          fileId,
-        )
-        .then((result) => {
-          if (!token.canceled && result) {
-            uiStore.isCloudSaveSuccess = true;
-            uiStore.updateDriveCharacter(tempId, {
-              id: result.id,
-              updatedAt: now,
-            });
-            uiStore.currentDriveFileId = result.id;
-          }
-          uiStore.completePendingDriveSave(tempId);
-        })
-        .catch((err) => {
-          if (!token.canceled) {
-            uiStore.removeDriveCharacter(tempId);
-          }
-          uiStore.completePendingDriveSave(tempId);
-          throw err;
-        });
-
-      showAsyncToast(savePromise, {
-        loading: messages.googleDrive.save.loading(),
-        success: messages.googleDrive.save.success(),
-        error: (err) => messages.googleDrive.save.error(err),
+      showAsyncToast(loadPromise, {
+        loading: messages.googleDrive.load.loading(displayName),
+        success: messages.googleDrive.load.success(displayName),
+        error: (err) => messages.googleDrive.load.error(err),
       });
-      return savePromise;
-    } else {
-      const idx = uiStore.driveCharacters.findIndex((c) => c.id === fileId);
-      const prev = idx !== -1 ? { ...uiStore.driveCharacters[idx] } : null;
-      uiStore.updateDriveCharacter(fileId, {
-        characterName: charName,
-        updatedAt: now,
-      });
-
-      const savePromise = dataManager
-        .saveDataToAppData(
-          characterStore.character,
-          characterStore.skills,
-          characterStore.specialSkills,
-          characterStore.equipments,
-          characterStore.histories,
-          fileId,
-        )
-        .then((result) => {
-          if (result) {
-            uiStore.isCloudSaveSuccess = true;
-          }
-        })
-        .catch((err) => {
-          if (prev) {
-            uiStore.updateDriveCharacter(fileId, prev);
-          }
-          throw err;
-        });
-
-      showAsyncToast(savePromise, {
-        loading: messages.googleDrive.save.loading(),
-        success: messages.googleDrive.save.success(),
-        error: (err) => messages.googleDrive.save.error(err),
-      });
-      return savePromise;
+      await loadPromise;
+      await refreshDriveCharacters();
+    } catch (error) {
+      if (error && error.message === 'Picker cancelled by user.') {
+        return;
+      }
+      if (!loadPromise && error) {
+        showToast({ type: 'error', ...messages.googleDrive.load.error(error) });
+      }
     }
   }
 
-  function handleSaveToDriveClick() {
-    return saveCharacterToDrive(uiStore.currentDriveFileId);
+  async function saveCharacterToDrive(fileId) {
+    if (!dataManager.googleDriveManager) return null;
+    uiStore.isCloudSaveSuccess = false;
+    const targetFileId = fileId ?? uiStore.currentDriveFileId ?? null;
+    const savePromise = dataManager
+      .saveDataToDrive(
+        characterStore.character,
+        characterStore.skills,
+        characterStore.specialSkills,
+        characterStore.equipments,
+        characterStore.histories,
+        targetFileId,
+      )
+      .then((result) => {
+        if (result && result.id) {
+          uiStore.currentDriveFileId = result.id;
+          uiStore.isCloudSaveSuccess = true;
+        }
+        return result;
+      });
+
+    showAsyncToast(savePromise, {
+      loading: messages.googleDrive.save.loading(),
+      success: messages.googleDrive.save.success(),
+      error: (err) => messages.googleDrive.save.error(err),
+    });
+
+    try {
+      const result = await savePromise;
+      await refreshDriveCharacters();
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
 
   function saveOrUpdateCurrentCharacterInDrive() {
     return saveCharacterToDrive(uiStore.currentDriveFileId);
+  }
+
+  function saveNewCharacterToDrive() {
+    uiStore.currentDriveFileId = null;
+    return saveCharacterToDrive(null);
   }
 
   function initializeGoogleDrive() {
@@ -225,9 +240,10 @@ export function useGoogleDrive(dataManager) {
     canSignInToGoogle,
     handleSignInClick,
     handleSignOutClick,
-    promptForDriveFolder,
+    openDriveFile,
     saveCharacterToDrive,
-    handleSaveToDriveClick,
     saveOrUpdateCurrentCharacterInDrive,
+    saveNewCharacterToDrive,
+    refreshDriveCharacters,
   };
 }
