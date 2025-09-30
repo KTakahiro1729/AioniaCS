@@ -108,6 +108,7 @@ describe('useGoogleDrive', () => {
       loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
       googleDriveManager: {
         showFilePicker: (cb) => cb(null, { id: 'file-1', name: 'Explorer.json' }),
+        findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-id'),
       },
     };
     const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
