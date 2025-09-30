@@ -6,7 +6,6 @@
         <div class="sub-box-title sub-box-title--scar">傷痕</div>
         <div class="info-row">
           <div class="info-item info-item--double">
-            <<<<<<< HEAD
             <label for="initial_scar">初期値</label>
             <input
               type="number"
@@ -15,10 +14,6 @@
               min="0"
               :disabled="uiStore.isViewingShared"
             />
-            =======
-            <label for="current_scar">現在値</label>
-            <span id="current_scar" class="scar-section__current-value">{{ characterStore.calculatedScar }}</span>
-            >>>>>>> f73232e69207a477195a848c3640301daad1c4c5
           </div>
           <div class="info-item info-item--double">
             <label for="current_scar" class="link-checkbox-main-label">現在値（初期値+増加分）</label>
