@@ -38,7 +38,6 @@ export function usePrint() {
   async function buildHtml() {
     const { default: printTemplate } = await import('/src/assets/print/print-template.html?raw');
     const { default: printStyles } = await import('/src/assets/print/print-styles.css?raw');
-    const characterStore = useCharacterStore();
     const ch = characterStore.character;
     let html = printTemplate;
 
@@ -60,7 +59,7 @@ export function usePrint() {
     replace('origin', ch.origin || '');
     replace('occupation', ch.occupation || '');
     replace('faith', ch.faith || '');
-    replace('current-scar-value', String(ch.currentScar ?? ''));
+    replace('current-scar-value', String(characterStore.calculatedScar ?? ''));
     replace('current-experience-value', String(characterStore.currentExperiencePoints + '/' + characterStore.maxExperiencePoints));
 
     // --- 弱点の置換 ---
@@ -97,7 +96,7 @@ export function usePrint() {
     replace('background-content', ch.memo || '');
 
     for (let i = 0; i < 7; i++) {
-      const h = characterStore.histories[i] || {};
+      const h = characterStore.adventureLog[i] || {};
       replace(`adventure-scenario-${i}`, h.sessionName || '');
       replace(`adventure-memo-${i}`, h.memo || '');
       replace(`adventure-experience-${i}`, h.gotExperiments != null ? String(h.gotExperiments) : '');

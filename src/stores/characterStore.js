@@ -27,8 +27,12 @@ function baseEquipments() {
   };
 }
 
+function baseAdventureLogEntry() {
+  return { sessionName: '', gotExperiments: null, memo: '', increasedScar: 0 };
+}
+
 function baseHistories() {
-  return [{ sessionName: '', gotExperiments: null, memo: '' }];
+  return [baseAdventureLogEntry()];
 }
 
 export const useCharacterStore = defineStore('character', {
@@ -40,6 +44,9 @@ export const useCharacterStore = defineStore('character', {
     histories: baseHistories(),
   }),
   getters: {
+    adventureLog(state) {
+      return state.histories;
+    },
     maxExperiencePoints(state) {
       const initialScarExp = Number(state.character.initialScar) || 0;
       const creationWeaknessExp = state.character.weaknesses.reduce(
@@ -53,6 +60,11 @@ export const useCharacterStore = defineStore('character', {
       const combinedInitialBonus = Math.min(initialScarExp + creationWeaknessExp, AioniaGameData.experiencePointValues.maxInitialBonus);
       const historyExp = state.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
       return AioniaGameData.experiencePointValues.basePoints + combinedInitialBonus + historyExp;
+    },
+    calculatedScar(state) {
+      const initialScar = Number(state.character.initialScar) || 0;
+      const adventureScar = state.histories.reduce((sum, entry) => sum + (Number(entry.increasedScar) || 0), 0);
+      return initialScar + adventureScar;
     },
     currentExperiencePoints(state) {
       const skillExp = state.skills.reduce((sum, s) => sum + (s.checked ? AioniaGameData.experiencePointValues.skillBase : 0), 0);
@@ -143,11 +155,7 @@ export const useCharacterStore = defineStore('character', {
       this._manageListItem({
         list: this.histories,
         action: 'add',
-        newItemFactory: () => ({
-          sessionName: '',
-          gotExperiments: null,
-          memo: '',
-        }),
+        newItemFactory: () => baseAdventureLogEntry(),
       });
     },
     removeHistoryItem(index) {
@@ -155,12 +163,11 @@ export const useCharacterStore = defineStore('character', {
         list: this.histories,
         action: 'remove',
         index,
-        newItemFactory: () => ({
-          sessionName: '',
-          gotExperiments: null,
-          memo: '',
-        }),
-        hasContentChecker: (h) => !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
+        newItemFactory: () => baseAdventureLogEntry(),
+        hasContentChecker: (h) => {
+          const hasScarIncrease = Number(h.increasedScar) > 0;
+          return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || hasScarIncrease || h.memo);
+        },
       });
     },
     addExpert(skillId) {
@@ -187,7 +194,13 @@ export const useCharacterStore = defineStore('character', {
     },
     updateHistoryItem(index, field, value) {
       if (this.histories[index]) {
-        this.histories[index][field] = field === 'gotExperiments' && value !== '' && value !== null ? Number(value) : value;
+        if (field === 'gotExperiments') {
+          this.histories[index][field] = value !== '' && value !== null ? Number(value) : value;
+        } else if (field === 'increasedScar') {
+          this.histories[index][field] = value !== '' && value !== null ? Number(value) : 0;
+        } else {
+          this.histories[index][field] = value;
+        }
       }
     },
     handleSpeciesChange() {

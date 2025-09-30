@@ -45,7 +45,9 @@ export class DataManager {
       })),
       specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
       equipments: equipments,
-      histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
+      histories: histories.filter(
+        (h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || Number(h.increasedScar) > 0 || h.memo,
+      ),
     };
 
     const jsonData = JSON.stringify(dataToSave, null, 2);
@@ -238,7 +240,9 @@ export class DataManager {
       })),
       specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
       equipments: equipments,
-      histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
+      histories: histories.filter(
+        (h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || Number(h.increasedScar) > 0 || h.memo,
+      ),
     };
 
     const jsonData = JSON.stringify(dataToSave, null, 2);
@@ -273,7 +277,9 @@ export class DataManager {
       })),
       specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
       equipments: equipments,
-      histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
+      histories: histories.filter(
+        (h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || Number(h.increasedScar) > 0 || h.memo,
+      ),
     };
 
     if (currentFileId) {
@@ -566,6 +572,7 @@ export class DataManager {
         gotExperiments: h.experiments ? parseInt(h.experiments, 10) : null,
         // Use 'memo' if present (from this tool's older format), otherwise 'stress' (from bright-trpg)
         memo: h.memo || h.stress || '',
+        increasedScar: h.increasedScar ? parseInt(h.increasedScar, 10) : 0,
       }));
     }
     // If no history, it will remain an empty array from initialization
@@ -714,10 +721,11 @@ export class DataManager {
             ? null // Keep null as null
             : Number(h.gotExperiments), // Convert valid numbers
         memo: h.memo || '',
+        increasedScar: h.increasedScar === null || h.increasedScar === undefined || h.increasedScar === '' ? 0 : Number(h.increasedScar),
       }));
     }
     // No historyData or empty array, return a single default history item
-    return [{ sessionName: '', gotExperiments: null, memo: '' }];
+    return [{ sessionName: '', gotExperiments: null, memo: '', increasedScar: 0 }];
   }
 }
 

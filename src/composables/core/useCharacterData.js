@@ -21,7 +21,7 @@ export function useCharacterData() {
     weapon2: { group: '', name: '' },
     armor: { group: '', name: '' },
   });
-  const histories = reactive([{ sessionName: '', gotExperiments: null, memo: '' }]);
+  const histories = reactive([{ sessionName: '', gotExperiments: null, memo: '', increasedScar: 0 }]);
 
   function resetCharacter() {
     Object.assign(character, createCharacter());
@@ -55,6 +55,7 @@ export function useCharacterData() {
       sessionName: '',
       gotExperiments: null,
       memo: '',
+      increasedScar: 0,
     });
   }
 

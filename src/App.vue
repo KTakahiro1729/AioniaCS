@@ -107,21 +107,11 @@ const experienceStatusClass = computed(() => uiStore.experienceStatusClass);
 // --- Watchers (formerly `watch`) ---
 
 watch(
-  () => characterStore.character.initialScar,
-  (newVal) => {
-    if (characterStore.character.linkCurrentToInitialScar) {
-      characterStore.character.currentScar = newVal;
-    }
+  () => characterStore.calculatedScar,
+  (currentScar) => {
+    characterStore.character.currentScar = currentScar;
   },
-);
-
-watch(
-  () => characterStore.character.linkCurrentToInitialScar,
-  (isLinked) => {
-    if (isLinked) {
-      characterStore.character.currentScar = characterStore.character.initialScar;
-    }
-  },
+  { immediate: true },
 );
 
 watch(

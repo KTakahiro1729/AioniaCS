@@ -116,6 +116,7 @@ describe('DataManager', () => {
       sessionName: 'sess1',
       gotExperiments: 2,
       memo: 'note',
+      increasedScar: 0,
     });
     expect(internal.character.images).toEqual([]);
   });
@@ -125,13 +126,13 @@ describe('DataManager', () => {
     expect(result.character.weaknesses).toHaveLength(AioniaGameData.config.maxWeaknesses);
     result.character.weaknesses.forEach((w) => expect(w).toEqual({ text: '', acquired: '--' }));
     expect(result.skills).toHaveLength(AioniaGameData.baseSkills.length);
-    expect(result.histories).toEqual([{ sessionName: '', gotExperiments: null, memo: '' }]);
+    expect(result.histories).toEqual([{ sessionName: '', gotExperiments: null, memo: '', increasedScar: 0 }]);
     expect(result.character.linkCurrentToInitialScar).toBe(true);
     expect(result.character.images).toEqual([]);
   });
 
   test('_normalizeHistoryData returns default when empty', () => {
-    expect(dm._normalizeHistoryData([])).toEqual([{ sessionName: '', gotExperiments: null, memo: '' }]);
+    expect(dm._normalizeHistoryData([])).toEqual([{ sessionName: '', gotExperiments: null, memo: '', increasedScar: 0 }]);
   });
 
   describe('saveData', () => {

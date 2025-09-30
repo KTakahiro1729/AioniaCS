@@ -6,26 +6,14 @@
         <div class="sub-box-title sub-box-title--scar">傷痕</div>
         <div class="info-row">
           <div class="info-item info-item--double">
-            <div class="link-checkbox-container">
-              <label for="current_scar" class="link-checkbox-main-label">現在値</label>
-              <input
-                type="checkbox"
-                id="link_current_to_initial_scar_checkbox"
-                v-model="characterStore.character.linkCurrentToInitialScar"
-                class="link-checkbox"
-                :disabled="uiStore.isViewingShared"
-              />
-              <label for="link_current_to_initial_scar_checkbox" class="link-checkbox-label">連動</label>
-            </div>
+            <label for="current_scar" class="link-checkbox-main-label">現在値</label>
             <input
               type="number"
               id="current_scar"
-              v-model.number="characterStore.character.currentScar"
-              @input="handleCurrentScarInput"
-              :class="{ 'greyed-out': characterStore.character.linkCurrentToInitialScar }"
+              :value="calculatedScar"
               min="0"
-              class="scar-section__current-input"
-              :disabled="uiStore.isViewingShared"
+              class="scar-section__current-input scar-section__current-input--readonly"
+              disabled
             />
           </div>
           <div class="info-item info-item--double">
@@ -75,14 +63,7 @@ import { useUiStore } from '../../stores/uiStore.js';
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 const sessionNames = computed(() => characterStore.sessionNamesForWeaknessDropdown);
-
-function handleCurrentScarInput(event) {
-  const enteredValue = parseInt(event.target.value, 10);
-  if (Number.isNaN(enteredValue)) return;
-  if (characterStore.character.linkCurrentToInitialScar && enteredValue !== characterStore.character.initialScar) {
-    characterStore.character.linkCurrentToInitialScar = false;
-  }
-}
+const calculatedScar = computed(() => characterStore.calculatedScar);
 </script>
 
 <style scoped>
@@ -94,29 +75,13 @@ function handleCurrentScarInput(event) {
   margin-bottom: 25px;
 }
 
-.link-checkbox-container {
-  display: flex;
-  align-items: center;
-}
-
 .link-checkbox-main-label {
   margin-right: 8px;
 }
 
-.link-checkbox {
-  margin-right: 4px;
-  margin-bottom: 2px;
-  accent-color: var(--color-accent);
-  transform: scale(1.1);
-  width: auto;
-}
-
-.link-checkbox-label {
-  font-size: 0.9em;
-  color: var(--color-text-muted);
-  font-weight: normal;
-  user-select: none;
-  margin-bottom: 0;
+.scar-section__current-input--readonly {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
 }
 
 .sub-box-title--weakness {

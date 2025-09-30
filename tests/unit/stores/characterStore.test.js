@@ -48,4 +48,45 @@ describe('characterStore', () => {
     expect(skill.experts.length).toBe(1);
     expect(skill.experts[0].value).toBe('');
   });
+
+  describe('calculatedScar', () => {
+    test('sums increased scars with initial value', () => {
+      const store = useCharacterStore();
+      store.character.initialScar = 5;
+      store.adventureLog.splice(
+        0,
+        store.adventureLog.length,
+        ...[
+          { sessionName: 'Session 1', gotExperiments: 10, memo: '', increasedScar: 2 },
+          { sessionName: 'Session 2', gotExperiments: 5, memo: '', increasedScar: 3 },
+        ],
+      );
+
+      expect(store.calculatedScar).toBe(10);
+    });
+
+    test('handles zero values without NaN', () => {
+      const store = useCharacterStore();
+      store.character.initialScar = 0;
+      store.adventureLog[0].increasedScar = 0;
+
+      expect(store.calculatedScar).toBe(0);
+    });
+
+    test('ignores non-numeric values when summing', () => {
+      const store = useCharacterStore();
+      store.character.initialScar = 7;
+      store.adventureLog.splice(
+        0,
+        store.adventureLog.length,
+        ...[
+          { sessionName: 'Session 1', gotExperiments: 4, memo: '', increasedScar: 1 },
+          { sessionName: 'Session 2', gotExperiments: 4, memo: '', increasedScar: null },
+          { sessionName: 'Session 3', gotExperiments: 4, memo: '', increasedScar: '3' },
+        ],
+      );
+
+      expect(store.calculatedScar).toBe(11);
+    });
+  });
 });
