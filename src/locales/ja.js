@@ -67,6 +67,15 @@ export const messages = {
       title: 'Google Drive',
       message: '初期化が完了するまでお待ちください',
     }),
+    config: {
+      loadError: () => ({ title: '設定読み込み失敗', message: '保存先フォルダの取得に失敗しました' }),
+      requiresSignIn: () => ({ title: 'Google Drive', message: 'Googleにサインインしてください' }),
+      updateSuccess: () => ({ title: '設定更新', message: '保存先フォルダを更新しました' }),
+      updateError: (err) => ({
+        title: '設定更新失敗',
+        message: err?.message || '保存先フォルダの更新に失敗しました',
+      }),
+    },
   },
   share: {
     copied: (link) => ({ title: '共有リンクをコピーしました', message: link }),

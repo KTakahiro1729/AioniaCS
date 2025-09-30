@@ -35,6 +35,10 @@ export function useGoogleDrive(dataManager) {
     if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
       dataManager.setGoogleDriveManager(googleDriveManager.value);
     }
+
+    if (googleDriveManager.value && uiStore.isSignedIn) {
+      refreshDriveFolderPath();
+    }
   }
 
   function handleSignInClick() {
@@ -50,6 +54,7 @@ export function useGoogleDrive(dataManager) {
         }
       });
     });
+    signInPromise.then(() => refreshDriveFolderPath()).catch(() => {});
     showAsyncToast(signInPromise, {
       loading: messages.googleDrive.signIn.loading(),
       success: messages.googleDrive.signIn.success(),
@@ -77,9 +82,44 @@ export function useGoogleDrive(dataManager) {
         });
         return;
       }
-      uiStore.driveFolderId = folder.id;
-      uiStore.driveFolderName = folder.name;
+      updateDriveFolderPath(folder.name);
     });
+  }
+
+  async function refreshDriveFolderPath() {
+    if (!googleDriveManager.value || !uiStore.isSignedIn) {
+      return;
+    }
+    try {
+      const config = await googleDriveManager.value.loadConfig();
+      if (config?.characterFolderPath) {
+        uiStore.setDriveFolderPath(config.characterFolderPath);
+      }
+    } catch (error) {
+      console.error('Failed to load Drive folder config:', error);
+      showToast({ type: 'error', ...messages.googleDrive.config.loadError() });
+    }
+  }
+
+  async function updateDriveFolderPath(path) {
+    if (!googleDriveManager.value) {
+      return uiStore.driveFolderPath;
+    }
+    if (!uiStore.isSignedIn) {
+      showToast({ type: 'error', ...messages.googleDrive.config.requiresSignIn() });
+      return uiStore.driveFolderPath;
+    }
+    try {
+      const normalized = await googleDriveManager.value.setCharacterFolderPath(path);
+      uiStore.setDriveFolderPath(normalized);
+      await googleDriveManager.value.findOrCreateAioniaCSFolder();
+      showToast({ type: 'success', ...messages.googleDrive.config.updateSuccess() });
+      return normalized;
+    } catch (error) {
+      console.error('Failed to update Drive folder config:', error);
+      showToast({ type: 'error', ...messages.googleDrive.config.updateError(error) });
+      return uiStore.driveFolderPath;
+    }
   }
 
   async function loadCharacterFromDrive() {
@@ -270,6 +310,8 @@ export function useGoogleDrive(dataManager) {
     handleSignInClick,
     handleSignOutClick,
     promptForDriveFolder,
+    refreshDriveFolderPath,
+    updateDriveFolderPath,
     loadCharacterFromDrive,
     saveCharacterToDrive,
     handleSaveToDriveClick,

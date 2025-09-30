@@ -298,8 +298,16 @@ export class DataManager {
       ),
     };
 
-    if (currentFileId) {
-      return this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave);
+    let targetFileId = currentFileId;
+    if (targetFileId) {
+      const isInConfiguredFolder = await this.googleDriveManager.isFileInConfiguredFolder(targetFileId);
+      if (!isInConfiguredFolder) {
+        targetFileId = null;
+      }
+    }
+
+    if (targetFileId) {
+      return this.googleDriveManager.updateCharacterFile(targetFileId, dataToSave);
     }
 
     return this.googleDriveManager.createCharacterFile(dataToSave);

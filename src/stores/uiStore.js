@@ -8,8 +8,7 @@ export const useUiStore = defineStore('ui', {
     isGapiInitialized: false,
     isGisInitialized: false,
     isLoading: false,
-    driveFolderId: null,
-    driveFolderName: '',
+    driveFolderPath: '慈悲なきアイオニア',
     currentDriveFileId: null,
     isViewingShared: false,
     pendingDriveSaves: {},
@@ -26,7 +25,7 @@ export const useUiStore = defineStore('ui', {
       return state.isGapiInitialized && state.isGisInitialized && !state.isSignedIn;
     },
     canOperateDrive(state) {
-      return state.isSignedIn && state.driveFolderId;
+      return state.isSignedIn;
     },
   },
   actions: {
@@ -38,6 +37,9 @@ export const useUiStore = defineStore('ui', {
     },
     clearCurrentDriveFileId() {
       this.currentDriveFileId = null;
+    },
+    setDriveFolderPath(path) {
+      this.driveFolderPath = path;
     },
     registerPendingDriveSave(id) {
       this.pendingDriveSaves[id] = { canceled: false };

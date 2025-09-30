@@ -158,4 +158,63 @@ test.describe('Character Sheet E2E Tests', () => {
       await expect(imageCountDisplay).toHaveText('1 / 1'); // Assuming one image in the test zip
     });
   });
+
+  test('updates Drive folder path and saves using configured hierarchy', async ({ page }) => {
+    await page.evaluate(() => localStorage.clear());
+
+    const characterNameInput = page.locator('#name');
+    await characterNameInput.fill('MockE2E');
+
+    await page.locator('.icon-button').first().click();
+    const modal = page.locator('.modal');
+    await modal.waitFor({ state: 'visible' });
+
+    const signInButton = page.locator('button:has-text("Googleにログイン")');
+    await signInButton.waitFor({ state: 'visible' });
+    await expect(signInButton).toBeEnabled({ timeout: 10000 });
+    await signInButton.click();
+
+    const saveNewButton = page.locator('button:has-text("新しい冒険者として保存")');
+    await expect(saveNewButton).toBeVisible({ timeout: 10000 });
+    await expect(saveNewButton).toBeEnabled({ timeout: 10000 });
+
+    const folderInput = page.locator('#drive_folder_path');
+    await expect(folderInput).toHaveValue('慈悲なきアイオニア');
+
+    const desiredPath = '慈悲なきアイオニア\\PC/第一キャンペーン';
+    await folderInput.fill(desiredPath);
+    await folderInput.blur();
+    await expect(folderInput).toHaveValue('慈悲なきアイオニア/PC/第一キャンペーン');
+
+    await saveNewButton.click();
+
+    await page.waitForFunction(() => {
+      const stateRaw = localStorage.getItem('mockGoogleDriveData');
+      if (!stateRaw) return false;
+      try {
+        const state = JSON.parse(stateRaw);
+        return Object.values(state.files || {}).some((file) => file.name === 'MockE2E.json');
+      } catch (e) {
+        return false;
+      }
+    });
+
+    const driveState = await page.evaluate(() => JSON.parse(localStorage.getItem('mockGoogleDriveData')));
+    expect(driveState.config.characterFolderPath).toBe('慈悲なきアイオニア/PC/第一キャンペーン');
+
+    const savedFile = Object.values(driveState.files).find((file) => file.name === 'MockE2E.json');
+    expect(savedFile).toBeTruthy();
+
+    const buildPath = (folderId) => {
+      const segments = [];
+      let current = driveState.folders[folderId];
+      while (current) {
+        segments.unshift(current.name);
+        current = driveState.folders[current.parentId];
+      }
+      return segments.join('/');
+    };
+
+    expect(buildPath(savedFile.parentId)).toBe('慈悲なきアイオニア/PC/第一キャンペーン');
+  });
 });
