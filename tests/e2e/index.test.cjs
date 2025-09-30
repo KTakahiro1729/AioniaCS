@@ -169,9 +169,6 @@ test.describe('Character Sheet E2E Tests', () => {
     const modal = page.locator('.modal');
     await modal.waitFor({ state: 'visible' });
 
-    const folderInput = page.locator('#drive_folder_path');
-    await expect(folderInput).toHaveValue('慈悲なきアイオニア');
-
     const signInButton = page.locator('button:has-text("Googleにログイン")');
     await signInButton.waitFor({ state: 'visible' });
     await expect(signInButton).toBeEnabled({ timeout: 10000 });
@@ -180,6 +177,9 @@ test.describe('Character Sheet E2E Tests', () => {
     const saveNewButton = page.locator('button:has-text("新しい冒険者として保存")');
     await expect(saveNewButton).toBeVisible({ timeout: 10000 });
     await expect(saveNewButton).toBeEnabled({ timeout: 10000 });
+
+    const folderInput = page.locator('#drive_folder_path');
+    await expect(folderInput).toHaveValue('慈悲なきアイオニア');
 
     const desiredPath = '慈悲なきアイオニア\\PC/第一キャンペーン';
     await folderInput.fill(desiredPath);
