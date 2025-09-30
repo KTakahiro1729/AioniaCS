@@ -8,16 +8,17 @@
           <div class="history-item-inputs">
             <div class="flex-history-name"><label>シナリオ名</label></div>
             <div class="flex-history-exp"><label>経験点</label></div>
-            <div class="flex-history-memo"><label>メモ</label></div>
+            <div class="flex-history-scar"><label>傷痕増加</label></div>
+            <div class="flex-history-memo"></div>
           </div>
         </div>
       </div>
       <ul id="histories" class="list-reset">
         <BaseListItem
-          v-for="(history, index) in characterStore.histories"
+          v-for="(history, index) in characterStore.adventureLog"
           :key="index"
           :show-delete-button="!uiStore.isViewingShared"
-          :can-delete="!(characterStore.histories.length <= 1 && !hasHistoryContent(history))"
+          :can-delete="!(characterStore.adventureLog.length <= 1 && !hasHistoryContent(history))"
           @delete-item="characterStore.removeHistoryItem(index)"
         >
           <div class="flex-grow">
@@ -39,9 +40,19 @@
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
+              <div class="flex-history-scar">
+                <BaseInput
+                  type="number"
+                  min="0"
+                  :model-value="history.increasedScar"
+                  @update:model-value="(v) => characterStore.updateHistoryItem(index, 'increasedScar', v)"
+                  :disabled="uiStore.isViewingShared"
+                />
+              </div>
               <div class="flex-history-memo">
                 <BaseInput
                   type="text"
+                  placeholder="メモ"
                   :model-value="history.memo"
                   @update:model-value="(v) => characterStore.updateHistoryItem(index, 'memo', v)"
                   :disabled="uiStore.isViewingShared"
@@ -75,7 +86,12 @@ const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 
 function hasHistoryContent(h) {
-  return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo);
+  return !!(
+    h.sessionName ||
+    (h.gotExperiments !== null && h.gotExperiments !== '') ||
+    (h.increasedScar !== null && h.increasedScar !== undefined) ||
+    h.memo
+  );
 }
 </script>
 
@@ -88,15 +104,25 @@ function hasHistoryContent(h) {
 }
 
 .flex-history-name {
-  flex: 1 1 150px;
+  flex: 1 1 120px;
   max-width: 150px;
 }
 
 .flex-history-exp {
-  flex: 0 1 80px;
+  flex: 0 1 70px;
+  max-width: 70px;
+}
+
+.flex-history-scar {
+  flex: 0 1 70px;
+  max-width: 70px;
+}
+
+.flex-history-scar {
+  flex: 0 1 100px;
 }
 
 .flex-history-memo {
-  flex: 3 2 220px;
+  flex: 3 2 150px;
 }
 </style>
