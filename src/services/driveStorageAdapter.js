@@ -7,7 +7,11 @@ export class DriveStorageAdapter {
 
   async create(data) {
     const content = this._serializeData(data);
-    const res = await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content);
+    const folderId = this.gdm.getWorkspaceFolderId?.();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
+    const res = await this.gdm.saveFile(folderId, `sls_${Date.now()}.json`, content);
     return res && res.id ? res.id : null;
   }
 
@@ -19,7 +23,11 @@ export class DriveStorageAdapter {
 
   async update(id, data) {
     const content = this._serializeData(data);
-    await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content, id);
+    const folderId = this.gdm.getWorkspaceFolderId?.();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
+    await this.gdm.saveFile(folderId, `sls_${Date.now()}.json`, content, id);
   }
 
   _serializeData(data) {

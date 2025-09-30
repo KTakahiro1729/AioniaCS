@@ -1,7 +1,7 @@
 import { GoogleDriveManager } from '../../src/services/googleDriveManager.js';
 import { vi } from 'vitest';
 
-describe('GoogleDriveManager appDataFolder', () => {
+describe('GoogleDriveManager workspace folder', () => {
   let gdm;
 
   beforeEach(() => {
@@ -18,6 +18,7 @@ describe('GoogleDriveManager appDataFolder', () => {
       },
     };
     gdm = new GoogleDriveManager('k', 'c');
+    gdm.setWorkspaceFolder({ id: 'folder-1', name: 'AioniaCS' });
   });
 
   afterEach(() => {
@@ -32,6 +33,10 @@ describe('GoogleDriveManager appDataFolder', () => {
     const info = await gdm.ensureIndexFile();
     expect(info.id).toBe('1');
     expect(gapi.client.request).toHaveBeenCalled();
+    expect(gapi.client.drive.files.list).toHaveBeenCalledWith({
+      q: "name='character_index.json' and 'folder-1' in parents and trashed=false",
+      fields: 'files(id,name)',
+    });
   });
 
   test('readIndexFile returns parsed data', async () => {
@@ -49,7 +54,7 @@ describe('GoogleDriveManager appDataFolder', () => {
     });
   });
 
-  test('createCharacterFile uploads JSON to appDataFolder', async () => {
+  test('createCharacterFile uploads JSON to workspace folder', async () => {
     gapi.client.request.mockResolvedValue({
       result: { id: 'c1', name: 'Test.json' },
     });
@@ -57,6 +62,11 @@ describe('GoogleDriveManager appDataFolder', () => {
     const res = await gdm.createCharacterFile(data);
     expect(res.id).toBe('c1');
     expect(gapi.client.request).toHaveBeenCalled();
+    const body = gapi.client.request.mock.calls[0][0];
+    expect(body.path).toBe('/upload/drive/v3/files');
+    expect(body.method).toBe('POST');
+    expect(body.params.uploadType).toBe('multipart');
+    expect(body.body).toContain('\"parents\":[\"folder-1\"]');
   });
 
   test('deleteCharacterFile removes file and index entry', async () => {

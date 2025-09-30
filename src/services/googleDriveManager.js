@@ -6,11 +6,14 @@ export class GoogleDriveManager {
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-    this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
+    this.scope = 'https://www.googleapis.com/auth/drive.file';
     this.gapiLoadedCallback = null;
     this.gisLoadedCallback = null;
     this.tokenClient = null;
     this.pickerApiLoaded = false;
+    this.workspaceFolderName = 'AioniaCS';
+    this.workspaceFolderId = null;
+    this.indexFileId = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
@@ -138,6 +141,48 @@ export class GoogleDriveManager {
   // --- Placeholder methods for Drive functionality ---
 
   /**
+   * Sets the active workspace folder where character data is stored.
+   * @param {{id:string,name:string}} folder
+   */
+  setWorkspaceFolder(folder) {
+    if (!folder || !folder.id) {
+      throw new Error('Invalid workspace folder specified.');
+    }
+    this.workspaceFolderId = folder.id;
+    this.workspaceFolderName = folder.name || this.workspaceFolderName;
+    this.indexFileId = null;
+  }
+
+  /**
+   * Clears the active workspace folder reference.
+   */
+  clearWorkspaceFolder() {
+    this.workspaceFolderId = null;
+    this.indexFileId = null;
+  }
+
+  /**
+   * Returns the currently selected workspace folder ID.
+   * @returns {string|null}
+   */
+  getWorkspaceFolderId() {
+    return this.workspaceFolderId;
+  }
+
+  /**
+   * Ensures the default workspace folder exists and sets it as active.
+   * @param {string} [folderName]
+   * @returns {Promise<{id:string,name:string}|null>}
+   */
+  async ensureWorkspaceFolder(folderName = this.workspaceFolderName) {
+    const folder = await this.getOrCreateAppFolder(folderName);
+    if (folder) {
+      this.setWorkspaceFolder(folder);
+    }
+    return folder;
+  }
+
+  /**
    * Creates a new folder in Google Drive.
    * @param {string} folderName - The name for the new folder.
    * @returns {Promise<string|null>} The ID of the created folder, or null on error.
@@ -152,6 +197,7 @@ export class GoogleDriveManager {
         resource: {
           name: folderName,
           mimeType: 'application/vnd.google-apps.folder',
+          parents: ['root'],
         },
         fields: 'id, name',
       });
@@ -175,9 +221,8 @@ export class GoogleDriveManager {
     }
     try {
       const response = await gapi.client.drive.files.list({
-        q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`,
+        q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false and 'root' in parents`,
         fields: 'files(id, name)',
-        spaces: 'drive',
       });
       const files = response.result.files;
       if (files && files.length > 0) {
@@ -204,12 +249,12 @@ export class GoogleDriveManager {
       return null;
     }
     try {
-      let folderId = await this.findFolder(appFolderName);
-      if (!folderId) {
+      let folder = await this.findFolder(appFolderName);
+      if (!folder) {
         console.log(`Folder "${appFolderName}" not found, creating it.`);
-        folderId = await this.createFolder(appFolderName);
+        folder = await this.createFolder(appFolderName);
       }
-      return folderId;
+      return folder;
     } catch (error) {
       console.error(`Error in getOrCreateAppFolder for "${appFolderName}":`, error);
       return null;
@@ -252,6 +297,10 @@ export class GoogleDriveManager {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
+    }
+
+    if (!fileId && !folderId) {
+      throw new Error('Folder ID is required when creating new files.');
     }
 
     if (fileId) {
@@ -444,8 +493,9 @@ export class GoogleDriveManager {
     };
 
     const view = new google.picker.View(google.picker.ViewId.DOCS);
-    if (parentFolderId) {
-      view.setParent(parentFolderId);
+    const startingFolderId = parentFolderId || this.getWorkspaceFolderId();
+    if (startingFolderId) {
+      view.setParent(startingFolderId);
     }
     if (mimeTypes && mimeTypes.length > 0) {
       view.setMimeTypes(mimeTypes.join(','));
@@ -511,15 +561,20 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Ensures the character index file exists in appDataFolder.
+   * Ensures the character index file exists in the workspace folder.
    * @returns {Promise<{id:string,name:string}|null>} index file info
    */
   async ensureIndexFile() {
+    const folderId = this.getWorkspaceFolderId();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
+
+    const query = `name='character_index.json' and '${folderId}' in parents and trashed=false`;
     const fileList =
       (
         await gapi.client.drive.files.list({
-          q: "name='character_index.json' and trashed=false",
-          spaces: 'appDataFolder',
+          q: query,
           fields: 'files(id,name)',
         })
       ).result.files || [];
@@ -529,7 +584,7 @@ export class GoogleDriveManager {
       return fileList[0];
     }
 
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
+    const created = await this.saveFile(folderId, 'character_index.json', '[]');
     if (created) this.indexFileId = created.id;
     return created;
   }
@@ -556,7 +611,7 @@ export class GoogleDriveManager {
   async writeIndexFile(indexData) {
     const info = await this.ensureIndexFile();
     if (!info) return null;
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
+    return this.saveFile(this.getWorkspaceFolderId(), 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
   }
 
   async addIndexEntry(entry) {
@@ -583,18 +638,25 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Creates a character data file in appDataFolder.
+   * Creates a character data file in the active workspace folder.
    * @param {object} data character JSON object
-   * @param {string} name file name
    */
   async createCharacterFile(data) {
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
+    const folderId = this.getWorkspaceFolderId();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
   }
 
   async updateCharacterFile(id, data) {
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
+    const folderId = this.getWorkspaceFolderId();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
   }
 
   async loadCharacterFile(id) {

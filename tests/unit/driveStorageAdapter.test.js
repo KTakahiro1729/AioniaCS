@@ -9,6 +9,7 @@ describe('DriveStorageAdapter', () => {
     gdm = {
       saveFile: vi.fn().mockResolvedValue({ id: '1' }),
       loadFileContent: vi.fn().mockResolvedValue(''),
+      getWorkspaceFolderId: vi.fn().mockReturnValue('folder-1'),
     };
     adapter = new DriveStorageAdapter(gdm);
   });
@@ -32,6 +33,6 @@ describe('DriveStorageAdapter', () => {
 
   test('update calls saveFile with id', async () => {
     await adapter.update('u1', new Uint8Array(4));
-    expect(gdm.saveFile).toHaveBeenCalledWith('appDataFolder', expect.any(String), expect.any(String), 'u1');
+    expect(gdm.saveFile).toHaveBeenCalledWith('folder-1', expect.any(String), expect.any(String), 'u1');
   });
 });

@@ -278,6 +278,7 @@ describe('DataManager', () => {
         updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
         addIndexEntry: vi.fn().mockResolvedValue(),
         renameIndexEntry: vi.fn().mockResolvedValue(),
+        getWorkspaceFolderId: vi.fn().mockReturnValue('folder-1'),
       };
     });
 

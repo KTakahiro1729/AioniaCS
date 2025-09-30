@@ -20,14 +20,24 @@ export function useGoogleDrive(dataManager) {
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
     const signInPromise = new Promise((resolve, reject) => {
-      googleDriveManager.value.handleSignIn((error, authResult) => {
+      googleDriveManager.value.handleSignIn(async (error, authResult) => {
         if (error || !authResult || !authResult.signedIn) {
           uiStore.isSignedIn = false;
           reject(error || new Error('Ensure pop-ups are enabled.'));
         } else {
-          uiStore.isSignedIn = true;
-          dataManager.loadCharacterListFromDrive().then((list) => (uiStore.driveCharacters = list));
-          resolve();
+          try {
+            uiStore.isSignedIn = true;
+            const folder = await googleDriveManager.value.ensureWorkspaceFolder();
+            if (!folder) {
+              throw new Error('Failed to access Google Drive workspace folder.');
+            }
+            uiStore.setDriveFolder(folder);
+            const list = await dataManager.loadCharacterListFromDrive();
+            uiStore.driveCharacters = list;
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         }
       });
     });
@@ -42,7 +52,9 @@ export function useGoogleDrive(dataManager) {
     if (!googleDriveManager.value) return;
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
+      uiStore.setDriveFolder(null);
       uiStore.clearDriveCharacters();
+      googleDriveManager.value.clearWorkspaceFolder?.();
       showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
     });
   }
@@ -50,6 +62,7 @@ export function useGoogleDrive(dataManager) {
   function promptForDriveFolder() {
     const gdm = dataManager.googleDriveManager;
     if (!gdm) return;
+    let resultPromise = null;
     gdm.showFolderPicker((err, folder) => {
       if (err || !folder) {
         showToast({
@@ -58,14 +71,31 @@ export function useGoogleDrive(dataManager) {
         });
         return;
       }
-      uiStore.driveFolderId = folder.id;
-      uiStore.driveFolderName = folder.name;
+      const loadPromise = (async () => {
+        gdm.setWorkspaceFolder(folder);
+        uiStore.setDriveFolder(folder);
+        const list = await dataManager.loadCharacterListFromDrive();
+        uiStore.driveCharacters = list;
+      })();
+      showAsyncToast(loadPromise, {
+        loading: messages.googleDrive.folderPicker.loading(),
+        success: messages.googleDrive.folderPicker.success(folder.name),
+        error: (loadErr) => messages.googleDrive.folderPicker.error(loadErr),
+      });
+      resultPromise = loadPromise;
     });
+    return resultPromise;
   }
 
   async function saveCharacterToDrive(fileId) {
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
+
+    if (!uiStore.driveFolderId) {
+      const error = new Error('Google Drive folder is not selected.');
+      showToast({ type: 'error', ...messages.googleDrive.workspaceNotSelected() });
+      return Promise.reject(error);
+    }
 
     const charName = characterStore.character.name || '名もなき冒険者';
     const now = new Date().toISOString();

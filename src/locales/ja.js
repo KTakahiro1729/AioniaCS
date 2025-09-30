@@ -23,11 +23,23 @@ export const messages = {
       success: () => ({ title: 'サインアウトしました', message: '' }),
     },
     folderPicker: {
+      loading: () => ({
+        title: 'Google Drive',
+        message: 'フォルダ情報を取得しています...',
+      }),
+      success: (name) => ({
+        title: 'フォルダ変更',
+        message: `${name} を使用します`,
+      }),
       error: (err) => ({
         title: 'Google Drive',
         message: err?.message || 'フォルダ選択をキャンセルしました',
       }),
     },
+    workspaceNotSelected: () => ({
+      title: 'Google Drive',
+      message: '保存先のフォルダを選択してください。',
+    }),
     save: {
       loading: () => ({ title: 'Google Drive', message: '保存中...' }),
       success: () => ({ title: '保存完了', message: '' }),
@@ -76,6 +88,31 @@ export const messages = {
     },
   },
   characterHub: {
+    fallbackName: '名もなき冒険者',
+    signedOutMessage: 'Google Driveと連携して、キャラクターを保存・共有できます。ベータ版のため、データの破損・消失の危険性があります。',
+    emptyMessage: '保存済みのキャラクターが見つかりません。',
+    defaultFolderName: 'AioniaCS',
+    workspaceLabel: (name) => `保存先フォルダ: ${name}`,
+    workspaceUnset: '保存先フォルダが未選択です。フォルダを選択してください。',
+    controls: {
+      signIn: 'Googleにログイン',
+      signOut: 'ログアウト',
+      refresh: '一覧更新',
+      saveNew: '新規保存',
+      saveOverwrite: '上書き保存',
+      changeFolder: 'フォルダ変更',
+      openPicker: 'Drive読込',
+    },
+    list: {
+      actions: {
+        overwrite: '上書き',
+        export: '端末保存',
+        remove: '削除',
+        cancel: 'キャンセル',
+      },
+      deletePrompt: 'このキャラクターを削除しますか？',
+      updatedAt: (text) => `更新: ${text}`,
+    },
     loadConfirm: (name) => ({
       title: '読込確認',
       message: `${name} を読み込みますか？`,

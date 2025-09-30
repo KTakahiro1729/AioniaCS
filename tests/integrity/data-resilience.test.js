@@ -7,10 +7,11 @@ describe('DataManager data integrity', () => {
   let dm;
   let gdm;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     gdm = new MockGoogleDriveManager('k', 'c');
     dm = new DataManager(AioniaGameData);
     dm.setGoogleDriveManager(gdm);
+    await gdm.ensureWorkspaceFolder();
   });
 
   it('should handle corrupted pointers gracefully without crashing', async () => {
@@ -29,6 +30,6 @@ describe('DataManager data integrity', () => {
     const list = await dm.loadCharacterListFromDrive();
     expect(list).toEqual([]);
     // ensure file exists but ignored
-    expect(gdm.appData[file.id]).toBeDefined();
+    expect(gdm.files[file.id]).toBeDefined();
   });
 });

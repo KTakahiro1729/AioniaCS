@@ -1,5 +1,7 @@
 const { defineConfig } = require('@playwright/test');
 
+process.env.VITE_USE_MOCK_DRIVE = process.env.VITE_USE_MOCK_DRIVE || 'true';
+
 module.exports = defineConfig({
   testDir: './tests/e2e',
   use: {

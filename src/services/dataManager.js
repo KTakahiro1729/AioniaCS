@@ -254,13 +254,18 @@ export class DataManager {
   }
 
   /**
-   * Saves character data to the user's appDataFolder.
+   * Saves character data to the user's configured Google Drive workspace folder.
    * Adds an index entry when creating a new file.
    */
   async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+
+    const workspaceFolderId = this.googleDriveManager.getWorkspaceFolderId?.();
+    if (!workspaceFolderId) {
+      throw new Error('Google Drive folder is not selected. Please choose a destination folder.');
     }
 
     const dataToSave = {
@@ -329,6 +334,11 @@ export class DataManager {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+
+    const workspaceFolderId = this.googleDriveManager.getWorkspaceFolderId?.();
+    if (!workspaceFolderId) {
+      throw new Error('Google Drive folder is not selected. Please choose a destination folder.');
     }
 
     const index = await this.googleDriveManager.readIndexFile();

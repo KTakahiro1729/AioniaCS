@@ -12,11 +12,13 @@ export class MockGoogleDriveManager {
       const storedState = localStorage.getItem(this.storageKey);
       if (storedState) {
         const state = JSON.parse(storedState);
-        this.appData = state.appData;
-        this.folders = state.folders;
-        this.fileCounter = state.fileCounter;
-        this.indexFileId = state.indexFileId;
-        this.signedIn = state.signedIn;
+        this.files = state.files || state.appData || {};
+        this.folders = state.folders || {};
+        this.fileCounter = state.fileCounter || 1;
+        this.indexFileId = state.indexFileId || null;
+        this.workspaceFolderId = state.workspaceFolderId || null;
+        this.workspaceFolderName = state.workspaceFolderName || 'AioniaCS';
+        this.signedIn = state.signedIn || false;
       } else {
         this._initState();
       }
@@ -29,20 +31,24 @@ export class MockGoogleDriveManager {
 
   _saveState() {
     const stateToSave = {
-      appData: this.appData,
+      files: this.files,
       folders: this.folders,
       fileCounter: this.fileCounter,
       indexFileId: this.indexFileId,
+      workspaceFolderId: this.workspaceFolderId,
+      workspaceFolderName: this.workspaceFolderName,
       signedIn: this.signedIn,
     };
     localStorage.setItem(this.storageKey, JSON.stringify(stateToSave));
   }
 
   _initState() {
-    this.appData = {};
+    this.files = {};
     this.folders = {};
     this.fileCounter = 1;
     this.indexFileId = null;
+    this.workspaceFolderId = null;
+    this.workspaceFolderName = 'AioniaCS';
     this.signedIn = false;
     this._saveState();
   }
@@ -67,6 +73,37 @@ export class MockGoogleDriveManager {
     if (callback) callback();
   }
 
+  setWorkspaceFolder(folder) {
+    if (!folder || !folder.id) {
+      throw new Error('Invalid workspace folder specified.');
+    }
+    this.workspaceFolderId = folder.id;
+    this.workspaceFolderName = folder.name || this.workspaceFolderName;
+    this.indexFileId = null;
+    if (!this.folders[folder.id]) {
+      this.folders[folder.id] = { id: folder.id, name: folder.name };
+    }
+    this._saveState();
+  }
+
+  clearWorkspaceFolder() {
+    this.workspaceFolderId = null;
+    this.indexFileId = null;
+    this._saveState();
+  }
+
+  getWorkspaceFolderId() {
+    return this.workspaceFolderId;
+  }
+
+  async ensureWorkspaceFolder(folderName = this.workspaceFolderName) {
+    const folder = await this.getOrCreateAppFolder(folderName);
+    if (folder) {
+      this.setWorkspaceFolder(folder);
+    }
+    return folder;
+  }
+
   async createFolder(folderName) {
     const existing = Object.values(this.folders).find((f) => f.name === folderName);
     if (existing) return existing;
@@ -88,25 +125,29 @@ export class MockGoogleDriveManager {
   }
 
   async listFiles(folderId, mimeType = 'application/json') {
-    return Object.values(this.appData)
+    return Object.values(this.files)
       .filter((f) => f.parentId === folderId)
       .map((f) => ({ id: f.id, name: f.name }));
   }
 
   async saveFile(folderId, fileName, fileContent, fileId = null) {
     const id = fileId || `file-${this.fileCounter++}`;
-    this.appData[id] = {
+    const parentId = fileId && this.files[fileId] ? this.files[fileId].parentId : folderId || this.workspaceFolderId;
+    if (!parentId && !fileId) {
+      throw new Error('Workspace folder not set.');
+    }
+    this.files[id] = {
       id,
       name: fileName,
       content: fileContent,
-      parentId: folderId,
+      parentId,
     };
     this._saveState();
     return { id, name: fileName };
   }
 
   async loadFileContent(fileId) {
-    const file = this.appData[fileId];
+    const file = this.files[fileId];
     return file ? file.content : null;
   }
 
@@ -116,7 +157,8 @@ export class MockGoogleDriveManager {
   }
 
   showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
-    const files = Object.values(this.appData).filter((f) => !parentFolderId || f.parentId === parentFolderId);
+    const folderId = parentFolderId || this.workspaceFolderId;
+    const files = Object.values(this.files).filter((f) => !folderId || f.parentId === folderId);
     const first = files[0];
     if (first) {
       if (callback) callback(null, { id: first.id, name: first.name });
@@ -135,17 +177,24 @@ export class MockGoogleDriveManager {
   }
 
   async ensureIndexFile() {
-    if (this.indexFileId && this.appData[this.indexFileId]) {
+    const folderId = this.getWorkspaceFolderId();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
+
+    if (this.indexFileId && this.files[this.indexFileId] && this.files[this.indexFileId].parentId === folderId) {
       return { id: this.indexFileId, name: 'character_index.json' };
     }
-    const foundId = Object.keys(this.appData).find((id) => this.appData[id].name === 'character_index.json');
-    if (foundId) {
-      this.indexFileId = foundId;
+
+    const existing = Object.values(this.files).find((file) => file.parentId === folderId && file.name === 'character_index.json');
+    if (existing) {
+      this.indexFileId = existing.id;
       this._saveState();
-      return { id: foundId, name: 'character_index.json' };
+      return { id: existing.id, name: existing.name };
     }
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
-    this.indexFileId = created.id;
+
+    const created = await this.saveFile(folderId, 'character_index.json', '[]');
+    this.indexFileId = created?.id || null;
     this._saveState();
     return created;
   }
@@ -162,7 +211,8 @@ export class MockGoogleDriveManager {
 
   async writeIndexFile(indexData) {
     const info = await this.ensureIndexFile();
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
+    const folderId = this.getWorkspaceFolderId();
+    return this.saveFile(folderId, 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
   }
 
   async addIndexEntry(entry) {
@@ -189,13 +239,21 @@ export class MockGoogleDriveManager {
   }
 
   async createCharacterFile(data) {
+    const folderId = this.getWorkspaceFolderId();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
   }
 
   async updateCharacterFile(id, data) {
+    const folderId = this.getWorkspaceFolderId();
+    if (!folderId) {
+      throw new Error('Workspace folder is not set.');
+    }
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
   }
 
   async loadCharacterFile(id) {
@@ -204,7 +262,7 @@ export class MockGoogleDriveManager {
   }
 
   async deleteCharacterFile(id) {
-    delete this.appData[id];
+    delete this.files[id];
     this._saveState();
     await this.removeIndexEntry(id);
   }

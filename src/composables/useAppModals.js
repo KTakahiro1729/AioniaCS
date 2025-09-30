@@ -2,7 +2,6 @@ import { reactive, defineAsyncComponent } from 'vue';
 import { useModal } from './useModal.js';
 import { useUiStore } from '../stores/uiStore.js';
 const CharacterHub = defineAsyncComponent(() => import('../components/ui/CharacterHub.vue'));
-const CharacterHubControls = defineAsyncComponent(() => import('../components/ui/CharacterHubControls.vue'));
 const IoModal = defineAsyncComponent(() => import('../components/modals/contents/IoModal.vue'));
 const ShareOptions = defineAsyncComponent(() => import('../components/modals/contents/ShareOptions.vue'));
 
@@ -21,8 +20,6 @@ export function useAppModals(options) {
     saveCharacterToDrive,
     handleSignInClick,
     handleSignOutClick,
-    refreshHubList,
-    saveNewCharacter,
     saveData,
     handleFileUpload,
     outputToCocofolia,
@@ -41,14 +38,10 @@ export function useAppModals(options) {
         loadCharacter: loadCharacterById,
         saveToDrive: saveCharacterToDrive,
       },
-      globalActions: {
-        component: CharacterHubControls,
-        on: {
-          'sign-in': handleSignInClick,
-          'sign-out': handleSignOutClick,
-          refresh: refreshHubList,
-          new: saveNewCharacter,
-        },
+      on: {
+        'sign-in': handleSignInClick,
+        'sign-out': handleSignOutClick,
+        'change-folder': promptForDriveFolder,
       },
       buttons: [],
     });

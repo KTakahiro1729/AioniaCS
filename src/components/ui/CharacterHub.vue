@@ -1,65 +1,93 @@
 <template>
   <div class="character-hub">
-    <template v-if="uiStore.isSignedIn">
-      <ul class="character-hub--list">
+    <header class="character-hub__header">
+      <div class="character-hub__summary">
+        <p v-if="uiStore.isSignedIn" class="character-hub__summary-text">
+          <span class="character-hub__folder-label">{{ workspaceLabel }}</span>
+          <span v-if="!uiStore.driveFolderId" class="character-hub__folder-warning">{{ workspaceUnsetMessage }}</span>
+        </p>
+        <p v-else class="character-hub__summary-text">
+          {{ signedOutMessage }}
+        </p>
+      </div>
+      <CharacterHubControls
+        :labels="controlLabels"
+        @sign-in="emit('sign-in')"
+        @sign-out="emit('sign-out')"
+        @refresh="refreshList"
+        @save-new="saveNew"
+        @save-current="handleSaveCurrent"
+        @change-folder="emit('change-folder')"
+        @open-picker="openDrivePicker"
+      />
+    </header>
+    <section v-if="uiStore.isSignedIn" class="character-hub__body">
+      <p v-if="characters.length === 0" class="character-hub__empty">{{ emptyMessage }}</p>
+      <ul v-else class="character-hub__list">
         <li
           v-for="ch in characters"
           :key="ch.id"
-          :class="['character-hub--item', { 'character-hub--item--highlighted': ch.id === uiStore.currentDriveFileId }]"
+          :class="['character-hub__item', { 'character-hub__item--active': ch.id === uiStore.currentDriveFileId }]"
         >
-          <span>
-            <button class="character-hub--name" @click="confirmLoad(ch)">
-              {{ ch.characterName || '名もなき冒険者' }}
+          <div class="character-hub__item-main">
+            <button class="character-hub__name" @click="confirmLoad(ch)">
+              {{ ch.characterName || fallbackName }}
             </button>
-            <span class="character-hub--date">{{ formatDate(ch.updatedAt) }}</span>
-          </span>
-          <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub--actions-container">
-            <p class="character-hub--confirmation-message">本当に削除しますか？</p>
-            <div class="character-hub--confirmation-actions">
-              <button class="button-base button-compact" @click="executeDelete">はい</button>
-              <button class="button-base button-compact button-secondary" @click="cancelDelete">いいえ</button>
+            <span class="character-hub__date">{{ formatUpdatedAt(ch.updatedAt) }}</span>
+          </div>
+          <div v-if="characterToDelete && characterToDelete.id === ch.id" class="character-hub__confirm">
+            <p class="character-hub__confirm-text">{{ deleteConfirmation }}</p>
+            <div class="character-hub__confirm-actions">
+              <button class="button-base button-compact" @click="executeDelete">{{ actionLabels.remove }}</button>
+              <button class="button-base button-compact button-secondary" @click="cancelDelete">
+                {{ actionLabels.cancel }}
+              </button>
             </div>
           </div>
-          <div v-else class="character-hub--actions-container">
-            <div class="character-hub--actions-inline">
-              <button class="button-base button-compact" @click="overwrite(ch)">上書き保存</button>
-              <button class="button-base button-compact" @click="exportLocal(ch)">端末保存</button>
-              <button class="button-base button-compact" @click="startDelete(ch)">削除</button>
-            </div>
+          <div v-else class="character-hub__actions">
+            <button class="button-base button-compact" @click="overwrite(ch)">{{ actionLabels.overwrite }}</button>
+            <button class="button-base button-compact" @click="exportLocal(ch)">{{ actionLabels.export }}</button>
+            <button class="button-base button-compact" @click="startDelete(ch)">{{ actionLabels.remove }}</button>
           </div>
         </li>
       </ul>
-    </template>
-    <template v-else>
-      <p class="character-hub--description">
-        Google Driveと連携して、キャラクターを保存・共有できます。ベータ版のため、データの破損・消失の危険性があります。
-      </p>
-    </template>
+    </section>
+    <section v-else class="character-hub__signed-out">
+      <p class="character-hub__description">{{ signedOutMessage }}</p>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import CharacterHubControls from './CharacterHubControls.vue';
 import { useUiStore } from '../../stores/uiStore.js';
-import { useCharacterStore } from '../../stores/characterStore.js';
 import { useNotifications } from '../../composables/useNotifications.js';
 import { useModal } from '../../composables/useModal.js';
 import { messages } from '../../locales/ja.js';
 
 const props = defineProps({
-  dataManager: Object,
-  loadCharacter: Function,
-  saveToDrive: Function,
+  dataManager: { type: Object, required: true },
+  loadCharacter: { type: Function, required: true },
+  saveToDrive: { type: Function, required: true },
 });
 
-const characterToDelete = ref(null);
-
-const emit = defineEmits(['sign-in', 'sign-out']);
+const emit = defineEmits(['sign-in', 'sign-out', 'change-folder']);
 
 const uiStore = useUiStore();
-const characterStore = useCharacterStore();
 const { showToast, showAsyncToast } = useNotifications();
 const { showModal } = useModal();
+
+const characterToDelete = ref(null);
+const fallbackName = messages.characterHub.fallbackName;
+
+const controlLabels = messages.characterHub.controls;
+const actionLabels = messages.characterHub.list.actions;
+const deleteConfirmation = messages.characterHub.list.deletePrompt;
+const signedOutMessage = messages.characterHub.signedOutMessage;
+const emptyMessage = messages.characterHub.emptyMessage;
+const workspaceUnsetMessage = messages.characterHub.workspaceUnset;
+
 const characters = computed(() =>
   [...uiStore.driveCharacters].sort((a, b) => {
     const tA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
@@ -68,13 +96,22 @@ const characters = computed(() =>
   }),
 );
 
-onMounted(ensureCharacters);
+const workspaceLabel = computed(() => {
+  if (!uiStore.isSignedIn) {
+    return signedOutMessage;
+  }
+  if (!uiStore.driveFolderId) {
+    return messages.characterHub.workspaceLabel(messages.characterHub.defaultFolderName);
+  }
+  const name = uiStore.driveFolderName || messages.characterHub.defaultFolderName;
+  return messages.characterHub.workspaceLabel(name);
+});
 
-async function ensureCharacters() {
+onMounted(async () => {
   if (uiStore.isSignedIn && uiStore.driveCharacters.length === 0 && props.dataManager.googleDriveManager) {
     await uiStore.refreshDriveCharacters(props.dataManager.googleDriveManager);
   }
-}
+});
 
 function refreshList() {
   props.dataManager.loadCharacterListFromDrive().then((list) => (uiStore.driveCharacters = list));
@@ -86,21 +123,28 @@ async function saveNew() {
   }
 }
 
+async function handleSaveCurrent() {
+  if (props.saveToDrive) {
+    await props.saveToDrive(uiStore.currentDriveFileId);
+  }
+}
+
 async function overwrite(ch) {
   if (props.saveToDrive) {
     await props.saveToDrive(ch.id);
   }
 }
 
-function formatDate(date) {
+function formatUpdatedAt(date) {
   if (!date) return '';
-  return new Date(date).toLocaleString();
+  const text = new Date(date).toLocaleString();
+  return messages.characterHub.list.updatedAt(text);
 }
 
 async function confirmLoad(ch) {
-  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName));
+  const result = await showModal(messages.characterHub.loadConfirm(ch.characterName || fallbackName));
   if (result.value === 'load') {
-    await props.loadCharacter(ch.id, ch.characterName);
+    await props.loadCharacter(ch.id, ch.characterName || fallbackName);
   }
 }
 
@@ -154,89 +198,148 @@ async function exportLocal(ch) {
     error: (err) => messages.characterHub.export.error(err),
   });
 }
+
+function openDrivePicker() {
+  const gdm = props.dataManager.googleDriveManager;
+  if (!gdm) return;
+  gdm.showFilePicker(async (err, file) => {
+    if (err || !file) {
+      if (err && err.message && err.message !== 'Picker cancelled by user.') {
+        showToast({ type: 'error', ...messages.googleDrive.load.error(err) });
+      }
+      return;
+    }
+    await props.loadCharacter(file.id, file.name);
+  }, uiStore.driveFolderId, ['application/json']);
+}
 </script>
 
 <style scoped>
 .character-hub {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.character-hub--description {
+.character-hub__header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.character-hub__summary-text {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.character-hub__folder-label {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.character-hub__folder-warning {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-warning-light);
+}
+
+.character-hub__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.character-hub__empty {
+  margin: 0;
+  color: var(--color-text-muted);
   text-align: center;
 }
 
-.character-hub--list {
+.character-hub__list {
   list-style: none;
+  margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.character-hub__item {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background-color: var(--color-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.character-hub__item--active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px rgba(140, 120, 255, 0.35);
+}
+
+.character-hub__item-main {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.character-hub__name {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-accent-light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.character-hub__name:hover {
+  text-decoration: underline;
+}
+
+.character-hub__date {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.character-hub__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.character-hub__confirm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.character-hub__confirm-text {
   margin: 0;
 }
 
-.character-hub--item {
+.character-hub__confirm-actions {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  align-content: space-around;
-  gap: 3px;
-  padding: 4px;
-  margin-top: 4px;
+  gap: 8px;
 }
-.character-hub--name {
-  background: none;
-  border: none;
-  color: var(--color-accent);
-  cursor: pointer;
-  font-size: 20px;
-  font-weight: 700;
-  padding-right: 15px;
-  text-align: left;
-  overflow-wrap: break-word;
-  word-break: break-all;
+
+.character-hub__signed-out {
+  text-align: center;
+}
+
+.character-hub__description {
+  margin: 0 auto;
+  max-width: 420px;
+  color: var(--color-text-muted);
 }
 
 .button-compact {
-  padding: 3px 4px;
-  font-size: 0.9em;
-  border-radius: 0px;
-  font-weight: 400;
-  height: auto;
-  width: auto;
-}
-
-.button-compact:hover {
-  border-color: var(--color-accent-middle);
-  color: var(--color-accent-light);
-  background-color: transparent;
-  box-shadow: none;
-  text-shadow: none;
-}
-
-.button-compact:not(:first-of-type) {
-  border-left: none;
-}
-
-.character-hub--date {
-  color: var(--color-text-muted);
-  flex-grow: 1;
-}
-.character-hub--actions-container {
-  display: flex;
-  margin: 0 0 0 auto;
-  justify-content: flex-end;
-  flex-direction: row;
-  align-items: center;
-}
-
-.character-hub--actions-inline {
-  display: flex;
-}
-.character-hub--item--highlighted {
-  background-color: var(--color-panel-body);
-  box-shadow:
-    inset 0 0 2px var(--color-accent),
-    0 0 6px var(--color-accent);
-}
-
-.character-hub--confirmation-message {
-  margin: 0 30px 0 0;
+  padding: 4px 8px;
+  font-size: 0.85rem;
 }
 </style>

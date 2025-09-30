@@ -34,6 +34,16 @@ export const useUiStore = defineStore('ui', {
     setLoading(flag) {
       this.isLoading = flag;
     },
+    setDriveFolder(folder) {
+      if (folder && folder.id) {
+        this.driveFolderId = folder.id;
+        this.driveFolderName = folder.name || '';
+      } else {
+        this.driveFolderId = null;
+        this.driveFolderName = '';
+        this.currentDriveFileId = null;
+      }
+    },
     async refreshDriveCharacters(gdm) {
       if (!gdm) return;
       const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
