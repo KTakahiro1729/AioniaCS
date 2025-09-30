@@ -49,6 +49,30 @@ describe('characterStore', () => {
     expect(skill.experts[0].value).toBe('');
   });
 
+  test('calculatedScar reflects initial value when no increments are present', () => {
+    const store = useCharacterStore();
+    store.character.initialScar = 7;
+    expect(store.calculatedScar).toBe(7);
+  });
+
+  test('calculatedScar includes positive scar increases from adventure log', () => {
+    const store = useCharacterStore();
+    store.character.initialScar = 3;
+    store.adventureLog[0].increasedScar = 4;
+    expect(store.calculatedScar).toBe(7);
+  });
+
+  test('calculatedScar sums multiple scar increases including zeros', () => {
+    const store = useCharacterStore();
+    store.character.initialScar = 2;
+    store.adventureLog[0].increasedScar = 0;
+    store.addHistoryItem();
+    store.adventureLog[1].increasedScar = 5;
+    store.addHistoryItem();
+    store.adventureLog[2].increasedScar = 3;
+    expect(store.calculatedScar).toBe(10);
+  });
+
   describe('calculatedScar', () => {
     test('sums increased scars with initial value', () => {
       const store = useCharacterStore();

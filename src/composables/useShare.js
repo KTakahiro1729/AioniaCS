@@ -60,21 +60,7 @@ export function useShare(dataManager) {
       data,
       mode,
       uploadHandler: _uploadHandler,
-      shortenUrlHandler: async (longUrl) => {
-        try {
-          // TinyURLのAPIエンドポイントにリクエストを送信
-          const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-          if (response.ok) {
-            return await response.text();
-          } else {
-            console.error('TinyURL API request failed:', response.status, response.statusText);
-            return longUrl;
-          }
-        } catch (error) {
-          console.error('Failed to shorten URL with TinyURL:', error);
-          return longUrl;
-        }
-      },
+      shortenUrlHandler: async (longUrl) => longUrl,
       password: password || undefined,
       expiresInDays,
     });

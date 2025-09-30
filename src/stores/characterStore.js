@@ -95,6 +95,11 @@ export const useCharacterStore = defineStore('character', {
       weight += armorWeights[state.equipments.armor.group] || 0;
       return weight;
     },
+    calculatedScar(state) {
+      const initialScar = Number(state.character.initialScar) || 0;
+      const adventureScar = state.histories.reduce((sum, history) => sum + (Number(history?.increasedScar) || 0), 0);
+      return initialScar + adventureScar;
+    },
     sessionNamesForWeaknessDropdown(state) {
       const defaultOptions = [...AioniaGameData.weaknessAcquisitionOptions];
       const sessionOptions = state.histories

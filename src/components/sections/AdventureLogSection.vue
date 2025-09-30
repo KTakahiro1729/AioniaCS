@@ -118,6 +118,10 @@ function hasHistoryContent(h) {
   max-width: 70px;
 }
 
+.flex-history-scar {
+  flex: 0 1 100px;
+}
+
 .flex-history-memo {
   flex: 3 2 150px;
 }
