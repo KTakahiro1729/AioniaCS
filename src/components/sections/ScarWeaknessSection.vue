@@ -6,17 +6,6 @@
         <div class="sub-box-title sub-box-title--scar">傷痕</div>
         <div class="info-row">
           <div class="info-item info-item--double">
-            <label for="current_scar" class="link-checkbox-main-label">現在値</label>
-            <input
-              type="number"
-              id="current_scar"
-              :value="calculatedScar"
-              min="0"
-              class="scar-section__current-input scar-section__current-input--readonly"
-              disabled
-            />
-          </div>
-          <div class="info-item info-item--double">
             <label for="initial_scar">初期値</label>
             <input
               type="number"
@@ -24,6 +13,17 @@
               v-model.number="characterStore.character.initialScar"
               min="0"
               :disabled="uiStore.isViewingShared"
+            />
+          </div>
+          <div class="info-item info-item--double">
+            <label for="current_scar" class="link-checkbox-main-label">現在値（初期値+増加分）</label>
+            <input
+              type="number"
+              id="current_scar"
+              :value="calculatedScar"
+              min="0"
+              class="scar-section__current-input scar-section__current-input--readonly"
+              disabled
             />
           </div>
         </div>

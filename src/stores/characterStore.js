@@ -28,7 +28,7 @@ function baseEquipments() {
 }
 
 function baseAdventureLogEntry() {
-  return { sessionName: '', gotExperiments: null, memo: '', increasedScar: 0 };
+  return { sessionName: '', gotExperiments: null, memo: '', increasedScar: null };
 }
 
 function baseHistories() {
@@ -165,8 +165,12 @@ export const useCharacterStore = defineStore('character', {
         index,
         newItemFactory: () => baseAdventureLogEntry(),
         hasContentChecker: (h) => {
-          const hasScarIncrease = Number(h.increasedScar) > 0;
-          return !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || hasScarIncrease || h.memo);
+          return !!(
+            h.sessionName ||
+            (h.gotExperiments !== null && h.gotExperiments !== '') ||
+            (h.increasedScar !== null && h.increasedScar !== undefined) ||
+            h.memo
+          );
         },
       });
     },
@@ -195,9 +199,9 @@ export const useCharacterStore = defineStore('character', {
     updateHistoryItem(index, field, value) {
       if (this.histories[index]) {
         if (field === 'gotExperiments') {
-          this.histories[index][field] = value !== '' && value !== null ? Number(value) : value;
+          this.histories[index][field] = value !== '' && value !== null ? Number(value) : null;
         } else if (field === 'increasedScar') {
-          this.histories[index][field] = value !== '' && value !== null ? Number(value) : 0;
+          this.histories[index][field] = value !== '' && value !== null ? Number(value) : null;
         } else {
           this.histories[index][field] = value;
         }
