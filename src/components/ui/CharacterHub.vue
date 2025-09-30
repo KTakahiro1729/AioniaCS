@@ -1,43 +1,33 @@
 <template>
   <div class="character-hub">
-    <div class="character-hub--config">
-      <label class="character-hub--label" for="drive_folder_path">保存先フォルダ</label>
-      <input
-        id="drive_folder_path"
-        class="character-hub--input"
-        type="text"
-        v-model="folderPathInput"
-        :disabled="!uiStore.isSignedIn"
-        placeholder="慈悲なきアイオニア"
-        @blur="commitFolderPath"
-        @keyup.enter.prevent="commitFolderPath"
-      />
-    </div>
     <template v-if="uiStore.isSignedIn">
       <div class="character-hub--actions">
+        <div class="character-hub--config">
+          <label class="character-hub--label" for="drive_folder_path">保存先フォルダ</label>
+          <input
+            id="drive_folder_path"
+            class="character-hub--input"
+            type="text"
+            v-model="folderPathInput"
+            :disabled="!uiStore.isSignedIn"
+            placeholder="慈悲なきアイオニア"
+            @blur="commitFolderPath"
+            @keyup.enter.prevent="commitFolderPath"
+          />
+        </div>
         <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="loadCharacterFromDrive">
           Driveから読み込む
         </button>
         <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="saveNewCharacter">
           新しい冒険者として保存
         </button>
-        <button
-          class="button-base character-hub--button"
-          :disabled="!isOverwriteEnabled"
-          @click="saveOverwrite"
-        >
-          上書き保存
-        </button>
-        <button class="button-base character-hub--button" @click="emitSignOut">
-          ログアウト
-        </button>
+        <button class="button-base character-hub--button" :disabled="!isOverwriteEnabled" @click="saveOverwrite">上書き保存</button>
+        <button class="button-base character-hub--button" @click="emitSignOut">ログアウト</button>
       </div>
     </template>
     <template v-else>
       <div class="character-hub--actions">
-        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="emitSignIn">
-          Googleにログイン
-        </button>
+        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="emitSignIn">Googleにログイン</button>
       </div>
     </template>
   </div>
@@ -128,7 +118,6 @@ async function commitFolderPath() {
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  margin-bottom: 16px;
 }
 
 .character-hub--label {
