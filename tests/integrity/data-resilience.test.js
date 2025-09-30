@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, vi, expect } from 'vitest';
+import { describe, it, beforeEach, expect } from 'vitest';
 import { DataManager } from '../../src/services/dataManager.js';
 import { MockGoogleDriveManager } from '../../src/services/mockGoogleDriveManager.js';
 import { AioniaGameData } from '../../src/data/gameData.js';
@@ -13,22 +13,23 @@ describe('DataManager data integrity', () => {
     dm.setGoogleDriveManager(gdm);
   });
 
-  it('should handle corrupted pointers gracefully without crashing', async () => {
-    await gdm.writeIndexFile([{ id: 'missing', characterName: 'Missing' }]);
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const list = await dm.loadCharacterListFromDrive();
-    expect(Array.isArray(list)).toBe(true);
-    expect(list.length).toBe(0);
-    expect(errorSpy).toHaveBeenCalled();
-    errorSpy.mockRestore();
+  it('saves a new character into the .AioniaCS folder', async () => {
+    const result = await dm.saveDataToAppData({ name: 'Hero' }, [], [], {}, [], null);
+
+    expect(result?.id).toBeTruthy();
+    const stored = await gdm.loadCharacterFile(result.id);
+    expect(stored.character.name).toBe('Hero');
   });
 
-  it('should ignore orphaned files not referenced in index', async () => {
-    const file = await gdm.createCharacterFile({ character: { name: 'Orphan' } });
-    await gdm.writeIndexFile([]);
-    const list = await dm.loadCharacterListFromDrive();
-    expect(list).toEqual([]);
-    // ensure file exists but ignored
-    expect(gdm.appData[file.id]).toBeDefined();
+  it('finds existing files by character name and updates them', async () => {
+    const initial = await dm.saveDataToAppData({ name: 'Scout', memo: 'original' }, [], [], {}, [], null);
+
+    const found = await dm.findDriveFileByCharacterName('Scout');
+    expect(found?.id).toBe(initial.id);
+
+    await dm.saveDataToAppData({ name: 'Scout', memo: 'updated' }, [], [], {}, [], found.id);
+
+    const updated = await gdm.loadCharacterFile(found.id);
+    expect(updated.character.memo).toBe('updated');
   });
 });

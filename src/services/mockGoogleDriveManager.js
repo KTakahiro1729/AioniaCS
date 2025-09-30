@@ -12,11 +12,11 @@ export class MockGoogleDriveManager {
       const storedState = localStorage.getItem(this.storageKey);
       if (storedState) {
         const state = JSON.parse(storedState);
-        this.appData = state.appData;
-        this.folders = state.folders;
-        this.fileCounter = state.fileCounter;
-        this.indexFileId = state.indexFileId;
-        this.signedIn = state.signedIn;
+        this.files = state.files || {};
+        this.folders = state.folders || {};
+        this.fileCounter = state.fileCounter || 1;
+        this.folderId = state.folderId || null;
+        this.signedIn = state.signedIn || false;
       } else {
         this._initState();
       }
@@ -29,20 +29,20 @@ export class MockGoogleDriveManager {
 
   _saveState() {
     const stateToSave = {
-      appData: this.appData,
+      files: this.files,
       folders: this.folders,
       fileCounter: this.fileCounter,
-      indexFileId: this.indexFileId,
+      folderId: this.folderId,
       signedIn: this.signedIn,
     };
     localStorage.setItem(this.storageKey, JSON.stringify(stateToSave));
   }
 
   _initState() {
-    this.appData = {};
+    this.files = {};
     this.folders = {};
     this.fileCounter = 1;
-    this.indexFileId = null;
+    this.folderId = null;
     this.signedIn = false;
     this._saveState();
   }
@@ -70,32 +70,36 @@ export class MockGoogleDriveManager {
   async createFolder(folderName) {
     const existing = Object.values(this.folders).find((f) => f.name === folderName);
     if (existing) return existing;
-    const id = `folder-${this.fileCounter++}`;
+    const id = folderName === '.AioniaCS' ? this.folderId || 'mock-folder-id' : `folder-${this.fileCounter++}`;
     const folder = { id, name: folderName };
     this.folders[id] = folder;
+    if (folderName === '.AioniaCS') {
+      this.folderId = id;
+    }
     this._saveState();
     return folder;
   }
 
   async findFolder(folderName) {
+    if (folderName === '.AioniaCS' && this.folderId) {
+      return this.folders[this.folderId] || { id: this.folderId, name: folderName };
+    }
     return Object.values(this.folders).find((f) => f.name === folderName) || null;
   }
 
-  async getOrCreateAppFolder(appFolderName) {
-    let folder = await this.findFolder(appFolderName);
-    if (!folder) folder = await this.createFolder(appFolderName);
-    return folder;
+  async getOrCreateAppFolder() {
+    return this.findOrCreateAioniaCSFolder();
   }
 
-  async listFiles(folderId, mimeType = 'application/json') {
-    return Object.values(this.appData)
+  async listFiles(folderId) {
+    return Object.values(this.files)
       .filter((f) => f.parentId === folderId)
       .map((f) => ({ id: f.id, name: f.name }));
   }
 
   async saveFile(folderId, fileName, fileContent, fileId = null) {
     const id = fileId || `file-${this.fileCounter++}`;
-    this.appData[id] = {
+    this.files[id] = {
       id,
       name: fileName,
       content: fileContent,
@@ -106,17 +110,17 @@ export class MockGoogleDriveManager {
   }
 
   async loadFileContent(fileId) {
-    const file = this.appData[fileId];
+    const file = this.files[fileId];
     return file ? file.content : null;
   }
 
-  async uploadAndShareFile(fileContent, fileName, mimeType) {
+  async uploadAndShareFile(fileContent, fileName) {
     const info = await this.saveFile('drive', fileName, fileContent);
     return info.id;
   }
 
-  showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
-    const files = Object.values(this.appData).filter((f) => !parentFolderId || f.parentId === parentFolderId);
+  showFilePicker(callback, parentFolderId = null) {
+    const files = Object.values(this.files).filter((f) => !parentFolderId || f.parentId === parentFolderId);
     const first = files[0];
     if (first) {
       if (callback) callback(null, { id: first.id, name: first.name });
@@ -126,76 +130,61 @@ export class MockGoogleDriveManager {
   }
 
   showFolderPicker(callback) {
-    const first = Object.values(this.folders)[0];
-    if (first) {
-      if (callback) callback(null, { id: first.id, name: first.name });
+    if (this.folderId) {
+      if (callback) callback(null, { id: this.folderId, name: '.AioniaCS' });
     } else if (callback) {
       callback(new Error('No folders available.'));
     }
   }
 
-  async ensureIndexFile() {
-    if (this.indexFileId && this.appData[this.indexFileId]) {
-      return { id: this.indexFileId, name: 'character_index.json' };
-    }
-    const foundId = Object.keys(this.appData).find((id) => this.appData[id].name === 'character_index.json');
-    if (foundId) {
-      this.indexFileId = foundId;
+  async findOrCreateAioniaCSFolder() {
+    if (this.folderId) return this.folderId;
+    const existing = await this.findFolder('.AioniaCS');
+    if (existing) {
+      this.folderId = existing.id;
       this._saveState();
-      return { id: foundId, name: 'character_index.json' };
+      return this.folderId;
     }
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
-    this.indexFileId = created.id;
+    const created = await this.createFolder('.AioniaCS');
+    this.folderId = created.id || 'mock-folder-id';
+    if (!this.folders[this.folderId]) {
+      this.folders[this.folderId] = { id: this.folderId, name: '.AioniaCS' };
+    }
     this._saveState();
-    return created;
+    return this.folderId;
+  }
+
+  async findFileByName(fileName) {
+    if (!fileName) return null;
+    const folderId = await this.findOrCreateAioniaCSFolder();
+    const match = Object.values(this.files).find((f) => f.parentId === folderId && f.name === fileName);
+    return match ? { id: match.id, name: match.name } : null;
   }
 
   async readIndexFile() {
-    const info = await this.ensureIndexFile();
-    const content = await this.loadFileContent(info.id);
-    try {
-      return JSON.parse(content || '[]');
-    } catch {
-      return [];
-    }
+    return [];
   }
 
-  async writeIndexFile(indexData) {
-    const info = await this.ensureIndexFile();
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
+  async writeIndexFile() {
+    return null;
   }
 
-  async addIndexEntry(entry) {
-    const index = await this.readIndexFile();
-    index.push({ ...entry, updatedAt: new Date().toISOString() });
-    await this.writeIndexFile(index);
-  }
+  async addIndexEntry() {}
 
-  async renameIndexEntry(id, newName) {
-    const index = await this.readIndexFile();
-    index.forEach((e) => {
-      if (e.id === id) {
-        e.characterName = newName;
-        e.updatedAt = new Date().toISOString();
-      }
-    });
-    await this.writeIndexFile(index);
-  }
+  async renameIndexEntry() {}
 
-  async removeIndexEntry(id) {
-    const index = await this.readIndexFile();
-    const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
-  }
+  async removeIndexEntry() {}
 
   async createCharacterFile(data) {
+    const folderId = await this.findOrCreateAioniaCSFolder();
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
   }
 
   async updateCharacterFile(id, data) {
+    const folderId = await this.findOrCreateAioniaCSFolder();
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
   }
 
   async loadCharacterFile(id) {
@@ -204,9 +193,8 @@ export class MockGoogleDriveManager {
   }
 
   async deleteCharacterFile(id) {
-    delete this.appData[id];
+    delete this.files[id];
     this._saveState();
-    await this.removeIndexEntry(id);
   }
 }
 

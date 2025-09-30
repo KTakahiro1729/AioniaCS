@@ -11,6 +11,7 @@ export class GoogleDriveManager {
     this.gisLoadedCallback = null;
     this.tokenClient = null;
     this.pickerApiLoaded = false;
+    this.aioniaFolderId = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
@@ -369,6 +370,125 @@ export class GoogleDriveManager {
   }
 
   /**
+   * Finds or creates the .AioniaCS folder in the user's Drive root.
+   * @returns {Promise<string|null>} The ID of the folder, or null if not available.
+   */
+  async findOrCreateAioniaCSFolder() {
+    if (this.aioniaFolderId) return this.aioniaFolderId;
+
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for findOrCreateAioniaCSFolder.');
+      return null;
+    }
+
+    const folderName = '.AioniaCS';
+
+    try {
+      const response = await gapi.client.drive.files.list({
+        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false`,
+        fields: 'files(id, name)',
+        spaces: 'drive',
+      });
+
+      const existingFolder = response.result.files?.[0];
+      if (existingFolder) {
+        this.aioniaFolderId = existingFolder.id;
+        return existingFolder.id;
+      }
+    } catch (error) {
+      console.error('Error searching for .AioniaCS folder:', error);
+      return null;
+    }
+
+    try {
+      const created = await gapi.client.drive.files.create({
+        resource: {
+          name: folderName,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: ['root'],
+        },
+        fields: 'id, name',
+      });
+      this.aioniaFolderId = created.result.id;
+      return created.result.id;
+    } catch (error) {
+      console.error('Error creating .AioniaCS folder:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Finds a file by name inside the .AioniaCS folder.
+   * @param {string} fileName - The target file name.
+   * @returns {Promise<{id: string, name: string}|null>} File info or null when not found.
+   */
+  async findFileByName(fileName) {
+    if (!fileName) return null;
+
+    const folderId = await this.findOrCreateAioniaCSFolder();
+    if (!folderId) return null;
+
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for findFileByName.');
+      return null;
+    }
+
+    const escapedName = fileName.replace(/'/g, "\\'");
+
+    try {
+      const response = await gapi.client.drive.files.list({
+        q: `'${folderId}' in parents and name='${escapedName}' and trashed=false`,
+        fields: 'files(id, name)',
+        spaces: 'drive',
+      });
+
+      const file = response.result.files?.[0];
+      return file || null;
+    } catch (error) {
+      console.error('Error finding file by name:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Deprecated no-op: retained for backward compatibility.
+   * @returns {Promise<Array>}
+   */
+  async readIndexFile() {
+    console.warn('readIndexFile is deprecated. .AioniaCS folder now stores files directly.');
+    return [];
+  }
+
+  /**
+   * Deprecated no-op: retained for backward compatibility.
+   */
+  async writeIndexFile() {
+    console.warn('writeIndexFile is deprecated. .AioniaCS folder now stores files directly.');
+    return null;
+  }
+
+  /**
+   * Deprecated no-op: retained for backward compatibility.
+   */
+  async addIndexEntry() {
+    console.warn('addIndexEntry is deprecated. Index file handling has been removed.');
+  }
+
+  /**
+   * Deprecated no-op: retained for backward compatibility.
+   */
+  async renameIndexEntry() {
+    console.warn('renameIndexEntry is deprecated. Index file handling has been removed.');
+  }
+
+  /**
+   * Deprecated no-op: retained for backward compatibility.
+   */
+  async removeIndexEntry() {
+    console.warn('removeIndexEntry is deprecated. Index file handling has been removed.');
+  }
+
+  /**
    * Uploads a file and sets sharing permissions.
    * @param {string|ArrayBuffer} fileContent
    * @param {string} fileName
@@ -511,90 +631,26 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Ensures the character index file exists in appDataFolder.
-   * @returns {Promise<{id:string,name:string}|null>} index file info
-   */
-  async ensureIndexFile() {
-    const fileList =
-      (
-        await gapi.client.drive.files.list({
-          q: "name='character_index.json' and trashed=false",
-          spaces: 'appDataFolder',
-          fields: 'files(id,name)',
-        })
-      ).result.files || [];
-
-    if (fileList.length > 0) {
-      this.indexFileId = fileList[0].id;
-      return fileList[0];
-    }
-
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
-    if (created) this.indexFileId = created.id;
-    return created;
-  }
-
-  /**
-   * Reads and parses the character index file.
-   * @returns {Promise<Array>}
-   */
-  async readIndexFile() {
-    const info = await this.ensureIndexFile();
-    if (!info) return [];
-    const content = await this.loadFileContent(info.id);
-    try {
-      return JSON.parse(content || '[]');
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Writes the given index array back to the index file.
-   * @param {Array} indexData
-   */
-  async writeIndexFile(indexData) {
-    const info = await this.ensureIndexFile();
-    if (!info) return null;
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
-  }
-
-  async addIndexEntry(entry) {
-    const index = await this.readIndexFile();
-    index.push({ ...entry, updatedAt: new Date().toISOString() });
-    await this.writeIndexFile(index);
-  }
-
-  async renameIndexEntry(id, newName) {
-    const index = await this.readIndexFile();
-    index.forEach((e) => {
-      if (e.id === id) {
-        e.characterName = newName;
-        e.updatedAt = new Date().toISOString();
-      }
-    });
-    await this.writeIndexFile(index);
-  }
-
-  async removeIndexEntry(id) {
-    const index = await this.readIndexFile();
-    const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
-  }
-
-  /**
-   * Creates a character data file in appDataFolder.
+   * Creates a character data file inside the .AioniaCS folder.
    * @param {object} data character JSON object
-   * @param {string} name file name
    */
   async createCharacterFile(data) {
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
+    const folderId = await this.findOrCreateAioniaCSFolder();
+    if (!folderId) return null;
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
   }
 
+  /**
+   * Updates an existing character file inside the .AioniaCS folder.
+   * @param {string} id file ID
+   * @param {object} data character JSON object
+   */
   async updateCharacterFile(id, data) {
     const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
+    const folderId = await this.findOrCreateAioniaCSFolder();
+    if (!folderId) return null;
+    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
   }
 
   async loadCharacterFile(id) {
@@ -605,7 +661,6 @@ export class GoogleDriveManager {
   async deleteCharacterFile(id) {
     if (!gapi.client || !gapi.client.drive) return null;
     await gapi.client.drive.files.delete({ fileId: id });
-    await this.removeIndexEntry(id);
   }
 }
 

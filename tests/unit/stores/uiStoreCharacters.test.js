@@ -1,39 +1,22 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
-describe('uiStore character cache', () => {
+describe('uiStore drive state', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  test('refreshDriveCharacters merges lists', async () => {
+  test('setCurrentDriveFileId updates the current id', () => {
     const store = useUiStore();
-    store.driveCharacters = [
-      { id: '2', characterName: 'B' },
-      { id: 'temp-1', characterName: 'Temp' },
-    ];
-    const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: '1' }]) };
-    await store.refreshDriveCharacters(gdm);
-    expect(store.driveCharacters).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', characterName: 'Temp' })]),
-    );
+    store.setCurrentDriveFileId('file-123');
+    expect(store.currentDriveFileId).toBe('file-123');
   });
 
-  test('clearDriveCharacters empties cache', () => {
+  test('clearCurrentDriveFileId resets the id to null', () => {
     const store = useUiStore();
-    store.driveCharacters = [{ id: '1' }];
-    store.clearDriveCharacters();
-    expect(store.driveCharacters).toEqual([]);
-  });
-
-  test('drive character add, update, remove', () => {
-    const store = useUiStore();
-    store.addDriveCharacter({ id: 'a', characterName: 'A' });
-    expect(store.driveCharacters).toHaveLength(1);
-    store.updateDriveCharacter('a', { characterName: 'B' });
-    expect(store.driveCharacters[0].characterName).toBe('B');
-    store.removeDriveCharacter('a');
-    expect(store.driveCharacters).toHaveLength(0);
+    store.setCurrentDriveFileId('file-abc');
+    store.clearCurrentDriveFileId();
+    expect(store.currentDriveFileId).toBeNull();
   });
 
   test('pending drive save lifecycle', () => {

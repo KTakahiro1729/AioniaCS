@@ -4,6 +4,7 @@ import { MockGoogleDriveManager } from '../services/mockGoogleDriveManager.js';
 import { useUiStore } from '../stores/uiStore.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
+import { useModal } from './useModal.js';
 import { messages } from '../locales/ja.js';
 
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
@@ -14,6 +15,7 @@ export function useGoogleDrive(dataManager) {
   const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
   const { showToast, showAsyncToast } = useNotifications();
+  const { showModal } = useModal();
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
 
@@ -26,7 +28,6 @@ export function useGoogleDrive(dataManager) {
           reject(error || new Error('Ensure pop-ups are enabled.'));
         } else {
           uiStore.isSignedIn = true;
-          dataManager.loadCharacterListFromDrive().then((list) => (uiStore.driveCharacters = list));
           resolve();
         }
       });
@@ -42,7 +43,7 @@ export function useGoogleDrive(dataManager) {
     if (!googleDriveManager.value) return;
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
-      uiStore.clearDriveCharacters();
+      uiStore.clearCurrentDriveFileId();
       showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
     });
   }
@@ -63,101 +64,110 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
-  async function saveCharacterToDrive(fileId) {
+  async function loadCharacterFromDrive() {
+    if (!dataManager.googleDriveManager) return null;
+
+    return new Promise((resolve) => {
+      dataManager.googleDriveManager.showFilePicker(
+        (err, file) => {
+          if (err || !file) {
+            showToast({ type: 'error', ...messages.googleDrive.load.error(err || new Error('No file selected')) });
+            resolve(null);
+            return;
+          }
+
+          const loadPromise = dataManager.loadDataFromDrive(file.id).then((parsedData) => {
+            if (!parsedData) {
+              throw new Error('Failed to load character data.');
+            }
+            Object.assign(characterStore.character, parsedData.character);
+            characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
+            characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
+            Object.assign(characterStore.equipments, parsedData.equipments);
+            characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+            uiStore.setCurrentDriveFileId(file.id);
+            return parsedData;
+          });
+
+          showAsyncToast(loadPromise, {
+            loading: messages.googleDrive.load.loading(file.name),
+            success: messages.googleDrive.load.success(file.name),
+            error: (loadErr) => messages.googleDrive.load.error(loadErr),
+          });
+
+          loadPromise.then((result) => resolve(result)).catch(() => resolve(null));
+        },
+        null,
+        ['application/json'],
+      );
+    });
+  }
+
+  async function saveCharacterToDrive(option = false) {
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
 
-    const charName = characterStore.character.name || '名もなき冒険者';
-    const now = new Date().toISOString();
+    let isNewFile = false;
+    let explicitFileId = null;
 
-    if (!fileId) {
-      const tempId = `temp-${Date.now()}`;
-      uiStore.addDriveCharacter({
-        id: tempId,
-        characterName: charName,
-        updatedAt: now,
-      });
-
-      const token = uiStore.registerPendingDriveSave(tempId);
-
-      const savePromise = dataManager
-        .saveDataToAppData(
-          characterStore.character,
-          characterStore.skills,
-          characterStore.specialSkills,
-          characterStore.equipments,
-          characterStore.histories,
-          fileId,
-        )
-        .then((result) => {
-          if (!token.canceled && result) {
-            uiStore.isCloudSaveSuccess = true;
-            uiStore.updateDriveCharacter(tempId, {
-              id: result.id,
-              updatedAt: now,
-            });
-            uiStore.currentDriveFileId = result.id;
-          }
-          uiStore.completePendingDriveSave(tempId);
-        })
-        .catch((err) => {
-          if (!token.canceled) {
-            uiStore.removeDriveCharacter(tempId);
-          }
-          uiStore.completePendingDriveSave(tempId);
-          throw err;
-        });
-
-      showAsyncToast(savePromise, {
-        loading: messages.googleDrive.save.loading(),
-        success: messages.googleDrive.save.success(),
-        error: (err) => messages.googleDrive.save.error(err),
-      });
-      return savePromise;
-    } else {
-      const idx = uiStore.driveCharacters.findIndex((c) => c.id === fileId);
-      const prev = idx !== -1 ? { ...uiStore.driveCharacters[idx] } : null;
-      uiStore.updateDriveCharacter(fileId, {
-        characterName: charName,
-        updatedAt: now,
-      });
-
-      const savePromise = dataManager
-        .saveDataToAppData(
-          characterStore.character,
-          characterStore.skills,
-          characterStore.specialSkills,
-          characterStore.equipments,
-          characterStore.histories,
-          fileId,
-        )
-        .then((result) => {
-          if (result) {
-            uiStore.isCloudSaveSuccess = true;
-          }
-        })
-        .catch((err) => {
-          if (prev) {
-            uiStore.updateDriveCharacter(fileId, prev);
-          }
-          throw err;
-        });
-
-      showAsyncToast(savePromise, {
-        loading: messages.googleDrive.save.loading(),
-        success: messages.googleDrive.save.success(),
-        error: (err) => messages.googleDrive.save.error(err),
-      });
-      return savePromise;
+    if (typeof option === 'boolean') {
+      isNewFile = option;
+    } else if (typeof option === 'string') {
+      explicitFileId = option;
+    } else if (option === null) {
+      isNewFile = true;
     }
+
+    const charName = characterStore.character.name || '名もなき冒険者';
+    let targetFileId = explicitFileId;
+
+    if (!targetFileId && !isNewFile && uiStore.currentDriveFileId) {
+      targetFileId = uiStore.currentDriveFileId;
+    }
+
+    if (!targetFileId) {
+      const existing = await dataManager.findDriveFileByCharacterName(charName);
+      if (existing) {
+        const result = await showModal(messages.googleDrive.overwriteConfirm(existing.name));
+        if (!result || result.value !== 'overwrite') {
+          return null;
+        }
+        targetFileId = existing.id;
+      }
+    }
+
+    const savePromise = dataManager
+      .saveDataToAppData(
+        characterStore.character,
+        characterStore.skills,
+        characterStore.specialSkills,
+        characterStore.equipments,
+        characterStore.histories,
+        targetFileId,
+      )
+      .then((result) => {
+        if (result) {
+          uiStore.isCloudSaveSuccess = true;
+          uiStore.setCurrentDriveFileId(result.id);
+        }
+        return result;
+      });
+
+    showAsyncToast(savePromise, {
+      loading: messages.googleDrive.save.loading(),
+      success: messages.googleDrive.save.success(),
+      error: (err) => messages.googleDrive.save.error(err),
+    });
+
+    return savePromise;
   }
 
   function handleSaveToDriveClick() {
-    return saveCharacterToDrive(uiStore.currentDriveFileId);
+    return saveCharacterToDrive(false);
   }
 
   function saveOrUpdateCurrentCharacterInDrive() {
-    return saveCharacterToDrive(uiStore.currentDriveFileId);
+    return saveCharacterToDrive(false);
   }
 
   function initializeGoogleDrive() {
@@ -226,6 +236,7 @@ export function useGoogleDrive(dataManager) {
     handleSignInClick,
     handleSignOutClick,
     promptForDriveFolder,
+    loadCharacterFromDrive,
     saveCharacterToDrive,
     handleSaveToDriveClick,
     saveOrUpdateCurrentCharacterInDrive,
