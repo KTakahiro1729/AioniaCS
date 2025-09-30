@@ -28,7 +28,7 @@ function baseEquipments() {
 }
 
 function baseHistories() {
-  return [{ sessionName: '', gotExperiments: null, memo: '' }];
+  return [{ sessionName: '', gotExperiments: null, memo: '', increasedScar: 0 }];
 }
 
 export const useCharacterStore = defineStore('character', {
@@ -40,6 +40,9 @@ export const useCharacterStore = defineStore('character', {
     histories: baseHistories(),
   }),
   getters: {
+    adventureLog(state) {
+      return state.histories;
+    },
     maxExperiencePoints(state) {
       const initialScarExp = Number(state.character.initialScar) || 0;
       const creationWeaknessExp = state.character.weaknesses.reduce(
@@ -82,6 +85,11 @@ export const useCharacterStore = defineStore('character', {
       weight += weaponWeights[state.equipments.weapon2.group] || 0;
       weight += armorWeights[state.equipments.armor.group] || 0;
       return weight;
+    },
+    calculatedScar(state) {
+      const initialScar = Number(state.character.initialScar) || 0;
+      const adventureScar = state.histories.reduce((sum, history) => sum + (Number(history?.increasedScar) || 0), 0);
+      return initialScar + adventureScar;
     },
     sessionNamesForWeaknessDropdown(state) {
       const defaultOptions = [...AioniaGameData.weaknessAcquisitionOptions];
@@ -147,6 +155,7 @@ export const useCharacterStore = defineStore('character', {
           sessionName: '',
           gotExperiments: null,
           memo: '',
+          increasedScar: 0,
         }),
       });
     },
@@ -159,8 +168,15 @@ export const useCharacterStore = defineStore('character', {
           sessionName: '',
           gotExperiments: null,
           memo: '',
+          increasedScar: 0,
         }),
-        hasContentChecker: (h) => !!(h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
+        hasContentChecker: (h) =>
+          !!(
+            h.sessionName ||
+            (h.gotExperiments !== null && h.gotExperiments !== '') ||
+            (h.increasedScar !== null && h.increasedScar !== undefined && h.increasedScar !== 0) ||
+            h.memo
+          ),
       });
     },
     addExpert(skillId) {
@@ -187,7 +203,13 @@ export const useCharacterStore = defineStore('character', {
     },
     updateHistoryItem(index, field, value) {
       if (this.histories[index]) {
-        this.histories[index][field] = field === 'gotExperiments' && value !== '' && value !== null ? Number(value) : value;
+        if (field === 'gotExperiments') {
+          this.histories[index][field] = value !== '' && value !== null ? Number(value) : value;
+        } else if (field === 'increasedScar') {
+          this.histories[index][field] = value !== '' && value !== null ? Number(value) : null;
+        } else {
+          this.histories[index][field] = value;
+        }
       }
     },
     handleSpeciesChange() {
