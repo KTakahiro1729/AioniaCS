@@ -27,6 +27,8 @@ describe('useGoogleDrive', () => {
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
     charStore.character.name = 'Hero';
     uiStore.setCurrentDriveFileId('existing-id');
 
@@ -53,6 +55,8 @@ describe('useGoogleDrive', () => {
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
     charStore.character.name = 'Hero';
     uiStore.clearCurrentDriveFileId();
 
@@ -80,6 +84,9 @@ describe('useGoogleDrive', () => {
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
     charStore.character.name = 'Hero';
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
 
     const result = await saveCharacterToDrive(true);
 
@@ -106,6 +113,8 @@ describe('useGoogleDrive', () => {
     const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
 
     const result = await loadCharacterFromDrive();
 

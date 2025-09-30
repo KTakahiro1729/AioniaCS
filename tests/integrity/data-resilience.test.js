@@ -1,6 +1,10 @@
 import { describe, it, beforeEach, expect } from 'vitest';
 import { DataManager } from '../../src/services/dataManager.js';
-import { MockGoogleDriveManager } from '../../src/services/mockGoogleDriveManager.js';
+import {
+  initializeMockGoogleDriveManager,
+  resetMockGoogleDriveManagerForTests,
+  getMockGoogleDriveManagerInstance,
+} from '../../src/services/mockGoogleDriveManager.js';
 import { AioniaGameData } from '../../src/data/gameData.js';
 
 describe('DataManager data integrity', () => {
@@ -8,7 +12,8 @@ describe('DataManager data integrity', () => {
   let gdm;
 
   beforeEach(() => {
-    gdm = new MockGoogleDriveManager('k', 'c');
+    resetMockGoogleDriveManagerForTests();
+    gdm = initializeMockGoogleDriveManager('k', 'c');
     dm = new DataManager(AioniaGameData);
     dm.setGoogleDriveManager(gdm);
   });
@@ -29,7 +34,7 @@ describe('DataManager data integrity', () => {
 
     await dm.saveDataToAppData({ name: 'Scout', memo: 'updated' }, [], [], {}, [], found.id);
 
-    const updated = await gdm.loadCharacterFile(found.id);
+    const updated = await getMockGoogleDriveManagerInstance().loadCharacterFile(found.id);
     expect(updated.character.memo).toBe('updated');
   });
 });

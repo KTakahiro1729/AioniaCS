@@ -1,8 +1,14 @@
 /**
  * Manages interactions with Google Drive and Google Sign-In.
  */
+let singletonInstance = null;
+
 export class GoogleDriveManager {
   constructor(apiKey, clientId) {
+    if (singletonInstance) {
+      throw new Error('GoogleDriveManager has already been instantiated. Use getGoogleDriveManagerInstance().');
+    }
+
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
@@ -12,10 +18,14 @@ export class GoogleDriveManager {
     this.tokenClient = null;
     this.pickerApiLoaded = false;
     this.aioniaFolderId = null;
+    this.gapiLoadPromise = null;
+    this.gisLoadPromise = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
     this.handleSignOut = this.handleSignOut.bind(this);
+
+    singletonInstance = this;
   }
 
   /**
@@ -24,7 +34,11 @@ export class GoogleDriveManager {
    * @returns {Promise<void>}
    */
   onGapiLoad() {
-    return new Promise((resolve, reject) => {
+    if (this.gapiLoadPromise) {
+      return this.gapiLoadPromise;
+    }
+
+    this.gapiLoadPromise = new Promise((resolve, reject) => {
       if (typeof gapi === 'undefined' || !gapi.load) {
         const err = new Error('GAPI core script not available for gapi.load.');
         console.error('GDM: ' + err.message);
@@ -53,6 +67,8 @@ export class GoogleDriveManager {
           });
       });
     });
+
+    return this.gapiLoadPromise;
   }
 
   /**
@@ -61,7 +77,11 @@ export class GoogleDriveManager {
    * @returns {Promise<void>}
    */
   onGisLoad() {
-    return new Promise((resolve, reject) => {
+    if (this.gisLoadPromise) {
+      return this.gisLoadPromise;
+    }
+
+    this.gisLoadPromise = new Promise((resolve, reject) => {
       if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2 || !google.accounts.oauth2.initTokenClient) {
         const err = new Error(
           'GIS library not fully available to initialize token client (google.accounts.oauth2.initTokenClient is undefined).',
@@ -82,6 +102,8 @@ export class GoogleDriveManager {
         reject(error);
       }
     });
+
+    return this.gisLoadPromise;
   }
 
   /**
@@ -664,8 +686,26 @@ export class GoogleDriveManager {
   }
 }
 
-// Make the class available globally for now, to be instantiated in main.js
-window.GoogleDriveManager = GoogleDriveManager;
+export function initializeGoogleDriveManager(apiKey, clientId) {
+  if (singletonInstance) {
+    return singletonInstance;
+  }
 
-// Global gapiLoaded and gisLoaded functions will be defined in main.js
-// and will call the appropriate methods on the GoogleDriveManager instance.
+  return new GoogleDriveManager(apiKey, clientId);
+}
+
+export function getGoogleDriveManagerInstance() {
+  if (!singletonInstance) {
+    throw new Error('GoogleDriveManager has not been initialized. Call initializeGoogleDriveManager() first.');
+  }
+
+  return singletonInstance;
+}
+
+export function isGoogleDriveManagerInitialized() {
+  return Boolean(singletonInstance);
+}
+
+export function resetGoogleDriveManagerForTests() {
+  singletonInstance = null;
+}

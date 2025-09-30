@@ -63,6 +63,10 @@ export const messages = {
       title: 'Google サインインエラー',
       message: '初期化に失敗しました',
     }),
+    initPending: () => ({
+      title: 'Google Drive',
+      message: '初期化が完了するまでお待ちください',
+    }),
   },
   share: {
     copied: (link) => ({ title: '共有リンクをコピーしました', message: link }),

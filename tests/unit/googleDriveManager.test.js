@@ -1,10 +1,16 @@
-import { GoogleDriveManager } from '../../src/services/googleDriveManager.js';
+import {
+  GoogleDriveManager,
+  initializeGoogleDriveManager,
+  getGoogleDriveManagerInstance,
+  resetGoogleDriveManagerForTests,
+} from '../../src/services/googleDriveManager.js';
 import { vi } from 'vitest';
 
 describe('GoogleDriveManager Drive folder management', () => {
   let gdm;
 
   beforeEach(() => {
+    resetGoogleDriveManagerForTests();
     global.gapi = {
       client: {
         drive: {
@@ -18,11 +24,12 @@ describe('GoogleDriveManager Drive folder management', () => {
         request: vi.fn(),
       },
     };
-    gdm = new GoogleDriveManager('k', 'c');
+    gdm = initializeGoogleDriveManager('k', 'c');
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    resetGoogleDriveManagerForTests();
   });
 
   test('findOrCreateAioniaCSFolder returns existing folder id when present', async () => {
@@ -113,5 +120,12 @@ describe('GoogleDriveManager Drive folder management', () => {
   test('onGapiLoad rejects when gapi.load is missing', async () => {
     delete gapi.load;
     await expect(gdm.onGapiLoad()).rejects.toThrow('GAPI core script not available for gapi.load.');
+  });
+
+  test('prevents creating multiple GoogleDriveManager instances', () => {
+    expect(() => new GoogleDriveManager('other', 'other')).toThrow('already been instantiated');
+    const again = initializeGoogleDriveManager('k', 'c');
+    expect(again).toBe(gdm);
+    expect(getGoogleDriveManagerInstance()).toBe(gdm);
   });
 });

@@ -1,6 +1,6 @@
 import { ref, computed, onMounted } from 'vue';
-import { GoogleDriveManager as RealGoogleDriveManager } from '../services/googleDriveManager.js';
-import { MockGoogleDriveManager } from '../services/mockGoogleDriveManager.js';
+import { getGoogleDriveManagerInstance, initializeGoogleDriveManager } from '../services/googleDriveManager.js';
+import { getMockGoogleDriveManagerInstance, initializeMockGoogleDriveManager } from '../services/mockGoogleDriveManager.js';
 import { useUiStore } from '../stores/uiStore.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
@@ -8,7 +8,10 @@ import { useModal } from './useModal.js';
 import { messages } from '../locales/ja.js';
 
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
-const GoogleDriveManager = useMock ? MockGoogleDriveManager : RealGoogleDriveManager;
+const getDriveManagerInstance = useMock ? getMockGoogleDriveManagerInstance : getGoogleDriveManagerInstance;
+const initializeDriveManager = useMock ? initializeMockGoogleDriveManager : initializeGoogleDriveManager;
+
+let scriptsWatched = false;
 
 export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
@@ -18,6 +21,21 @@ export function useGoogleDrive(dataManager) {
   const { showModal } = useModal();
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
+  const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isGisInitialized);
+
+  function syncGoogleDriveManager() {
+    try {
+      googleDriveManager.value = getDriveManagerInstance();
+    } catch {
+      const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      googleDriveManager.value = initializeDriveManager(apiKey, clientId);
+    }
+
+    if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
+      dataManager.setGoogleDriveManager(googleDriveManager.value);
+    }
+  }
 
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
@@ -65,6 +83,10 @@ export function useGoogleDrive(dataManager) {
   }
 
   async function loadCharacterFromDrive() {
+    if (!isDriveReady.value) {
+      showToast({ type: 'error', ...messages.googleDrive.initPending() });
+      return null;
+    }
     if (!dataManager.googleDriveManager) return null;
 
     return new Promise((resolve) => {
@@ -104,6 +126,10 @@ export function useGoogleDrive(dataManager) {
   }
 
   async function saveCharacterToDrive(option = false) {
+    if (!isDriveReady.value) {
+      showToast({ type: 'error', ...messages.googleDrive.initPending() });
+      return null;
+    }
     if (!dataManager.googleDriveManager) return;
     uiStore.isCloudSaveSuccess = false;
 
@@ -171,31 +197,36 @@ export function useGoogleDrive(dataManager) {
   }
 
   function initializeGoogleDrive() {
-    const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    googleDriveManager.value = new GoogleDriveManager(apiKey, clientId);
-    dataManager.setGoogleDriveManager(googleDriveManager.value);
+    syncGoogleDriveManager();
+
+    if (!googleDriveManager.value || scriptsWatched) {
+      return;
+    }
+
+    scriptsWatched = true;
 
     const handleGapiLoaded = async () => {
       if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
-      uiStore.isGapiInitialized = true;
       console.info('Google API Loading...');
       try {
         await googleDriveManager.value.onGapiLoad();
         console.info('Google API Ready');
+        uiStore.isGapiInitialized = true;
       } catch {
+        uiStore.isGapiInitialized = false;
         showToast({ type: 'error', ...messages.googleDrive.apiInitError() });
       }
     };
 
     const handleGisLoaded = async () => {
       if (uiStore.isGisInitialized || !googleDriveManager.value) return;
-      uiStore.isGisInitialized = true;
       console.info('Google Sign-In Loading...');
       try {
         await googleDriveManager.value.onGisLoad();
         console.info('Google Sign-In Ready');
+        uiStore.isGisInitialized = true;
       } catch {
+        uiStore.isGisInitialized = false;
         showToast({ type: 'error', ...messages.googleDrive.signInInitError() });
       }
     };
@@ -225,14 +256,15 @@ export function useGoogleDrive(dataManager) {
       .catch(() => showToast({ type: 'error', ...messages.googleDrive.signInInitError() }));
   }
 
+  syncGoogleDriveManager();
+
   onMounted(() => {
-    if (window.GoogleDriveManager || window.MockGoogleDriveManager) {
-      initializeGoogleDrive();
-    }
+    initializeGoogleDrive();
   });
 
   return {
     canSignInToGoogle,
+    isDriveReady,
     handleSignInClick,
     handleSignOutClick,
     promptForDriveFolder,

@@ -23,6 +23,66 @@ test.describe('Character Sheet E2E Tests', () => {
     await expect(nameInput).toHaveValue('テストキャラ');
   });
 
+  test('Google Drive sign-in is disabled until APIs finish loading', async ({ page }) => {
+    await page.locator('.main-header .icon-button').click();
+    const signInButton = page.locator('.character-hub--button', { hasText: 'Googleにログイン' });
+    await expect(signInButton).toBeVisible();
+    await expect(signInButton).toBeDisabled();
+
+    await page.evaluate(() => {
+      window.gapi = {
+        load: (_modules, callback) => callback(),
+        client: {
+          init: () => Promise.resolve(),
+          getToken: () => ({ access_token: 'token' }),
+          setToken: () => {},
+          request: () => Promise.resolve({ result: {} }),
+          drive: { files: {} },
+        },
+      };
+      window.google = {
+        accounts: {
+          oauth2: {
+            initTokenClient: () => ({
+              requestAccessToken: () => {},
+            }),
+            revoke: (_token, cb) => cb(),
+          },
+        },
+        picker: {
+          Response: { ACTION: 'action', DOCUMENTS: 'docs' },
+          Action: { PICKED: 'picked', CANCEL: 'cancel' },
+          View: function () {
+            this.setParent = () => {};
+            this.setMimeTypes = () => {};
+          },
+          ViewId: { DOCS: 'docs' },
+          Feature: { NAV_HIDDEN: 'nav_hidden' },
+          PickerBuilder: function () {
+            this.setOrigin = () => this;
+            this.addView = () => this;
+            this.enableFeature = () => this;
+            this.setOAuthToken = () => this;
+            this.setCallback = () => this;
+            this.build = () => ({ setVisible: () => {} });
+            return this;
+          },
+        },
+      };
+
+      const gapiScript = document.querySelector('script[src="https://apis.google.com/js/api.js"]');
+      if (gapiScript) {
+        gapiScript.dispatchEvent(new Event('load'));
+      }
+      const gisScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (gisScript) {
+        gisScript.dispatchEvent(new Event('load'));
+      }
+    });
+
+    await expect(signInButton).toBeEnabled();
+  });
+
   test.describe('Image Handling', () => {
     test('uploads, displays image, and saves JSON (no images initially, then one image)', async ({ page }) => {
       const characterNameInput = page.locator('#name');

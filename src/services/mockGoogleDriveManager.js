@@ -1,10 +1,17 @@
+let singletonInstance = null;
+
 export class MockGoogleDriveManager {
   constructor(apiKey, clientId) {
+    if (singletonInstance) {
+      throw new Error('MockGoogleDriveManager has already been instantiated. Use getMockGoogleDriveManagerInstance().');
+    }
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.storageKey = 'mockGoogleDriveData';
     console.log('MockGoogleDriveManager is active and uses localStorage.');
     this._loadState();
+
+    singletonInstance = this;
   }
 
   _loadState() {
@@ -198,4 +205,25 @@ export class MockGoogleDriveManager {
   }
 }
 
-window.MockGoogleDriveManager = MockGoogleDriveManager;
+export function initializeMockGoogleDriveManager(apiKey, clientId) {
+  if (singletonInstance) {
+    return singletonInstance;
+  }
+
+  return new MockGoogleDriveManager(apiKey, clientId);
+}
+
+export function getMockGoogleDriveManagerInstance() {
+  if (!singletonInstance) {
+    throw new Error('MockGoogleDriveManager has not been initialized. Call initializeMockGoogleDriveManager() first.');
+  }
+
+  return singletonInstance;
+}
+
+export function resetMockGoogleDriveManagerForTests() {
+  singletonInstance = null;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('mockGoogleDriveData');
+  }
+}

@@ -2,10 +2,10 @@
   <div class="character-hub">
     <template v-if="uiStore.isSignedIn">
       <div class="character-hub--actions">
-        <button class="button-base character-hub--button" @click="loadCharacterFromDrive">
+        <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="loadCharacterFromDrive">
           Driveから読み込む
         </button>
-        <button class="button-base character-hub--button" @click="saveNewCharacter">
+        <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="saveNewCharacter">
           新しい冒険者として保存
         </button>
         <button
@@ -22,7 +22,7 @@
     </template>
     <template v-else>
       <div class="character-hub--actions">
-        <button class="button-base character-hub--button" @click="emitSignIn">
+        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="emitSignIn">
           Googleにログイン
         </button>
       </div>
@@ -45,9 +45,16 @@ const props = defineProps({
 const emit = defineEmits(['sign-in', 'sign-out']);
 
 const uiStore = useUiStore();
-const { loadCharacterFromDrive, saveCharacterToDrive } = useGoogleDrive(props.dataManager);
+const { loadCharacterFromDrive: loadFromDrive, saveCharacterToDrive, isDriveReady, canSignInToGoogle } =
+  useGoogleDrive(props.dataManager);
 
-const isOverwriteEnabled = computed(() => !!uiStore.currentDriveFileId);
+const canSignIn = computed(() => canSignInToGoogle.value);
+const isOverwriteEnabled = computed(() => isDriveReady.value && !!uiStore.currentDriveFileId);
+
+function loadCharacterFromDrive() {
+  if (!isDriveReady.value) return null;
+  return loadFromDrive();
+}
 
 function emitSignIn() {
   emit('sign-in');
@@ -58,6 +65,7 @@ function emitSignOut() {
 }
 
 function saveNewCharacter() {
+  if (!isDriveReady.value) return null;
   return saveCharacterToDrive(true);
 }
 
