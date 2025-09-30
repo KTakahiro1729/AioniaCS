@@ -4,16 +4,26 @@
       <div class="character-hub--actions">
         <div class="character-hub--config">
           <label class="character-hub--label" for="drive_folder_path">保存先フォルダ</label>
-          <input
-            id="drive_folder_path"
-            class="character-hub--input"
-            type="text"
-            v-model="folderPathInput"
-            :disabled="!uiStore.isSignedIn"
-            placeholder="慈悲なきアイオニア"
-            @blur="commitFolderPath"
-            @keyup.enter.prevent="commitFolderPath"
-          />
+          <div class="character-hub--input-with-button">
+            <input
+              id="drive_folder_path"
+              class="character-hub--input"
+              type="text"
+              v-model="folderPathInput"
+              :disabled="!uiStore.isSignedIn"
+              placeholder="慈悲なきアイオニア"
+              @blur="commitFolderPath"
+              @keyup.enter.prevent="commitFolderPath"
+            />
+            <button
+              class="button-base character-hub--button-inline"
+              :disabled="!uiStore.isSignedIn || !isDriveReady"
+              type="button"
+              @click="emitDriveFolder"
+            >
+              変更
+            </button>
+          </div>
         </div>
         <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="loadCharacterFromDrive">
           Driveから読み込む
@@ -45,7 +55,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['sign-in', 'sign-out']);
+const emit = defineEmits(['sign-in', 'sign-out', 'drive-folder']);
 
 const uiStore = useUiStore();
 const {
@@ -79,6 +89,13 @@ function emitSignIn() {
 
 function emitSignOut() {
   emit('sign-out');
+}
+
+function emitDriveFolder() {
+  if (!uiStore.isSignedIn || !isDriveReady.value) {
+    return;
+  }
+  emit('drive-folder');
 }
 
 function saveNewCharacter() {
@@ -120,6 +137,10 @@ async function commitFolderPath() {
   width: 100%;
 }
 
+.character-hub--input-with-button {
+  display: flex;
+}
+
 .character-hub--label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -132,6 +153,19 @@ async function commitFolderPath() {
   border: 1px solid var(--color-border-normal);
   background-color: var(--color-panel-body);
   color: var(--color-text-primary, #fff);
+}
+
+.character-hub--input-with-button .character-hub--input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+  flex-grow: 1;
+}
+
+.character-hub--button-inline {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  flex-shrink: 0;
 }
 
 .character-hub--input:disabled {

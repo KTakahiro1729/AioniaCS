@@ -71,19 +71,29 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
-  function promptForDriveFolder() {
+  async function promptForDriveFolder() {
     const gdm = dataManager.googleDriveManager;
     if (!gdm) return;
-    gdm.showFolderPicker((err, folder) => {
-      if (err || !folder) {
-        showToast({
-          type: 'error',
-          ...messages.googleDrive.folderPicker.error(err),
-        });
-        return;
+
+    try {
+      const folder = await gdm.pickFolder();
+      if (!folder) {
+        throw new Error('No folder selected');
       }
-      updateDriveFolderPath(folder.name);
-    });
+
+      const folderPath = await gdm.getFolderPath(folder.id);
+      let desiredPath = folderPath;
+      if (!desiredPath) {
+        desiredPath = folder.id === 'root' ? '' : folder.name || '';
+      }
+      const normalized = await updateDriveFolderPath(desiredPath);
+      uiStore.setDriveFolderPath(normalized);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        ...messages.googleDrive.folderPicker.error(err),
+      });
+    }
   }
 
   async function refreshDriveFolderPath() {

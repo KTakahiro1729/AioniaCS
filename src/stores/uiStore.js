@@ -8,7 +8,7 @@ export const useUiStore = defineStore('ui', {
     isGapiInitialized: false,
     isGisInitialized: false,
     isLoading: false,
-    driveFolderPath: '慈悲なきアイオニア',
+    driveFolderPath: '',
     currentDriveFileId: null,
     isViewingShared: false,
     pendingDriveSaves: {},

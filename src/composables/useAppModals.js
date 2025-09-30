@@ -38,6 +38,7 @@ export function useAppModals(options) {
       on: {
         'sign-in': handleSignInClick,
         'sign-out': handleSignOutClick,
+        'drive-folder': promptForDriveFolder,
       },
     });
   }
@@ -58,7 +59,6 @@ export function useAppModals(options) {
         },
         outputTimings: messages.outputButton.animationTimings,
         printLabel: messages.ui.modal.io.buttons.print,
-        driveFolderLabel: messages.ui.modal.io.buttons.driveFolder,
       },
       buttons: [],
       on: {
@@ -66,7 +66,6 @@ export function useAppModals(options) {
         'load-local': handleFileUpload,
         'output-cocofolia': outputToCocofolia,
         print: handlePrint,
-        'drive-folder': promptForDriveFolder,
       },
     });
   }

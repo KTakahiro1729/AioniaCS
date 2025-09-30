@@ -128,6 +128,55 @@ export class GoogleDriveManager {
     return normalized;
   }
 
+  async getFolderPath(folderId) {
+    if (!folderId || folderId === 'root') {
+      return '';
+    }
+
+    if (!gapi.client || !gapi.client.drive) {
+      throw new Error('GAPI client or Drive API not loaded for getFolderPath.');
+    }
+
+    const segments = [];
+    const visited = new Set();
+    let currentId = folderId;
+
+    try {
+      while (currentId && currentId !== 'root') {
+        if (visited.has(currentId)) {
+          throw new Error('Circular parent reference detected while resolving folder path.');
+        }
+        visited.add(currentId);
+
+        const response = await gapi.client.drive.files.get({
+          fileId: currentId,
+          fields: 'id, name, parents',
+        });
+
+        const folder = response.result;
+        if (!folder) {
+          break;
+        }
+
+        if (folder.name) {
+          segments.push(folder.name);
+        }
+
+        const parentId = Array.isArray(folder.parents) && folder.parents.length > 0 ? folder.parents[0] : null;
+        if (!parentId) {
+          break;
+        }
+
+        currentId = parentId;
+      }
+    } catch (error) {
+      console.error('Error retrieving folder path:', error);
+      throw error;
+    }
+
+    return segments.reverse().join('/');
+  }
+
   /**
    * Called when the Google API script (api.js) is loaded.
    * Initializes the GAPI client.
@@ -749,6 +798,18 @@ export class GoogleDriveManager {
 
     const picker = pickerBuilder.build();
     picker.setVisible(true);
+  }
+
+  pickFolder() {
+    return new Promise((resolve, reject) => {
+      this.showFolderPicker((err, folder) => {
+        if (err || !folder) {
+          reject(err || new Error('Folder selection failed.'));
+          return;
+        }
+        resolve(folder);
+      });
+    });
   }
 
   async isFileInConfiguredFolder(fileId) {

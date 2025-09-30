@@ -118,6 +118,33 @@ export class MockGoogleDriveManager {
     return normalized;
   }
 
+  async getFolderPath(folderId) {
+    if (!folderId || folderId === 'root') {
+      return '';
+    }
+
+    const segments = [];
+    const visited = new Set();
+    let currentId = folderId;
+
+    while (currentId && currentId !== 'root') {
+      if (visited.has(currentId)) {
+        throw new Error('Circular parent reference detected in mock folder hierarchy.');
+      }
+      visited.add(currentId);
+
+      const folder = this.state.folders[currentId];
+      if (!folder) {
+        break;
+      }
+
+      segments.push(folder.name);
+      currentId = folder.parentId || null;
+    }
+
+    return segments.reverse().join('/');
+  }
+
   async createFolder(name, parentId = 'root') {
     const existing = await this.findFolder(name, parentId);
     if (existing) {
@@ -214,6 +241,18 @@ export class MockGoogleDriveManager {
     } else {
       callback?.(new Error('No folders available.'));
     }
+  }
+
+  pickFolder() {
+    return new Promise((resolve, reject) => {
+      this.showFolderPicker((err, folder) => {
+        if (err || !folder) {
+          reject(err || new Error('Folder selection failed.'));
+          return;
+        }
+        resolve(folder);
+      });
+    });
   }
 
   async findFileByName(fileName) {
