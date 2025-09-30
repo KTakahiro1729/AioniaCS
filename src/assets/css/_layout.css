@@ -176,7 +176,7 @@
   padding: 30px;
   border-radius: 4px;
   box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
-  z-index: 1000;
+  z-index: 200;
   max-width: 90%;
   width: 400px;
   font-size: 0.9em;
@@ -272,7 +272,7 @@
   border: 1px solid var(--color-border-normal);
   border-radius: 5px;
   box-shadow: 0 0 10px rgb(0 0 0 / 50%);
-  z-index: 2000;
+  z-index: 300;
   white-space: pre-wrap;
   display: none;
 }
@@ -350,7 +350,7 @@
     position: fixed;
     top: 10px;
     left: 10px;
-    z-index: 1050;
+    z-index: 350;
   }
 
   .icon-button {
