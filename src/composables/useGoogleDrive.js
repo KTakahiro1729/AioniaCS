@@ -89,6 +89,8 @@ export function useGoogleDrive(dataManager) {
     }
     if (!dataManager.googleDriveManager) return null;
 
+    const folderId = await dataManager.googleDriveManager.findOrCreateAioniaCSFolder();
+
     return new Promise((resolve) => {
       dataManager.googleDriveManager.showFilePicker(
         (err, file) => {
@@ -119,7 +121,7 @@ export function useGoogleDrive(dataManager) {
 
           loadPromise.then((result) => resolve(result)).catch(() => resolve(null));
         },
-        null,
+        folderId,
         ['application/json'],
       );
     });
