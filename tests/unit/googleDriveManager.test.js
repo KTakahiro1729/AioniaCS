@@ -1,22 +1,37 @@
-import { GoogleDriveManager } from '../../src/services/googleDriveManager.js';
+import { GoogleDriveManager, DRIVE_FOLDER_NAME } from '../../src/services/googleDriveManager.js';
 import { vi } from 'vitest';
 
-describe('GoogleDriveManager appDataFolder', () => {
+describe('GoogleDriveManager', () => {
   let gdm;
 
   beforeEach(() => {
     global.gapi = {
+      load: vi.fn((_, cb) => cb()),
       client: {
+        getToken: vi.fn(() => ({ access_token: 'token' })),
+        setToken: vi.fn(),
         drive: {
           files: {
             list: vi.fn(),
-            get: vi.fn(),
+            create: vi.fn(),
             delete: vi.fn(),
           },
         },
         request: vi.fn(),
       },
     };
+    global.google = {
+      picker: {
+        View: vi.fn(),
+        ViewId: { DOCS: 'DOCS' },
+        Feature: { NAV_HIDDEN: 'NAV_HIDDEN' },
+        Response: { ACTION: 'action', DOCUMENTS: 'docs' },
+        Action: { PICKED: 'picked', CANCEL: 'cancel' },
+        PickerBuilder: vi.fn().mockReturnValue({ build: vi.fn().mockReturnValue({ setVisible: vi.fn() }) }),
+      },
+      accounts: { oauth2: { initTokenClient: vi.fn().mockReturnValue({}) } },
+    };
+
     gdm = new GoogleDriveManager('k', 'c');
   });
 
@@ -24,81 +39,75 @@ describe('GoogleDriveManager appDataFolder', () => {
     vi.clearAllMocks();
   });
 
-  test('ensureIndexFile creates new index when absent', async () => {
-    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
-    gapi.client.request.mockResolvedValue({
-      result: { id: '1', name: 'character_index.json' },
-    });
-    const info = await gdm.ensureIndexFile();
-    expect(info.id).toBe('1');
-    expect(gapi.client.request).toHaveBeenCalled();
+  test('ensureAppFolder returns existing folder id', async () => {
+    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [{ id: 'folder-1', name: DRIVE_FOLDER_NAME }] } });
+
+    const id = await gdm.ensureAppFolder();
+
+    expect(id).toBe('folder-1');
+    expect(gapi.client.drive.files.create).not.toHaveBeenCalled();
   });
 
-  test('readIndexFile returns parsed data', async () => {
-    gapi.client.drive.files.list.mockResolvedValue({
-      result: { files: [{ id: '10', name: 'character_index.json' }] },
-    });
-    gapi.client.drive.files.get.mockResolvedValue({
-      body: '[{"id":"a","characterName":"Alice"}]',
-    });
-    const index = await gdm.readIndexFile();
-    expect(index).toEqual([{ id: 'a', characterName: 'Alice' }]);
-    expect(gapi.client.drive.files.get).toHaveBeenCalledWith({
-      fileId: '10',
-      alt: 'media',
+  test('ensureAppFolder creates folder when missing', async () => {
+    gapi.client.drive.files.list.mockResolvedValueOnce({ result: { files: [] } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'new-folder', name: DRIVE_FOLDER_NAME } });
+
+    const id = await gdm.ensureAppFolder();
+
+    expect(id).toBe('new-folder');
+    expect(gapi.client.drive.files.create).toHaveBeenCalled();
+  });
+
+  test('listFiles requests files inside ensured folder', async () => {
+    gapi.client.drive.files.list
+      .mockResolvedValueOnce({ result: { files: [{ id: 'folder-1', name: DRIVE_FOLDER_NAME }] } })
+      .mockResolvedValueOnce({ result: { files: [{ id: 'file-1', name: 'hero.json', modifiedTime: '2024-01-01T00:00:00Z' }] } });
+
+    const files = await gdm.listFiles();
+
+    expect(files).toEqual([{ id: 'file-1', name: 'hero.json', modifiedTime: '2024-01-01T00:00:00Z' }]);
+    expect(gapi.client.drive.files.list).toHaveBeenLastCalledWith({
+      q: "'folder-1' in parents and mimeType='application/json' and trashed=false",
+      fields: 'files(id, name, modifiedTime)',
+      spaces: 'drive',
+      orderBy: 'modifiedTime desc',
     });
   });
 
-  test('createCharacterFile uploads JSON to appDataFolder', async () => {
-    gapi.client.request.mockResolvedValue({
-      result: { id: 'c1', name: 'Test.json' },
-    });
-    const data = { character: { name: 'Test' } };
-    const res = await gdm.createCharacterFile(data);
-    expect(res.id).toBe('c1');
-    expect(gapi.client.request).toHaveBeenCalled();
+  test('saveFile creates new file with metadata', async () => {
+    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [{ id: 'folder-1', name: DRIVE_FOLDER_NAME }] } });
+    gapi.client.request.mockResolvedValue({ result: { id: 'file-1', name: 'hero.json' } });
+
+    const result = await gdm.saveFile(null, 'hero.json', '{"test":true}');
+
+    expect(result).toEqual({ id: 'file-1', name: 'hero.json' });
+    expect(gapi.client.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'POST',
+        path: '/upload/drive/v3/files',
+        params: expect.objectContaining({ uploadType: 'multipart' }),
+      }),
+    );
   });
 
-  test('deleteCharacterFile removes file and index entry', async () => {
-    vi.spyOn(gdm, 'removeIndexEntry').mockResolvedValue();
+  test('saveFile updates existing file when id provided', async () => {
+    gapi.client.request.mockResolvedValue({ result: { id: 'file-1', name: 'hero.json' } });
+
+    const result = await gdm.saveFile('folder-1', 'hero.json', '{"test":true}', 'file-1');
+
+    expect(result).toEqual({ id: 'file-1', name: 'hero.json' });
+    expect(gapi.client.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'PATCH',
+        path: '/upload/drive/v3/files/file-1',
+      }),
+    );
+  });
+
+  test('deleteCharacterFile removes drive file', async () => {
     gapi.client.drive.files.delete.mockResolvedValue({});
-    await gdm.deleteCharacterFile('d1');
-    expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({
-      fileId: 'd1',
-    });
-    expect(gdm.removeIndexEntry).toHaveBeenCalledWith('d1');
-  });
-
-  test('renameIndexEntry updates characterName and timestamp', async () => {
-    const now = new Date('2024-01-01T00:00:00.000Z');
-    vi.useFakeTimers().setSystemTime(now);
-    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([{ id: 'a', characterName: 'Old' }]);
-    vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
-    await gdm.renameIndexEntry('a', 'New');
-    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
-      {
-        id: 'a',
-        characterName: 'New',
-        updatedAt: now.toISOString(),
-      },
-    ]);
-    vi.useRealTimers();
-  });
-
-  test('addIndexEntry sets updatedAt', async () => {
-    const now = new Date('2024-01-02T00:00:00.000Z');
-    vi.useFakeTimers().setSystemTime(now);
-    vi.spyOn(gdm, 'readIndexFile').mockResolvedValue([]);
-    vi.spyOn(gdm, 'writeIndexFile').mockResolvedValue();
-    await gdm.addIndexEntry({ id: 'b', characterName: 'Bob' });
-    expect(gdm.writeIndexFile).toHaveBeenCalledWith([
-      {
-        id: 'b',
-        characterName: 'Bob',
-        updatedAt: now.toISOString(),
-      },
-    ]);
-    vi.useRealTimers();
+    await gdm.deleteCharacterFile('file-2');
+    expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({ fileId: 'file-2' });
   });
 
   test('onGapiLoad rejects when gapi.load is missing', async () => {

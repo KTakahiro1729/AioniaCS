@@ -276,20 +276,14 @@ export class DataManager {
       histories: histories.filter((h) => h.sessionName || (h.gotExperiments !== null && h.gotExperiments !== '') || h.memo),
     };
 
-    if (currentFileId) {
-      const res = await this.googleDriveManager.updateCharacterFile(currentFileId, dataToSave);
-      await this.googleDriveManager.renameIndexEntry(currentFileId, character.name || '名もなき冒険者');
-      return res;
+    const sanitizedFileName = (character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+
+    const folderId = await this.googleDriveManager.ensureAppFolder();
+    if (!folderId) {
+      throw new Error('Unable to access Google Drive folder.');
     }
 
-    const created = await this.googleDriveManager.createCharacterFile(dataToSave);
-    if (created) {
-      await this.googleDriveManager.addIndexEntry({
-        id: created.id,
-        characterName: character.name || '名もなき冒険者',
-      });
-    }
-    return created;
+    return this.googleDriveManager.saveFile(folderId, sanitizedFileName, JSON.stringify(dataToSave, null, 2), currentFileId || null);
   }
 
   /**
@@ -331,23 +325,15 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const index = await this.googleDriveManager.readIndexFile();
-    const valid = [];
+    const folderId = await this.googleDriveManager.ensureAppFolder();
+    if (!folderId) return [];
 
-    for (const entry of index) {
-      try {
-        const data = await this.loadDataFromDrive(entry.id);
-        if (data) {
-          valid.push(entry);
-        } else {
-          console.error(`Character file not found or invalid: ${entry.id}`);
-        }
-      } catch (err) {
-        console.error(`Failed to load character file ${entry.id}:`, err);
-      }
-    }
-
-    return valid;
+    const files = await this.googleDriveManager.listFiles(folderId);
+    return files.map((file) => ({
+      id: file.id,
+      characterName: file.name.replace(/\.json$/i, ''),
+      updatedAt: file.modifiedTime,
+    }));
   }
 
   /**

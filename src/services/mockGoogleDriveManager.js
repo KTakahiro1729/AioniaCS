@@ -1,3 +1,5 @@
+import { DRIVE_FOLDER_NAME } from './googleDriveManager.js';
+
 export class MockGoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
@@ -15,7 +17,6 @@ export class MockGoogleDriveManager {
         this.appData = state.appData;
         this.folders = state.folders;
         this.fileCounter = state.fileCounter;
-        this.indexFileId = state.indexFileId;
         this.signedIn = state.signedIn;
       } else {
         this._initState();
@@ -32,7 +33,6 @@ export class MockGoogleDriveManager {
       appData: this.appData,
       folders: this.folders,
       fileCounter: this.fileCounter,
-      indexFileId: this.indexFileId,
       signedIn: this.signedIn,
     };
     localStorage.setItem(this.storageKey, JSON.stringify(stateToSave));
@@ -42,7 +42,6 @@ export class MockGoogleDriveManager {
     this.appData = {};
     this.folders = {};
     this.fileCounter = 1;
-    this.indexFileId = null;
     this.signedIn = false;
     this._saveState();
   }
@@ -81,25 +80,32 @@ export class MockGoogleDriveManager {
     return Object.values(this.folders).find((f) => f.name === folderName) || null;
   }
 
-  async getOrCreateAppFolder(appFolderName) {
-    let folder = await this.findFolder(appFolderName);
-    if (!folder) folder = await this.createFolder(appFolderName);
-    return folder;
+  async ensureAppFolder() {
+    let folder = await this.findFolder(DRIVE_FOLDER_NAME);
+    if (!folder) folder = await this.createFolder(DRIVE_FOLDER_NAME);
+    return folder ? folder.id : null;
   }
 
-  async listFiles(folderId, mimeType = 'application/json') {
+  async listFiles(folderId = null, mimeType = 'application/json') {
+    const targetFolderId = folderId || (await this.ensureAppFolder());
+    if (!targetFolderId) return [];
     return Object.values(this.appData)
-      .filter((f) => f.parentId === folderId)
-      .map((f) => ({ id: f.id, name: f.name }));
+      .filter((f) => f.parentId === targetFolderId && f.mimeType === mimeType)
+      .sort((a, b) => b.modifiedTime - a.modifiedTime)
+      .map((f) => ({ id: f.id, name: f.name, modifiedTime: new Date(f.modifiedTime).toISOString() }));
   }
 
   async saveFile(folderId, fileName, fileContent, fileId = null) {
+    const targetFolderId = fileId ? null : folderId || (await this.ensureAppFolder());
     const id = fileId || `file-${this.fileCounter++}`;
+    const now = Date.now();
     this.appData[id] = {
       id,
       name: fileName,
       content: fileContent,
-      parentId: folderId,
+      parentId: fileId ? this.appData[fileId]?.parentId || targetFolderId : targetFolderId,
+      mimeType: 'application/json',
+      modifiedTime: now,
     };
     this._saveState();
     return { id, name: fileName };
@@ -134,70 +140,6 @@ export class MockGoogleDriveManager {
     }
   }
 
-  async ensureIndexFile() {
-    if (this.indexFileId && this.appData[this.indexFileId]) {
-      return { id: this.indexFileId, name: 'character_index.json' };
-    }
-    const foundId = Object.keys(this.appData).find((id) => this.appData[id].name === 'character_index.json');
-    if (foundId) {
-      this.indexFileId = foundId;
-      this._saveState();
-      return { id: foundId, name: 'character_index.json' };
-    }
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
-    this.indexFileId = created.id;
-    this._saveState();
-    return created;
-  }
-
-  async readIndexFile() {
-    const info = await this.ensureIndexFile();
-    const content = await this.loadFileContent(info.id);
-    try {
-      return JSON.parse(content || '[]');
-    } catch {
-      return [];
-    }
-  }
-
-  async writeIndexFile(indexData) {
-    const info = await this.ensureIndexFile();
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
-  }
-
-  async addIndexEntry(entry) {
-    const index = await this.readIndexFile();
-    index.push({ ...entry, updatedAt: new Date().toISOString() });
-    await this.writeIndexFile(index);
-  }
-
-  async renameIndexEntry(id, newName) {
-    const index = await this.readIndexFile();
-    index.forEach((e) => {
-      if (e.id === id) {
-        e.characterName = newName;
-        e.updatedAt = new Date().toISOString();
-      }
-    });
-    await this.writeIndexFile(index);
-  }
-
-  async removeIndexEntry(id) {
-    const index = await this.readIndexFile();
-    const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
-  }
-
-  async createCharacterFile(data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
-  }
-
-  async updateCharacterFile(id, data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
-  }
-
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
     return content ? JSON.parse(content) : null;
@@ -206,7 +148,6 @@ export class MockGoogleDriveManager {
   async deleteCharacterFile(id) {
     delete this.appData[id];
     this._saveState();
-    await this.removeIndexEntry(id);
   }
 }
 

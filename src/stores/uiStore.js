@@ -36,31 +36,12 @@ export const useUiStore = defineStore('ui', {
     },
     async refreshDriveCharacters(gdm) {
       if (!gdm) return;
-      const temps = this.driveCharacters.filter((c) => c.id.startsWith('temp-'));
-      const serverList = await gdm.readIndexFile();
-      const serverIds = new Set(serverList.map((c) => c.id));
-
-      // Keep local entries that still exist on server
-      let merged = this.driveCharacters.filter((c) => c.id.startsWith('temp-') || serverIds.has(c.id));
-
-      // Add or update server entries
-      serverList.forEach((srv) => {
-        const idx = merged.findIndex((c) => c.id === srv.id);
-        if (idx !== -1) {
-          merged[idx] = { ...merged[idx], ...srv };
-        } else {
-          merged.push(srv);
-        }
-      });
-
-      // Ensure temps remain
-      temps.forEach((t) => {
-        if (!merged.some((c) => c.id === t.id)) {
-          merged.push(t);
-        }
-      });
-
-      this.driveCharacters = merged;
+      const files = await gdm.listFiles();
+      this.driveCharacters = files.map((file) => ({
+        id: file.id,
+        characterName: file.name.replace(/\.json$/i, ''),
+        updatedAt: file.modifiedTime,
+      }));
     },
     clearDriveCharacters() {
       this.driveCharacters = [];

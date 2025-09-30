@@ -36,11 +36,13 @@ const { printCharacterSheet, openPreviewPage } = usePrint();
 
 const {
   canSignInToGoogle,
+  canOverwrite,
   handleSignInClick,
   handleSignOutClick,
-  promptForDriveFolder,
-  saveCharacterToDrive,
-  saveOrUpdateCurrentCharacterInDrive,
+  openDriveFile,
+  saveFile,
+  saveAsNewFile,
+  overwriteFile,
 } = useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
@@ -57,7 +59,7 @@ function refreshHubList() {
 }
 
 async function saveNewCharacter() {
-  await saveCharacterToDrive(null);
+  await saveAsNewFile();
 }
 
 async function loadCharacterById(id, characterName) {
@@ -81,17 +83,14 @@ async function loadCharacterById(id, characterName) {
 const { openHub, openIoModal, openShareModal } = useAppModals({
   dataManager,
   loadCharacterById,
-  saveCharacterToDrive,
   handleSignInClick,
   handleSignOutClick,
   refreshHubList,
   saveNewCharacter,
-  saveData,
-  handleFileUpload,
-  outputToCocofolia,
-  printCharacterSheet,
-  openPreviewPage,
-  promptForDriveFolder,
+  openDriveFile,
+  saveAsNewFile,
+  overwriteFile,
+  canOverwrite: () => canOverwrite.value,
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
@@ -172,7 +171,7 @@ onMounted(initialize);
     :save-local="saveData"
     :handle-file-upload="handleFileUpload"
     :open-hub="openHub"
-    :save-to-drive="saveOrUpdateCurrentCharacterInDrive"
+    :save-to-drive="saveFile"
     :experience-label="messages.ui.footer.experience"
     :io-label="messages.ui.footer.io"
     :share-label="messages.ui.footer.share"

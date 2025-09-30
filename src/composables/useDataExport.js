@@ -5,9 +5,11 @@ import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
 import { copyText } from '../utils/clipboard.js';
+import { useUiStore } from '../stores/uiStore.js';
 
 export function useDataExport() {
   const characterStore = useCharacterStore();
+  const uiStore = useUiStore();
   const dataManager = new DataManager(AioniaGameData);
   const cocofoliaExporter = new CocofoliaExporter();
   const { showToast } = useNotifications();
@@ -31,6 +33,7 @@ export function useDataExport() {
         characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
         Object.assign(characterStore.equipments, parsedData.equipments);
         characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+        uiStore.currentDriveFileId = null;
       },
       (errorMessage) =>
         showToast({

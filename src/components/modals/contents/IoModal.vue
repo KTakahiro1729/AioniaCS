@@ -1,71 +1,86 @@
 <template>
   <div class="io-modal">
-    <button class="button-base" @click="$emit('save-local')">
-      {{ saveLocalLabel }}
-    </button>
-    <label class="button-base">
-      {{ loadLocalLabel }}
-      <input type="file" class="hidden" @change="(e) => $emit('load-local', e)" accept=".json,.txt,.zip" />
-    </label>
-    <AnimatedButton
-      class="button-base"
-      :trigger="triggerKey"
-      :default-label="outputLabels.default"
-      :animating-label="outputLabels.animating"
-      :success-label="outputLabels.success"
-      :timings="outputTimings"
-      @click="$emit('output-cocofolia')"
-    />
-    <button class="button-base" @click="$emit('print')">
-      {{ printLabel }}
-    </button>
-    <button class="button-base" v-if="signedIn" @click="$emit('drive-folder')">
-      {{ driveFolderLabel }}
-    </button>
+    <template v-if="!signedIn">
+      <p class="io-modal__description">
+        {{ description }}
+      </p>
+      <button class="button-base io-modal__primary" @click="$emit('login')">
+        {{ loginLabel }}
+      </button>
+    </template>
+    <template v-else>
+      <p class="io-modal__folder-info">{{ folderMessage }}</p>
+      <div class="io-modal__actions">
+        <button class="button-base" @click="$emit('open')">
+          {{ openLabel }}
+        </button>
+        <button class="button-base" @click="$emit('save-new')">
+          {{ saveNewLabel }}
+        </button>
+        <button class="button-base" :disabled="!canOverwrite" @click="$emit('overwrite')">
+          {{ overwriteLabel }}
+        </button>
+        <button class="button-base button-secondary" @click="$emit('logout')">
+          {{ logoutLabel }}
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import AnimatedButton from '../../common/AnimatedButton.vue';
+import { computed } from 'vue';
 
-defineProps({
+const props = defineProps({
   signedIn: Boolean,
-  saveLocalLabel: String,
-  loadLocalLabel: String,
-  outputLabels: Object,
-  outputTimings: Object,
-  printLabel: String,
-  driveFolderLabel: String,
+  canOverwrite: Boolean,
+  description: String,
+  folderName: String,
+  loginLabel: String,
+  openLabel: String,
+  saveNewLabel: String,
+  overwriteLabel: String,
+  logoutLabel: String,
 });
 
-defineEmits(['save-local', 'load-local', 'output-cocofolia', 'print', 'drive-folder']);
+defineEmits(['login', 'open', 'save-new', 'overwrite', 'logout']);
 
-const triggerKey = ref(0);
-function triggerAnimation() {
-  triggerKey.value += 1;
-}
-
-function handleCopySuccess(event) {
-  if (event.detail.type === 'cocofolia') {
-    triggerAnimation();
-  }
-}
-
-onMounted(() => {
-  document.removeEventListener('aionia-copy-success', handleCopySuccess);
-  document.addEventListener('aionia-copy-success', handleCopySuccess);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('aionia-copy-success', handleCopySuccess);
-});
+const folderMessage = computed(() => `${props.folderName} にキャラクターシートを保存します。`);
 </script>
 
 <style scoped>
 .io-modal {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
+}
+
+.io-modal__description {
+  margin: 0;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.io-modal__primary {
+  align-self: center;
+  min-width: 220px;
+}
+
+.io-modal__folder-info {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.io-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.io-modal__actions .button-base[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

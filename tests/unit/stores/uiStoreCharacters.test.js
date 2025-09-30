@@ -6,17 +6,13 @@ describe('uiStore character cache', () => {
     setActivePinia(createPinia());
   });
 
-  test('refreshDriveCharacters merges lists', async () => {
+  test('refreshDriveCharacters loads files from Drive', async () => {
     const store = useUiStore();
-    store.driveCharacters = [
-      { id: '2', characterName: 'B' },
-      { id: 'temp-1', characterName: 'Temp' },
-    ];
-    const gdm = { readIndexFile: vi.fn().mockResolvedValue([{ id: '1' }]) };
+    const gdm = {
+      listFiles: vi.fn().mockResolvedValue([{ id: '1', name: 'Hero.json', modifiedTime: '2024-01-01T00:00:00Z' }]),
+    };
     await store.refreshDriveCharacters(gdm);
-    expect(store.driveCharacters).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: '1' }), expect.objectContaining({ id: 'temp-1', characterName: 'Temp' })]),
-    );
+    expect(store.driveCharacters).toEqual([{ id: '1', characterName: 'Hero', updatedAt: '2024-01-01T00:00:00Z' }]);
   });
 
   test('clearDriveCharacters empties cache', () => {

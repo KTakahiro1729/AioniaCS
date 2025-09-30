@@ -1,6 +1,7 @@
 import { reactive, defineAsyncComponent } from 'vue';
 import { useModal } from './useModal.js';
 import { useUiStore } from '../stores/uiStore.js';
+import { DRIVE_FOLDER_NAME } from '../services/googleDriveManager.js';
 const CharacterHub = defineAsyncComponent(() => import('../components/ui/CharacterHub.vue'));
 const CharacterHubControls = defineAsyncComponent(() => import('../components/ui/CharacterHubControls.vue'));
 const IoModal = defineAsyncComponent(() => import('../components/modals/contents/IoModal.vue'));
@@ -9,7 +10,6 @@ const ShareOptions = defineAsyncComponent(() => import('../components/modals/con
 import { useShare } from './useShare.js';
 import { useNotifications } from './useNotifications.js';
 import { useModalStore } from '../stores/modalStore.js';
-import { isDesktopDevice } from '../utils/device.js';
 import { messages } from '../locales/ja.js';
 
 export function useAppModals(options) {
@@ -18,28 +18,33 @@ export function useAppModals(options) {
   const {
     dataManager,
     loadCharacterById,
-    saveCharacterToDrive,
     handleSignInClick,
     handleSignOutClick,
     refreshHubList,
     saveNewCharacter,
-    saveData,
-    handleFileUpload,
-    outputToCocofolia,
-    printCharacterSheet,
-    openPreviewPage,
-    promptForDriveFolder,
+    openDriveFile,
+    saveAsNewFile,
+    overwriteFile,
+    canOverwrite,
     copyEditCallback,
   } = options;
 
   async function openHub() {
+    async function handleSaveToDrive(id) {
+      if (id) {
+        uiStore.currentDriveFileId = id;
+        return overwriteFile();
+      }
+      return saveAsNewFile();
+    }
+
     await showModal({
       component: CharacterHub,
       title: messages.ui.modal.hubTitle,
       props: {
         dataManager,
         loadCharacter: loadCharacterById,
-        saveToDrive: saveCharacterToDrive,
+        saveToDrive: handleSaveToDrive,
       },
       globalActions: {
         component: CharacterHubControls,
@@ -55,30 +60,27 @@ export function useAppModals(options) {
   }
 
   async function openIoModal() {
-    const handlePrint = isDesktopDevice() ? printCharacterSheet : openPreviewPage;
     await showModal({
       component: IoModal,
       title: messages.ui.modal.io.title,
       props: {
         signedIn: uiStore.isSignedIn,
-        saveLocalLabel: messages.ui.modal.io.buttons.saveLocal,
-        loadLocalLabel: messages.ui.modal.io.buttons.loadLocal,
-        outputLabels: {
-          default: messages.outputButton.default,
-          animating: messages.outputButton.animating,
-          success: messages.outputButton.success,
-        },
-        outputTimings: messages.outputButton.animationTimings,
-        printLabel: messages.ui.modal.io.buttons.print,
-        driveFolderLabel: messages.ui.modal.io.buttons.driveFolder,
+        canOverwrite: typeof canOverwrite === 'function' ? canOverwrite() : Boolean(uiStore.currentDriveFileId),
+        description: messages.ui.modal.io.google.description(DRIVE_FOLDER_NAME),
+        folderName: DRIVE_FOLDER_NAME,
+        loginLabel: messages.ui.modal.io.google.login,
+        openLabel: messages.ui.modal.io.google.open,
+        saveNewLabel: messages.ui.modal.io.google.saveNew,
+        overwriteLabel: messages.ui.modal.io.google.overwrite,
+        logoutLabel: messages.ui.modal.io.google.logout,
       },
       buttons: [],
       on: {
-        'save-local': saveData,
-        'load-local': handleFileUpload,
-        'output-cocofolia': outputToCocofolia,
-        print: handlePrint,
-        'drive-folder': promptForDriveFolder,
+        login: handleSignInClick,
+        open: openDriveFile,
+        'save-new': saveAsNewFile,
+        overwrite: overwriteFile,
+        logout: handleSignOutClick,
       },
     });
   }

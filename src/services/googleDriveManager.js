@@ -1,16 +1,19 @@
 /**
  * Manages interactions with Google Drive and Google Sign-In.
  */
+export const DRIVE_FOLDER_NAME = 'AioniaCS';
+
 export class GoogleDriveManager {
   constructor(apiKey, clientId) {
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-    this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
+    this.scope = 'https://www.googleapis.com/auth/drive.file';
     this.gapiLoadedCallback = null;
     this.gisLoadedCallback = null;
     this.tokenClient = null;
     this.pickerApiLoaded = false;
+    this.appFolderId = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
@@ -142,7 +145,7 @@ export class GoogleDriveManager {
    * @param {string} folderName - The name for the new folder.
    * @returns {Promise<string|null>} The ID of the created folder, or null on error.
    */
-  async createFolder(folderName) {
+  async createFolder(folderName, parentId = 'root') {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded.');
       return null;
@@ -152,6 +155,7 @@ export class GoogleDriveManager {
         resource: {
           name: folderName,
           mimeType: 'application/vnd.google-apps.folder',
+          parents: parentId ? [parentId] : undefined,
         },
         fields: 'id, name',
       });
@@ -168,14 +172,14 @@ export class GoogleDriveManager {
    * @param {string} folderName - The name of the folder to find.
    * @returns {Promise<string|null>} The ID of the folder if found, otherwise null.
    */
-  async findFolder(folderName) {
+  async findFolder(folderName, parentId = 'root') {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded.');
       return null;
     }
     try {
       const response = await gapi.client.drive.files.list({
-        q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`,
+        q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and '${parentId}' in parents and trashed=false`,
         fields: 'files(id, name)',
         spaces: 'drive',
       });
@@ -198,20 +202,31 @@ export class GoogleDriveManager {
    * @param {string} appFolderName - The name of the folder.
    * @returns {Promise<string|null>} The folder ID, or null on error.
    */
-  async getOrCreateAppFolder(appFolderName) {
+  async ensureAppFolder() {
+    if (this.appFolderId) {
+      return this.appFolderId;
+    }
+
     if (!gapi.client || !gapi.client.drive) {
-      console.error('GAPI client or Drive API not loaded for getOrCreateAppFolder.');
+      console.error('GAPI client or Drive API not loaded for ensureAppFolder.');
       return null;
     }
+
     try {
-      let folderId = await this.findFolder(appFolderName);
-      if (!folderId) {
-        console.log(`Folder "${appFolderName}" not found, creating it.`);
-        folderId = await this.createFolder(appFolderName);
+      const existingFolder = await this.findFolder(DRIVE_FOLDER_NAME);
+      if (existingFolder && existingFolder.id) {
+        this.appFolderId = existingFolder.id;
+        return this.appFolderId;
       }
-      return folderId;
+      const createdFolder = await this.createFolder(DRIVE_FOLDER_NAME);
+      if (createdFolder && createdFolder.id) {
+        this.appFolderId = createdFolder.id;
+        return this.appFolderId;
+      }
+      console.error('Failed to create Drive folder.');
+      return null;
     } catch (error) {
-      console.error(`Error in getOrCreateAppFolder for "${appFolderName}":`, error);
+      console.error('Error ensuring Drive folder:', error);
       return null;
     }
   }
@@ -222,16 +237,19 @@ export class GoogleDriveManager {
    * @param {string} mimeType - The MIME type of files to list.
    * @returns {Promise<Array<{id: string, name: string}>>} A list of files, or empty array on error.
    */
-  async listFiles(folderId, mimeType = 'application/json') {
+  async listFiles(folderId = null, mimeType = 'application/json') {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for listFiles.');
       return [];
     }
     try {
+      const targetFolderId = folderId || (await this.ensureAppFolder());
+      if (!targetFolderId) return [];
       const response = await gapi.client.drive.files.list({
-        q: `'${folderId}' in parents and mimeType='${mimeType}' and trashed=false`,
-        fields: 'files(id, name)',
+        q: `'${targetFolderId}' in parents and mimeType='${mimeType}' and trashed=false`,
+        fields: 'files(id, name, modifiedTime)',
         spaces: 'drive',
+        orderBy: 'modifiedTime desc',
       });
       return response.result.files || [];
     } catch (error) {
@@ -253,6 +271,8 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
     }
+
+    const targetFolderId = fileId ? null : folderId || (await this.ensureAppFolder());
 
     if (fileId) {
       try {
@@ -306,9 +326,11 @@ export class GoogleDriveManager {
       const contentType = 'application/json';
       const metadata = {
         name: fileName,
-        parents: [folderId],
         mimeType: contentType,
       };
+      if (targetFolderId) {
+        metadata.parents = [targetFolderId];
+      }
 
       const multipartRequestBody =
         delimiter +
@@ -514,89 +536,6 @@ export class GoogleDriveManager {
    * Ensures the character index file exists in appDataFolder.
    * @returns {Promise<{id:string,name:string}|null>} index file info
    */
-  async ensureIndexFile() {
-    const fileList =
-      (
-        await gapi.client.drive.files.list({
-          q: "name='character_index.json' and trashed=false",
-          spaces: 'appDataFolder',
-          fields: 'files(id,name)',
-        })
-      ).result.files || [];
-
-    if (fileList.length > 0) {
-      this.indexFileId = fileList[0].id;
-      return fileList[0];
-    }
-
-    const created = await this.saveFile('appDataFolder', 'character_index.json', '[]');
-    if (created) this.indexFileId = created.id;
-    return created;
-  }
-
-  /**
-   * Reads and parses the character index file.
-   * @returns {Promise<Array>}
-   */
-  async readIndexFile() {
-    const info = await this.ensureIndexFile();
-    if (!info) return [];
-    const content = await this.loadFileContent(info.id);
-    try {
-      return JSON.parse(content || '[]');
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Writes the given index array back to the index file.
-   * @param {Array} indexData
-   */
-  async writeIndexFile(indexData) {
-    const info = await this.ensureIndexFile();
-    if (!info) return null;
-    return this.saveFile('appDataFolder', 'character_index.json', JSON.stringify(indexData, null, 2), info.id);
-  }
-
-  async addIndexEntry(entry) {
-    const index = await this.readIndexFile();
-    index.push({ ...entry, updatedAt: new Date().toISOString() });
-    await this.writeIndexFile(index);
-  }
-
-  async renameIndexEntry(id, newName) {
-    const index = await this.readIndexFile();
-    index.forEach((e) => {
-      if (e.id === id) {
-        e.characterName = newName;
-        e.updatedAt = new Date().toISOString();
-      }
-    });
-    await this.writeIndexFile(index);
-  }
-
-  async removeIndexEntry(id) {
-    const index = await this.readIndexFile();
-    const filtered = index.filter((e) => e.id !== id);
-    await this.writeIndexFile(filtered);
-  }
-
-  /**
-   * Creates a character data file in appDataFolder.
-   * @param {object} data character JSON object
-   * @param {string} name file name
-   */
-  async createCharacterFile(data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2));
-  }
-
-  async updateCharacterFile(id, data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile('appDataFolder', fileName, JSON.stringify(data, null, 2), id);
-  }
-
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
     return content ? JSON.parse(content) : null;
@@ -605,7 +544,6 @@ export class GoogleDriveManager {
   async deleteCharacterFile(id) {
     if (!gapi.client || !gapi.client.drive) return null;
     await gapi.client.drive.files.delete({ fileId: id });
-    await this.removeIndexEntry(id);
   }
 }
 

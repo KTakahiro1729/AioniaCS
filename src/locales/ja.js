@@ -154,12 +154,14 @@ export const messages = {
       shareFailed: '共有リンク生成失敗',
       io: {
         title: '入出力',
-        buttons: {
-          saveLocal: '端末保存',
-          loadLocal: '端末読込',
-          output: '駒出力',
-          print: '印刷',
-          driveFolder: 'フォルダ変更',
+        google: {
+          description: (folderName) =>
+            `Google Driveにサインインするとマイドライブ直下に${folderName}フォルダが自動で作成され、キャラクターシートを保存できます。`,
+          login: 'Googleでログイン',
+          open: 'ファイルを開く',
+          saveNew: '新規保存',
+          overwrite: '上書き保存',
+          logout: 'ログアウト',
         },
       },
     },

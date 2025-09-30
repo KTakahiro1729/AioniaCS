@@ -1,13 +1,10 @@
 import { setActivePinia, createPinia } from 'pinia';
+import { vi } from 'vitest';
 import { useAppModals } from '../../../src/composables/useAppModals.js';
 import { useModal } from '../../../src/composables/useModal.js';
-import { isDesktopDevice } from '../../../src/utils/device.js';
 
 vi.mock('../../../src/composables/useModal.js', () => ({
   useModal: vi.fn(),
-}));
-vi.mock('../../../src/utils/device.js', () => ({
-  isDesktopDevice: vi.fn(),
 }));
 
 describe('useAppModals', () => {
@@ -17,53 +14,35 @@ describe('useAppModals', () => {
     useModal.mockReturnValue({ showModal: vi.fn().mockResolvedValue(null) });
   });
 
-  test('desktop uses direct print', async () => {
-    isDesktopDevice.mockReturnValue(true);
-    const printCharacterSheet = vi.fn();
-    const openPreviewPage = vi.fn();
-    const { openIoModal } = useAppModals({
-      dataManager: {},
-      loadCharacterById: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
-      handleSignInClick: vi.fn(),
-      handleSignOutClick: vi.fn(),
-      refreshHubList: vi.fn(),
-      saveNewCharacter: vi.fn(),
-      saveData: vi.fn(),
-      handleFileUpload: vi.fn(),
-      outputToCocofolia: vi.fn(),
-      printCharacterSheet,
-      openPreviewPage,
-      promptForDriveFolder: vi.fn(),
-      copyEditCallback: vi.fn(),
-    });
-    await openIoModal();
-    const args = useModal.mock.results[0].value.showModal.mock.calls[0][0];
-    expect(args.on.print).toBe(printCharacterSheet);
-  });
+  test('openIoModal wires drive handlers', async () => {
+    const handleSignInClick = vi.fn();
+    const handleSignOutClick = vi.fn();
+    const openDriveFile = vi.fn();
+    const saveAsNewFile = vi.fn();
+    const overwriteFile = vi.fn();
 
-  test('mobile uses preview page', async () => {
-    isDesktopDevice.mockReturnValue(false);
-    const printCharacterSheet = vi.fn();
-    const openPreviewPage = vi.fn();
     const { openIoModal } = useAppModals({
       dataManager: {},
       loadCharacterById: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
-      handleSignInClick: vi.fn(),
-      handleSignOutClick: vi.fn(),
+      saveFile: vi.fn(),
+      handleSignInClick,
+      handleSignOutClick,
       refreshHubList: vi.fn(),
       saveNewCharacter: vi.fn(),
-      saveData: vi.fn(),
-      handleFileUpload: vi.fn(),
-      outputToCocofolia: vi.fn(),
-      printCharacterSheet,
-      openPreviewPage,
-      promptForDriveFolder: vi.fn(),
+      openDriveFile,
+      saveAsNewFile,
+      overwriteFile,
+      canOverwrite: () => true,
       copyEditCallback: vi.fn(),
     });
+
     await openIoModal();
     const args = useModal.mock.results[0].value.showModal.mock.calls[0][0];
-    expect(args.on.print).toBe(openPreviewPage);
+
+    expect(args.on.login).toBe(handleSignInClick);
+    expect(args.on.logout).toBe(handleSignOutClick);
+    expect(args.on.open).toBe(openDriveFile);
+    expect(args.on['save-new']).toBe(saveAsNewFile);
+    expect(args.on.overwrite).toBe(overwriteFile);
   });
 });
