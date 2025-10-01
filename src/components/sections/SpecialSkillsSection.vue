@@ -2,9 +2,18 @@
   <div id="special_skills" class="special-skills">
     <div class="box-title">特技</div>
     <div class="box-content">
+      <ul class="list-reset">
+        <li class="base-list-header special-skill-list-header">
+          <div class="flex-item-delete"></div>
+          <div class="flex-item-group">種類</div>
+          <div class="flex-item-name">名称</div>
+          <div class="flex-item-acquired">獲得</div>
+          <div class="flex-item-exp">報酬</div>
+        </li>
+      </ul>
       <ul class="list-reset special-skills-list">
         <li v-for="(specialSkill, index) in localSpecialSkills" :key="index" class="base-list-item special-skill-item">
-          <div class="delete-button-wrapper" v-if="!uiStore.isViewingShared">
+          <div class="delete-button-wrapper flex-item-delete" v-if="!uiStore.isViewingShared">
             <button
               type="button"
               class="button-base list-button list-button--delete"
@@ -20,7 +29,7 @@
               <select
                 v-model="specialSkill.group"
                 @change="updateSpecialSkillOptions(index)"
-                class="flex-item-1"
+                class="flex-item-group"
                 :disabled="uiStore.isViewingShared"
               >
                 <option v-for="option in AioniaGameData.specialSkillGroupOptions" :key="option.value" :value="option.value">
@@ -31,7 +40,7 @@
                 v-if="specialSkill.group === 'free'"
                 type="text"
                 v-model="specialSkill.name"
-                class="flex-item-2"
+                class="flex-item-name"
                 :disabled="uiStore.isViewingShared"
               />
               <select
@@ -39,11 +48,25 @@
                 v-model="specialSkill.name"
                 @change="updateSpecialSkillNoteVisibility(index)"
                 :disabled="!specialSkill.group || uiStore.isViewingShared"
-                class="flex-item-2"
+                class="flex-item-name"
+                u
               >
                 <option value="">---</option>
                 <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
+              <select v-model="specialSkill.acquired" class="flex-item-acquired" :disabled="!specialSkill.group || uiStore.isViewingShared">
+                <option
+                  v-for="option in characterStore.acquisitionOptionsForSpecialSkills"
+                  :key="option.value"
+                  :value="option.value"
+                  :disabled="option.disabled"
+                >
+                  {{ option.text }}
+                </option>
+              </select>
+              <div class="flex-item-exp">
+                <input type="checkbox" v-model="specialSkill.excludeFromExp" :disabled="!specialSkill.group || uiStore.isViewingShared" />
+              </div>
             </div>
             <textarea
               v-if="specialSkill.group === 'free'"
@@ -121,6 +144,43 @@ function updateSpecialSkillNoteVisibility(index) {
 </script>
 
 <style scoped>
+.special-skill-list-header {
+  display: flex;
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+  padding: 0 5px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.special-skill-item .flex-group {
+  align-items: center;
+}
+
+.flex-item-delete {
+  width: 30px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.flex-item-group {
+  flex: 2;
+  max-width: 100px;
+  margin-right: 1px;
+}
+.flex-item-name {
+  flex: 3;
+  margin-right: 1px;
+}
+.flex-item-acquired {
+  flex: 2;
+  margin-right: 1px;
+}
+.flex-item-exp {
+  width: 30px;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
 .special-skill-note-input {
   margin-top: 3px;
 }

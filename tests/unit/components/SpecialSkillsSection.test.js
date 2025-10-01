@@ -15,8 +15,8 @@ describe('SpecialSkillsSection', () => {
     const store = useCharacterStore();
     const item = store.specialSkills[0];
 
-    const groupSelect = wrapper.findAll('select.flex-item-1')[0];
-    const nameSelect = wrapper.findAll('select.flex-item-2')[0];
+    const groupSelect = wrapper.findAll('select.flex-item-group')[0];
+    const nameSelect = wrapper.findAll('select.flex-item-name')[0];
     const noteInput = wrapper.findAll('input.special-skill-note-input')[0];
 
     await groupSelect.setValue('magic');

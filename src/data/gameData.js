@@ -226,11 +226,11 @@ export const AioniaGameData = {
 
   // 特技グループ選択肢
   specialSkillGroupOptions: [
-    { value: '', label: '種類を選択' },
+    { value: '', label: '種類' },
     { value: 'tactics', label: '戦術' },
     { value: 'magic', label: '魔術' },
     { value: 'features', label: '特徴' },
-    { value: 'free', label: '自由入力' },
+    { value: 'free', label: '自由' },
   ],
 
   // 種族ラベルマップ
