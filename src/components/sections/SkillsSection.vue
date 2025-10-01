@@ -47,15 +47,15 @@
 </template>
 
 <script setup>
-import { useSkillsManagement } from '../../composables/features/useSkillsManagement.js';
+import { AioniaGameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 const localSkills = characterStore.skills;
-
-const { expertPlaceholder } = useSkillsManagement();
+const expertPlaceholder = (skill) =>
+  skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
 </script>
 
 <style scoped>
