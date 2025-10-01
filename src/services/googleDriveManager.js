@@ -99,8 +99,8 @@ export class GoogleDriveManager {
         }
         [currentId] = parents;
       } catch (error) {
-        console.error('Error resolving folder path:', error);
-        return null;
+        console.log('Error resolving folder path:', error);
+        break;
       }
     }
 

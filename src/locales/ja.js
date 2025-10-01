@@ -130,7 +130,7 @@ export const messages = {
       }),
     },
     driveFolder: {
-      changeButton: '変更',
+      changeButton: '選択',
     },
   },
   image: {

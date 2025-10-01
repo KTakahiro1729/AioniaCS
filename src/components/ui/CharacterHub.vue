@@ -176,7 +176,9 @@ async function openFolderPicker() {
 .character-hub--change-button {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-  padding-inline: 14px;
+  padding-inline: 5px;
+  padding:5px;
+  height:unset;
   font-size: 0.95rem;
   font-weight: 600;
   white-space: nowrap;
