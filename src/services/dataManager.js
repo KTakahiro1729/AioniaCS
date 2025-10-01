@@ -670,6 +670,9 @@ export class DataManager {
           name: loadedSS.name || '',
           note: loadedSS.note || '',
           showNote: this.gameData.specialSkillsRequiringNote.includes(loadedSS.name || ''),
+          acquired:
+            Object.prototype.hasOwnProperty.call(loadedSS, 'acquired') && loadedSS.acquired !== undefined ? loadedSS.acquired : '作成時',
+          excludeFromExp: !!loadedSS.excludeFromExp,
         });
       } else {
         // Fill with empty special skill objects if loaded data is shorter
@@ -678,6 +681,8 @@ export class DataManager {
           name: '',
           note: '',
           showNote: false,
+          acquired: '作成時',
+          excludeFromExp: false,
         });
       }
     }

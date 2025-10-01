@@ -31,10 +31,12 @@ export function useExperienceCalculation(character, skills, specialSkills, histo
       }
       return sum;
     }, 0);
-    const specialSkillExp = specialSkills.reduce(
-      (sum, ss) => sum + (ss.name && ss.name.trim() !== '' ? AioniaGameData.experiencePointValues.specialSkill : 0),
-      0,
-    );
+    const specialSkillExp = specialSkills.reduce((sum, ss) => {
+      if (ss.excludeFromExp) {
+        return sum;
+      }
+      return sum + (ss.name && ss.name.trim() !== '' ? AioniaGameData.experiencePointValues.specialSkill : 0);
+    }, 0);
     return skillExp + expertExp + specialSkillExp;
   });
 

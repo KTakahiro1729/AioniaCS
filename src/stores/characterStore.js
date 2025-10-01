@@ -13,10 +13,21 @@ function baseSkills() {
   return deepClone(AioniaGameData.baseSkills);
 }
 
+function createSpecialSkill() {
+  return {
+    group: '',
+    name: '',
+    note: '',
+    showNote: false,
+    acquired: '作成時',
+    excludeFromExp: false,
+  };
+}
+
 function baseSpecialSkills() {
   return Array(AioniaGameData.config.initialSpecialSkillCount)
     .fill(null)
-    .map(() => ({ group: '', name: '', note: '', showNote: false }));
+    .map(() => createSpecialSkill());
 }
 
 function baseEquipments() {
@@ -80,10 +91,12 @@ export const useCharacterStore = defineStore('character', {
         }
         return sum;
       }, 0);
-      const specialSkillExp = state.specialSkills.reduce(
-        (sum, ss) => sum + (ss.name && ss.name.trim() !== '' ? AioniaGameData.experiencePointValues.specialSkill : 0),
-        0,
-      );
+      const specialSkillExp = state.specialSkills.reduce((sum, ss) => {
+        if (ss.excludeFromExp) {
+          return sum;
+        }
+        return sum + (ss.name && ss.name.trim() !== '' ? AioniaGameData.experiencePointValues.specialSkill : 0);
+      }, 0);
       return skillExp + expertExp + specialSkillExp;
     },
     currentWeight(state) {
@@ -113,6 +126,26 @@ export const useCharacterStore = defineStore('character', {
       };
       return defaultOptions.concat(sessionOptions, helpOption);
     },
+    acquisitionOptionsForSpecialSkills(state) {
+      const defaultOptions = [
+        { value: '--', text: '--', disabled: false },
+        { value: '作成時', text: '作成時', disabled: false },
+        { value: '幕間', text: '幕間', disabled: false },
+      ];
+      const sessionOptions = state.histories
+        .map((h) => h.sessionName)
+        .filter((name) => name && name.trim() !== '')
+        .map((name) => ({ value: name, text: name, disabled: false }));
+      const uniqueSessionOptions = sessionOptions.filter(
+        (option, index, array) => array.findIndex((item) => item.value === option.value) === index,
+      );
+      const helpOption = {
+        value: 'help-text-special-skills',
+        text: messages.weaknessDropdownHelp,
+        disabled: true,
+      };
+      return defaultOptions.concat(uniqueSessionOptions, helpOption);
+    },
   },
   actions: {
     _manageListItem({ list, action, index, newItemFactory, hasContentChecker, maxLength }) {
@@ -133,12 +166,7 @@ export const useCharacterStore = defineStore('character', {
       this._manageListItem({
         list: this.specialSkills,
         action: 'add',
-        newItemFactory: () => ({
-          group: '',
-          name: '',
-          note: '',
-          showNote: false,
-        }),
+        newItemFactory: () => createSpecialSkill(),
         maxLength: AioniaGameData.config.maxSpecialSkills,
       });
     },
@@ -147,12 +175,7 @@ export const useCharacterStore = defineStore('character', {
         list: this.specialSkills,
         action: 'remove',
         index,
-        newItemFactory: () => ({
-          group: '',
-          name: '',
-          note: '',
-          showNote: false,
-        }),
+        newItemFactory: () => createSpecialSkill(),
         hasContentChecker: (ss) => !!(ss.group || ss.name || ss.note),
       });
     },
