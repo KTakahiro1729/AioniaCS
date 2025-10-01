@@ -129,6 +129,9 @@ export const messages = {
         message: err.message || '',
       }),
     },
+    driveFolder: {
+      changeButton: '選択',
+    },
   },
   image: {
     loadError: (err) => ({ title: '画像読み込み失敗', message: err.message }),

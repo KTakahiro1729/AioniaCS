@@ -22,6 +22,7 @@ export class MockGoogleDriveManager {
       folderCounter: 1,
       signedIn: false,
       config: this.getDefaultConfig(),
+      folderPickerQueue: [],
     };
 
     try {
@@ -30,6 +31,10 @@ export class MockGoogleDriveManager {
     } catch (error) {
       console.error('Failed to load mock state from localStorage, resetting.', error);
       this.state = defaultState;
+    }
+
+    if (!Array.isArray(this.state.folderPickerQueue)) {
+      this.state.folderPickerQueue = [];
     }
 
     this.configuredFolderId = null;
@@ -49,6 +54,7 @@ export class MockGoogleDriveManager {
       folderCounter: 1,
       signedIn: false,
       config: this.getDefaultConfig(),
+      folderPickerQueue: [],
     };
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
@@ -77,6 +83,36 @@ export class MockGoogleDriveManager {
 
   getFolderSegments(path) {
     return this.normalizeFolderPath(path).split('/');
+  }
+
+  buildFolderPath(folderId) {
+    const segments = [];
+    let current = this.state.folders[folderId];
+    while (current) {
+      segments.unshift(current.name);
+      current = this.state.folders[current.parentId];
+    }
+    return segments.join('/');
+  }
+
+  async ensureFolderPath(path) {
+    const normalized = this.normalizeFolderPath(path);
+    let parentId = 'root';
+    let currentFolder = null;
+
+    for (const segment of this.getFolderSegments(normalized)) {
+      let folder = await this.findFolder(segment, parentId);
+      if (!folder) {
+        folder = await this.createFolder(segment, parentId);
+      }
+      if (!folder) {
+        return { folder: null, normalized };
+      }
+      currentFolder = folder;
+      parentId = folder.id;
+    }
+
+    return { folder: currentFolder, normalized };
   }
 
   async onGapiLoad() {
@@ -145,23 +181,14 @@ export class MockGoogleDriveManager {
       return this.configuredFolderId;
     }
 
-    let parentId = 'root';
-    let currentId = null;
-    for (const segment of this.getFolderSegments(path)) {
-      let folder = await this.findFolder(segment, parentId);
-      if (!folder) {
-        folder = await this.createFolder(segment, parentId);
-      }
-      if (!folder) {
-        return null;
-      }
-      currentId = folder.id;
-      parentId = currentId;
+    const { folder, normalized } = await this.ensureFolderPath(path);
+    if (!folder) {
+      return null;
     }
-    this.configuredFolderId = currentId;
-    this.cachedFolderPath = path;
+    this.configuredFolderId = folder.id;
+    this.cachedFolderPath = normalized;
     this._saveState();
-    return currentId;
+    return folder.id;
   }
 
   async findOrCreateAioniaCSFolder() {
@@ -207,10 +234,30 @@ export class MockGoogleDriveManager {
   }
 
   showFolderPicker(callback) {
+    const queue = Array.isArray(this.state.folderPickerQueue) ? this.state.folderPickerQueue : [];
+    if (queue.length > 0) {
+      const targetPath = this.normalizeFolderPath(queue.shift());
+      this.state.folderPickerQueue = queue;
+      this._saveState();
+      this.ensureFolderPath(targetPath)
+        .then(({ folder, normalized }) => {
+          if (!folder) {
+            callback?.(new Error('No folders available.'));
+            return;
+          }
+          callback?.(null, { id: folder.id, name: folder.name, path: normalized });
+        })
+        .catch((error) => {
+          callback?.(error);
+        });
+      return;
+    }
+
     const folderId = this.configuredFolderId;
     if (folderId) {
       const folder = this.state.folders[folderId];
-      callback?.(null, { id: folder.id, name: folder.name });
+      const path = this.cachedFolderPath || this.buildFolderPath(folderId);
+      callback?.(null, { id: folder.id, name: folder.name, path: path || folder.name });
     } else {
       callback?.(new Error('No folders available.'));
     }

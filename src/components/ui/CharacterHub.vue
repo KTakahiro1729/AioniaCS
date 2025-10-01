@@ -4,16 +4,26 @@
       <div class="character-hub--actions">
         <div class="character-hub--config">
           <label class="character-hub--label" for="drive_folder_path">保存先フォルダ</label>
-          <input
-            id="drive_folder_path"
-            class="character-hub--input"
-            type="text"
-            v-model="folderPathInput"
-            :disabled="!uiStore.isSignedIn"
-            placeholder="慈悲なきアイオニア"
-            @blur="commitFolderPath"
-            @keyup.enter.prevent="commitFolderPath"
-          />
+          <div class="character-hub--input-group">
+            <input
+              id="drive_folder_path"
+              class="character-hub--input"
+              type="text"
+              v-model="folderPathInput"
+              :disabled="!uiStore.isSignedIn"
+              placeholder="慈悲なきアイオニア"
+              @blur="commitFolderPath"
+              @keyup.enter.prevent="commitFolderPath"
+            />
+            <button
+              type="button"
+              class="button-base character-hub--change-button"
+              :disabled="!isFolderPickerEnabled"
+              @click="openFolderPicker"
+            >
+              {{ changeFolderLabel }}
+            </button>
+          </div>
         </div>
         <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="loadCharacterFromDrive">
           Driveから読み込む
@@ -37,6 +47,7 @@
 import { computed, ref, watch } from 'vue';
 import { useUiStore } from '../../stores/uiStore.js';
 import { useGoogleDrive } from '../../composables/useGoogleDrive.js';
+import { messages } from '../../locales/ja.js';
 
 const props = defineProps({
   dataManager: {
@@ -54,11 +65,14 @@ const {
   isDriveReady,
   canSignInToGoogle,
   updateDriveFolderPath,
+  promptForDriveFolder,
 } = useGoogleDrive(props.dataManager);
 
 const canSignIn = computed(() => canSignInToGoogle.value);
 const isOverwriteEnabled = computed(() => isDriveReady.value && !!uiStore.currentDriveFileId);
 const folderPathInput = ref(uiStore.driveFolderPath);
+const changeFolderLabel = messages.characterHub.driveFolder.changeButton;
+const isFolderPickerEnabled = computed(() => isDriveReady.value && uiStore.isSignedIn);
 
 watch(
   () => uiStore.driveFolderPath,
@@ -105,6 +119,14 @@ async function commitFolderPath() {
   const normalized = await updateDriveFolderPath(desired);
   folderPathInput.value = normalized;
 }
+
+async function openFolderPicker() {
+  if (!isFolderPickerEnabled.value) {
+    return;
+  }
+  const selected = await promptForDriveFolder();
+  folderPathInput.value = selected;
+}
 </script>
 
 <style scoped>
@@ -127,11 +149,44 @@ async function commitFolderPath() {
 
 .character-hub--input {
   width: 100%;
+  flex: 1 1 auto;
   padding: 8px 10px;
   border-radius: 4px;
   border: 1px solid var(--color-border-normal);
   background-color: var(--color-panel-body);
   color: var(--color-text-primary, #fff);
+}
+
+.character-hub--input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.character-hub--input-group .character-hub--input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.character-hub--input-group .character-hub--input:disabled {
+  border-color: var(--color-border-normal);
+}
+
+.character-hub--change-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-inline: 5px;
+  padding:5px;
+  height:unset;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.character-hub--change-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .character-hub--input:disabled {

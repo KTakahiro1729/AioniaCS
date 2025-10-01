@@ -19,9 +19,6 @@
     <button class="button-base" @click="$emit('print')">
       {{ printLabel }}
     </button>
-    <button class="button-base" v-if="signedIn" @click="$emit('drive-folder')">
-      {{ driveFolderLabel }}
-    </button>
   </div>
 </template>
 
@@ -36,10 +33,9 @@ defineProps({
   outputLabels: Object,
   outputTimings: Object,
   printLabel: String,
-  driveFolderLabel: String,
 });
 
-defineEmits(['save-local', 'load-local', 'output-cocofolia', 'print', 'drive-folder']);
+defineEmits(['save-local', 'load-local', 'output-cocofolia', 'print']);
 
 const triggerKey = ref(0);
 function triggerAnimation() {

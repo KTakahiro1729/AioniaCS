@@ -181,10 +181,22 @@ test.describe('Character Sheet E2E Tests', () => {
     const folderInput = page.locator('#drive_folder_path');
     await expect(folderInput).toHaveValue('慈悲なきアイオニア');
 
-    const desiredPath = '慈悲なきアイオニア\\PC/第一キャンペーン';
-    await folderInput.fill(desiredPath);
-    await folderInput.blur();
-    await expect(folderInput).toHaveValue('慈悲なきアイオニア/PC/第一キャンペーン');
+    const desiredPath = '慈悲なきアイオニア/PC/第一キャンペーン';
+
+    await page.evaluate(async (path) => {
+      const module = await import('/src/services/mockGoogleDriveManager.js');
+      let manager;
+      try {
+        manager = module.getMockGoogleDriveManagerInstance();
+      } catch (error) {
+        manager = module.initializeMockGoogleDriveManager('', '');
+      }
+      manager.state.folderPickerQueue = [path];
+    }, desiredPath);
+
+    const changeButton = page.locator('.character-hub--change-button');
+    await changeButton.click();
+    await expect(folderInput).toHaveValue(desiredPath);
 
     await saveNewButton.click();
 
