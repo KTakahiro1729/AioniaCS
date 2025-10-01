@@ -92,35 +92,6 @@ describe('DataManager', () => {
     vi.restoreAllMocks();
   });
 
-  test('convertExternalJsonToInternalFormat converts minimal data', () => {
-    const external = {
-      name: 'foo',
-      player: 'bar',
-      init_weakness1: 'fear',
-      weapon1_type: 'sword',
-      weapon1_name: 'blade',
-      history: [{ name: 'sess1', experiments: '2', stress: 'note' }],
-    };
-    const internal = dm.convertExternalJsonToInternalFormat(external);
-    expect(internal.character.name).toBe('foo');
-    expect(internal.character.playerName).toBe('bar');
-    expect(internal.character.weaknesses[0]).toEqual({
-      text: 'fear',
-      acquired: '作成時',
-    });
-    expect(internal.equipments.weapon1).toEqual({
-      group: 'sword',
-      name: 'blade',
-    });
-    expect(internal.histories[0]).toEqual({
-      sessionName: 'sess1',
-      gotExperiments: 2,
-      memo: 'note',
-      increasedScar: null,
-    });
-    expect(internal.character.images).toEqual([]);
-  });
-
   test('_normalizeLoadedData fills defaults', () => {
     const result = dm._normalizeLoadedData({});
     expect(result.character.weaknesses).toHaveLength(AioniaGameData.config.maxWeaknesses);

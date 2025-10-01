@@ -357,98 +357,25 @@ export class DataManager {
    * @returns {Promise<Array>} Array of valid index entries
    */
   /**
-   * 外部JSONフォーマットを内部フォーマットに変換
-   */
-  convertExternalJsonToInternalFormat(externalData) {
-    const internalData = {
-      character: {
-        name: externalData.name || '',
-        playerName: externalData.player || '',
-        species: externalData.species || '',
-        rareSpecies: externalData.rare_species || '',
-        occupation: externalData.occupation || '',
-        age: externalData.age ? parseInt(externalData.age, 10) : null,
-        gender: externalData.gender || '',
-        height: externalData.height || '',
-        weight: externalData.weight || '',
-        origin: externalData.origin || '',
-        faith: externalData.faith || '',
-        otherItems: externalData.otherItems || '',
-        initialScar: externalData.init_scar ? parseInt(externalData.init_scar, 10) : 0,
-        currentScar: externalData.init_scar ? parseInt(externalData.init_scar, 10) : 0,
-        linkCurrentToInitialScar: typeof externalData.linkCurrentToInitialScar === 'boolean' ? externalData.linkCurrentToInitialScar : true,
-        memo: externalData.character_memo || '',
-        images: [], // Initialize images for external format
-        weaknesses: createWeaknessArray(this.gameData.config.maxWeaknesses),
-      },
-      skills: [],
-      specialSkills: [],
-      equipments: {
-        weapon1: { group: '', name: '' },
-        weapon2: { group: '', name: '' },
-        armor: { group: '', name: '' },
-      },
-      histories: [],
-    };
-
-    // 弱点データの変換
-    if (externalData.init_weakness1) {
-      internalData.character.weaknesses[0] = {
-        text: externalData.init_weakness1,
-        acquired: '作成時',
-      };
-    }
-    if (externalData.init_weakness2) {
-      internalData.character.weaknesses[1] = {
-        text: externalData.init_weakness2,
-        acquired: '作成時',
-      };
-    }
-
-    // スキルデータの変換
-    this._convertSkillsData(externalData, internalData);
-
-    // 特技データの変換
-    this._convertSpecialSkillsData(externalData, internalData);
-
-    // 装備データの変換
-    this._convertEquipmentData(externalData, internalData);
-
-    // 履歴データの変換
-    this._convertHistoryData(externalData, internalData);
-
-    return internalData;
-  }
-
-  /**
    * 読み込まれたデータを解析
    */
   parseLoadedData(rawJsonData) {
     let dataToParse = rawJsonData;
 
-    // フォーマット判定と変換
-    if (this._isExternalFormat(rawJsonData)) {
-      console.log('External JSON format (bright-trpg tool) detected, converting...');
-      dataToParse = this.convertExternalJsonToInternalFormat(rawJsonData);
-    } else if (this._isInternalFormat(rawJsonData)) {
-      console.log('Internal JSON format (this tool) detected.');
-      // If it's internal format but images are somehow missing in character, ensure it's there
+    if (this._isInternalFormat(rawJsonData)) {
       if (dataToParse.character && typeof dataToParse.character.images === 'undefined') {
         dataToParse.character.images = [];
       }
     } else {
       console.warn('Unknown JSON format, attempting to parse as is. Data integrity not guaranteed.');
-      // Refined logic for unknown format
-      let characterImages = []; // Default
+      let characterImages = [];
       if (rawJsonData && rawJsonData.character && Array.isArray(rawJsonData.character.images)) {
         characterImages = rawJsonData.character.images;
       } else if (rawJsonData && rawJsonData.character && typeof rawJsonData.character.images !== 'undefined') {
-        // It exists but is not an array, log warning or ignore, still use default empty array
         console.warn("Loaded character data has an 'images' property that is not an array. Defaulting to empty images array.");
       }
 
       dataToParse = {
-        // Ensure default structure for character if not present in rawJsonData
         character: {
           images: characterImages,
           ...(rawJsonData.character || {}),
@@ -457,11 +384,9 @@ export class DataManager {
         specialSkills: [],
         equipments: {},
         histories: [],
-        ...rawJsonData, // Spread rawJsonData, but character.images is now handled more carefully
+        ...rawJsonData,
       };
-      // Now, ensure character.images is an array after all spreads
       if (!dataToParse.character) {
-        // If rawJsonData completely overwrote character
         dataToParse.character = { images: [] };
       } else if (!Array.isArray(dataToParse.character.images)) {
         dataToParse.character.images = [];
@@ -471,13 +396,6 @@ export class DataManager {
   }
 
   // プライベートメソッド
-  _isExternalFormat(data) {
-    return (
-      data &&
-      typeof data.player !== 'undefined' && // bright-trpg tool has 'player'
-      typeof data.character_memo !== 'undefined'
-    ); // and 'character_memo'
-  }
 
   _isInternalFormat(data) {
     return (
@@ -485,97 +403,6 @@ export class DataManager {
       data.character && // This tool has a nested 'character' object
       typeof data.character.playerName !== 'undefined'
     ); // and 'playerName' inside 'character'
-  }
-
-  _convertSkillsData(externalData, internalData) {
-    if (externalData.skills && Array.isArray(externalData.skills)) {
-      this.gameData.externalSkillOrder.forEach((skillId, index) => {
-        const appSkillDefinition = this.gameData.baseSkills.find((s) => s.id === skillId);
-        if (appSkillDefinition && externalData.skills[index]) {
-          const externalSkill = externalData.skills[index];
-          const newSkill = {
-            id: appSkillDefinition.id,
-            name: appSkillDefinition.name,
-            checked: !!externalSkill.selected,
-            canHaveExperts: appSkillDefinition.canHaveExperts,
-            experts: [],
-          };
-
-          if (newSkill.checked && newSkill.canHaveExperts) {
-            if (externalSkill.expert_skills && externalSkill.expert_skills.length > 0) {
-              newSkill.experts = externalSkill.expert_skills.map((es) => ({ value: es || '' })).filter((e) => e.value);
-            }
-            if (newSkill.experts.length === 0) {
-              newSkill.experts.push({ value: '' });
-            }
-          } else if (newSkill.canHaveExperts) {
-            newSkill.experts.push({ value: '' });
-          }
-
-          internalData.skills.push(newSkill);
-        } else if (appSkillDefinition) {
-          // If external data is missing a skill, use default from app definition
-          internalData.skills.push(deepClone(appSkillDefinition));
-        }
-      });
-    } else {
-      // No skills in external data, use default app skills
-      internalData.skills = deepClone(this.gameData.baseSkills);
-    }
-  }
-
-  _convertSpecialSkillsData(externalData, internalData) {
-    if (externalData.special_skills && Array.isArray(externalData.special_skills)) {
-      internalData.specialSkills = externalData.special_skills
-        .filter((ss) => ss.group && ss.name) // Ensure basic validity
-        .map((ss) => ({
-          group: ss.group || '',
-          name: ss.name || '',
-          note: ss.note || '',
-          showNote: this.gameData.specialSkillsRequiringNote.includes(ss.name || ''),
-        }));
-    }
-    // If no special skills, it will remain an empty array from initialization
-  }
-
-  _convertEquipmentData(externalData, internalData) {
-    // Initialize with defaults, then override if data exists
-    internalData.equipments = {
-      weapon1: { group: '', name: '' },
-      weapon2: { group: '', name: '' },
-      armor: { group: '', name: '' },
-    };
-    if (externalData.weapon1_type || externalData.weapon1_name) {
-      internalData.equipments.weapon1 = {
-        group: externalData.weapon1_type || '',
-        name: externalData.weapon1_name || '',
-      };
-    }
-    if (externalData.weapon2_type || externalData.weapon2_name) {
-      internalData.equipments.weapon2 = {
-        group: externalData.weapon2_type || '',
-        name: externalData.weapon2_name || '',
-      };
-    }
-    if (externalData.armor_type || externalData.armor_name) {
-      internalData.equipments.armor = {
-        group: externalData.armor_type || '',
-        name: externalData.armor_name || '',
-      };
-    }
-  }
-
-  _convertHistoryData(externalData, internalData) {
-    if (externalData.history && Array.isArray(externalData.history)) {
-      internalData.histories = externalData.history.map((h) => ({
-        sessionName: h.name || '',
-        gotExperiments: h.experiments ? parseInt(h.experiments, 10) : null,
-        // Use 'memo' if present (from this tool's older format), otherwise 'stress' (from bright-trpg)
-        memo: h.memo || h.stress || '',
-        increasedScar: h.increasedScar ? parseInt(h.increasedScar, 10) : null,
-      }));
-    }
-    // If no history, it will remain an empty array from initialization
   }
 
   _normalizeLoadedData(dataToParse) {
