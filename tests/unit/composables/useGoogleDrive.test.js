@@ -9,6 +9,20 @@ vi.mock('../../../src/composables/useModal.js', () => ({
 
 import { useModal } from '../../../src/composables/useModal.js';
 
+function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
+  const showFolderPicker = vi.fn();
+  const setCharacterFolderPath = vi.fn().mockResolvedValue(normalizedPath);
+  const findOrCreateAioniaCSFolder = vi.fn().mockResolvedValue('folder-id');
+  const normalizeFolderPath = vi.fn((path) => path.replace(/\\/g, '/'));
+
+  return {
+    showFolderPicker,
+    setCharacterFolderPath,
+    findOrCreateAioniaCSFolder,
+    normalizeFolderPath,
+  };
+}
+
 describe('useGoogleDrive', () => {
   let showModalMock;
 
@@ -122,5 +136,36 @@ describe('useGoogleDrive', () => {
     expect(result).toEqual(loadData);
     expect(charStore.character.name).toBe('Explorer');
     expect(uiStore.currentDriveFileId).toBe('file-1');
+  });
+
+  test('promptForDriveFolder applies picker selection to drive path', async () => {
+    const desiredPath = '慈悲なきアイオニア/PC/第一キャンペーン';
+    const stubManager = createDriveManagerStub(desiredPath);
+    stubManager.showFolderPicker.mockImplementation((cb) => cb(null, { id: 'folder-1', name: '第一キャンペーン', path: desiredPath }));
+
+    const dataManager = {
+      googleDriveManager: stubManager,
+      setGoogleDriveManager(manager) {
+        Object.assign(manager, stubManager);
+        this.googleDriveManager = manager;
+      },
+      loadDataFromDrive: vi.fn(),
+      findDriveFileByCharacterName: vi.fn(),
+      saveDataToAppData: vi.fn(),
+    };
+
+    const { promptForDriveFolder } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
+    uiStore.setDriveFolderPath('慈悲なきアイオニア');
+
+    const selected = await promptForDriveFolder();
+
+    expect(stubManager.showFolderPicker).toHaveBeenCalled();
+    expect(stubManager.setCharacterFolderPath).toHaveBeenCalledWith(desiredPath);
+    expect(uiStore.driveFolderPath).toBe(desiredPath);
+    expect(selected).toBe(desiredPath);
   });
 });

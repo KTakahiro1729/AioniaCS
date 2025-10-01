@@ -71,18 +71,31 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
-  function promptForDriveFolder() {
+  async function promptForDriveFolder() {
+    if (!uiStore.isSignedIn) {
+      showToast({ type: 'error', ...messages.googleDrive.config.requiresSignIn() });
+      return uiStore.driveFolderPath;
+    }
     const gdm = dataManager.googleDriveManager;
-    if (!gdm) return;
-    gdm.showFolderPicker((err, folder) => {
-      if (err || !folder) {
-        showToast({
-          type: 'error',
-          ...messages.googleDrive.folderPicker.error(err),
-        });
-        return;
-      }
-      updateDriveFolderPath(folder.name);
+    if (!gdm || typeof gdm.showFolderPicker !== 'function') {
+      showToast({ type: 'error', ...messages.googleDrive.folderPicker.error(new Error('Picker unavailable')) });
+      return uiStore.driveFolderPath;
+    }
+
+    return new Promise((resolve) => {
+      gdm.showFolderPicker(async (err, folder) => {
+        if (err || !folder) {
+          showToast({
+            type: 'error',
+            ...messages.googleDrive.folderPicker.error(err),
+          });
+          resolve(uiStore.driveFolderPath);
+          return;
+        }
+        const targetPath = folder.path || folder.name;
+        const normalized = await updateDriveFolderPath(targetPath);
+        resolve(normalized);
+      });
     });
   }
 
@@ -109,10 +122,22 @@ export function useGoogleDrive(dataManager) {
       showToast({ type: 'error', ...messages.googleDrive.config.requiresSignIn() });
       return uiStore.driveFolderPath;
     }
+    const normalizer =
+      typeof googleDriveManager.value.normalizeFolderPath === 'function' ? googleDriveManager.value.normalizeFolderPath(path) : path;
+
+    if (normalizer === uiStore.driveFolderPath) {
+      if (typeof googleDriveManager.value.findOrCreateAioniaCSFolder === 'function') {
+        await googleDriveManager.value.findOrCreateAioniaCSFolder();
+      }
+      return normalizer;
+    }
+
     try {
       const normalized = await googleDriveManager.value.setCharacterFolderPath(path);
       uiStore.setDriveFolderPath(normalized);
-      await googleDriveManager.value.findOrCreateAioniaCSFolder();
+      if (typeof googleDriveManager.value.findOrCreateAioniaCSFolder === 'function') {
+        await googleDriveManager.value.findOrCreateAioniaCSFolder();
+      }
       showToast({ type: 'success', ...messages.googleDrive.config.updateSuccess() });
       return normalized;
     } catch (error) {

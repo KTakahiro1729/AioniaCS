@@ -36,7 +36,6 @@ const {
   canSignInToGoogle,
   handleSignInClick,
   handleSignOutClick,
-  promptForDriveFolder,
   saveCharacterToDrive,
   saveOrUpdateCurrentCharacterInDrive,
 } = useGoogleDrive(dataManager);
@@ -58,7 +57,6 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
   outputToCocofolia,
   printCharacterSheet,
   openPreviewPage,
-  promptForDriveFolder,
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },

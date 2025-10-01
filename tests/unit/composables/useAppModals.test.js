@@ -32,7 +32,6 @@ describe('useAppModals', () => {
       outputToCocofolia: vi.fn(),
       printCharacterSheet: vi.fn(),
       openPreviewPage: vi.fn(),
-      promptForDriveFolder: vi.fn(),
       copyEditCallback: vi.fn(),
     });
     await openHub();
@@ -54,7 +53,6 @@ describe('useAppModals', () => {
       outputToCocofolia: vi.fn(),
       printCharacterSheet,
       openPreviewPage,
-      promptForDriveFolder: vi.fn(),
       copyEditCallback: vi.fn(),
     });
     await openIoModal();
@@ -75,7 +73,6 @@ describe('useAppModals', () => {
       outputToCocofolia: vi.fn(),
       printCharacterSheet,
       openPreviewPage,
-      promptForDriveFolder: vi.fn(),
       copyEditCallback: vi.fn(),
     });
     await openIoModal();

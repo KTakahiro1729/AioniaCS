@@ -56,6 +56,61 @@ export class GoogleDriveManager {
     return this.normalizeFolderPath(path).split('/');
   }
 
+  async buildFolderPathFromId(folderId) {
+    if (!folderId) {
+      return null;
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for buildFolderPathFromId.');
+      return null;
+    }
+
+    const segments = [];
+    let currentId = folderId;
+    const visited = new Set();
+    let iterations = 0;
+    const maxDepth = 50;
+
+    while (currentId && currentId !== 'root' && iterations < maxDepth) {
+      if (visited.has(currentId)) {
+        break;
+      }
+      visited.add(currentId);
+      iterations += 1;
+
+      try {
+        const response = await gapi.client.drive.files.get({
+          fileId: currentId,
+          fields: 'id, name, parents',
+        });
+        const file = response.result;
+        if (!file) {
+          break;
+        }
+        if (file.name) {
+          segments.unshift(file.name);
+        }
+        const parents = Array.isArray(file.parents) ? file.parents : [];
+        if (parents.length === 0) {
+          break;
+        }
+        if (parents.includes('root')) {
+          break;
+        }
+        [currentId] = parents;
+      } catch (error) {
+        console.error('Error resolving folder path:', error);
+        return null;
+      }
+    }
+
+    if (segments.length === 0) {
+      return null;
+    }
+
+    return this.normalizeFolderPath(segments.join('/'));
+  }
+
   async loadConfig() {
     if (this.config) {
       return this.config;
@@ -725,10 +780,16 @@ export class GoogleDriveManager {
       return;
     }
 
-    const pickerCallback = (data) => {
+    const pickerCallback = async (data) => {
       if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
         const folder = data[google.picker.Response.DOCUMENTS][0];
-        if (callback) callback(null, { id: folder.id, name: folder.name });
+        try {
+          const path = await this.buildFolderPathFromId(folder.id);
+          if (callback) callback(null, { id: folder.id, name: folder.name, path: path || folder.name });
+        } catch (error) {
+          console.error('Error resolving selected folder path:', error);
+          if (callback) callback(error);
+        }
       } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
         console.log('Folder Picker cancelled by user.');
         if (callback) callback(new Error('Folder Picker cancelled by user.'));
