@@ -63,6 +63,13 @@ watch(
   (val) => {
     updatingFromParent = true;
     imagesInternal.value = [...val];
+    if (imagesInternal.value.length === 0) {
+      currentImageIndex.value = -1;
+    } else if (currentImageIndex.value >= imagesInternal.value.length) {
+      currentImageIndex.value = imagesInternal.value.length - 1;
+    } else if (currentImageIndex.value < 0) {
+      currentImageIndex.value = 0;
+    }
     nextTick(() => {
       updatingFromParent = false;
     });
