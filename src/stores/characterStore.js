@@ -19,8 +19,7 @@ function createSpecialSkill() {
     name: '',
     note: '',
     showNote: false,
-    acquired: '作成時',
-    excludeFromExp: false,
+    acquired: '経験点消費',
   };
 }
 
@@ -90,7 +89,8 @@ export const useCharacterStore = defineStore('character', {
         return sum;
       }, 0);
       const specialSkillExp = state.specialSkills.reduce(
-        (sum, ss) => sum + (ss.name && ss.name.trim() !== '' && !ss.excludeFromExp ? AioniaGameData.experiencePointValues.specialSkill : 0),
+        (sum, ss) =>
+          sum + (ss.name && ss.name.trim() !== '' && ss.acquired === '経験点消費' ? AioniaGameData.experiencePointValues.specialSkill : 0),
         0,
       );
       return skillExp + expertExp + specialSkillExp;
@@ -123,17 +123,14 @@ export const useCharacterStore = defineStore('character', {
       return defaultOptions.concat(sessionOptions, helpOption);
     },
     acquisitionOptionsForSpecialSkills(state) {
-      const staticOptions = [
-        { value: '作成時', text: '作成時', disabled: false },
-        { value: '幕間', text: '幕間', disabled: false },
-      ];
+      const staticOptions = [{ value: '経験点消費', text: '経験点消費', disabled: false }];
       const sessionOptions = state.histories
         .map((h) => h.sessionName)
         .filter((name) => name && name.trim() !== '')
         .map((name) => ({ value: name, text: name, disabled: false }));
       const helpOption = {
         value: 'help-text',
-        text: messages.weaknessDropdownHelp,
+        text: messages.specialSkillDropdownHelp,
         disabled: true,
       };
       return [...staticOptions, ...sessionOptions, helpOption];

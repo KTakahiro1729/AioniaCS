@@ -8,7 +8,6 @@
           <div class="flex-item-group">種類</div>
           <div class="flex-item-name">名称</div>
           <div class="flex-item-acquired">獲得</div>
-          <div class="flex-item-exp">報酬</div>
         </li>
       </ul>
       <ul class="list-reset special-skills-list">
@@ -64,9 +63,6 @@
                   {{ option.text }}
                 </option>
               </select>
-              <div class="flex-item-exp">
-                <input type="checkbox" v-model="specialSkill.excludeFromExp" :disabled="!specialSkill.group || uiStore.isViewingShared" />
-              </div>
             </div>
             <textarea
               v-if="specialSkill.group === 'free'"

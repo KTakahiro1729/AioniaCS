@@ -204,4 +204,5 @@ export const messages = {
     },
   },
   weaknessDropdownHelp: '（冒険の記録を追加すると選択肢が増えます）',
+  specialSkillDropdownHelp: '（シナリオ報酬の場合はシナリオ名を選択）',
 };
