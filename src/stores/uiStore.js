@@ -13,6 +13,8 @@ export const useUiStore = defineStore('ui', {
     isViewingShared: false,
     pendingDriveSaves: {},
     showHeader: true,
+    showSpecialSkillDescriptions: false,
+    showItemDescriptions: false,
   }),
   getters: {
     experienceStatusClass() {

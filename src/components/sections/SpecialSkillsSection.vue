@@ -1,6 +1,14 @@
 <template>
   <div id="special_skills" class="special-skills">
-    <div class="box-title">特技</div>
+    <div class="box-title">
+      <div class="box-title-main">
+        <span class="box-title-text">特技</span>
+        <label class="description-toggle">
+          <input type="checkbox" v-model="uiStore.showSpecialSkillDescriptions" />
+          説明を表示
+        </label>
+      </div>
+    </div>
     <div class="box-content">
       <ul class="list-reset">
         <li class="base-list-header special-skill-list-header">
@@ -48,7 +56,7 @@
                 @change="updateSpecialSkillNoteVisibility(index)"
                 :disabled="!specialSkill.group || uiStore.isViewingShared"
                 class="flex-item-name"
-                u
+                :title="getSpecialSkillDescription(specialSkill)"
               >
                 <option value="">---</option>
                 <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -80,6 +88,16 @@
               :placeholder="AioniaGameData.placeholderTexts.specialSkillNote"
               :disabled="uiStore.isViewingShared"
             />
+            <textarea
+              v-if="
+                uiStore.showSpecialSkillDescriptions &&
+                specialSkill.group !== 'free' &&
+                getSpecialSkillDescription(specialSkill)
+              "
+              class="special-skill-description"
+              :value="getSpecialSkillDescription(specialSkill)"
+              readonly
+            ></textarea>
           </div>
         </li>
       </ul>
@@ -101,6 +119,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { AioniaGameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
@@ -109,6 +128,17 @@ const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 const localSpecialSkills = characterStore.specialSkills;
 
+const specialSkillDescriptionMap = computed(() => {
+  const map = {};
+  Object.entries(AioniaGameData.specialSkillData).forEach(([group, skills]) => {
+    map[group] = skills.reduce((acc, skill) => {
+      acc[skill.value] = skill.description || '';
+      return acc;
+    }, {});
+  });
+  return map;
+});
+
 function hasSpecialSkillContent(ss) {
   return !!(ss.group || ss.name || ss.note);
 }
@@ -116,6 +146,13 @@ function hasSpecialSkillContent(ss) {
 function availableSpecialSkillNames(index) {
   const item = localSpecialSkills[index];
   return item ? AioniaGameData.specialSkillData[item.group] || [] : [];
+}
+
+function getSpecialSkillDescription(item) {
+  if (!item || !item.group || item.group === 'free') {
+    return '';
+  }
+  return specialSkillDescriptionMap.value[item.group]?.[item.name] || '';
 }
 
 function updateSpecialSkillOptions(index) {
@@ -184,5 +221,28 @@ function updateSpecialSkillNoteVisibility(index) {
 textarea.special-skill-note-input {
   min-height: 45px;
   resize: vertical;
+}
+
+.special-skill-description {
+  margin-top: 3px;
+  min-height: 45px;
+  resize: vertical;
+}
+
+.box-title-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.description-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85em;
+}
+
+.description-toggle input[type='checkbox'] {
+  accent-color: var(--color-accent-primary);
 }
 </style>
