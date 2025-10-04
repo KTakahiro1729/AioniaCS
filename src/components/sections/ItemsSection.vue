@@ -1,6 +1,15 @@
 <template>
   <div id="items_section" class="items">
-    <div class="box-title">所持品<LoadIndicator /></div>
+    <div class="box-title">
+      <div class="box-title-main">
+        <span class="box-title-text">所持品</span>
+        <label class="description-toggle">
+          <input type="checkbox" v-model="uiStore.showItemDescriptions" />
+          説明を表示
+        </label>
+      </div>
+      <LoadIndicator />
+    </div>
 
     <div class="box-content">
       <div class="equipment-wrapper">
@@ -14,6 +23,7 @@
                   v-model="characterStore.equipments.weapon1.group"
                   class="flex-item-1"
                   :disabled="uiStore.isViewingShared"
+                  :title="weapon1Description"
                 >
                   <option v-for="option in gameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
@@ -26,6 +36,12 @@
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
+              <textarea
+                v-if="uiStore.showItemDescriptions && weapon1Description"
+                class="equipment-description"
+                :value="weapon1Description"
+                readonly
+              ></textarea>
             </div>
             <div class="equipment-item">
               <label for="weapon2">武器2</label>
@@ -35,6 +51,7 @@
                   v-model="characterStore.equipments.weapon2.group"
                   class="flex-item-1"
                   :disabled="uiStore.isViewingShared"
+                  :title="weapon2Description"
                 >
                   <option v-for="option in gameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
@@ -47,11 +64,23 @@
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
+              <textarea
+                v-if="uiStore.showItemDescriptions && weapon2Description"
+                class="equipment-description"
+                :value="weapon2Description"
+                readonly
+              ></textarea>
             </div>
             <div class="equipment-item">
               <label for="armor">防具</label>
               <div class="flex-group">
-                <select id="armor" v-model="characterStore.equipments.armor.group" class="flex-item-1" :disabled="uiStore.isViewingShared">
+                <select
+                  id="armor"
+                  v-model="characterStore.equipments.armor.group"
+                  class="flex-item-1"
+                  :disabled="uiStore.isViewingShared"
+                  :title="armorDescription"
+                >
                   <option v-for="option in gameData.armorOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
                 <input
@@ -63,6 +92,12 @@
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
+              <textarea
+                v-if="uiStore.showItemDescriptions && armorDescription"
+                class="equipment-description"
+                :value="armorDescription"
+                readonly
+              ></textarea>
             </div>
           </div>
         </div>
@@ -81,6 +116,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { AioniaGameData as gameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
@@ -88,6 +124,26 @@ import LoadIndicator from '../ui/LoadIndicator.vue';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+
+const weaponDescriptions = computed(() =>
+  gameData.weaponOptions.reduce((acc, option) => {
+    acc[option.value] = option.description || '';
+    return acc;
+  }, {}),
+);
+
+const armorDescriptions = computed(() =>
+  gameData.armorOptions.reduce((acc, option) => {
+    acc[option.value] = option.description || '';
+    return acc;
+  }, {}),
+);
+
+const weapon1Description = computed(() => weaponDescriptions.value[characterStore.equipments.weapon1.group] || '');
+
+const weapon2Description = computed(() => weaponDescriptions.value[characterStore.equipments.weapon2.group] || '');
+
+const armorDescription = computed(() => armorDescriptions.value[characterStore.equipments.armor.group] || '');
 </script>
 
 <style scoped>
@@ -118,5 +174,18 @@ const uiStore = useUiStore();
 .items-textarea {
   min-height: 100px;
   resize: vertical;
+}
+
+.equipment-description {
+  margin-top: 6px;
+  min-height: 45px;
+  resize: vertical;
+}
+
+.description-toggle {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8em;
 }
 </style>
