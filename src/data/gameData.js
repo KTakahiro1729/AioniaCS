@@ -203,7 +203,7 @@ export const AioniaGameData = {
 
   // 武器選択肢データ
   weaponOptions: [
-    { value: '', label: 'なし', description: '（なし）説明プレースホルダー' },
+    { value: '', label: 'なし', description: null },
     { value: 'combat_small', label: '小型白兵武器', description: '（小型白兵武器）説明プレースホルダー' },
     { value: 'combat_medium', label: '中型白兵武器', description: '（中型白兵武器）説明プレースホルダー' },
     { value: 'combat_large', label: '大型白兵武器', description: '（大型白兵武器）説明プレースホルダー' },
@@ -213,7 +213,7 @@ export const AioniaGameData = {
 
   // 防具選択肢データ
   armorOptions: [
-    { value: '', label: 'なし', description: '（なし）説明プレースホルダー' },
+    { value: '', label: 'なし', description: null },
     { value: 'light_armor', label: '軽装防具', description: '（軽装防具）説明プレースホルダー' },
     { value: 'heavy_armor', label: '重装防具', description: '（重装防具）説明プレースホルダー' },
   ],
