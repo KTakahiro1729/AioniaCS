@@ -116,6 +116,11 @@ input[type='checkbox'] {
   cursor: pointer;
 }
 
+.description-toggle input[type='checkbox'] {
+  margin-left: 12px;
+  margin-right: 6px;
+}
+
 /* 特殊状態 */
 input.greyed-out,
 select.greyed-out,

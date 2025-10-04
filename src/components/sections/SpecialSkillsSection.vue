@@ -89,11 +89,7 @@
               :disabled="uiStore.isViewingShared"
             />
             <textarea
-              v-if="
-                uiStore.showSpecialSkillDescriptions &&
-                specialSkill.group !== 'free' &&
-                getSpecialSkillDescription(specialSkill)
-              "
+              v-if="uiStore.showSpecialSkillDescriptions && specialSkill.group !== 'free' && getSpecialSkillDescription(specialSkill)"
               class="special-skill-description"
               :value="getSpecialSkillDescription(specialSkill)"
               readonly
@@ -229,20 +225,10 @@ textarea.special-skill-note-input {
   resize: vertical;
 }
 
-.box-title-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .description-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.85em;
-}
-
-.description-toggle input[type='checkbox'] {
-  accent-color: var(--color-accent-primary);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8em;
 }
 </style>

@@ -129,27 +129,21 @@ const weaponDescriptions = computed(() =>
   gameData.weaponOptions.reduce((acc, option) => {
     acc[option.value] = option.description || '';
     return acc;
-  }, {})
+  }, {}),
 );
 
 const armorDescriptions = computed(() =>
   gameData.armorOptions.reduce((acc, option) => {
     acc[option.value] = option.description || '';
     return acc;
-  }, {})
+  }, {}),
 );
 
-const weapon1Description = computed(
-  () => weaponDescriptions.value[characterStore.equipments.weapon1.group] || ''
-);
+const weapon1Description = computed(() => weaponDescriptions.value[characterStore.equipments.weapon1.group] || '');
 
-const weapon2Description = computed(
-  () => weaponDescriptions.value[characterStore.equipments.weapon2.group] || ''
-);
+const weapon2Description = computed(() => weaponDescriptions.value[characterStore.equipments.weapon2.group] || '');
 
-const armorDescription = computed(
-  () => armorDescriptions.value[characterStore.equipments.armor.group] || ''
-);
+const armorDescription = computed(() => armorDescriptions.value[characterStore.equipments.armor.group] || '');
 </script>
 
 <style scoped>
@@ -188,20 +182,10 @@ const armorDescription = computed(
   resize: vertical;
 }
 
-.box-title-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .description-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.85em;
-}
-
-.description-toggle input[type='checkbox'] {
-  accent-color: var(--color-accent-primary);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8em;
 }
 </style>
