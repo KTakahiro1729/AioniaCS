@@ -159,20 +159,6 @@ export const AioniaGameData = {
     },
   ],
 
-  // 特技の順序
-  externalSkillOrder: [
-    'motion',
-    'avoidance',
-    'sense',
-    'observation',
-    'technique',
-    'shooting',
-    'sociality',
-    'knowledge',
-    'combat',
-    'defense',
-  ],
-
   // 備考が必要な特技
   specialSkillsRequiringNote: [
     'enchant',
@@ -356,7 +342,6 @@ export const AioniaGameData = {
 - **共有リンクが開けない**: リンクの有効期限が切れているか、パスワードが間違っている可能性があります。リンクの作成者に確認してください。
 
 #### 互換性とフィードバック
-- bright-trpg様作成の「慈悲なきアイオニア　キャラクター作成用ツール」で保存されたJSONファイルも読み込み可能です。
 - 不具合報告やご要望は、[GitHub Issues](https://github.com/ktakahiro1729/aioniacs/issues)までお寄せください。
   `,
 };

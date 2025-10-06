@@ -8,7 +8,7 @@
 
 ## クレジット
 
-本サイトは [TRPG **「慈悲なきアイオニア」**](https://www.aioniatrpg.com/)（作者: **イチ（フシギ製作所）**）の二次創作であり、bright‑trpg さんの[「慈悲なきアイオニア キャラクター作成用ツール（β）」](https://bright-trpg.github.io/aionia_character_maker/)をもとに **あろすてりっく** が作成したものです。
+本サイトは [TRPG **「慈悲なきアイオニア」**](https://www.aioniatrpg.com/)（作者: **イチ（フシギ製作所）**）の二次創作であり、**あろすてりっく** が作成したものです。
 
 ## ライセンス
 
