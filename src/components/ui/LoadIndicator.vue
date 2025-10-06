@@ -44,7 +44,7 @@ const stepClasses = computed(() => calculateStepClasses(loadValue.value));
   width: 10px;
   height: 16px;
   border-radius: 2px;
-  background-color: var(--color-ghost-normal);
+  background-color: var(--color-load-ghost-normal);
 }
 
 .load-indicator--step--on-normal {
