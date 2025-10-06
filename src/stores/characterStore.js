@@ -69,11 +69,6 @@ export const useCharacterStore = defineStore('character', {
       const historyExp = state.histories.reduce((sum, h) => sum + (Number(h.gotExperiments) || 0), 0);
       return AioniaGameData.experiencePointValues.basePoints + combinedInitialBonus + historyExp;
     },
-    calculatedScar(state) {
-      const initialScar = Number(state.character.initialScar) || 0;
-      const adventureScar = state.histories.reduce((sum, entry) => sum + (Number(entry.increasedScar) || 0), 0);
-      return initialScar + adventureScar;
-    },
     currentExperiencePoints(state) {
       const skillExp = state.skills.reduce((sum, s) => sum + (s.checked ? AioniaGameData.experiencePointValues.skillBase : 0), 0);
       const expertExp = state.skills.reduce((sum, s) => {
