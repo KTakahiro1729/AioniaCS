@@ -1,3 +1,31 @@
+import { buildZipFromCharacterData, parseCharacterZipData, separateCharacterImages } from './characterDataFileHelpers.js';
+
+function uint8ArrayToBase64(uint8Array) {
+  if (!(uint8Array instanceof Uint8Array)) {
+    return uint8Array;
+  }
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < uint8Array.length; i += chunkSize) {
+    const chunk = uint8Array.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(binary);
+}
+
+function base64ToUint8Array(value) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  const binary = atob(value);
+  const length = binary.length;
+  const bytes = new Uint8Array(length);
+  for (let i = 0; i < length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 let singletonInstance = null;
 
 export class MockGoogleDriveManager {
@@ -201,13 +229,27 @@ export class MockGoogleDriveManager {
       .map((file) => ({ id: file.id, name: file.name }));
   }
 
-  async saveFile(folderId, fileName, fileContent, fileId = null) {
+  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
     const id = fileId || `file-${this.state.fileCounter++}`;
+    const isBinary =
+      fileContent instanceof Uint8Array ||
+      fileContent instanceof ArrayBuffer ||
+      (typeof Blob !== 'undefined' && fileContent instanceof Blob) ||
+      ArrayBuffer.isView(fileContent);
+
+    let storedContent = fileContent;
+    if (isBinary) {
+      const uint8Array = fileContent instanceof Uint8Array ? fileContent : new Uint8Array(fileContent);
+      storedContent = uint8ArrayToBase64(uint8Array);
+    }
+
     this.state.files[id] = {
       id,
       name: fileName,
-      content: fileContent,
+      content: storedContent,
       parentId: folderId,
+      mimeType,
+      isBinary,
     };
     this._saveState();
     return { id, name: fileName };
@@ -215,7 +257,11 @@ export class MockGoogleDriveManager {
 
   async loadFileContent(fileId) {
     const file = this.state.files[fileId];
-    return file ? file.content : null;
+    if (!file) {
+      return null;
+    }
+    const body = file.isBinary ? base64ToUint8Array(file.content) : file.content;
+    return { body, mimeType: file.mimeType || 'application/json', name: file.name };
   }
 
   async uploadAndShareFile(fileContent, fileName) {
@@ -281,20 +327,47 @@ export class MockGoogleDriveManager {
   async createCharacterFile(data) {
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
+    const sanitizedName = (data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_');
+    const { characterWithoutImages, images } = separateCharacterImages(data.character);
+    const payload = {
+      ...data,
+      character: characterWithoutImages,
+    };
+    const hasImages = images.length > 0;
+    const jsonString = JSON.stringify(payload, null, 2);
+    const fileName = `${sanitizedName}.${hasImages ? 'zip' : 'json'}`;
+    const mimeType = hasImages ? 'application/zip' : 'application/json';
+    const content = hasImages ? await buildZipFromCharacterData(jsonString, images) : jsonString;
+    return this.saveFile(folderId, fileName, content, null, mimeType);
   }
 
   async updateCharacterFile(id, data) {
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
+    const sanitizedName = (data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_');
+    const { characterWithoutImages, images } = separateCharacterImages(data.character);
+    const payload = {
+      ...data,
+      character: characterWithoutImages,
+    };
+    const hasImages = images.length > 0;
+    const jsonString = JSON.stringify(payload, null, 2);
+    const fileName = `${sanitizedName}.${hasImages ? 'zip' : 'json'}`;
+    const mimeType = hasImages ? 'application/zip' : 'application/json';
+    const content = hasImages ? await buildZipFromCharacterData(jsonString, images) : jsonString;
+    return this.saveFile(folderId, fileName, content, id, mimeType);
   }
 
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
-    return content ? JSON.parse(content) : null;
+    if (!content || content.body === undefined || content.body === null) {
+      return null;
+    }
+    if (content.mimeType === 'application/zip') {
+      return parseCharacterZipData(content.body);
+    }
+    const text = typeof content.body === 'string' ? content.body : JSON.stringify(content.body);
+    return JSON.parse(text);
   }
 
   async deleteCharacterFile(id) {

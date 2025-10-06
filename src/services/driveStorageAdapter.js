@@ -12,8 +12,9 @@ export class DriveStorageAdapter {
   }
 
   async read(id) {
-    const text = await this.gdm.loadFileContent(id);
-    if (!text) return null;
+    const content = await this.gdm.loadFileContent(id);
+    if (!content || content.body === undefined || content.body === null) return null;
+    const text = typeof content.body === 'string' ? content.body : JSON.stringify(content.body);
     return this._deserializeData(text);
   }
 

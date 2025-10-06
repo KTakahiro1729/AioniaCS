@@ -20,6 +20,11 @@ describe('DataManager', () => {
   beforeEach(() => {
     // 各テストの前に、すべてのモックの状態をリセットします
     vi.clearAllMocks();
+    JSZip.mockImplementation(() => ({
+      file: vi.fn(),
+      folder: vi.fn().mockReturnThis(),
+      generateAsync: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
+    }));
 
     dm = new DataManager(AioniaGameData);
     mockCharacter = deepClone(AioniaGameData.defaultCharacterData);
@@ -142,7 +147,7 @@ describe('DataManager', () => {
       const mockZipInstance = {
         file: vi.fn(),
         folder: vi.fn().mockReturnThis(),
-        generateAsync: vi.fn().mockResolvedValue(new Blob(['zip_blob_content'])),
+        generateAsync: vi.fn().mockResolvedValue(new Uint8Array([9, 8, 7])),
       };
       JSZip.mockImplementation(() => mockZipInstance);
 
@@ -153,14 +158,12 @@ describe('DataManager', () => {
       // fileメソッドの呼び出しを検証
       expect(mockZipInstance.file).toHaveBeenCalledWith('character_data.json', expect.any(String));
       expect(mockZipInstance.file).toHaveBeenCalledWith('image_0.png', 'mockimgdata1', { base64: true });
-      expect(mockZipInstance.file).toHaveBeenCalledWith('image_1.jpeg', 'mockimgdata2', { base64: true });
+      expect(mockZipInstance.file).toHaveBeenCalledWith('image_1.jpg', 'mockimgdata2', { base64: true });
 
       const jsonDataCall = mockZipInstance.file.mock.calls.find((call) => call[0] === 'character_data.json');
       const jsonDataInZip = JSON.parse(jsonDataCall[1]);
       expect(jsonDataInZip.character.images).toBeUndefined();
-      expect(mockZipInstance.generateAsync).toHaveBeenCalledWith({
-        type: 'blob',
-      });
+      expect(mockZipInstance.generateAsync).toHaveBeenCalledWith({ type: 'uint8array' });
       const mockAnchor = document.createElement.mock.results[0].value;
       expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
       expect(mockAnchor.click).toHaveBeenCalled();
@@ -260,8 +263,7 @@ describe('DataManager', () => {
   describe('saveDataToAppData', () => {
     beforeEach(() => {
       dm.googleDriveManager = {
-        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
+        saveFile: vi.fn().mockResolvedValue({ id: '1', name: 'TestChar.json' }),
         findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-id'),
         isFileInConfiguredFolder: vi.fn().mockResolvedValue(true),
       };
@@ -269,23 +271,59 @@ describe('DataManager', () => {
 
     test('creates new file when no id', async () => {
       const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
+      expect(dm.googleDriveManager.findOrCreateAioniaCSFolder).toHaveBeenCalled();
+      expect(dm.googleDriveManager.saveFile).toHaveBeenCalledWith(
+        'folder-id',
+        'TestChar.json',
+        expect.any(String),
+        null,
+        'application/json',
+      );
+      const payload = dm.googleDriveManager.saveFile.mock.calls[0][2];
+      const parsed = JSON.parse(payload);
+      expect(parsed.character.images).toEqual([]);
       expect(res.id).toBe('1');
     });
 
     test('updates file when id exists', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object));
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, 'file-1');
+      expect(dm.googleDriveManager.isFileInConfiguredFolder).toHaveBeenCalledWith('file-1');
+      expect(dm.googleDriveManager.saveFile).toHaveBeenCalledWith(
+        'folder-id',
+        'TestChar.json',
+        expect.any(String),
+        'file-1',
+        'application/json',
+      );
     });
 
     test('creates new file when existing file is outside configured folder', async () => {
       dm.googleDriveManager.isFileInConfiguredFolder.mockResolvedValue(false);
 
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, 'file-1');
 
-      expect(dm.googleDriveManager.isFileInConfiguredFolder).toHaveBeenCalledWith('1');
-      expect(dm.googleDriveManager.updateCharacterFile).not.toHaveBeenCalled();
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
+      expect(dm.googleDriveManager.isFileInConfiguredFolder).toHaveBeenCalledWith('file-1');
+      expect(dm.googleDriveManager.saveFile).toHaveBeenCalledWith(
+        'folder-id',
+        'TestChar.json',
+        expect.any(String),
+        null,
+        'application/json',
+      );
+    });
+
+    test('saves ZIP when images are present', async () => {
+      mockCharacter.images = ['data:image/png;base64,image'];
+
+      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
+
+      expect(dm.googleDriveManager.saveFile).toHaveBeenCalledWith(
+        'folder-id',
+        'TestChar.zip',
+        expect.any(Uint8Array),
+        null,
+        'application/zip',
+      );
     });
   });
 });

@@ -8,7 +8,7 @@ describe('DriveStorageAdapter', () => {
   beforeEach(() => {
     gdm = {
       saveFile: vi.fn().mockResolvedValue({ id: '1' }),
-      loadFileContent: vi.fn().mockResolvedValue(''),
+      loadFileContent: vi.fn().mockResolvedValue({ body: '', mimeType: 'application/json', name: 'test.json' }),
     };
     adapter = new DriveStorageAdapter(gdm);
   });
@@ -25,7 +25,7 @@ describe('DriveStorageAdapter', () => {
       ciphertext: arrayBufferToBase64(new ArrayBuffer(2)),
       iv: arrayBufferToBase64(new Uint8Array(2)),
     });
-    gdm.loadFileContent.mockResolvedValue(payload);
+    gdm.loadFileContent.mockResolvedValue({ body: payload, mimeType: 'application/json', name: 'test.json' });
     const data = await adapter.read('x');
     expect(data.ciphertext.byteLength).toBe(2);
   });

@@ -68,8 +68,9 @@ export function useAppInitialization(dataManager) {
         buffer = await receiveSharedData({
           location: window.location,
           downloadHandler: async (id) => {
-            const text = await dataManager.googleDriveManager.loadFileContent(id);
-            if (!text) throw new Error('no data');
+            const content = await dataManager.googleDriveManager.loadFileContent(id);
+            if (!content || content.body === undefined || content.body === null) throw new Error('no data');
+            const text = typeof content.body === 'string' ? content.body : JSON.stringify(content.body);
             const { ciphertext, iv } = JSON.parse(text);
             return {
               ciphertext: base64ToArrayBuffer(ciphertext),

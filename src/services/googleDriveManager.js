@@ -1,3 +1,5 @@
+import { buildZipFromCharacterData, parseCharacterZipData, separateCharacterImages } from './characterDataFileHelpers.js';
+
 /**
  * Manages interactions with Google Drive and Google Sign-In.
  */
@@ -133,9 +135,10 @@ export class GoogleDriveManager {
       if (file) {
         this.configFileId = file.id;
         const content = await this.loadFileContent(file.id);
-        if (content) {
+        if (content && content.body !== undefined && content.body !== null) {
           try {
-            const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+            const text = typeof content.body === 'string' ? content.body : JSON.stringify(content.body);
+            const parsed = JSON.parse(text);
             this.config = {
               ...this.getDefaultConfig(),
               ...parsed,
@@ -428,28 +431,67 @@ export class GoogleDriveManager {
    * @param {string|null} fileId - The ID of the file to update, or null to create a new file.
    * @returns {Promise<{id: string, name: string}|null>} File ID and name, or null on error.
    */
-  async saveFile(folderId, fileName, fileContent, fileId = null) {
+  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
     }
 
+    const boundary = '-------314159265358979323846';
+    const delimiter = `\r\n--${boundary}\r\n`;
+    const closeDelim = `\r\n--${boundary}--`;
+
+    const toUint8Array = async (content) => {
+      if (content instanceof Uint8Array) {
+        return content;
+      }
+      if (content instanceof ArrayBuffer) {
+        return new Uint8Array(content);
+      }
+      if (typeof Blob !== 'undefined' && content instanceof Blob) {
+        const arrayBuffer = await content.arrayBuffer();
+        return new Uint8Array(arrayBuffer);
+      }
+      if (ArrayBuffer.isView(content)) {
+        return new Uint8Array(content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength));
+      }
+      throw new Error('Unsupported binary content type for saveFile.');
+    };
+
+    const uint8ArrayToBase64 = (uint8Array) => {
+      let binaryString = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, i + chunkSize);
+        binaryString += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binaryString);
+    };
+
+    const buildMultipartBody = async (content, parentId = null) => {
+      const metadata = {
+        name: fileName,
+        mimeType,
+      };
+
+      if (!fileId && parentId) {
+        metadata.parents = [parentId];
+      }
+
+      const metadataPart = delimiter + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata);
+
+      if (typeof content === 'string') {
+        return metadataPart + delimiter + `Content-Type: ${mimeType}\r\n\r\n` + content + closeDelim;
+      }
+
+      const binaryContent = await toUint8Array(content);
+      const base64Data = uint8ArrayToBase64(binaryContent);
+      return metadataPart + delimiter + `Content-Type: ${mimeType}\r\nContent-Transfer-Encoding: base64\r\n\r\n` + base64Data + closeDelim;
+    };
+
     if (fileId) {
       try {
-        const boundary = '-------314159265358979323846';
-        const delimiter = `\r\n--${boundary}\r\n`;
-        const closeDelim = `\r\n--${boundary}--`;
-        const contentType = 'application/json';
-        const metadata = { name: fileName, mimeType: contentType };
-
-        const multipartRequestBody =
-          delimiter +
-          'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-          JSON.stringify(metadata) +
-          delimiter +
-          `Content-Type: ${contentType}\r\n\r\n` +
-          fileContent +
-          closeDelim;
+        const multipartRequestBody = await buildMultipartBody(fileContent);
 
         const response = await gapi.client.request({
           path: `/upload/drive/v3/files/${fileId}`,
@@ -480,24 +522,7 @@ export class GoogleDriveManager {
     }
 
     try {
-      const boundary = '-------314159265358979323846';
-      const delimiter = `\r\n--${boundary}\r\n`;
-      const closeDelim = `\r\n--${boundary}--`;
-      const contentType = 'application/json';
-      const metadata = {
-        name: fileName,
-        parents: [folderId],
-        mimeType: contentType,
-      };
-
-      const multipartRequestBody =
-        delimiter +
-        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-        JSON.stringify(metadata) +
-        delimiter +
-        `Content-Type: ${contentType}\r\n\r\n` +
-        fileContent +
-        closeDelim;
+      const multipartRequestBody = await buildMultipartBody(fileContent, folderId);
 
       const response = await gapi.client.request({
         path: '/upload/drive/v3/files',
@@ -528,17 +553,44 @@ export class GoogleDriveManager {
       return null;
     }
     try {
+      const metadataResponse = await gapi.client.drive.files.get({
+        fileId: fileId,
+        fields: 'id, name, mimeType',
+      });
+      const metadata = metadataResponse.result || metadataResponse.body || {};
+      const mimeType = metadata.mimeType || 'application/json';
+      const name = metadata.name || '';
+
       const response = await gapi.client.drive.files.get({
         fileId: fileId,
         alt: 'media',
       });
-      // The response body for alt: 'media' is directly the content.
-      // For JSON, it might already be parsed if GAPI client detects content type.
-      // If it's a string, it's fine. If it's an object (parsed JSON), stringify it.
-      if (typeof response.body === 'object') {
-        return JSON.stringify(response.body);
+      const body = response.body;
+
+      if (mimeType === 'application/zip') {
+        if (body instanceof ArrayBuffer) {
+          return { body, mimeType, name };
+        }
+        if (ArrayBuffer.isView(body)) {
+          const buffer = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength);
+          return { body: buffer, mimeType, name };
+        }
+        if (typeof body === 'string') {
+          const buffer = new ArrayBuffer(body.length);
+          const view = new Uint8Array(buffer);
+          for (let i = 0; i < body.length; i += 1) {
+            view[i] = body.charCodeAt(i) & 0xff;
+          }
+          return { body: buffer, mimeType, name };
+        }
+        console.warn('Unexpected ZIP payload type from Drive.', body);
+        return { body: null, mimeType, name };
       }
-      return response.body; // Should be string
+
+      if (typeof body === 'object') {
+        return { body: JSON.stringify(body), mimeType, name };
+      }
+      return { body, mimeType, name };
     } catch (error) {
       console.error('Error loading file content:', error);
       if (error.result && error.result.error) {
@@ -846,10 +898,20 @@ export class GoogleDriveManager {
    * @param {object} data character JSON object
    */
   async createCharacterFile(data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+    const sanitizedName = (data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_');
+    const { characterWithoutImages, images } = separateCharacterImages(data.character);
+    const payload = {
+      ...data,
+      character: characterWithoutImages,
+    };
+    const hasImages = images.length > 0;
+    const jsonString = JSON.stringify(payload, null, 2);
+    const fileName = `${sanitizedName}.${hasImages ? 'zip' : 'json'}`;
+    const mimeType = hasImages ? 'application/zip' : 'application/json';
+    const content = hasImages ? await buildZipFromCharacterData(jsonString, images) : jsonString;
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
+    return this.saveFile(folderId, fileName, content, null, mimeType);
   }
 
   /**
@@ -858,15 +920,32 @@ export class GoogleDriveManager {
    * @param {object} data character JSON object
    */
   async updateCharacterFile(id, data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+    const sanitizedName = (data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_');
+    const { characterWithoutImages, images } = separateCharacterImages(data.character);
+    const payload = {
+      ...data,
+      character: characterWithoutImages,
+    };
+    const hasImages = images.length > 0;
+    const jsonString = JSON.stringify(payload, null, 2);
+    const fileName = `${sanitizedName}.${hasImages ? 'zip' : 'json'}`;
+    const mimeType = hasImages ? 'application/zip' : 'application/json';
+    const content = hasImages ? await buildZipFromCharacterData(jsonString, images) : jsonString;
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
+    return this.saveFile(folderId, fileName, content, id, mimeType);
   }
 
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
-    return content ? JSON.parse(content) : null;
+    if (!content || !content.body) {
+      return null;
+    }
+    if (content.mimeType === 'application/zip') {
+      return parseCharacterZipData(content.body);
+    }
+    const text = typeof content.body === 'string' ? content.body : JSON.stringify(content.body);
+    return JSON.parse(text);
   }
 
   async deleteCharacterFile(id) {
