@@ -44,14 +44,18 @@
 
 <script setup>
 import { ref, computed, defineExpose, watchEffect } from 'vue';
-const props = defineProps({ signedIn: Boolean, longData: Boolean });
+import { storeToRefs } from 'pinia';
+import { useUiStore } from '../../../stores/uiStore.js';
+const props = defineProps({ longData: Boolean });
 const emit = defineEmits(['signin', 'update:canGenerate']);
 const type = ref('snapshot');
 const includeFull = ref(false);
 const enablePassword = ref(false);
 const password = ref('');
 const expires = ref('0');
-const needSignin = computed(() => (type.value === 'dynamic' || includeFull.value) && !props.signedIn);
+const uiStore = useUiStore();
+const { isSignedIn } = storeToRefs(uiStore);
+const needSignin = computed(() => (type.value === 'dynamic' || includeFull.value) && !isSignedIn.value);
 const showTruncateWarning = computed(() => props.longData && !includeFull.value);
 const canGenerate = computed(() => !needSignin.value);
 watchEffect(() => {
@@ -61,7 +65,7 @@ watchEffect(() => {
 defineExpose({ type, includeFull, password, expires, enablePassword });
 
 function handleSignin() {
-  if (window.__driveSignIn) window.__driveSignIn();
+  emit('signin');
 }
 </script>
 

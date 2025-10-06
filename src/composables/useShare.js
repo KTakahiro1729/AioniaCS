@@ -34,11 +34,18 @@ export function useShare(dataManager) {
   }
 
   async function _uploadHandler(data) {
+    const manager = dataManager.googleDriveManager;
+    if (!manager || typeof manager.uploadAndShareFile !== 'function') {
+      throw new Error(messages.share.needSignIn().message);
+    }
     const payload = JSON.stringify({
       ciphertext: arrayBufferToBase64(data.ciphertext),
       iv: arrayBufferToBase64(data.iv),
     });
-    const id = await dataManager.googleDriveManager.uploadAndShareFile(payload, 'share.enc', 'application/json');
+    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json');
+    if (!id) {
+      throw new Error('Google Drive へのアップロードに失敗しました');
+    }
     return id;
   }
 

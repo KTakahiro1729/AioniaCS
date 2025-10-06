@@ -16,7 +16,7 @@ vi.mock('../../../src/libs/sabalessshare/src/dynamic.js', () => ({
 }));
 
 vi.mock('../../../src/services/driveStorageAdapter.js', () => ({
-  DriveStorageAdapter: vi.fn().mockImplementation(() => ({})),
+  DriveStorageAdapter: vi.fn().mockImplementation((manager) => ({ manager })),
 }));
 
 vi.mock('../../../src/composables/useNotifications.js', () => ({
@@ -94,5 +94,27 @@ describe('useAppInitialization', () => {
     resolve(buffer);
     await p;
     expect(uiStore.isLoading).toBe(false);
+  });
+
+  test('loads dynamic shared data through Drive adapter', async () => {
+    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
+    const { receiveDynamicData } = await import('../../../src/libs/sabalessshare/src/dynamic.js');
+    const { DriveStorageAdapter } = await import('../../../src/services/driveStorageAdapter.js');
+    parseShareUrl.mockReturnValue({ mode: 'dynamic' });
+    const payload = {
+      character: { name: 'Dynamic' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
+    receiveDynamicData.mockResolvedValue(buffer);
+    const googleDriveManager = {};
+    const { initialize } = useAppInitialization({ googleDriveManager });
+    await initialize();
+    expect(DriveStorageAdapter).toHaveBeenCalledWith(googleDriveManager);
+    const adapterArg = receiveDynamicData.mock.calls[0][0].adapter;
+    expect(adapterArg.manager).toBe(googleDriveManager);
   });
 });

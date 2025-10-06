@@ -1,36 +1,66 @@
 import { arrayBufferToBase64, base64ToArrayBuffer } from '../libs/sabalessshare/src/crypto.js';
 
+const FILE_NAMES = {
+  data: 'sls_dynamic_data.json',
+  pointer: 'sls_dynamic_pointer.txt',
+};
+
 export class DriveStorageAdapter {
   constructor(googleDriveManager) {
     this.gdm = googleDriveManager;
   }
 
   async create(data) {
-    const content = this._serializeData(data);
-    const res = await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content);
-    return res && res.id ? res.id : null;
+    this._ensureManager();
+    const serialized = this._serializeData(data);
+    const id = await this.gdm.uploadAndShareFile(serialized.body, FILE_NAMES[serialized.kind], serialized.mimeType);
+    if (!id) {
+      throw new Error('Google Drive へのアップロードに失敗しました');
+    }
+    return id;
   }
 
   async read(id) {
+    this._ensureManager();
+    if (!id) {
+      throw new Error('読み込み対象のIDが指定されていません');
+    }
     const text = await this.gdm.loadFileContent(id);
-    if (!text) return null;
+    if (!text) {
+      throw new Error('Google Drive からファイルを取得できませんでした');
+    }
     return this._deserializeData(text);
   }
 
   async update(id, data) {
-    const content = this._serializeData(data);
-    await this.gdm.saveFile('appDataFolder', `sls_${Date.now()}.json`, content, id);
+    this._ensureManager();
+    if (!id) {
+      throw new Error('更新対象のIDが指定されていません');
+    }
+    const serialized = this._serializeData(data);
+    const result = await this.gdm.saveFile(null, FILE_NAMES[serialized.kind], serialized.body, id);
+    if (!result || !result.id) {
+      throw new Error('Google Drive の共有ファイル更新に失敗しました');
+    }
   }
 
   _serializeData(data) {
     if (data && data.ciphertext && data.iv) {
-      return JSON.stringify({
-        ciphertext: arrayBufferToBase64(data.ciphertext),
-        iv: arrayBufferToBase64(data.iv),
-      });
+      return {
+        body: JSON.stringify({
+          ciphertext: arrayBufferToBase64(data.ciphertext),
+          iv: arrayBufferToBase64(data.iv),
+        }),
+        mimeType: 'application/json',
+        kind: 'data',
+      };
     }
     const buffer = data instanceof Uint8Array ? data : new Uint8Array(data);
-    return arrayBufferToBase64(buffer.buffer);
+    return {
+      body: arrayBufferToBase64(buffer.buffer),
+      mimeType: 'text/plain',
+      kind: 'pointer',
+    };
   }
 
   _deserializeData(text) {
@@ -46,5 +76,11 @@ export class DriveStorageAdapter {
       // not JSON
     }
     return base64ToArrayBuffer(text.trim());
+  }
+
+  _ensureManager() {
+    if (!this.gdm) {
+      throw new Error('Google Drive マネージャーが設定されていません');
+    }
   }
 }

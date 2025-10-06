@@ -78,7 +78,6 @@ export function useAppModals(options) {
     const { generateShare, copyLink, isLongData } = useShare(dataManager);
     const { showToast } = useNotifications();
     const modalStore = useModalStore();
-    window.__driveSignIn = handleSignInClick;
     const generateButton = reactive({
       label: messages.ui.modal.generate,
       value: 'generate',
@@ -90,7 +89,7 @@ export function useAppModals(options) {
     }
     const result = await showModal({
       component: ShareOptions,
-      props: { signedIn: uiStore.isSignedIn, longData: isLongData() },
+      props: { longData: isLongData() },
       title: messages.ui.modal.shareTitle,
       buttons: [
         generateButton,
@@ -100,9 +99,8 @@ export function useAppModals(options) {
           variant: 'secondary',
         },
       ],
-      on: { 'update:canGenerate': updateCanGenerate },
+      on: { 'update:canGenerate': updateCanGenerate, signin: handleSignInClick },
     });
-    delete window.__driveSignIn;
     if (result.value !== 'generate' || !result.component) return;
     const optsComp = result.component;
     const opts = {
