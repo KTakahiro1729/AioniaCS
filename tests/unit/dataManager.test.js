@@ -62,7 +62,8 @@ describe('DataManager', () => {
         result: null,
         readAsText: vi.fn(function (file) {
           this.result = JSON.stringify({
-            character: { name: 'Loaded Char via readAsText' },
+            character: { name: 'Loaded Char via readAsText', playerName: 'Tester' },
+            skills: AioniaGameData.baseSkills,
           });
           process.nextTick(() => {
             if (file && file.name === 'error.json' && this.onerror) {
@@ -92,33 +93,13 @@ describe('DataManager', () => {
     vi.restoreAllMocks();
   });
 
-  test('convertExternalJsonToInternalFormat converts minimal data', () => {
+  test('parseLoadedData rejects unsupported external format data', () => {
     const external = {
       name: 'foo',
       player: 'bar',
-      init_weakness1: 'fear',
-      weapon1_type: 'sword',
-      weapon1_name: 'blade',
-      history: [{ name: 'sess1', experiments: '2', stress: 'note' }],
+      character_memo: 'legacy tool memo',
     };
-    const internal = dm.convertExternalJsonToInternalFormat(external);
-    expect(internal.character.name).toBe('foo');
-    expect(internal.character.playerName).toBe('bar');
-    expect(internal.character.weaknesses[0]).toEqual({
-      text: 'fear',
-      acquired: '作成時',
-    });
-    expect(internal.equipments.weapon1).toEqual({
-      group: 'sword',
-      name: 'blade',
-    });
-    expect(internal.histories[0]).toEqual({
-      sessionName: 'sess1',
-      gotExperiments: 2,
-      memo: 'note',
-      increasedScar: null,
-    });
-    expect(internal.character.images).toEqual([]);
+    expect(() => dm.parseLoadedData(external)).toThrowError(/対応していないファイル形式/);
   });
 
   test('_normalizeLoadedData fills defaults', () => {
@@ -196,7 +177,11 @@ describe('DataManager', () => {
     });
 
     it('should process JSON file correctly', async () => {
-      const mockFile = new File(['{"character":{"name":"TestOriginal"}}'], 'test.json', { type: 'application/json' });
+      const internalJson = JSON.stringify({
+        character: { name: 'TestOriginal', playerName: 'Tester' },
+        skills: AioniaGameData.baseSkills,
+      });
+      const mockFile = new File([internalJson], 'test.json', { type: 'application/json' });
       const mockEvent = { target: { files: [mockFile], value: '' } };
       await new Promise((resolve) => {
         onSuccessMock.mockImplementation(resolve);

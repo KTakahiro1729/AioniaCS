@@ -141,6 +141,7 @@ export const messages = {
   },
   file: {
     loadError: 'ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。',
+    unsupportedFormat: '対応していないファイル形式です。AioniaCSで保存したデータをご利用ください。',
   },
   ui: {
     header: {
