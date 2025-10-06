@@ -143,13 +143,6 @@ onMounted(initialize);
 </template>
 
 <style scoped>
-/*
-  It is recommended to use Vite's asset handling.
-  You can either @import your main CSS file here or manage it
-  in your main.js/main.ts entry file.
-*/
-
-/* Additional component-specific styles can go here */
 .hidden {
   display: none !important;
 }
