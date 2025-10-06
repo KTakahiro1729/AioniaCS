@@ -80,8 +80,8 @@ const calculatedScar = computed(() => characterStore.calculatedScar);
 }
 
 .scar-section__current-input--readonly {
-  background-color: var(--color-surface-muted);
-  color: var(--color-text);
+  background-color: var(--color-input-disabled-bg);
+  color: var(--color-text-normal);
 }
 
 .sub-box-title--weakness {
