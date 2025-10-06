@@ -15,87 +15,37 @@
       <div class="equipment-wrapper">
         <div class="equipment-container">
           <div class="equipment-section">
-            <div class="equipment-item">
-              <label for="weapon1">武器1</label>
+            <div class="equipment-item" v-for="slot in equipmentSlots" :key="slot.key">
+              <label :for="slot.key">{{ slot.label }}</label>
               <div class="flex-group">
                 <select
-                  id="weapon1"
-                  v-model="characterStore.equipments.weapon1.group"
+                  :id="slot.key"
+                  v-model="characterStore.equipments[slot.key].group"
                   class="flex-item-1"
                   :disabled="uiStore.isViewingShared"
-                  :title="weapon1Description"
+                  :title="equipmentDescriptions[slot.key]"
                 >
-                  <option v-for="option in gameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                  <option
+                    v-for="option in gameData[slot.optionsKey]"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
                 </select>
                 <input
                   type="text"
-                  id="weapon1_name"
-                  v-model="characterStore.equipments.weapon1.name"
-                  :placeholder="gameData.placeholderTexts.weaponName"
+                  :id="`${slot.key}_name`"
+                  v-model="characterStore.equipments[slot.key].name"
+                  :placeholder="gameData.placeholderTexts[slot.placeholderKey]"
                   class="flex-item-2"
                   :disabled="uiStore.isViewingShared"
                 />
               </div>
               <textarea
-                v-if="uiStore.showItemDescriptions && weapon1Description"
+                v-if="uiStore.showItemDescriptions && equipmentDescriptions[slot.key]"
                 class="equipment-description"
-                :value="weapon1Description"
-                readonly
-              ></textarea>
-            </div>
-            <div class="equipment-item">
-              <label for="weapon2">武器2</label>
-              <div class="flex-group">
-                <select
-                  id="weapon2"
-                  v-model="characterStore.equipments.weapon2.group"
-                  class="flex-item-1"
-                  :disabled="uiStore.isViewingShared"
-                  :title="weapon2Description"
-                >
-                  <option v-for="option in gameData.weaponOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                </select>
-                <input
-                  type="text"
-                  id="weapon2_name"
-                  v-model="characterStore.equipments.weapon2.name"
-                  :placeholder="gameData.placeholderTexts.weaponName"
-                  class="flex-item-2"
-                  :disabled="uiStore.isViewingShared"
-                />
-              </div>
-              <textarea
-                v-if="uiStore.showItemDescriptions && weapon2Description"
-                class="equipment-description"
-                :value="weapon2Description"
-                readonly
-              ></textarea>
-            </div>
-            <div class="equipment-item">
-              <label for="armor">防具</label>
-              <div class="flex-group">
-                <select
-                  id="armor"
-                  v-model="characterStore.equipments.armor.group"
-                  class="flex-item-1"
-                  :disabled="uiStore.isViewingShared"
-                  :title="armorDescription"
-                >
-                  <option v-for="option in gameData.armorOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                </select>
-                <input
-                  type="text"
-                  id="armor_name"
-                  v-model="characterStore.equipments.armor.name"
-                  :placeholder="gameData.placeholderTexts.armorName"
-                  class="flex-item-2"
-                  :disabled="uiStore.isViewingShared"
-                />
-              </div>
-              <textarea
-                v-if="uiStore.showItemDescriptions && armorDescription"
-                class="equipment-description"
-                :value="armorDescription"
+                :value="equipmentDescriptions[slot.key]"
                 readonly
               ></textarea>
             </div>
@@ -125,25 +75,37 @@ import LoadIndicator from '../ui/LoadIndicator.vue';
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 
-const weaponDescriptions = computed(() =>
-  gameData.weaponOptions.reduce((acc, option) => {
-    acc[option.value] = option.description || '';
-    return acc;
+const equipmentSlots = [
+  { key: 'weapon1', label: '武器1', optionsKey: 'weaponOptions', placeholderKey: 'weaponName' },
+  { key: 'weapon2', label: '武器2', optionsKey: 'weaponOptions', placeholderKey: 'weaponName' },
+  { key: 'armor', label: '防具', optionsKey: 'armorOptions', placeholderKey: 'armorName' },
+];
+
+const optionDescriptionMaps = computed(() =>
+  equipmentSlots.reduce((maps, slot) => {
+    if (!maps[slot.optionsKey]) {
+      maps[slot.optionsKey] = (gameData[slot.optionsKey] || []).reduce((acc, option) => {
+        acc[option.value] = option.description || '';
+        return acc;
+      }, {});
+    }
+    return maps;
   }, {}),
 );
 
-const armorDescriptions = computed(() =>
-  gameData.armorOptions.reduce((acc, option) => {
-    acc[option.value] = option.description || '';
-    return acc;
-  }, {}),
-);
+const equipmentDescriptions = computed(() => {
+  const maps = optionDescriptionMaps.value;
 
-const weapon1Description = computed(() => weaponDescriptions.value[characterStore.equipments.weapon1.group] || '');
+  return equipmentSlots.reduce((descriptions, slot) => {
+    const equipment = characterStore.equipments[slot.key];
+    const group = equipment?.group;
+    const optionMap = maps[slot.optionsKey] || {};
 
-const weapon2Description = computed(() => weaponDescriptions.value[characterStore.equipments.weapon2.group] || '');
+    descriptions[slot.key] = (group && optionMap[group]) || '';
 
-const armorDescription = computed(() => armorDescriptions.value[characterStore.equipments.armor.group] || '');
+    return descriptions;
+  }, {});
+});
 </script>
 
 <style scoped>
