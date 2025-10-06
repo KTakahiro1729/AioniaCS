@@ -7,11 +7,20 @@ export function receiveSharedData() {
 }
 
 export function createDynamicLink() {
-  return Promise.resolve({ shareLink: 'dynamic-link' });
+  return Promise.resolve({
+    shareLink: 'dynamic-link',
+    pointerFileId: 'mock-pointer',
+    key: 'mock-key',
+    salt: null,
+  });
 }
 
 export function receiveDynamicData() {
   return Promise.resolve(new ArrayBuffer(0));
+}
+
+export function updateDynamicLink() {
+  return Promise.resolve('mock-updated-data-id');
 }
 
 export function arrayBufferToBase64(buffer) {

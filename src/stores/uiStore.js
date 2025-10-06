@@ -15,6 +15,7 @@ export const useUiStore = defineStore('ui', {
     showHeader: true,
     showSpecialSkillDescriptions: false,
     showItemDescriptions: false,
+    dynamicShareMetadata: null,
   }),
   getters: {
     experienceStatusClass() {
@@ -39,6 +40,21 @@ export const useUiStore = defineStore('ui', {
     },
     clearCurrentDriveFileId() {
       this.currentDriveFileId = null;
+    },
+    setDynamicShareMetadata(metadata) {
+      this.dynamicShareMetadata = metadata
+        ? {
+            pointerFileId: metadata.pointerFileId,
+            key: metadata.key,
+            salt: metadata.salt ?? null,
+            shareLink: metadata.shareLink,
+            includeFull: Boolean(metadata.includeFull),
+            password: metadata.password ?? null,
+          }
+        : null;
+    },
+    clearDynamicShareMetadata() {
+      this.dynamicShareMetadata = null;
     },
     setDriveFolderPath(path) {
       this.driveFolderPath = path;

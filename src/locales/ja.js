@@ -88,6 +88,15 @@ export const messages = {
       title: '共有リンク生成失敗',
       message: err.message,
     }),
+    dynamicMetadataMissing: '共有リンク情報が見つかりません。新しく共有リンクを生成してください。',
+    dynamicPasswordRequired: '共有リンクのパスワード情報を復元できませんでした。もう一度共有リンクを生成してください。',
+    dynamicPasswordChangeUnsupported: '既存の共有リンクではパスワード設定を変更できません。新しく共有リンクを生成してください。',
+    dynamicPasswordMismatch: '入力されたパスワードが既存の共有リンクと一致しません。共有リンクを新しく生成してください。',
+    dynamicUpdateFailed: '動的共有リンクの更新に失敗しました。共有リンクを新しく生成してください。',
+    dynamicAutoUpdateFailed: (err) => ({
+      title: '共有リンク更新失敗',
+      message: err?.message || '共有リンクに最新データを反映できませんでした。再度共有リンクを生成してください。',
+    }),
     loadError: {
       ...shareLoadErrorTexts,
       toast: (key) => ({

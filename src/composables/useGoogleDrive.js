@@ -5,6 +5,7 @@ import { useUiStore } from '../stores/uiStore.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
 import { useModal } from './useModal.js';
+import { useShare } from './useShare.js';
 import { messages } from '../locales/ja.js';
 
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
@@ -19,6 +20,7 @@ export function useGoogleDrive(dataManager) {
   const googleDriveManager = ref(null);
   const { showToast, showAsyncToast } = useNotifications();
   const { showModal } = useModal();
+  const { refreshDynamicShare } = useShare(dataManager);
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
   const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isGisInitialized);
@@ -67,6 +69,7 @@ export function useGoogleDrive(dataManager) {
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
       uiStore.clearCurrentDriveFileId();
+      uiStore.clearDynamicShareMetadata();
       showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
     });
   }
@@ -238,10 +241,11 @@ export function useGoogleDrive(dataManager) {
         characterStore.histories,
         targetFileId,
       )
-      .then((result) => {
+      .then(async (result) => {
         if (result) {
           uiStore.isCloudSaveSuccess = true;
           uiStore.setCurrentDriveFileId(result.id);
+          await refreshDynamicShare();
         }
         return result;
       });

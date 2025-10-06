@@ -7,7 +7,12 @@ vi.mock('../../../src/composables/useModal.js', () => ({
   useModal: vi.fn(),
 }));
 
+vi.mock('../../../src/composables/useShare.js', () => ({
+  useShare: vi.fn(),
+}));
+
 import { useModal } from '../../../src/composables/useModal.js';
+import { useShare } from '../../../src/composables/useShare.js';
 
 function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
   const showFolderPicker = vi.fn();
@@ -30,6 +35,7 @@ describe('useGoogleDrive', () => {
     setActivePinia(createPinia());
     showModalMock = vi.fn().mockResolvedValue({ value: 'overwrite' });
     useModal.mockReturnValue({ showModal: showModalMock });
+    useShare.mockReturnValue({ refreshDynamicShare: vi.fn().mockResolvedValue(true) });
   });
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
@@ -57,6 +63,26 @@ describe('useGoogleDrive', () => {
       charStore.histories,
       'existing-id',
     );
+  });
+
+  test('saveCharacterToDrive refreshes dynamic share metadata after successful save', async () => {
+    const refreshDynamicShare = vi.fn().mockResolvedValue(true);
+    useShare.mockReturnValue({ refreshDynamicShare });
+    const dataManager = {
+      saveDataToAppData: vi.fn().mockResolvedValue({ id: 'new-id', name: 'Hero.json' }),
+      findDriveFileByCharacterName: vi.fn(),
+      googleDriveManager: {},
+    };
+    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const charStore = useCharacterStore();
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
+    charStore.character.name = 'Hero';
+
+    await saveCharacterToDrive(true);
+
+    expect(refreshDynamicShare).toHaveBeenCalled();
   });
 
   test('saveCharacterToDrive prompts for overwrite when duplicate exists', async () => {
