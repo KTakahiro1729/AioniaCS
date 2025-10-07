@@ -503,15 +503,16 @@ export class GoogleDriveManager {
         console.log('File updated successfully:', response.result);
         return { id: response.result.id, name: response.result.name };
       } catch (error) {
-        // 404エラーの場合、ファイルが存在しないと判断し、新規作成フローに進む
-        if (error.status === 404) {
-          console.error('Error creating file: The parent folder was not found.', error);
-          // UI側でハンドリングできるよう、具体的なエラーをスローする
-          throw new Error('Parent folder not found. Please select a new folder.');
+        const isNotFoundError =
+          error?.status === 404 ||
+          error?.result?.error?.code === 404 ||
+          (Array.isArray(error?.result?.error?.errors) && error.result.error.errors.some((entry) => entry.reason === 'notFound'));
+
+        if (isNotFoundError) {
+          console.warn('Existing Drive file not found. Falling back to create a new file.', error);
         } else {
-          // その他の作成エラー
-          console.error('Error creating new file:', error);
-          if (error.result && error.result.error) {
+          console.error('Error updating Drive file:', error);
+          if (error?.result?.error) {
             console.error('Detailed error:', error.result.error.message);
           }
           return null;

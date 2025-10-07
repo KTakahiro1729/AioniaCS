@@ -159,6 +159,30 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(call.body).toContain('Content-Type: application/zip');
   });
 
+  test('saveFile falls back to creation when update target is missing', async () => {
+    const notFoundError = new Error('File not found');
+    notFoundError.status = 404;
+    notFoundError.result = {
+      error: {
+        code: 404,
+        message: 'File not found',
+        errors: [{ reason: 'notFound' }],
+      },
+    };
+
+    gapi.client.request.mockRejectedValueOnce(notFoundError);
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-new', name: 'Hero.json' } });
+
+    const result = await gdm.saveFile('folder-1', 'Hero.json', '{}', 'missing-id');
+
+    expect(gapi.client.request).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ path: '/upload/drive/v3/files/missing-id', method: 'PATCH' }),
+    );
+    expect(gapi.client.request).toHaveBeenNthCalledWith(2, expect.objectContaining({ path: '/upload/drive/v3/files', method: 'POST' }));
+    expect(result).toEqual({ id: 'file-new', name: 'Hero.json' });
+  });
+
   test('findFileByName queries configured folder', async () => {
     gapi.client.drive.files.list
       .mockResolvedValueOnce({ result: { files: [] } })
