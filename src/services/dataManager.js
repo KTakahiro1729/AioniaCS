@@ -146,8 +146,8 @@ export class DataManager {
   }
 
   /**
-   * Saves character data to the user's appDataFolder.
-   * Adds an index entry when creating a new file.
+   * Saves character data to the configured Google Drive character folder.
+   * Handles both creating new files and updating existing ones without index management.
    */
   async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId) {
     if (!this.googleDriveManager) {

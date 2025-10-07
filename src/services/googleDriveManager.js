@@ -590,7 +590,7 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Finds or creates the .AioniaCS folder in the user's Drive root.
+   * Finds or creates the configured character folder in the user's Drive root.
    * @returns {Promise<string|null>} The ID of the folder, or null if not available.
    */
   async findOrCreateAioniaCSFolder() {
@@ -635,7 +635,7 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Finds a file by name inside the .AioniaCS folder.
+   * Finds a file by name inside the configured character folder.
    * @param {string} fileName - The target file name.
    * @returns {Promise<{id: string, name: string}|null>} File info or null when not found.
    */
@@ -672,7 +672,7 @@ export class GoogleDriveManager {
    * @returns {Promise<Array>}
    */
   async readIndexFile() {
-    console.warn('readIndexFile is deprecated. .AioniaCS folder now stores files directly.');
+    console.warn('readIndexFile is deprecated. Configured Drive folder now stores files directly.');
     return [];
   }
 
@@ -680,7 +680,7 @@ export class GoogleDriveManager {
    * Deprecated no-op: retained for backward compatibility.
    */
   async writeIndexFile() {
-    console.warn('writeIndexFile is deprecated. .AioniaCS folder now stores files directly.');
+    console.warn('writeIndexFile is deprecated. Configured Drive folder now stores files directly.');
     return null;
   }
 

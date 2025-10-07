@@ -18,7 +18,7 @@ describe('DataManager data integrity', () => {
     dm.setGoogleDriveManager(gdm);
   });
 
-  it('saves a new character into the .AioniaCS folder', async () => {
+  it('saves a new character into the configured Drive folder', async () => {
     const result = await dm.saveDataToAppData({ name: 'Hero' }, [], [], {}, [], null);
 
     expect(result?.id).toBeTruthy();
