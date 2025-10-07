@@ -132,26 +132,28 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-5', name: 'aioniacs.cfg' } });
     gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
-    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-1', name: 'Hero.json' } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-1', name: 'Hero.zip' } });
 
-    const res = await gdm.createCharacterFile({ character: { name: 'Hero' } });
+    const res = await gdm.createCharacterFile({ content: new Uint8Array([0x01, 0x02]), mimeType: 'application/zip', name: 'Hero' });
 
     expect(res.id).toBe('file-1');
     const requestCall = gapi.client.request.mock.calls.at(-1)[0];
     expect(requestCall.body).toContain('"parents":["folder"]');
+    expect(requestCall.body).toContain('Content-Type: application/zip');
   });
 
   test('updateCharacterFile patches existing file', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-6', name: 'aioniacs.cfg' } });
     gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
-    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-1', name: 'Hero.json' } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-1', name: 'Hero.zip' } });
 
-    await gdm.updateCharacterFile('file-1', { character: { name: 'Hero' } });
+    await gdm.updateCharacterFile('file-1', { content: new Uint8Array([0x03, 0x04]), mimeType: 'application/zip', name: 'Hero' });
 
     const call = gapi.client.request.mock.calls.at(-1)[0];
     expect(call.path).toBe('/upload/drive/v3/files/file-1');
     expect(call.method).toBe('PATCH');
+    expect(call.body).toContain('Content-Type: application/zip');
   });
 
   test('findFileByName queries configured folder', async () => {
@@ -159,16 +161,16 @@ describe('GoogleDriveManager configuration and folder handling', () => {
       .mockResolvedValueOnce({ result: { files: [] } })
       .mockResolvedValueOnce({ result: { files: [] } })
       .mockResolvedValueOnce({
-        result: { files: [{ id: 'found', name: 'Hero.json' }] },
+        result: { files: [{ id: 'found', name: 'Hero.zip' }] },
       });
     gapi.client.request.mockResolvedValue({ result: { id: 'cfg-7', name: 'aioniacs.cfg' } });
     gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
 
-    const file = await gdm.findFileByName('Hero.json');
+    const file = await gdm.findFileByName('Hero.zip');
 
-    expect(file).toEqual({ id: 'found', name: 'Hero.json' });
+    expect(file).toEqual({ id: 'found', name: 'Hero.zip' });
     expect(gapi.client.drive.files.list).toHaveBeenCalledWith({
-      q: "'folder' in parents and name='Hero.json' and trashed=false",
+      q: "'folder' in parents and name='Hero.zip' and trashed=false",
       fields: 'files(id, name)',
       spaces: 'drive',
     });

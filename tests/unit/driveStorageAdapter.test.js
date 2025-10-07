@@ -38,6 +38,6 @@ describe('DriveStorageAdapter', () => {
 
   test('update calls saveFile with id', async () => {
     await adapter.update('u1', new Uint8Array(4));
-    expect(gdm.saveFile).toHaveBeenCalledWith(null, expect.stringContaining('pointer'), expect.any(String), 'u1');
+    expect(gdm.saveFile).toHaveBeenCalledWith(null, expect.stringContaining('pointer'), expect.any(String), 'u1', 'text/plain');
   });
 });

@@ -1,3 +1,10 @@
+import { deserializeCharacterPayload } from '../utils/characterSerialization.js';
+
+function sanitizeFileName(name) {
+  const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
+  return sanitized || '名もなき冒険者';
+}
+
 let singletonInstance = null;
 
 export class MockGoogleDriveManager {
@@ -201,13 +208,14 @@ export class MockGoogleDriveManager {
       .map((file) => ({ id: file.id, name: file.name }));
   }
 
-  async saveFile(folderId, fileName, fileContent, fileId = null) {
+  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
     const id = fileId || `file-${this.state.fileCounter++}`;
     this.state.files[id] = {
       id,
       name: fileName,
       content: fileContent,
       parentId: folderId,
+      mimeType,
     };
     this._saveState();
     return { id, name: fileName };
@@ -218,8 +226,8 @@ export class MockGoogleDriveManager {
     return file ? file.content : null;
   }
 
-  async uploadAndShareFile(fileContent, fileName) {
-    const info = await this.saveFile('shared', fileName, fileContent);
+  async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
+    const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
     return info.id;
   }
 
@@ -278,23 +286,27 @@ export class MockGoogleDriveManager {
     return file ? file.parentId === folderId : false;
   }
 
-  async createCharacterFile(data) {
+  async createCharacterFile(payload) {
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
+    const mimeType = payload?.mimeType || 'application/zip';
+    const extension = mimeType === 'application/zip' ? 'zip' : 'json';
+    const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
+    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
   }
 
-  async updateCharacterFile(id, data) {
+  async updateCharacterFile(id, payload) {
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
+    const mimeType = payload?.mimeType || 'application/zip';
+    const extension = mimeType === 'application/zip' ? 'zip' : 'json';
+    const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
+    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
   }
 
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
-    return content ? JSON.parse(content) : null;
+    return content ? await deserializeCharacterPayload(content) : null;
   }
 
   async deleteCharacterFile(id) {
