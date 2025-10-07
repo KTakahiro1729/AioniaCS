@@ -80,7 +80,19 @@ export function useAppInitialization(dataManager) {
         });
       }
       const parsed = JSON.parse(new TextDecoder().decode(buffer));
+      const parsedCharacterImages = parsed.character?.images;
+      if (parsed.character && 'images' in parsed.character) {
+        delete parsed.character.images;
+      }
       Object.assign(characterStore.character, parsed.character);
+      if (Array.isArray(parsedCharacterImages)) {
+        characterStore.character.images.splice(0, characterStore.character.images.length, ...parsedCharacterImages);
+      } else {
+        characterStore.character.images.splice(0, characterStore.character.images.length);
+      }
+      if (parsed.character) {
+        parsed.character.images = parsedCharacterImages;
+      }
       characterStore.skills.splice(0, characterStore.skills.length, ...parsed.skills);
       characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsed.specialSkills);
       Object.assign(characterStore.equipments, parsed.equipments);
