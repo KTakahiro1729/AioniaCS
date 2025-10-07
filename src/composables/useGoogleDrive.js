@@ -187,7 +187,7 @@ export function useGoogleDrive(dataManager) {
           loadPromise.then((result) => resolve(result)).catch(() => resolve(null));
         },
         folderId,
-        ['application/json'],
+        ['application/json', 'application/zip'],
       );
     });
   }
