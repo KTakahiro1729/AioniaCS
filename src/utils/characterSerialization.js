@@ -9,7 +9,7 @@ function filterSkills(skills) {
     checked: Boolean(skill.checked),
     canHaveExperts: Boolean(skill.canHaveExperts),
     experts: skill.canHaveExperts
-      ? skill.experts?.filter((expert) => expert.value && expert.value.trim() !== '').map((expert) => ({ value: expert.value })) || []
+      ? (skill.experts || []).filter((expert) => expert.value && expert.value.trim() !== '').map((expert) => ({ value: expert.value }))
       : [],
   }));
 }
