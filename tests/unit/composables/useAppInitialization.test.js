@@ -2,6 +2,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useAppInitialization } from '../../../src/composables/useAppInitialization.js';
 import { useCharacterStore } from '../../../src/stores/characterStore.js';
 import { useUiStore } from '../../../src/stores/uiStore.js';
+import { buildCharacterArchive } from '../../../src/utils/characterSerialization.js';
 
 vi.mock('../../../src/libs/sabalessshare/src/url.js', () => ({
   parseShareUrl: vi.fn(),
@@ -29,6 +30,12 @@ describe('useAppInitialization', () => {
     vi.clearAllMocks();
   });
 
+  async function createArchiveBuffer(payload) {
+    const { content } = await buildCharacterArchive({ data: payload, images: [] });
+    const { buffer, byteOffset, byteLength } = content;
+    return buffer.slice(byteOffset, byteOffset + byteLength);
+  }
+
   test('loads shared data when URL has params', async () => {
     const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
     const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
@@ -40,7 +47,7 @@ describe('useAppInitialization', () => {
       equipments: {},
       histories: [],
     };
-    const buffer = Uint8Array.from(Buffer.from(JSON.stringify(payload))).buffer;
+    const buffer = await createArchiveBuffer(payload);
     receiveSharedData.mockResolvedValue(buffer);
 
     const dataManager = { googleDriveManager: {} };
@@ -90,7 +97,7 @@ describe('useAppInitialization', () => {
       equipments: {},
       histories: [],
     };
-    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
+    const buffer = await createArchiveBuffer(payload);
     resolve(buffer);
     await p;
     expect(uiStore.isLoading).toBe(false);
@@ -108,7 +115,7 @@ describe('useAppInitialization', () => {
       equipments: {},
       histories: [],
     };
-    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
+    const buffer = await createArchiveBuffer(payload);
     receiveDynamicData.mockResolvedValue(buffer);
     const googleDriveManager = {};
     const { initialize } = useAppInitialization({ googleDriveManager });

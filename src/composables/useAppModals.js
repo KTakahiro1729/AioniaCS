@@ -75,7 +75,7 @@ export function useAppModals(options) {
       }
       return;
     }
-    const { generateShare, copyLink, isLongData } = useShare(dataManager);
+    const { generateShare, copyLink } = useShare(dataManager);
     const { showToast } = useNotifications();
     const modalStore = useModalStore();
     const generateButton = reactive({
@@ -89,7 +89,6 @@ export function useAppModals(options) {
     }
     const result = await showModal({
       component: ShareOptions,
-      props: { longData: isLongData() },
       title: messages.ui.modal.shareTitle,
       buttons: [
         generateButton,
@@ -105,8 +104,7 @@ export function useAppModals(options) {
     const optsComp = result.component;
     const opts = {
       type: optsComp.type.value,
-      includeFull: optsComp.includeFull.value,
-      password: optsComp.password.value || '',
+      password: optsComp.enablePassword.value ? optsComp.password.value || '' : '',
       expiresInDays: Number(optsComp.expires.value) || 0,
     };
     try {

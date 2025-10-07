@@ -9,6 +9,7 @@ import { useNotifications } from './useNotifications.js';
 import { useModal } from './useModal.js';
 import PasswordPromptModal from '../components/modals/contents/PasswordPromptModal.vue';
 import { messages } from '../locales/ja.js';
+import { deserializeCharacterPayload } from '../utils/characterSerialization.js';
 
 export function useAppInitialization(dataManager) {
   const characterStore = useCharacterStore();
@@ -79,7 +80,7 @@ export function useAppInitialization(dataManager) {
           passwordPromptHandler: promptPassword,
         });
       }
-      const parsed = JSON.parse(new TextDecoder().decode(buffer));
+      const parsed = await deserializeCharacterPayload(buffer);
       Object.assign(characterStore.character, parsed.character);
       characterStore.skills.splice(0, characterStore.skills.length, ...parsed.skills);
       characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsed.specialSkills);

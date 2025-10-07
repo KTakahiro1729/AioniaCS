@@ -5,43 +5,25 @@ import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
-import { serializeCharacterForExport } from '../utils/characterSerialization.js';
+import { serializeCharacterForExport, buildCharacterArchive } from '../utils/characterSerialization.js';
 
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
   const { showToast } = useNotifications();
 
-  function _collectData(includeFull) {
+  async function _collectArchiveBuffer() {
     const { data, images } = serializeCharacterForExport({
       character: characterStore.character,
       skills: characterStore.skills,
       specialSkills: characterStore.specialSkills,
       equipments: characterStore.equipments,
       histories: characterStore.histories,
-      includeImages: includeFull,
+      includeImages: true,
     });
 
-    if (includeFull && images.length > 0) {
-      data.character.images = images;
-    }
-
-    return new TextEncoder().encode(JSON.stringify(data)).buffer;
-  }
-
-  function isLongData() {
-    const { data } = serializeCharacterForExport({
-      character: characterStore.character,
-      skills: characterStore.skills,
-      specialSkills: characterStore.specialSkills,
-      equipments: characterStore.equipments,
-      histories: characterStore.histories,
-      includeImages: false,
-    });
-    const payload = JSON.stringify({
-      character: data.character,
-      skills: data.skills,
-    });
-    return payload.length > 7000; // rough threshold
+    const { content } = await buildCharacterArchive({ data, images });
+    const { buffer, byteOffset, byteLength } = content;
+    return buffer.slice(byteOffset, byteOffset + byteLength);
   }
 
   async function _uploadHandler(data) {
@@ -61,8 +43,8 @@ export function useShare(dataManager) {
   }
 
   async function generateShare(options) {
-    const { type, includeFull, password, expiresInDays } = options;
-    const data = _collectData(includeFull);
+    const { type, password, expiresInDays } = options;
+    const data = await _collectArchiveBuffer();
     if (type === 'dynamic') {
       const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
       const { shareLink } = await createDynamicLink({
@@ -73,10 +55,9 @@ export function useShare(dataManager) {
       });
       return shareLink;
     }
-    const mode = includeFull ? 'cloud' : 'simple';
     return createShareLink({
       data,
-      mode,
+      mode: 'cloud',
       uploadHandler: _uploadHandler,
       shortenUrlHandler: async (longUrl) => longUrl,
       password: password || undefined,
@@ -93,5 +74,5 @@ export function useShare(dataManager) {
     }
   }
 
-  return { generateShare, copyLink, isLongData };
+  return { generateShare, copyLink };
 }

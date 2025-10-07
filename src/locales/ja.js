@@ -91,13 +91,10 @@ export const messages = {
           snapshot: '反映しない',
           dynamic: '反映する',
         },
-        driveRequired: 'Google Drive連携が必要です',
+        driveRequired: '共有リンクの生成には Google Drive 連携が必要です',
       },
       additional: {
         title: '追加オプション',
-        includeFull: '画像・メモ（長文の場合）を含める',
-        driveRequired: 'Google Drive連携が必要です',
-        truncateWarning: '内容が一部省略される可能性があります',
         enablePassword: 'パスワード保護',
         passwordPlaceholder: 'パスワード',
         expires: {
