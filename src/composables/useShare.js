@@ -1,7 +1,3 @@
-import { createShareLink } from '../libs/sabalessshare/src/index.js';
-import { createDynamicLink } from '../libs/sabalessshare/src/dynamic.js';
-import { arrayBufferToBase64 } from '../libs/sabalessshare/src/crypto.js';
-import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
@@ -10,8 +6,9 @@ import { serializeCharacterForExport } from '../utils/characterSerialization.js'
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
   const { showToast } = useNotifications();
+  let lastSharedFileId = null;
 
-  function _collectData(includeFull) {
+  function collectSharePayload(includeFull) {
     const { data, images } = serializeCharacterForExport({
       character: characterStore.character,
       skills: characterStore.skills,
@@ -25,7 +22,7 @@ export function useShare(dataManager) {
       data.character.images = images;
     }
 
-    return new TextEncoder().encode(JSON.stringify(data)).buffer;
+    return data;
   }
 
   function isLongData() {
@@ -44,44 +41,47 @@ export function useShare(dataManager) {
     return payload.length > 7000; // rough threshold
   }
 
-  async function _uploadHandler(data) {
+  async function generateShare(options) {
+    const { includeFull = false } = options || {};
     const manager = dataManager.googleDriveManager;
-    if (!manager || typeof manager.uploadAndShareFile !== 'function') {
+    if (!manager || typeof manager.saveSharedSnapshot !== 'function') {
       throw new Error(messages.share.needSignIn().message);
     }
-    const payload = JSON.stringify({
-      ciphertext: arrayBufferToBase64(data.ciphertext),
-      iv: arrayBufferToBase64(data.iv),
-    });
-    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json');
-    if (!id) {
-      throw new Error(messages.share.errors.uploadFailed);
-    }
-    return id;
-  }
 
-  async function generateShare(options) {
-    const { type, includeFull, password, expiresInDays } = options;
-    const data = _collectData(includeFull);
-    if (type === 'dynamic') {
-      const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
-      const { shareLink } = await createDynamicLink({
-        data,
-        adapter,
-        password: password || undefined,
-        expiresInDays,
-      });
-      return shareLink;
+    const payload = collectSharePayload(includeFull);
+    const snapshot = {
+      name: characterStore.character?.name || '',
+      content: JSON.stringify({
+        version: 1,
+        sharedAt: new Date().toISOString(),
+        ...payload,
+      }),
+      fileId: lastSharedFileId,
+    };
+
+    let result;
+    try {
+      result = await manager.saveSharedSnapshot(snapshot);
+    } catch (error) {
+      console.error('Failed to save shared snapshot to Drive:', error);
+      throw new Error(messages.share.errors.saveFailed);
     }
-    const mode = includeFull ? 'cloud' : 'simple';
-    return createShareLink({
-      data,
-      mode,
-      uploadHandler: _uploadHandler,
-      shortenUrlHandler: async (longUrl) => longUrl,
-      password: password || undefined,
-      expiresInDays,
-    });
+    if (!result || !result.id) {
+      throw new Error(messages.share.errors.saveFailed);
+    }
+
+    try {
+      await manager.setPermissionToPublic(result.id);
+    } catch (error) {
+      console.error('Failed to update Drive permissions for share:', error);
+      throw new Error(messages.share.errors.permissionFailed);
+    }
+
+    lastSharedFileId = result.id;
+
+    const baseUrl = new URL(window.location.href);
+    baseUrl.hash = `#/share/drive/${encodeURIComponent(result.id)}`;
+    return baseUrl.toString();
   }
 
   async function copyLink(link) {

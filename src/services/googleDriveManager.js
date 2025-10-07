@@ -551,6 +551,16 @@ export class GoogleDriveManager {
     }
   }
 
+  async saveSharedSnapshot({ name, content, fileId = null }) {
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
+    if (!folderId) {
+      throw new Error('Unable to resolve Drive folder for shared data.');
+    }
+    const baseName = sanitizeFileName(name);
+    const fileName = `${baseName}_shared.json`;
+    return this.saveFile(folderId, fileName, content, fileId, 'application/json');
+  }
+
   /**
    * Loads the content of a file from Google Drive.
    * @param {string} fileId - The ID of the file to load.
@@ -748,6 +758,35 @@ export class GoogleDriveManager {
     } catch (error) {
       console.error('Error uploading and sharing file:', error);
       return null;
+    }
+  }
+
+  async setPermissionToPublic(fileId) {
+    if (!fileId) {
+      throw new Error('File ID is required to update permissions.');
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for setPermissionToPublic.');
+      throw new Error('Google Drive API is not initialized.');
+    }
+    if (!gapi.client.drive.permissions || typeof gapi.client.drive.permissions.create !== 'function') {
+      console.error('Drive permissions API is unavailable.');
+      throw new Error('Google Drive permissions API is unavailable.');
+    }
+
+    try {
+      await gapi.client.drive.permissions.create({
+        fileId,
+        resource: {
+          role: 'reader',
+          type: 'anyone',
+          allowFileDiscovery: false,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error('Error setting file permission to public:', error);
+      throw error;
     }
   }
 

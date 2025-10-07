@@ -11,25 +11,25 @@ describe('ShareOptions', () => {
     setActivePinia(createPinia());
   });
 
-  test('emits canGenerate updates', async () => {
+  test('emits canGenerate updates based on sign-in state', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     const wrapper = mount(ShareOptions, {
       props: { longData: false },
     });
 
-    await wrapper.find('input[value="dynamic"]').setValue();
-    await nextTick();
     let events = wrapper.emitted('update:canGenerate');
     expect(events[events.length - 1][0]).toBe(false);
+    expect(wrapper.find('.share-options__signin').exists()).toBe(true);
 
     uiStore.isSignedIn = true;
     await nextTick();
     events = wrapper.emitted('update:canGenerate');
     expect(events[events.length - 1][0]).toBe(true);
+    expect(wrapper.find('.share-options__signin').exists()).toBe(false);
   });
 
-  test('truncate warning shown only when full content disabled', async () => {
+  test('truncate warning shown only when summary may truncate', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
     const wrapper = mount(ShareOptions, {

@@ -30,6 +30,7 @@ export class MockGoogleDriveManager {
       signedIn: false,
       config: this.getDefaultConfig(),
       folderPickerQueue: [],
+      permissions: {},
     };
 
     try {
@@ -62,6 +63,7 @@ export class MockGoogleDriveManager {
       signedIn: false,
       config: this.getDefaultConfig(),
       folderPickerQueue: [],
+      permissions: {},
     };
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
@@ -221,6 +223,13 @@ export class MockGoogleDriveManager {
     return { id, name: fileName };
   }
 
+  async saveSharedSnapshot({ name, content, fileId = null }) {
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
+    if (!folderId) return null;
+    const fileName = `${sanitizeFileName(name)}_shared.json`;
+    return this.saveFile(folderId, fileName, content, fileId, 'application/json');
+  }
+
   async loadFileContent(fileId) {
     const file = this.state.files[fileId];
     return file ? file.content : null;
@@ -229,6 +238,15 @@ export class MockGoogleDriveManager {
   async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
     const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
     return info.id;
+  }
+
+  async setPermissionToPublic(fileId) {
+    if (!fileId) {
+      throw new Error('File ID is required');
+    }
+    this.state.permissions[fileId] = 'anyone';
+    this._saveState();
+    return true;
   }
 
   showFilePicker(callback, parentFolderId = null) {
