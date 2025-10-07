@@ -1,44 +1,59 @@
 <template>
   <div class="share-options">
     <section class="share-options__section">
-      <h3 class="share-options__heading">今後の変更を反映しますか？</h3>
+      <h3 class="share-options__heading">{{ shareOptions.reflection.title }}</h3>
       <div class="share-options__row">
-        <label class="share-options__option"> <input type="radio" value="snapshot" v-model="type" />反映しない </label>
+        <label class="share-options__option">
+          <input type="radio" value="snapshot" v-model="type" />
+          {{ shareOptions.reflection.choices.snapshot }}
+        </label>
       </div>
       <div class="share-options__row">
         <label class="share-options__option">
-          <input type="radio" value="dynamic" v-model="type" />反映する
-          <div class="share-options__note">Google Drive連携が必要です</div>
+          <input type="radio" value="dynamic" v-model="type" />
+          {{ shareOptions.reflection.choices.dynamic }}
+          <div class="share-options__note">{{ shareOptions.reflection.driveRequired }}</div>
         </label>
       </div>
     </section>
     <section class="share-options__section">
-      <h3 class="share-options__heading">追加オプション</h3>
+      <h3 class="share-options__heading">{{ shareOptions.additional.title }}</h3>
       <div class="share-options__row">
         <label class="share-options__option">
-          <input type="checkbox" v-model="includeFull" />画像・メモ（長文の場合）を含める
-          <div class="share-options__note">Google Drive連携が必要です</div>
+          <input type="checkbox" v-model="includeFull" />
+          {{ shareOptions.additional.includeFull }}
+          <div class="share-options__note">{{ shareOptions.additional.driveRequired }}</div>
         </label>
       </div>
-      <p v-if="showTruncateWarning" class="share-options__warning">内容が一部省略される可能性があります</p>
+      <p v-if="showTruncateWarning" class="share-options__warning">{{ shareOptions.additional.truncateWarning }}</p>
       <div class="share-options__row">
-        <label class="share-options__option"> <input type="checkbox" v-model="enablePassword" />パスワード保護 </label>
+        <label class="share-options__option">
+          <input type="checkbox" v-model="enablePassword" />
+          {{ shareOptions.additional.enablePassword }}
+        </label>
       </div>
       <div class="share-options__row" v-if="enablePassword">
-        <input type="text" v-model="password" class="share-options__password-input" />
+        <input
+          type="text"
+          v-model="password"
+          class="share-options__password-input"
+          :placeholder="shareOptions.additional.passwordPlaceholder"
+        />
       </div>
       <div class="share-options__row">
         <label class="share-options__option"
-          >有効期限
+          >{{ shareOptions.additional.expires.label }}
           <select v-model="expires">
-            <option value="1">1日</option>
-            <option value="7">7日</option>
-            <option value="0">無期限</option>
+            <option value="1">{{ shareOptions.additional.expires.options[1] }}</option>
+            <option value="7">{{ shareOptions.additional.expires.options[7] }}</option>
+            <option value="0">{{ shareOptions.additional.expires.options[0] }}</option>
           </select>
         </label>
       </div>
     </section>
-    <button class="button-base share-options__signin" v-if="needSignin" @click="handleSignin">Google Drive にサインイン</button>
+    <button class="button-base share-options__signin" v-if="needSignin" @click="handleSignin">
+      {{ shareOptions.signIn }}
+    </button>
   </div>
 </template>
 
@@ -46,6 +61,7 @@
 import { ref, computed, defineExpose, watchEffect } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useUiStore } from '../../../stores/uiStore.js';
+import { messages } from '../../../locales/ja.js';
 const props = defineProps({ longData: Boolean });
 const emit = defineEmits(['signin', 'update:canGenerate']);
 const type = ref('snapshot');
@@ -55,6 +71,7 @@ const password = ref('');
 const expires = ref('0');
 const uiStore = useUiStore();
 const { isSignedIn } = storeToRefs(uiStore);
+const shareOptions = messages.share.options;
 const needSignin = computed(() => (type.value === 'dynamic' || includeFull.value) && !isSignedIn.value);
 const showTruncateWarning = computed(() => props.longData && !includeFull.value);
 const canGenerate = computed(() => !needSignin.value);

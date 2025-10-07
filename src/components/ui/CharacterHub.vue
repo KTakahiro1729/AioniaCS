@@ -3,7 +3,7 @@
     <template v-if="uiStore.isSignedIn">
       <div class="character-hub--actions">
         <div class="character-hub--config">
-          <label class="character-hub--label" for="drive_folder_path">保存先フォルダ</label>
+          <label class="character-hub--label" for="drive_folder_path">{{ hubMessages.driveFolder.label }}</label>
           <div class="character-hub--input-group">
             <input
               id="drive_folder_path"
@@ -11,7 +11,7 @@
               type="text"
               v-model="folderPathInput"
               :disabled="!uiStore.isSignedIn"
-              placeholder="慈悲なきアイオニア"
+              :placeholder="hubMessages.driveFolder.placeholder"
               @blur="commitFolderPath"
               @keyup.enter.prevent="commitFolderPath"
             />
@@ -26,18 +26,22 @@
           </div>
         </div>
         <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="loadCharacterFromDrive">
-          Driveから読み込む
+          {{ hubMessages.buttons.load }}
         </button>
         <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="saveNewCharacter">
-          新しい冒険者として保存
+          {{ hubMessages.buttons.saveNew }}
         </button>
-        <button class="button-base character-hub--button" :disabled="!isOverwriteEnabled" @click="saveOverwrite">上書き保存</button>
-        <button class="button-base character-hub--button" @click="emitSignOut">ログアウト</button>
+        <button class="button-base character-hub--button" :disabled="!isOverwriteEnabled" @click="saveOverwrite">
+          {{ hubMessages.buttons.overwrite }}
+        </button>
+        <button class="button-base character-hub--button" @click="emitSignOut">{{ hubMessages.buttons.signOut }}</button>
       </div>
     </template>
     <template v-else>
       <div class="character-hub--actions">
-        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="emitSignIn">Googleにログイン</button>
+        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="emitSignIn">
+          {{ hubMessages.buttons.signIn }}
+        </button>
       </div>
     </template>
   </div>
@@ -71,7 +75,8 @@ const {
 const canSignIn = computed(() => canSignInToGoogle.value);
 const isOverwriteEnabled = computed(() => isDriveReady.value && !!uiStore.currentDriveFileId);
 const folderPathInput = ref(uiStore.driveFolderPath);
-const changeFolderLabel = messages.characterHub.driveFolder.changeButton;
+const hubMessages = messages.characterHub;
+const changeFolderLabel = hubMessages.driveFolder.changeButton;
 const isFolderPickerEnabled = computed(() => isDriveReady.value && uiStore.isSignedIn);
 
 watch(

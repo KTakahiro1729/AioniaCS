@@ -1,12 +1,12 @@
 <template>
   <div id="scar_weakness_section" class="scar-weakness">
-    <div class="box-title">傷痕と弱点</div>
+    <div class="box-title">{{ scarWeaknessTexts.title }}</div>
     <div class="box-content">
       <div class="scar-section">
-        <div class="sub-box-title sub-box-title--scar">傷痕</div>
+        <div class="sub-box-title sub-box-title--scar">{{ scarWeaknessTexts.scar.title }}</div>
         <div class="info-row">
           <div class="info-item info-item--double">
-            <label for="initial_scar">初期値</label>
+            <label for="initial_scar">{{ scarWeaknessTexts.scar.initial }}</label>
             <input
               type="number"
               id="initial_scar"
@@ -16,7 +16,7 @@
             />
           </div>
           <div class="info-item info-item--double">
-            <label for="current_scar" class="link-checkbox-main-label">現在値（初期値+増加分）</label>
+            <label for="current_scar" class="link-checkbox-main-label">{{ scarWeaknessTexts.scar.current }}</label>
             <input
               type="number"
               id="current_scar"
@@ -29,12 +29,12 @@
         </div>
       </div>
       <div class="weakness-section">
-        <div class="sub-box-title sub-box-title--weakness">弱点</div>
+        <div class="sub-box-title sub-box-title--weakness">{{ scarWeaknessTexts.weakness.title }}</div>
         <ul class="weakness-list list-reset">
           <li class="base-list-header">
             <div class="flex-weakness-number base-list-header-placeholder"></div>
-            <div class="flex-weakness-text"><label>弱点</label></div>
-            <div class="flex-weakness-acquired"><label>獲得</label></div>
+            <div class="flex-weakness-text"><label>{{ scarWeaknessTexts.weakness.columns.text }}</label></div>
+            <div class="flex-weakness-acquired"><label>{{ scarWeaknessTexts.weakness.columns.acquired }}</label></div>
           </li>
           <li v-for="(weakness, index) in characterStore.character.weaknesses" :key="index" class="base-list-item">
             <div class="flex-weakness-number">{{ index < 9 ? index + 1 : 'X' }}</div>
@@ -59,9 +59,11 @@
 import { computed } from 'vue';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
+import { messages } from '../../locales/ja.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const scarWeaknessTexts = messages.sheet.sections.scarWeakness;
 const sessionNames = computed(() => characterStore.sessionNamesForWeaknessDropdown);
 const calculatedScar = computed(() => characterStore.calculatedScar);
 </script>

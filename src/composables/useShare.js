@@ -55,7 +55,7 @@ export function useShare(dataManager) {
     });
     const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json');
     if (!id) {
-      throw new Error('Google Drive へのアップロードに失敗しました');
+      throw new Error(messages.share.errors.uploadFailed);
     }
     return id;
   }

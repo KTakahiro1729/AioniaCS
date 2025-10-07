@@ -2,10 +2,10 @@
   <div id="special_skills" class="special-skills">
     <div class="box-title">
       <div class="box-title-main">
-        <span class="box-title-text">特技</span>
+        <span class="box-title-text">{{ sheetMessages.sections.specialSkills.title }}</span>
         <label class="description-toggle">
           <input type="checkbox" v-model="uiStore.showSpecialSkillDescriptions" />
-          説明を表示
+          {{ sheetMessages.toggles.showDescription }}
         </label>
       </div>
     </div>
@@ -13,9 +13,9 @@
       <ul class="list-reset">
         <li class="base-list-header special-skill-list-header">
           <div class="flex-item-delete"></div>
-          <div class="flex-item-group">種類</div>
-          <div class="flex-item-name">名称</div>
-          <div class="flex-item-acquired">獲得</div>
+          <div class="flex-item-group">{{ sheetMessages.sections.specialSkills.columns.group }}</div>
+          <div class="flex-item-name">{{ sheetMessages.sections.specialSkills.columns.name }}</div>
+          <div class="flex-item-acquired">{{ sheetMessages.sections.specialSkills.columns.acquired }}</div>
         </li>
       </ul>
       <ul class="list-reset special-skills-list">
@@ -26,7 +26,7 @@
               class="button-base list-button list-button--delete"
               @click="characterStore.removeSpecialSkill(index)"
               :disabled="localSpecialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)"
-              aria-label="特技を削除"
+              :aria-label="sheetMessages.aria.removeSpecialSkill"
             >
               －
             </button>
@@ -76,7 +76,7 @@
               v-if="specialSkill.group === 'free'"
               v-model="specialSkill.note"
               class="special-skill-note-input"
-              :placeholder="AioniaGameData.placeholderTexts.specialSkillNote"
+              :placeholder="sheetMessages.placeholders.specialSkillNote"
               :disabled="uiStore.isViewingShared"
             ></textarea>
             <input
@@ -85,7 +85,7 @@
               v-model="specialSkill.note"
               v-show="specialSkill.showNote"
               class="special-skill-note-input"
-              :placeholder="AioniaGameData.placeholderTexts.specialSkillNote"
+              :placeholder="sheetMessages.placeholders.specialSkillNote"
               :disabled="uiStore.isViewingShared"
             />
             <textarea
@@ -105,7 +105,7 @@
           type="button"
           class="button-base list-button list-button--add"
           @click="characterStore.addSpecialSkillItem()"
-          aria-label="特技を追加"
+          :aria-label="sheetMessages.aria.addSpecialSkill"
         >
           ＋
         </button>
@@ -119,9 +119,11 @@ import { computed } from 'vue';
 import { AioniaGameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
+import { messages } from '../../locales/ja.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const sheetMessages = messages.sheet;
 const localSpecialSkills = characterStore.specialSkills;
 
 const specialSkillDescriptionMap = computed(() => {

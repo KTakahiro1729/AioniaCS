@@ -1,14 +1,14 @@
 <template>
   <div id="adventure_log_section" class="adventure-log-section">
-    <div class="box-title">冒険の記録</div>
+    <div class="box-title">{{ sheetMessages.sections.adventureLog.title }}</div>
     <div class="box-content">
       <div class="base-list-header">
         <div class="delete-button-wrapper base-list-header-placeholder"></div>
         <div class="flex-grow">
           <div class="history-item-inputs">
-            <div class="flex-history-name"><label>シナリオ名</label></div>
-            <div class="flex-history-exp"><label>経験点</label></div>
-            <div class="flex-history-scar"><label>傷痕増加</label></div>
+            <div class="flex-history-name"><label>{{ sheetMessages.sections.adventureLog.columns.scenario }}</label></div>
+            <div class="flex-history-exp"><label>{{ sheetMessages.sections.adventureLog.columns.experience }}</label></div>
+            <div class="flex-history-scar"><label>{{ sheetMessages.sections.adventureLog.columns.scar }}</label></div>
             <div class="flex-history-memo"></div>
           </div>
         </div>
@@ -52,7 +52,7 @@
               <div class="flex-history-memo">
                 <BaseInput
                   type="text"
-                  placeholder="メモ"
+                  :placeholder="sheetMessages.placeholders.adventureMemo"
                   :model-value="history.memo"
                   @update:model-value="(v) => characterStore.updateHistoryItem(index, 'memo', v)"
                   :disabled="uiStore.isViewingShared"
@@ -67,7 +67,7 @@
           type="button"
           class="button-base list-button list-button--add"
           @click="characterStore.addHistoryItem"
-          aria-label="冒険記録を追加"
+          :aria-label="sheetMessages.aria.addAdventureLog"
         >
           ＋
         </button>
@@ -81,9 +81,11 @@ import BaseInput from '../common/BaseInput.vue';
 import BaseListItem from '../common/BaseListItem.vue';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
+import { messages } from '../../locales/ja.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const sheetMessages = messages.sheet;
 
 function hasHistoryContent(h) {
   return !!(

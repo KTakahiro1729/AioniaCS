@@ -2,12 +2,12 @@
   <div class="character-image-container">
     <div class="image-display-area">
       <div class="image-display-wrapper" v-if="imagesInternal.length > 0">
-        <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" alt="Character Image" />
+        <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" :alt="sheetMessages.images.alt" />
         <button
           @click="previousImage"
           class="button-base button-imagenav button-imagenav--prev"
           :disabled="imagesInternal.length <= 1"
-          aria-label="前の画像"
+          :aria-label="sheetMessages.images.previous"
         >
           &lt;
         </button>
@@ -15,24 +15,26 @@
           @click="nextImage"
           class="button-base button-imagenav button-imagenav--next"
           :disabled="imagesInternal.length <= 1"
-          aria-label="次の画像"
+          :aria-label="sheetMessages.images.next"
         >
           &gt;
         </button>
         <div class="image-count-display">{{ currentImageIndex + 1 }} / {{ imagesInternal.length }}</div>
       </div>
-      <div class="character-image-placeholder" v-else>No Image</div>
+      <div class="character-image-placeholder" v-else>{{ sheetMessages.images.empty }}</div>
     </div>
     <div class="image-controls" v-if="!uiStore.isViewingShared">
       <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none" />
-      <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">画像を追加</label>
+      <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">
+        {{ sheetMessages.images.add }}
+      </label>
       <button
         :disabled="!currentImageSrc"
         @click="removeCurrentImage"
         class="button-base imagefile-button imagefile-button--delete"
-        aria-label="現在の画像を削除"
+        :aria-label="sheetMessages.images.deleteAria"
       >
-        削除
+        {{ sheetMessages.images.delete }}
       </button>
     </div>
   </div>
@@ -54,6 +56,7 @@ const props = defineProps({
 const emit = defineEmits(['update:images']);
 const uiStore = useUiStore();
 const { showToast } = useNotifications();
+const sheetMessages = messages.sheet;
 
 const imagesInternal = ref([...props.images]);
 let updatingFromParent = false;

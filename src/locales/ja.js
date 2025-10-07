@@ -84,10 +84,45 @@ export const messages = {
       title: 'Google Drive',
       message: 'サインインしてください',
     }),
+    options: {
+      reflection: {
+        title: '今後の変更を反映しますか？',
+        choices: {
+          snapshot: '反映しない',
+          dynamic: '反映する',
+        },
+        driveRequired: 'Google Drive連携が必要です',
+      },
+      additional: {
+        title: '追加オプション',
+        includeFull: '画像・メモ（長文の場合）を含める',
+        driveRequired: 'Google Drive連携が必要です',
+        truncateWarning: '内容が一部省略される可能性があります',
+        enablePassword: 'パスワード保護',
+        passwordPlaceholder: 'パスワード',
+        expires: {
+          label: '有効期限',
+          options: {
+            1: '1日',
+            7: '7日',
+            0: '無期限',
+          },
+        },
+      },
+      signIn: 'Google Drive にサインイン',
+    },
     generateFailed: (err) => ({
       title: '共有リンク生成失敗',
       message: err.message,
     }),
+    errors: {
+      uploadFailed: 'Google Drive へのアップロードに失敗しました',
+      missingReadId: '読み込み対象のIDが指定されていません',
+      fetchFailed: 'Google Drive からファイルを取得できませんでした',
+      missingUpdateId: '更新対象のIDが指定されていません',
+      updateFailed: 'Google Drive の共有ファイル更新に失敗しました',
+      managerMissing: 'Google Drive マネージャーが設定されていません',
+    },
     loadError: {
       ...shareLoadErrorTexts,
       toast: (key) => ({
@@ -131,10 +166,25 @@ export const messages = {
     },
     driveFolder: {
       changeButton: '選択',
+      label: '保存先フォルダ',
+      placeholder: '慈悲なきアイオニア',
+    },
+    buttons: {
+      load: 'Driveから読み込む',
+      saveNew: '新しい冒険者として保存',
+      overwrite: '上書き保存',
+      signOut: 'ログアウト',
+      signIn: 'Googleにログイン',
     },
   },
   image: {
     loadError: (err) => ({ title: '画像読み込み失敗', message: err.message }),
+    uploadErrors: {
+      noFile: '画像ファイルが選択されていません。',
+      unsupportedType: '対応していない画像形式です。JPEG、PNG、GIF、WebP、SVG を指定してください。',
+      tooLarge: 'ファイルサイズが大きすぎます（最大10MB）。',
+      readError: '画像の読み込み中にエラーが発生しました。',
+    },
   },
   dataExport: {
     loadError: (msg) => ({ title: '読み込み失敗', message: msg }),
@@ -185,6 +235,107 @@ export const messages = {
           output: '駒出力',
           print: '印刷',
           driveFolder: 'フォルダ変更',
+        },
+      },
+    },
+  },
+  sheet: {
+    loadIndicator: {
+      label: '荷重',
+    },
+    toggles: {
+      showDescription: '説明を表示',
+    },
+    images: {
+      alt: 'キャラクター画像',
+      previous: '前の画像',
+      next: '次の画像',
+      add: '画像を追加',
+      delete: '削除',
+      deleteAria: '現在の画像を削除',
+      empty: '画像はありません',
+    },
+    placeholders: {
+      expertSkill: '専門技能',
+      expertSkillDisabled: '専門技能 (技能選択で有効)',
+      specialSkillNote: '詳細',
+      characterMemo: 'キャラクター背景、設定、その他メモを記入',
+      weaponName: '装備名',
+      armorName: '装備名',
+      adventureMemo: 'メモ',
+    },
+    aria: {
+      deleteItem: '項目を削除',
+      removeExpert: '専門技能を削除',
+      addExpert: '専門技能を追加',
+      removeSpecialSkill: '特技を削除',
+      addSpecialSkill: '特技を追加',
+      addAdventureLog: '冒険記録を追加',
+    },
+    sections: {
+      basicInfo: {
+        title: '基本情報',
+        fields: {
+          name: 'キャラクター名',
+          playerName: 'プレイヤー名',
+          species: '種族',
+          rareSpecies: '種族名（希少人種）',
+          gender: '性別',
+          age: '年齢',
+          height: '身長',
+          weight: '体重',
+          origin: '出身地',
+          occupation: '職業',
+          faith: '信仰',
+        },
+      },
+      scarWeakness: {
+        title: '傷痕と弱点',
+        scar: {
+          title: '傷痕',
+          initial: '初期値',
+          current: '現在値（初期値+増加分）',
+        },
+        weakness: {
+          title: '弱点',
+          columns: {
+            text: '弱点',
+            acquired: '獲得',
+          },
+        },
+      },
+      skills: {
+        title: '技能',
+      },
+      memo: {
+        title: 'キャラクターメモ',
+      },
+      specialSkills: {
+        title: '特技',
+        columns: {
+          group: '種類',
+          name: '名称',
+          acquired: '獲得',
+        },
+      },
+      items: {
+        title: '所持品',
+        labels: {
+          otherItems: 'その他所持品',
+          slots: {
+            weapon1: '武器1',
+            weapon2: '武器2',
+            armor: '防具',
+          },
+        },
+      },
+      adventureLog: {
+        title: '冒険の記録',
+        columns: {
+          scenario: 'シナリオ名',
+          experience: '経験点',
+          scar: '傷痕増加',
+          memo: 'メモ',
         },
       },
     },

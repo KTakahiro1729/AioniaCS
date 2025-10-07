@@ -2,10 +2,10 @@
   <div id="items_section" class="items">
     <div class="box-title">
       <div class="box-title-main">
-        <span class="box-title-text">所持品</span>
+        <span class="box-title-text">{{ sheetMessages.sections.items.title }}</span>
         <label class="description-toggle">
           <input type="checkbox" v-model="uiStore.showItemDescriptions" />
-          説明を表示
+          {{ sheetMessages.toggles.showDescription }}
         </label>
       </div>
       <LoadIndicator />
@@ -37,7 +37,7 @@
                   type="text"
                   :id="`${slot.key}_name`"
                   v-model="characterStore.equipments[slot.key].name"
-                  :placeholder="gameData.placeholderTexts[slot.placeholderKey]"
+                  :placeholder="sheetMessages.placeholders[slot.placeholderKey]"
                   class="flex-item-2"
                   :disabled="uiStore.isViewingShared"
                 />
@@ -53,7 +53,7 @@
         </div>
       </div>
       <div>
-        <label for="other_items" class="block-label">その他所持品</label>
+        <label for="other_items" class="block-label">{{ sheetMessages.sections.items.labels.otherItems }}</label>
         <textarea
           id="other_items"
           class="items-textarea"
@@ -71,14 +71,31 @@ import { AioniaGameData as gameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
 import LoadIndicator from '../ui/LoadIndicator.vue';
+import { messages } from '../../locales/ja.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const sheetMessages = messages.sheet;
 
 const equipmentSlots = [
-  { key: 'weapon1', label: '武器1', optionsKey: 'weaponOptions', placeholderKey: 'weaponName' },
-  { key: 'weapon2', label: '武器2', optionsKey: 'weaponOptions', placeholderKey: 'weaponName' },
-  { key: 'armor', label: '防具', optionsKey: 'armorOptions', placeholderKey: 'armorName' },
+  {
+    key: 'weapon1',
+    label: sheetMessages.sections.items.labels.slots.weapon1,
+    optionsKey: 'weaponOptions',
+    placeholderKey: 'weaponName',
+  },
+  {
+    key: 'weapon2',
+    label: sheetMessages.sections.items.labels.slots.weapon2,
+    optionsKey: 'weaponOptions',
+    placeholderKey: 'weaponName',
+  },
+  {
+    key: 'armor',
+    label: sheetMessages.sections.items.labels.slots.armor,
+    optionsKey: 'armorOptions',
+    placeholderKey: 'armorName',
+  },
 ];
 
 const optionDescriptionMaps = computed(() =>
