@@ -12,13 +12,13 @@ import { useModal } from '../../../src/composables/useModal.js';
 function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
   const showFolderPicker = vi.fn();
   const setCharacterFolderPath = vi.fn().mockResolvedValue(normalizedPath);
-  const findOrCreateAioniaCSFolder = vi.fn().mockResolvedValue('folder-id');
+  const findOrCreateConfiguredCharacterFolder = vi.fn().mockResolvedValue('folder-id');
   const normalizeFolderPath = vi.fn((path) => path.replace(/\\/g, '/'));
 
   return {
     showFolderPicker,
     setCharacterFolderPath,
-    findOrCreateAioniaCSFolder,
+    findOrCreateConfiguredCharacterFolder,
     normalizeFolderPath,
   };
 }
@@ -34,7 +34,7 @@ describe('useGoogleDrive', () => {
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Hero.json' }),
+      saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Hero.json' }),
       findDriveFileByCharacterName: vi.fn(),
       googleDriveManager: {},
     };
@@ -49,7 +49,7 @@ describe('useGoogleDrive', () => {
     await saveCharacterToDrive();
 
     expect(dataManager.findDriveFileByCharacterName).not.toHaveBeenCalled();
-    expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
+    expect(dataManager.saveCharacterToDrive).toHaveBeenCalledWith(
       charStore.character,
       charStore.skills,
       charStore.specialSkills,
@@ -61,7 +61,7 @@ describe('useGoogleDrive', () => {
 
   test('saveCharacterToDrive prompts for overwrite when duplicate exists', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
+      saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
       findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
       googleDriveManager: {},
     };
@@ -78,7 +78,7 @@ describe('useGoogleDrive', () => {
 
     expect(dataManager.findDriveFileByCharacterName).toHaveBeenCalledWith('Hero');
     expect(showModalMock).toHaveBeenCalled();
-    expect(dataManager.saveDataToAppData).toHaveBeenCalledWith(
+    expect(dataManager.saveCharacterToDrive).toHaveBeenCalledWith(
       charStore.character,
       charStore.skills,
       charStore.specialSkills,
@@ -90,7 +90,7 @@ describe('useGoogleDrive', () => {
 
   test('saveCharacterToDrive cancels when overwrite declined', async () => {
     const dataManager = {
-      saveDataToAppData: vi.fn(),
+      saveCharacterToDrive: vi.fn(),
       findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
       googleDriveManager: {},
     };
@@ -105,7 +105,7 @@ describe('useGoogleDrive', () => {
     const result = await saveCharacterToDrive(true);
 
     expect(result).toBeNull();
-    expect(dataManager.saveDataToAppData).not.toHaveBeenCalled();
+    expect(dataManager.saveCharacterToDrive).not.toHaveBeenCalled();
   });
 
   test('loadCharacterFromDrive loads data and updates store', async () => {
@@ -117,12 +117,12 @@ describe('useGoogleDrive', () => {
       histories: [],
     };
     const dataManager = {
-      saveDataToAppData: vi.fn(),
+      saveCharacterToDrive: vi.fn(),
       findDriveFileByCharacterName: vi.fn(),
       loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
       googleDriveManager: {
         showFilePicker: (cb) => cb(null, { id: 'file-1', name: 'Explorer.json' }),
-        findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-id'),
+        findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
       },
     };
     const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
@@ -151,7 +151,7 @@ describe('useGoogleDrive', () => {
       },
       loadDataFromDrive: vi.fn(),
       findDriveFileByCharacterName: vi.fn(),
-      saveDataToAppData: vi.fn(),
+      saveCharacterToDrive: vi.fn(),
     };
 
     const { promptForDriveFolder } = useGoogleDrive(dataManager);

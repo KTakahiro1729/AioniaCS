@@ -19,7 +19,7 @@ describe('DataManager data integrity', () => {
   });
 
   it('saves a new character into the configured Drive folder', async () => {
-    const result = await dm.saveDataToAppData({ name: 'Hero' }, [], [], {}, [], null);
+    const result = await dm.saveCharacterToDrive({ name: 'Hero' }, [], [], {}, [], null);
 
     expect(result?.id).toBeTruthy();
     const stored = await gdm.loadCharacterFile(result.id);
@@ -27,12 +27,12 @@ describe('DataManager data integrity', () => {
   });
 
   it('finds existing files by character name and updates them', async () => {
-    const initial = await dm.saveDataToAppData({ name: 'Scout', memo: 'original' }, [], [], {}, [], null);
+    const initial = await dm.saveCharacterToDrive({ name: 'Scout', memo: 'original' }, [], [], {}, [], null);
 
     const found = await dm.findDriveFileByCharacterName('Scout');
     expect(found?.id).toBe(initial.id);
 
-    await dm.saveDataToAppData({ name: 'Scout', memo: 'updated' }, [], [], {}, [], found.id);
+    await dm.saveCharacterToDrive({ name: 'Scout', memo: 'updated' }, [], [], {}, [], found.id);
 
     const updated = await getMockGoogleDriveManagerInstance().loadCharacterFile(found.id);
     expect(updated.character.memo).toBe('updated');

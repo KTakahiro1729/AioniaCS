@@ -84,7 +84,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     );
   });
 
-  test('findOrCreateAioniaCSFolder builds nested folders from configured path', async () => {
+  test('findOrCreateConfiguredCharacterFolder builds nested folders from configured path', async () => {
     gapi.client.drive.files.list.mockImplementation(({ q }) => {
       if (q.includes("name='aioniacs.cfg'")) {
         return Promise.resolve({ result: { files: [] } });
@@ -107,7 +107,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     await gdm.loadConfig();
     await gdm.setCharacterFolderPath('Parent\\Child');
 
-    const folderId = await gdm.findOrCreateAioniaCSFolder();
+    const folderId = await gdm.findOrCreateConfiguredCharacterFolder();
 
     expect(folderId).toBe('folder-child');
     expect(gapi.client.drive.files.create).toHaveBeenNthCalledWith(1, {

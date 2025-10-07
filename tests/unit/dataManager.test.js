@@ -262,18 +262,18 @@ describe('DataManager', () => {
     });
   });
 
-  describe('saveDataToAppData', () => {
+  describe('saveCharacterToDrive', () => {
     beforeEach(() => {
       dm.googleDriveManager = {
         createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.zip' }),
         updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.zip' }),
-        findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-id'),
+        findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
         isFileInConfiguredFolder: vi.fn().mockResolvedValue(true),
       };
     });
 
     test('creates new file when no id', async () => {
-      const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
+      const res = await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
       expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
       const payload = dm.googleDriveManager.createCharacterFile.mock.calls[0][0];
       expect(payload.mimeType).toBe('application/zip');
@@ -283,7 +283,7 @@ describe('DataManager', () => {
     });
 
     test('updates file when id exists', async () => {
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
       expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith(
         '1',
         expect.objectContaining({
@@ -297,7 +297,7 @@ describe('DataManager', () => {
     test('creates new file when existing file is outside configured folder', async () => {
       dm.googleDriveManager.isFileInConfiguredFolder.mockResolvedValue(false);
 
-      await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
 
       expect(dm.googleDriveManager.isFileInConfiguredFolder).toHaveBeenCalledWith('1');
       expect(dm.googleDriveManager.updateCharacterFile).not.toHaveBeenCalled();

@@ -126,8 +126,8 @@ export function useGoogleDrive(dataManager) {
       typeof googleDriveManager.value.normalizeFolderPath === 'function' ? googleDriveManager.value.normalizeFolderPath(path) : path;
 
     if (normalizer === uiStore.driveFolderPath) {
-      if (typeof googleDriveManager.value.findOrCreateAioniaCSFolder === 'function') {
-        await googleDriveManager.value.findOrCreateAioniaCSFolder();
+      if (typeof googleDriveManager.value.findOrCreateConfiguredCharacterFolder === 'function') {
+        await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
       }
       return normalizer;
     }
@@ -135,8 +135,8 @@ export function useGoogleDrive(dataManager) {
     try {
       const normalized = await googleDriveManager.value.setCharacterFolderPath(path);
       uiStore.setDriveFolderPath(normalized);
-      if (typeof googleDriveManager.value.findOrCreateAioniaCSFolder === 'function') {
-        await googleDriveManager.value.findOrCreateAioniaCSFolder();
+      if (typeof googleDriveManager.value.findOrCreateConfiguredCharacterFolder === 'function') {
+        await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
       }
       showToast({ type: 'success', ...messages.googleDrive.config.updateSuccess() });
       return normalized;
@@ -154,7 +154,7 @@ export function useGoogleDrive(dataManager) {
     }
     if (!dataManager.googleDriveManager) return null;
 
-    const folderId = await dataManager.googleDriveManager.findOrCreateAioniaCSFolder();
+    const folderId = await dataManager.googleDriveManager.findOrCreateConfiguredCharacterFolder();
 
     return new Promise((resolve) => {
       dataManager.googleDriveManager.showFilePicker(
@@ -230,7 +230,7 @@ export function useGoogleDrive(dataManager) {
     }
 
     const savePromise = dataManager
-      .saveDataToAppData(
+      .saveCharacterToDrive(
         characterStore.character,
         characterStore.skills,
         characterStore.specialSkills,

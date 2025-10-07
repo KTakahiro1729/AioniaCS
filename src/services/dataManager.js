@@ -149,7 +149,7 @@ export class DataManager {
    * Saves character data to the configured Google Drive character folder.
    * Handles both creating new files and updating existing ones without index management.
    */
-  async saveDataToAppData(character, skills, specialSkills, equipments, histories, currentFileId) {
+  async saveCharacterToDrive(character, skills, specialSkills, equipments, histories, currentFileId) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');

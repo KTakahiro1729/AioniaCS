@@ -593,7 +593,7 @@ export class GoogleDriveManager {
    * Finds or creates the configured character folder in the user's Drive root.
    * @returns {Promise<string|null>} The ID of the folder, or null if not available.
    */
-  async findOrCreateAioniaCSFolder() {
+  async findOrCreateConfiguredCharacterFolder() {
     const config = await this.loadConfig();
     if (!config) {
       return null;
@@ -605,7 +605,7 @@ export class GoogleDriveManager {
     }
 
     if (!gapi.client || !gapi.client.drive) {
-      console.error('GAPI client or Drive API not loaded for findOrCreateAioniaCSFolder.');
+      console.error('GAPI client or Drive API not loaded for findOrCreateConfiguredCharacterFolder.');
       return null;
     }
 
@@ -642,7 +642,7 @@ export class GoogleDriveManager {
   async findFileByName(fileName) {
     if (!fileName) return null;
 
-    const folderId = await this.findOrCreateAioniaCSFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
 
     if (!gapi.client || !gapi.client.drive) {
@@ -858,7 +858,7 @@ export class GoogleDriveManager {
     if (!fileId) {
       return false;
     }
-    const targetFolderId = await this.findOrCreateAioniaCSFolder();
+    const targetFolderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!targetFolderId) {
       return false;
     }
@@ -891,7 +891,7 @@ export class GoogleDriveManager {
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    const folderId = await this.findOrCreateAioniaCSFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
     return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
   }
@@ -905,7 +905,7 @@ export class GoogleDriveManager {
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    const folderId = await this.findOrCreateAioniaCSFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
     return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
   }
