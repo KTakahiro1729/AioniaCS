@@ -178,7 +178,7 @@ export class MockGoogleDriveManager {
   }
 
   async getOrCreateAppFolder() {
-    return this.findOrCreateAioniaCSFolder();
+    return this.findOrCreateConfiguredCharacterFolder();
   }
 
   async ensureConfiguredFolder() {
@@ -198,7 +198,7 @@ export class MockGoogleDriveManager {
     return folder.id;
   }
 
-  async findOrCreateAioniaCSFolder() {
+  async findOrCreateConfiguredCharacterFolder() {
     return this.ensureConfiguredFolder();
   }
 
@@ -273,21 +273,21 @@ export class MockGoogleDriveManager {
 
   async findFileByName(fileName) {
     if (!fileName) return null;
-    const folderId = await this.findOrCreateAioniaCSFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
     const file = Object.values(this.state.files).find((entry) => entry.parentId === folderId && entry.name === fileName);
     return file ? { id: file.id, name: file.name } : null;
   }
 
   async isFileInConfiguredFolder(fileId) {
-    const folderId = await this.findOrCreateAioniaCSFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return false;
     const file = this.state.files[fileId];
     return file ? file.parentId === folderId : false;
   }
 
   async createCharacterFile(payload) {
-    const folderId = await this.findOrCreateAioniaCSFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
@@ -296,7 +296,7 @@ export class MockGoogleDriveManager {
   }
 
   async updateCharacterFile(id, payload) {
-    const folderId = await this.findOrCreateAioniaCSFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
