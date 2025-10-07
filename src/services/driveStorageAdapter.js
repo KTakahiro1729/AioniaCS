@@ -14,11 +14,15 @@ export class DriveStorageAdapter {
   async create(data) {
     this._ensureManager();
     const serialized = this._serializeData(data);
-    const id = await this.gdm.uploadAndShareFile(serialized.body, FILE_NAMES[serialized.kind], serialized.mimeType);
-    if (!id) {
+    const folderId = typeof this.gdm.findOrCreateAioniaCSFolder === 'function' ? await this.gdm.findOrCreateAioniaCSFolder() : null;
+    const result = await this.gdm.saveFile(folderId, FILE_NAMES[serialized.kind], serialized.body, {
+      mimeType: serialized.mimeType,
+      sharePublicly: true,
+    });
+    if (!result || !result.id) {
       throw new Error(messages.share.errors.uploadFailed);
     }
-    return id;
+    return result.id;
   }
 
   async read(id) {
@@ -39,7 +43,11 @@ export class DriveStorageAdapter {
       throw new Error(messages.share.errors.missingUpdateId);
     }
     const serialized = this._serializeData(data);
-    const result = await this.gdm.saveFile(null, FILE_NAMES[serialized.kind], serialized.body, id, serialized.mimeType);
+    const result = await this.gdm.saveFile(null, FILE_NAMES[serialized.kind], serialized.body, {
+      fileId: id,
+      mimeType: serialized.mimeType,
+      sharePublicly: true,
+    });
     if (!result || !result.id) {
       throw new Error(messages.share.errors.updateFailed);
     }

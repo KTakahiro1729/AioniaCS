@@ -208,14 +208,17 @@ export class MockGoogleDriveManager {
       .map((file) => ({ id: file.id, name: file.name }));
   }
 
-  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
+  async saveFile(folderId, fileName, fileContent, options = {}) {
+    const { fileId = null, mimeType = 'application/json', sharePublicly = false } = options;
     const id = fileId || `file-${this.state.fileCounter++}`;
+    const previous = this.state.files[id] || {};
     this.state.files[id] = {
       id,
       name: fileName,
       content: fileContent,
       parentId: folderId,
       mimeType,
+      shared: sharePublicly || Boolean(previous.shared),
     };
     this._saveState();
     return { id, name: fileName };
@@ -224,11 +227,6 @@ export class MockGoogleDriveManager {
   async loadFileContent(fileId) {
     const file = this.state.files[fileId];
     return file ? file.content : null;
-  }
-
-  async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
-    const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
-    return info.id;
   }
 
   showFilePicker(callback, parentFolderId = null) {
@@ -292,7 +290,7 @@ export class MockGoogleDriveManager {
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
+    return this.saveFile(folderId, fileName, payload?.content || '', { mimeType });
   }
 
   async updateCharacterFile(id, payload) {
@@ -301,7 +299,7 @@ export class MockGoogleDriveManager {
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
+    return this.saveFile(folderId, fileName, payload?.content || '', { fileId: id, mimeType });
   }
 
   async loadCharacterFile(id) {

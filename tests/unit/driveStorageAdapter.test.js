@@ -7,9 +7,9 @@ describe('DriveStorageAdapter', () => {
   let gdm;
   beforeEach(() => {
     gdm = {
-      uploadAndShareFile: vi.fn().mockResolvedValue('1'),
       saveFile: vi.fn().mockResolvedValue({ id: '1' }),
       loadFileContent: vi.fn().mockResolvedValue(''),
+      findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-1'),
     };
     adapter = new DriveStorageAdapter(gdm);
   });
@@ -18,7 +18,15 @@ describe('DriveStorageAdapter', () => {
     const buf = new ArrayBuffer(8);
     const id = await adapter.create({ ciphertext: buf, iv: new Uint8Array(8) });
     expect(id).toBe('1');
-    expect(gdm.uploadAndShareFile).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('data'), 'application/json');
+    expect(gdm.saveFile).toHaveBeenCalledWith(
+      'folder-1',
+      'sls_dynamic_data.json',
+      expect.any(String),
+      expect.objectContaining({
+        mimeType: 'application/json',
+        sharePublicly: true,
+      }),
+    );
   });
 
   test('read parses saved content', async () => {
@@ -38,6 +46,15 @@ describe('DriveStorageAdapter', () => {
 
   test('update calls saveFile with id', async () => {
     await adapter.update('u1', new Uint8Array(4));
-    expect(gdm.saveFile).toHaveBeenCalledWith(null, expect.stringContaining('pointer'), expect.any(String), 'u1', 'text/plain');
+    expect(gdm.saveFile).toHaveBeenCalledWith(
+      null,
+      expect.stringContaining('pointer'),
+      expect.any(String),
+      expect.objectContaining({
+        fileId: 'u1',
+        mimeType: 'text/plain',
+        sharePublicly: true,
+      }),
+    );
   });
 });

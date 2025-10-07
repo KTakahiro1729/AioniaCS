@@ -131,13 +131,10 @@ export class DataManager {
     const sanitizedFileName = `${this._sanitizeFileName(character.name)}.zip`;
 
     try {
-      const result = await this.googleDriveManager.saveFile(
-        targetFolderId,
-        sanitizedFileName,
-        archive.content,
-        currentFileId,
-        archive.mimeType,
-      );
+      const result = await this.googleDriveManager.saveFile(targetFolderId, sanitizedFileName, archive.content, {
+        fileId: currentFileId,
+        mimeType: archive.mimeType,
+      });
       return result;
     } catch (error) {
       console.error('Error saving data to Google Drive:', error);

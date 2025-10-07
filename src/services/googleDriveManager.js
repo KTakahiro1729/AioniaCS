@@ -193,7 +193,7 @@ export class GoogleDriveManager {
     }
     const payload = JSON.stringify(this.config, null, 2);
     try {
-      const result = await this.saveFile('root', this.configFileName, payload, this.configFileId);
+      const result = await this.saveFile('root', this.configFileName, payload, { fileId: this.configFileId });
       if (result) {
         this.configFileId = result.id;
       }
@@ -455,16 +455,20 @@ export class GoogleDriveManager {
    * Saves a file (creates or updates) to Google Drive.
    * @param {string} folderId - The ID of the parent folder (used if creating a new file).
    * @param {string} fileName - The name of the file.
-   * @param {string} fileContent - The content of the file (JSON string).
-   * @param {string|null} fileId - The ID of the file to update, or null to create a new file.
+   * @param {string|ArrayBuffer|ArrayBufferView} fileContent - The content of the file.
+   * @param {object} [options]
+   * @param {string|null} [options.fileId] - The ID of the file to update, or null to create a new file.
+   * @param {string} [options.mimeType] - MIME type of the file content.
+   * @param {boolean} [options.sharePublicly] - Whether to ensure the file is shared publicly.
    * @returns {Promise<{id: string, name: string}|null>} File ID and name, or null on error.
    */
-  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
+  async saveFile(folderId, fileName, fileContent, options = {}) {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
     }
 
+    const { fileId = null, mimeType = 'application/json', sharePublicly = false } = options;
     const boundary = '-------314159265358979323846';
     const delimiter = `\r\n--${boundary}\r\n`;
     const closeDelim = `\r\n--${boundary}--`;
@@ -479,6 +483,21 @@ export class GoogleDriveManager {
       console.error('Unsupported file content for Drive upload:', error);
       return null;
     }
+
+    const finalizeResult = async (result, context) => {
+      if (!result) {
+        return null;
+      }
+      if (sharePublicly && result.id) {
+        try {
+          await this.ensureFileIsPublic(result.id);
+        } catch (permissionError) {
+          console.error(`Failed to ensure file is publicly accessible after ${context}:`, permissionError);
+          return null;
+        }
+      }
+      return result;
+    };
 
     if (fileId) {
       try {
@@ -501,7 +520,7 @@ export class GoogleDriveManager {
           body: multipartRequestBody,
         });
         console.log('File updated successfully:', response.result);
-        return { id: response.result.id, name: response.result.name };
+        return await finalizeResult({ id: response.result.id, name: response.result.name }, 'update');
       } catch (error) {
         // 404エラーの場合、ファイルが存在しないと判断し、新規作成フローに進む
         if (error.status === 404) {
@@ -541,13 +560,35 @@ export class GoogleDriveManager {
         body: multipartRequestBody,
       });
       console.log('File created successfully:', response.result);
-      return { id: response.result.id, name: response.result.name };
+      return await finalizeResult({ id: response.result.id, name: response.result.name }, 'creation');
     } catch (error) {
       console.error('Error creating new file:', error);
       if (error.result && error.result.error) {
         console.error('Detailed error:', error.result.error.message);
       }
       return null;
+    }
+  }
+
+  async ensureFileIsPublic(fileId) {
+    if (!fileId) {
+      return;
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      throw new Error('GAPI client or Drive API not loaded for ensureFileIsPublic.');
+    }
+
+    try {
+      await gapi.client.drive.permissions.create({
+        fileId,
+        resource: { role: 'reader', type: 'anyone' },
+      });
+    } catch (error) {
+      if (error?.status === 409) {
+        console.warn('Public permission already exists for file:', fileId);
+        return;
+      }
+      throw error;
     }
   }
 
@@ -706,52 +747,6 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Uploads a file and sets sharing permissions.
-   * @param {string|ArrayBuffer} fileContent
-   * @param {string} fileName
-   * @param {string} mimeType
-   * @returns {Promise<string|null>} Uploaded file ID
-   */
-  async uploadAndShareFile(fileContent, fileName, mimeType) {
-    if (!gapi.client || !gapi.client.drive) {
-      console.error('GAPI client or Drive API not loaded for uploadAndShareFile.');
-      return null;
-    }
-    try {
-      const boundary = '-------314159265358979323846';
-      const delimiter = `\r\n--${boundary}\r\n`;
-      const closeDelim = `\r\n--${boundary}--`;
-      const metadata = { name: fileName, mimeType };
-      const payload = prepareMultipartPayload(fileContent);
-      const multipartRequestBody =
-        delimiter +
-        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-        JSON.stringify(metadata) +
-        delimiter +
-        `Content-Type: ${mimeType}\r\n${payload.transferEncoding}\r\n` +
-        payload.body +
-        closeDelim;
-
-      const res = await gapi.client.request({
-        path: '/upload/drive/v3/files',
-        method: 'POST',
-        params: { uploadType: 'multipart', fields: 'id' },
-        headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-        body: multipartRequestBody,
-      });
-
-      await gapi.client.drive.permissions.create({
-        fileId: res.result.id,
-        resource: { role: 'reader', type: 'anyone' },
-      });
-      return res.result.id;
-    } catch (error) {
-      console.error('Error uploading and sharing file:', error);
-      return null;
-    }
-  }
-
-  /**
    * Shows the Google File Picker to select a file.
    * @param {function} callback - Function to call with the result (error, {id, name}).
    * @param {string|null} parentFolderId - Optional ID of the folder to start in.
@@ -893,7 +888,7 @@ export class GoogleDriveManager {
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
+    return this.saveFile(folderId, fileName, payload?.content || '', { mimeType });
   }
 
   /**
@@ -907,7 +902,7 @@ export class GoogleDriveManager {
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
+    return this.saveFile(folderId, fileName, payload?.content || '', { fileId: id, mimeType });
   }
 
   async loadCharacterFile(id) {
