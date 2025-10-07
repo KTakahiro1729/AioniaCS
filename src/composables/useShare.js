@@ -21,11 +21,15 @@ export function useShare(dataManager) {
       includeImages: includeFull,
     });
 
-    if (includeFull && images.length > 0) {
-      data.character.images = images;
-    }
+    const payload = {
+      ...data,
+      character: {
+        ...(data.character || {}),
+        ...(includeFull && images.length > 0 ? { images } : {}),
+      },
+    };
 
-    return new TextEncoder().encode(JSON.stringify(data)).buffer;
+    return new TextEncoder().encode(JSON.stringify(payload)).buffer;
   }
 
   function isLongData() {
