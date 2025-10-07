@@ -39,10 +39,20 @@ describe('useShare', () => {
   });
 
   test('rejects when uploadAndShareFile returns null', async () => {
-    const googleDriveManager = { uploadAndShareFile: vi.fn().mockResolvedValue(null) };
+    const googleDriveManager = {
+      uploadAndShareFile: vi.fn().mockResolvedValue(null),
+      findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-xyz'),
+    };
     const { generateShare } = useShare({ googleDriveManager });
     await expect(generateShare({ type: 'snapshot', includeFull: true, password: '', expiresInDays: 0 })).rejects.toThrow(
       'Google Drive へのアップロードに失敗しました',
+    );
+    expect(googleDriveManager.findOrCreateAioniaCSFolder).toHaveBeenCalled();
+    expect(googleDriveManager.uploadAndShareFile).toHaveBeenCalledWith(
+      expect.stringContaining('ciphertext'),
+      'share.enc',
+      'application/json',
+      'folder-xyz',
     );
   });
 });

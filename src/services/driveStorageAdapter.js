@@ -14,7 +14,15 @@ export class DriveStorageAdapter {
   async create(data) {
     this._ensureManager();
     const serialized = this._serializeData(data);
-    const id = await this.gdm.uploadAndShareFile(serialized.body, FILE_NAMES[serialized.kind], serialized.mimeType);
+    let parentFolderId = null;
+    if (typeof this.gdm.findOrCreateAioniaCSFolder === 'function') {
+      try {
+        parentFolderId = await this.gdm.findOrCreateAioniaCSFolder();
+      } catch (error) {
+        console.error('Failed to resolve Drive folder for shared file upload:', error);
+      }
+    }
+    const id = await this.gdm.uploadAndShareFile(serialized.body, FILE_NAMES[serialized.kind], serialized.mimeType, parentFolderId ?? null);
     if (!id) {
       throw new Error(messages.share.errors.uploadFailed);
     }

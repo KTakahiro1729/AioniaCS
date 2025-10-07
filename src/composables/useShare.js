@@ -53,7 +53,15 @@ export function useShare(dataManager) {
       ciphertext: arrayBufferToBase64(data.ciphertext),
       iv: arrayBufferToBase64(data.iv),
     });
-    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json');
+    let parentFolderId = null;
+    if (typeof manager.findOrCreateAioniaCSFolder === 'function') {
+      try {
+        parentFolderId = await manager.findOrCreateAioniaCSFolder();
+      } catch (error) {
+        console.error('Failed to resolve Drive folder for shared snapshot upload:', error);
+      }
+    }
+    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json', parentFolderId ?? null);
     if (!id) {
       throw new Error(messages.share.errors.uploadFailed);
     }

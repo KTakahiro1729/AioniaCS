@@ -10,6 +10,7 @@ describe('DriveStorageAdapter', () => {
       uploadAndShareFile: vi.fn().mockResolvedValue('1'),
       saveFile: vi.fn().mockResolvedValue({ id: '1' }),
       loadFileContent: vi.fn().mockResolvedValue(''),
+      findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-123'),
     };
     adapter = new DriveStorageAdapter(gdm);
   });
@@ -18,7 +19,13 @@ describe('DriveStorageAdapter', () => {
     const buf = new ArrayBuffer(8);
     const id = await adapter.create({ ciphertext: buf, iv: new Uint8Array(8) });
     expect(id).toBe('1');
-    expect(gdm.uploadAndShareFile).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('data'), 'application/json');
+    expect(gdm.uploadAndShareFile).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.stringContaining('data'),
+      'application/json',
+      'folder-123',
+    );
+    expect(gdm.findOrCreateAioniaCSFolder).toHaveBeenCalled();
   });
 
   test('read parses saved content', async () => {
