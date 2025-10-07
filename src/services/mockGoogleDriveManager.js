@@ -226,8 +226,9 @@ export class MockGoogleDriveManager {
     return file ? file.content : null;
   }
 
-  async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
-    const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
+  async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json', parentFolderId = null) {
+    const targetParent = parentFolderId ?? 'shared';
+    const info = await this.saveFile(targetParent, fileName, fileContent, null, mimeType);
     return info.id;
   }
 

@@ -45,4 +45,15 @@ describe('useShare', () => {
       'Google Drive へのアップロードに失敗しました',
     );
   });
+
+  test('uploads snapshot data into the configured Drive folder', async () => {
+    const googleDriveManager = {
+      uploadAndShareFile: vi.fn().mockResolvedValue('file-1'),
+      findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-1'),
+    };
+    const { generateShare } = useShare({ googleDriveManager });
+    await expect(generateShare({ type: 'snapshot', includeFull: true, password: '', expiresInDays: 0 })).resolves.toBe('link');
+    expect(googleDriveManager.findOrCreateAioniaCSFolder).toHaveBeenCalled();
+    expect(googleDriveManager.uploadAndShareFile).toHaveBeenCalledWith(expect.any(String), 'share.enc', 'application/json', 'folder-1');
+  });
 });

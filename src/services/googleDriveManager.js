@@ -710,9 +710,10 @@ export class GoogleDriveManager {
    * @param {string|ArrayBuffer} fileContent
    * @param {string} fileName
    * @param {string} mimeType
+   * @param {string|null} parentFolderId - Optional parent folder ID.
    * @returns {Promise<string|null>} Uploaded file ID
    */
-  async uploadAndShareFile(fileContent, fileName, mimeType) {
+  async uploadAndShareFile(fileContent, fileName, mimeType, parentFolderId = null) {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for uploadAndShareFile.');
       return null;
@@ -722,6 +723,9 @@ export class GoogleDriveManager {
       const delimiter = `\r\n--${boundary}\r\n`;
       const closeDelim = `\r\n--${boundary}--`;
       const metadata = { name: fileName, mimeType };
+      if (parentFolderId) {
+        metadata.parents = [parentFolderId];
+      }
       const payload = prepareMultipartPayload(fileContent);
       const multipartRequestBody =
         delimiter +

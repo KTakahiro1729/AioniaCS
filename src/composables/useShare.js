@@ -53,7 +53,8 @@ export function useShare(dataManager) {
       ciphertext: arrayBufferToBase64(data.ciphertext),
       iv: arrayBufferToBase64(data.iv),
     });
-    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json');
+    const parentFolderId = typeof manager.findOrCreateAioniaCSFolder === 'function' ? await manager.findOrCreateAioniaCSFolder() : null;
+    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json', parentFolderId);
     if (!id) {
       throw new Error(messages.share.errors.uploadFailed);
     }

@@ -14,7 +14,8 @@ export class DriveStorageAdapter {
   async create(data) {
     this._ensureManager();
     const serialized = this._serializeData(data);
-    const id = await this.gdm.uploadAndShareFile(serialized.body, FILE_NAMES[serialized.kind], serialized.mimeType);
+    const parentFolderId = typeof this.gdm.findOrCreateAioniaCSFolder === 'function' ? await this.gdm.findOrCreateAioniaCSFolder() : null;
+    const id = await this.gdm.uploadAndShareFile(serialized.body, FILE_NAMES[serialized.kind], serialized.mimeType, parentFolderId);
     if (!id) {
       throw new Error(messages.share.errors.uploadFailed);
     }
