@@ -5,8 +5,8 @@ import { vi } from 'vitest';
 // JSZipコンストラクタのモック実装
 const JSZip = vi.fn().mockImplementation(() => ({
   file: vi.fn(),
-  folder: vi.fn().mockReturnThis(), // method chainingを可能にする
-  generateAsync: vi.fn().mockResolvedValue(new Blob(['zip_blob_content'])),
+  folder: vi.fn().mockReturnValue({ file: vi.fn() }),
+  generateAsync: vi.fn().mockResolvedValue(new Uint8Array([0x01, 0x02])),
 }));
 
 // 静的メソッド loadAsync のモック実装

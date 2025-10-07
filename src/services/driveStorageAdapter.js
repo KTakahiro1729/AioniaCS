@@ -38,7 +38,7 @@ export class DriveStorageAdapter {
       throw new Error('更新対象のIDが指定されていません');
     }
     const serialized = this._serializeData(data);
-    const result = await this.gdm.saveFile(null, FILE_NAMES[serialized.kind], serialized.body, id);
+    const result = await this.gdm.saveFile(null, FILE_NAMES[serialized.kind], serialized.body, id, serialized.mimeType);
     if (!result || !result.id) {
       throw new Error('Google Drive の共有ファイル更新に失敗しました');
     }

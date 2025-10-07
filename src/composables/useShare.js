@@ -5,30 +5,41 @@ import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
+import { serializeCharacterForExport } from '../utils/characterSerialization.js';
 
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
   const { showToast } = useNotifications();
 
   function _collectData(includeFull) {
-    const char = { ...characterStore.character };
-    if (!includeFull) delete char.images;
-    const payload = {
-      character: char,
+    const { data, images } = serializeCharacterForExport({
+      character: characterStore.character,
       skills: characterStore.skills,
       specialSkills: characterStore.specialSkills,
       equipments: characterStore.equipments,
       histories: characterStore.histories,
-    };
-    return new TextEncoder().encode(JSON.stringify(payload)).buffer;
+      includeImages: includeFull,
+    });
+
+    if (includeFull && images.length > 0) {
+      data.character.images = images;
+    }
+
+    return new TextEncoder().encode(JSON.stringify(data)).buffer;
   }
 
   function isLongData() {
-    const char = { ...characterStore.character };
-    delete char.images;
-    const payload = JSON.stringify({
-      character: char,
+    const { data } = serializeCharacterForExport({
+      character: characterStore.character,
       skills: characterStore.skills,
+      specialSkills: characterStore.specialSkills,
+      equipments: characterStore.equipments,
+      histories: characterStore.histories,
+      includeImages: false,
+    });
+    const payload = JSON.stringify({
+      character: data.character,
+      skills: data.skills,
     });
     return payload.length > 7000; // rough threshold
   }

@@ -1,5 +1,11 @@
 import { createWeaknessArray, deepClone } from '../utils/utils.js';
 import { messages } from '../locales/ja.js';
+import {
+  buildCharacterArchive,
+  deserializeCharacterPayload,
+  serializeCharacterForExport,
+  toTimestampString,
+} from '../utils/characterSerialization.js';
 
 /**
  * データ管理系の機能を担当するクラス
@@ -24,95 +30,35 @@ export class DataManager {
   }
 
   getDriveFileName(characterName) {
-    return `${this._sanitizeFileName(characterName)}.json`;
+    return `${this._sanitizeFileName(characterName)}.zip`;
   }
 
   /**
    * キャラクターデータを保存
    */
   async saveData(character, skills, specialSkills, equipments, histories) {
-    const characterDataForJson = { ...character };
-    let imagesToSave = null;
+    const { data, images } = serializeCharacterForExport({
+      character,
+      skills,
+      specialSkills,
+      equipments,
+      histories,
+      includeImages: true,
+    });
 
-    if (characterDataForJson.images && characterDataForJson.images.length > 0) {
-      imagesToSave = [...characterDataForJson.images]; // Store images separately
-      delete characterDataForJson.images; // Remove images from JSON part
-    }
-
-    const dataToSave = {
-      character: characterDataForJson,
-      skills: skills.map((s) => ({
-        id: s.id,
-        checked: s.checked,
-        canHaveExperts: s.canHaveExperts,
-        experts: s.canHaveExperts ? s.experts.filter((e) => e.value && e.value.trim() !== '').map((e) => ({ value: e.value })) : [],
-      })),
-      specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
-      equipments: equipments,
-      histories: histories.filter(
-        (h) =>
-          h.sessionName ||
-          (h.gotExperiments !== null && h.gotExperiments !== '') ||
-          (h.increasedScar !== null && h.increasedScar !== undefined) ||
-          h.memo,
-      ),
-    };
-
-    const jsonData = JSON.stringify(dataToSave, null, 2);
+    const archive = await buildCharacterArchive({ data, images });
     const charName = this._sanitizeFileName(character.name);
+    const timestamp = toTimestampString(new Date());
 
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
-
-    if (imagesToSave) {
-      // Save as ZIP
-      try {
-        const { default: JSZip } = await import('jszip');
-        const zip = new JSZip();
-        zip.file('character_data.json', jsonData);
-        const imageFolder = zip.folder('images');
-
-        imagesToSave.forEach((imageDataUrl, index) => {
-          const base64Data = imageDataUrl.substring(imageDataUrl.indexOf(',') + 1);
-          // Simple extension, could be improved by parsing imageDataUrl
-          const extension = imageDataUrl.substring(imageDataUrl.indexOf('/') + 1, imageDataUrl.indexOf(';'));
-          imageFolder.file(`image_${index}.${extension || 'png'}`, base64Data, {
-            base64: true,
-          });
-        });
-
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(zipBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${charName}_${timestamp}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Error saving ZIP file:', error);
-        // Consider showing an error to the user via main.js's alert
-        throw new Error('ZIPファイルの保存に失敗しました: ' + error.message);
-      }
-    } else {
-      // Save as JSON (original behavior)
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${charName}_${timestamp}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
+    const blob = new Blob([archive.content], { type: archive.mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${charName}_${timestamp}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   /**
@@ -128,72 +74,7 @@ export class DataManager {
     if (fileName.endsWith('.zip')) {
       reader.onload = async (e) => {
         try {
-          const { default: JSZip } = await import('jszip');
-          const zip = await JSZip.loadAsync(e.target.result);
-          const jsonDataFile = zip.file('character_data.json');
-
-          if (!jsonDataFile) {
-            throw new Error('ZIPファイルに character_data.json が見つかりません。');
-          }
-
-          const jsonContent = await jsonDataFile.async('string');
-          const rawJsonData = JSON.parse(jsonContent);
-
-          const imageFilesData = []; // Intermediate array for image data and paths
-          const imageFolder = zip.folder('images');
-          if (imageFolder) {
-            const imagePromises = [];
-            imageFolder.forEach((relativePath, fileEntry) => {
-              if (!fileEntry.dir) {
-                // Ensure it's a file
-                const promise = fileEntry
-                  .async('base64')
-                  .then((base64Data) => {
-                    const extension = relativePath.substring(relativePath.lastIndexOf('.') + 1) || 'png';
-                    const mimeType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
-                    // Push an object with relativePath and imageDataUrl
-                    imageFilesData.push({
-                      relativePath: relativePath,
-                      imageDataUrl: `data:${mimeType};base64,${base64Data}`,
-                    });
-                  })
-                  .catch((imgError) => {
-                    console.error(`Error loading image ${relativePath} from zip:`, imgError);
-                    // Optionally skip this image or handle error by not pushing to imageFilesData
-                  });
-                imagePromises.push(promise);
-              }
-            });
-            await Promise.all(imagePromises); // Wait for all images to be processed
-
-            // Sort imageFilesData based on relativePath
-            imageFilesData.sort((a, b) => {
-              const regex = /image_(\d+)\..+/i;
-              const matchA = a.relativePath.match(regex);
-              const matchB = b.relativePath.match(regex);
-
-              const numA = matchA ? parseInt(matchA[1], 10) : Infinity;
-              const numB = matchB ? parseInt(matchB[1], 10) : Infinity;
-
-              if (numA !== Infinity && numB !== Infinity) {
-                return numA - numB;
-              } else if (numA !== Infinity) {
-                return -1; // A has a number, B doesn't, so A comes first
-              } else if (numB !== Infinity) {
-                return 1; // B has a number, A doesn't, so B comes first
-              }
-              // Neither has a valid number pattern, sort by full path as a fallback
-              return a.relativePath.localeCompare(b.relativePath);
-            });
-          }
-
-          // Ensure character object exists before assigning images
-          if (!rawJsonData.character) {
-            rawJsonData.character = {};
-          }
-          // Assign sorted images (only imageDataUrl part)
-          rawJsonData.character.images = imageFilesData.map((item) => item.imageDataUrl);
-
+          const rawJsonData = await deserializeCharacterPayload(e.target.result);
           const parsedData = this.parseLoadedData(rawJsonData);
           onSuccess(parsedData);
         } catch (error) {
@@ -204,10 +85,10 @@ export class DataManager {
       reader.readAsArrayBuffer(file); // Read ZIP as ArrayBuffer
     } else {
       // Assume JSON or other text file
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const fileContent = e.target.result;
         try {
-          const rawJsonData = JSON.parse(fileContent);
+          const rawJsonData = await deserializeCharacterPayload(fileContent);
           const parsedData = this.parseLoadedData(rawJsonData);
           onSuccess(parsedData);
         } catch (error) {
@@ -238,30 +119,25 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const dataToSave = {
-      character: character,
-      skills: skills.map((s) => ({
-        id: s.id,
-        checked: s.checked,
-        canHaveExperts: s.canHaveExperts,
-        experts: s.canHaveExperts ? s.experts.filter((e) => e.value && e.value.trim() !== '').map((e) => ({ value: e.value })) : [],
-      })),
-      specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
-      equipments: equipments,
-      histories: histories.filter(
-        (h) =>
-          h.sessionName ||
-          (h.gotExperiments !== null && h.gotExperiments !== '') ||
-          (h.increasedScar !== null && h.increasedScar !== undefined) ||
-          h.memo,
-      ),
-    };
-
-    const jsonData = JSON.stringify(dataToSave, null, 2);
-    const sanitizedFileName = (character.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+    const { data, images } = serializeCharacterForExport({
+      character,
+      skills,
+      specialSkills,
+      equipments,
+      histories,
+      includeImages: true,
+    });
+    const archive = await buildCharacterArchive({ data, images });
+    const sanitizedFileName = `${this._sanitizeFileName(character.name)}.zip`;
 
     try {
-      const result = await this.googleDriveManager.saveFile(targetFolderId, sanitizedFileName, jsonData, currentFileId);
+      const result = await this.googleDriveManager.saveFile(
+        targetFolderId,
+        sanitizedFileName,
+        archive.content,
+        currentFileId,
+        archive.mimeType,
+      );
       return result;
     } catch (error) {
       console.error('Error saving data to Google Drive:', error);
@@ -279,24 +155,15 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const dataToSave = {
-      character: character,
-      skills: skills.map((s) => ({
-        id: s.id,
-        checked: s.checked,
-        canHaveExperts: s.canHaveExperts,
-        experts: s.canHaveExperts ? s.experts.filter((e) => e.value && e.value.trim() !== '').map((e) => ({ value: e.value })) : [],
-      })),
-      specialSkills: specialSkills.filter((ss) => ss.group && ss.name),
-      equipments: equipments,
-      histories: histories.filter(
-        (h) =>
-          h.sessionName ||
-          (h.gotExperiments !== null && h.gotExperiments !== '') ||
-          (h.increasedScar !== null && h.increasedScar !== undefined) ||
-          h.memo,
-      ),
-    };
+    const { data, images } = serializeCharacterForExport({
+      character,
+      skills,
+      specialSkills,
+      equipments,
+      histories,
+      includeImages: true,
+    });
+    const archive = await buildCharacterArchive({ data, images });
 
     let targetFileId = currentFileId;
     if (targetFileId) {
@@ -307,10 +174,18 @@ export class DataManager {
     }
 
     if (targetFileId) {
-      return this.googleDriveManager.updateCharacterFile(targetFileId, dataToSave);
+      return this.googleDriveManager.updateCharacterFile(targetFileId, {
+        content: archive.content,
+        mimeType: archive.mimeType,
+        name: this._sanitizeFileName(character.name),
+      });
     }
 
-    return this.googleDriveManager.createCharacterFile(dataToSave);
+    return this.googleDriveManager.createCharacterFile({
+      content: archive.content,
+      mimeType: archive.mimeType,
+      name: this._sanitizeFileName(character.name),
+    });
   }
 
   async findDriveFileByCharacterName(characterName) {
@@ -337,7 +212,7 @@ export class DataManager {
     try {
       const fileContent = await this.googleDriveManager.loadFileContent(fileId);
       if (fileContent) {
-        const rawJsonData = JSON.parse(fileContent);
+        const rawJsonData = await deserializeCharacterPayload(fileContent);
         const parsedData = this.parseLoadedData(rawJsonData);
         return parsedData;
       }

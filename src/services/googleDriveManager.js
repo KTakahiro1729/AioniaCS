@@ -1,7 +1,38 @@
+import { deserializeCharacterPayload } from '../utils/characterSerialization.js';
+
 /**
  * Manages interactions with Google Drive and Google Sign-In.
  */
 let singletonInstance = null;
+
+function uint8ArrayToBase64(bytes) {
+  const chunkSize = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(binary);
+}
+
+function prepareMultipartPayload(fileContent) {
+  if (typeof fileContent === 'string') {
+    return { body: fileContent, transferEncoding: '' };
+  }
+  if (fileContent instanceof ArrayBuffer) {
+    return prepareMultipartPayload(new Uint8Array(fileContent));
+  }
+  if (ArrayBuffer.isView(fileContent)) {
+    const bytes = fileContent instanceof Uint8Array ? fileContent : new Uint8Array(fileContent.buffer);
+    return { body: uint8ArrayToBase64(bytes), transferEncoding: 'Content-Transfer-Encoding: base64\r\n' };
+  }
+  throw new Error('Unsupported file content type for Drive upload');
+}
+
+function sanitizeFileName(name) {
+  const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
+  return sanitized || '名もなき冒険者';
+}
 
 export class GoogleDriveManager {
   constructor(apiKey, clientId) {
@@ -428,27 +459,36 @@ export class GoogleDriveManager {
    * @param {string|null} fileId - The ID of the file to update, or null to create a new file.
    * @returns {Promise<{id: string, name: string}|null>} File ID and name, or null on error.
    */
-  async saveFile(folderId, fileName, fileContent, fileId = null) {
+  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
     }
 
+    const boundary = '-------314159265358979323846';
+    const delimiter = `\r\n--${boundary}\r\n`;
+    const closeDelim = `\r\n--${boundary}--`;
+    const metadata = {
+      name: fileName,
+      mimeType,
+    };
+    let payload;
+    try {
+      payload = prepareMultipartPayload(fileContent);
+    } catch (error) {
+      console.error('Unsupported file content for Drive upload:', error);
+      return null;
+    }
+
     if (fileId) {
       try {
-        const boundary = '-------314159265358979323846';
-        const delimiter = `\r\n--${boundary}\r\n`;
-        const closeDelim = `\r\n--${boundary}--`;
-        const contentType = 'application/json';
-        const metadata = { name: fileName, mimeType: contentType };
-
         const multipartRequestBody =
           delimiter +
           'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
           JSON.stringify(metadata) +
           delimiter +
-          `Content-Type: ${contentType}\r\n\r\n` +
-          fileContent +
+          `Content-Type: ${mimeType}\r\n${payload.transferEncoding}\r\n` +
+          payload.body +
           closeDelim;
 
         const response = await gapi.client.request({
@@ -480,23 +520,17 @@ export class GoogleDriveManager {
     }
 
     try {
-      const boundary = '-------314159265358979323846';
-      const delimiter = `\r\n--${boundary}\r\n`;
-      const closeDelim = `\r\n--${boundary}--`;
-      const contentType = 'application/json';
-      const metadata = {
-        name: fileName,
-        parents: [folderId],
-        mimeType: contentType,
-      };
-
+      const createMetadata = { ...metadata };
+      if (folderId) {
+        createMetadata.parents = [folderId];
+      }
       const multipartRequestBody =
         delimiter +
         'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-        JSON.stringify(metadata) +
+        JSON.stringify(createMetadata) +
         delimiter +
-        `Content-Type: ${contentType}\r\n\r\n` +
-        fileContent +
+        `Content-Type: ${mimeType}\r\n${payload.transferEncoding}\r\n` +
+        payload.body +
         closeDelim;
 
       const response = await gapi.client.request({
@@ -532,13 +566,20 @@ export class GoogleDriveManager {
         fileId: fileId,
         alt: 'media',
       });
-      // The response body for alt: 'media' is directly the content.
-      // For JSON, it might already be parsed if GAPI client detects content type.
-      // If it's a string, it's fine. If it's an object (parsed JSON), stringify it.
-      if (typeof response.body === 'object') {
-        return JSON.stringify(response.body);
+      const { body } = response;
+      if (body instanceof ArrayBuffer) {
+        return body;
       }
-      return response.body; // Should be string
+      if (body && typeof body === 'object' && typeof body.byteLength === 'number') {
+        return body;
+      }
+      if (typeof body === 'string') {
+        return body;
+      }
+      if (typeof response.result === 'object') {
+        return JSON.stringify(response.result);
+      }
+      return response.result || null;
     } catch (error) {
       console.error('Error loading file content:', error);
       if (error.result && error.result.error) {
@@ -681,13 +722,14 @@ export class GoogleDriveManager {
       const delimiter = `\r\n--${boundary}\r\n`;
       const closeDelim = `\r\n--${boundary}--`;
       const metadata = { name: fileName, mimeType };
+      const payload = prepareMultipartPayload(fileContent);
       const multipartRequestBody =
         delimiter +
         'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
         JSON.stringify(metadata) +
         delimiter +
-        `Content-Type: ${mimeType}\r\n\r\n` +
-        fileContent +
+        `Content-Type: ${mimeType}\r\n${payload.transferEncoding}\r\n` +
+        payload.body +
         closeDelim;
 
       const res = await gapi.client.request({
@@ -843,30 +885,34 @@ export class GoogleDriveManager {
 
   /**
    * Creates a character data file inside the configured Drive folder.
-   * @param {object} data character JSON object
+   * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
    */
-  async createCharacterFile(data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+  async createCharacterFile(payload) {
+    const mimeType = payload?.mimeType || 'application/zip';
+    const extension = mimeType === 'application/zip' ? 'zip' : 'json';
+    const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2));
+    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
   }
 
   /**
    * Updates an existing character file inside the configured Drive folder.
    * @param {string} id file ID
-   * @param {object} data character JSON object
+   * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
    */
-  async updateCharacterFile(id, data) {
-    const fileName = `${(data.character?.name || '名もなき冒険者').replace(/[\\/:*?"<>|]/g, '_')}.json`;
+  async updateCharacterFile(id, payload) {
+    const mimeType = payload?.mimeType || 'application/zip';
+    const extension = mimeType === 'application/zip' ? 'zip' : 'json';
+    const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     const folderId = await this.findOrCreateAioniaCSFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, JSON.stringify(data, null, 2), id);
+    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
   }
 
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
-    return content ? JSON.parse(content) : null;
+    return content ? await deserializeCharacterPayload(content) : null;
   }
 
   async deleteCharacterFile(id) {

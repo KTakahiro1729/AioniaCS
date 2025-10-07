@@ -24,18 +24,16 @@ test.describe('Character Sheet E2E Tests', () => {
   });
 
   test.describe('Image Handling', () => {
-    test('uploads, displays image, and saves JSON (no images initially, then one image)', async ({ page }) => {
+    test('saves as ZIP without images, then uploads and displays an image', async ({ page }) => {
       const characterNameInput = page.locator('#name');
-      await characterNameInput.fill('JsonSaveChar');
+      await characterNameInput.fill('ZipSaveCharNoImage');
 
-      // 1. Save with no images (JSON)
-      // Intercept downloads
-      const [jsonDownload] = await Promise.all([
+      // 1. Save with no images (should be ZIP)
+      const [zipDownload] = await Promise.all([
         page.waitForEvent('download'),
         page.locator('button.footer-button--save:has-text("端末保存")').click(),
       ]);
-      // expect(jsonDownload.suggestedFilename()).toBe('JsonSaveChar_AioniaSheet.json');
-      expect(jsonDownload.suggestedFilename()).toMatch(/^JsonSaveChar_\d{14}\.json$/);
+      expect(zipDownload.suggestedFilename()).toMatch(/^ZipSaveCharNoImage_\d{14}\.zip$/);
 
       // 2. Upload image
       const imageUploadInput = page.locator('#character_image_upload');
@@ -45,7 +43,7 @@ test.describe('Character Sheet E2E Tests', () => {
       const imageDisplay = page.locator('.character-image-display');
       await expect(imageDisplay).toBeVisible();
       const imageSrc = await imageDisplay.getAttribute('src');
-      expect(imageSrc).toMatch(/^data:image\/png;base64,/); // Or whatever type sample.png is if specific
+      expect(imageSrc).toMatch(/^data:image\/png;base64,/);
 
       // 4. Verify image count
       const imageCountDisplay = page.locator('.image-count-display');
@@ -58,56 +56,55 @@ test.describe('Character Sheet E2E Tests', () => {
       const imageCountDisplay = page.locator('.image-count-display');
       const nextButton = page.locator('.button-imagenav:has-text(">")');
       const prevButton = page.locator('.button-imagenav:has-text("<")');
-      // const removeButton = page.locator('.button-remove:has-text("Remove Current Image")');
       const removeButton = page.locator('.imagefile-button--delete:has-text("削除")');
 
-      // Upload 3 images (using sample & sample2, then sample again for a third distinct one in array)
+      // Upload 3 images
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH);
       await expect(imageCountDisplay).toHaveText('1 / 1');
       let firstImageSrc = await imageDisplay.getAttribute('src');
 
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH_2);
-      await expect(imageCountDisplay).toHaveText('2 / 2'); // Should be current index + 1 / length
+      await expect(imageCountDisplay).toHaveText('2 / 2');
       let secondImageSrc = await imageDisplay.getAttribute('src');
-      expect(secondImageSrc).not.toBe(firstImageSrc); // Check if src changed
+      expect(secondImageSrc).not.toBe(firstImageSrc);
 
       await imageUploadInput.setInputFiles(SAMPLE_IMAGE_PATH); // Upload a third image
       await expect(imageCountDisplay).toHaveText('3 / 3');
       let thirdImageSrc = await imageDisplay.getAttribute('src');
       expect(thirdImageSrc).not.toBe(secondImageSrc);
 
-      // Initial state: image 3 of 3 is shown (index 2)
+      // Initial state: image 3 of 3 is shown
       await expect(imageDisplay).toHaveAttribute('src', thirdImageSrc);
 
-      // Navigate previous to image 2 (index 1)
+      // Navigate previous to image 2
       await prevButton.click();
       await expect(imageCountDisplay).toHaveText('2 / 3');
       await expect(imageDisplay).toHaveAttribute('src', secondImageSrc);
 
-      // Navigate previous to image 1 (index 0)
+      // Navigate previous to image 1
       await prevButton.click();
       await expect(imageCountDisplay).toHaveText('1 / 3');
       await expect(imageDisplay).toHaveAttribute('src', firstImageSrc);
 
-      // Try to go previous from first image (should loop to last)
+      // Loop to last
       await prevButton.click();
       await expect(imageCountDisplay).toHaveText('3 / 3');
       await expect(imageDisplay).toHaveAttribute('src', thirdImageSrc);
 
-      // Go to next from last image (should loop to first)
+      // Loop to first
       await nextButton.click();
       await expect(imageCountDisplay).toHaveText('1 / 3');
       await expect(imageDisplay).toHaveAttribute('src', firstImageSrc);
 
-      // Remove current image (image 1 at index 0)
+      // Remove current image (image 1)
       await removeButton.click();
-      await expect(imageCountDisplay).toHaveText('1 / 2'); // Now showing new image at index 0 (old image 2)
-      await expect(imageDisplay).toHaveAttribute('src', secondImageSrc); // secondImageSrc was originally at index 1, now at 0
+      await expect(imageCountDisplay).toHaveText('1 / 2');
+      await expect(imageDisplay).toHaveAttribute('src', secondImageSrc);
 
-      // Remove current image (new image at index 0, old image 2)
+      // Remove current image (was image 2)
       await removeButton.click();
-      await expect(imageCountDisplay).toHaveText('1 / 1'); // Now showing last remaining image (old image 3)
-      await expect(imageDisplay).toHaveAttribute('src', thirdImageSrc); // thirdImageSrc was originally at index 2, now at 0
+      await expect(imageCountDisplay).toHaveText('1 / 1');
+      await expect(imageDisplay).toHaveAttribute('src', thirdImageSrc);
 
       // Remove last image
       await removeButton.click();
@@ -126,36 +123,24 @@ test.describe('Character Sheet E2E Tests', () => {
         page.waitForEvent('download'),
         page.locator('button.footer-button--save:has-text("端末保存")').click(),
       ]);
-      // expect(zipDownload.suggestedFilename()).toBe('ZipSaveChar_AioniaSheet.zip');
       expect(zipDownload.suggestedFilename()).toMatch(/^ZipSaveChar_\d{14}\.zip$/);
     });
 
-    // Skipping this test as it requires a pre-made ZIP file with specific internal structure,
-    // which cannot be dynamically created with current tooling.
     test.skip('loads character data and image from ZIP file', async ({ page }) => {
-      // This test assumes `tests/fixtures/test_char.zip` is structured correctly:
-      // - character_data.json (e.g., with name "ZipLoadTestCharName")
-      // - images/sample_in_zip.png
-      // (The placeholder test_char.zip won't actually work like this, but the test logic is what's being demonstrated)
-
-      const fileUploadInput = page.locator('#load_input_vue'); // Assuming this is the ID for general file load
+      const fileUploadInput = page.locator('#load_input_vue');
       await fileUploadInput.setInputFiles(TEST_ZIP_PATH);
 
-      // Add a small delay or wait for a specific element that indicates loading is complete.
-      // For example, wait for the character name to be populated.
-      // This depends on how character_data.json in your test_char.zip is defined.
-      // For this example, let's assume character_data.json has {"character": {"name": "ZippyLoaded"}}
       await expect(page.locator('#name')).toHaveValue('ZippyLoaded', {
         timeout: 5000,
-      }); // Wait for name
+      });
 
       const imageDisplay = page.locator('.character-image-display');
       await expect(imageDisplay).toBeVisible();
       const imageSrc = await imageDisplay.getAttribute('src');
-      expect(imageSrc).toMatch(/^data:image\/.+;base64,/); // Check if an image is loaded
+      expect(imageSrc).toMatch(/^data:image\/.+;base64,/);
 
       const imageCountDisplay = page.locator('.image-count-display');
-      await expect(imageCountDisplay).toHaveText('1 / 1'); // Assuming one image in the test zip
+      await expect(imageCountDisplay).toHaveText('1 / 1');
     });
   });
 
@@ -205,7 +190,7 @@ test.describe('Character Sheet E2E Tests', () => {
       if (!stateRaw) return false;
       try {
         const state = JSON.parse(stateRaw);
-        return Object.values(state.files || {}).some((file) => file.name === 'MockE2E.json');
+        return Object.values(state.files || {}).some((file) => file.name === 'MockE2E.zip');
       } catch (e) {
         return false;
       }
@@ -214,7 +199,7 @@ test.describe('Character Sheet E2E Tests', () => {
     const driveState = await page.evaluate(() => JSON.parse(localStorage.getItem('mockGoogleDriveData')));
     expect(driveState.config.characterFolderPath).toBe('慈悲なきアイオニア/PC/第一キャンペーン');
 
-    const savedFile = Object.values(driveState.files).find((file) => file.name === 'MockE2E.json');
+    const savedFile = Object.values(driveState.files).find((file) => file.name === 'MockE2E.zip');
     expect(savedFile).toBeTruthy();
 
     const buildPath = (folderId) => {

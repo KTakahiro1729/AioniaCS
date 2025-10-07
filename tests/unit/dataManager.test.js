@@ -16,6 +16,8 @@ describe('DataManager', () => {
   let mockEquipments;
   let mockHistories;
   let currentFileReaderInstance;
+  let mockZipInstance;
+  let mockImageFolder;
 
   beforeEach(() => {
     // 各テストの前に、すべてのモックの状態をリセットします
@@ -53,6 +55,14 @@ describe('DataManager', () => {
     document.body.removeChild = vi.fn();
     const mockAnchor = { click: vi.fn(), href: '', download: '' };
     document.createElement = vi.fn().mockReturnValue(mockAnchor);
+
+    mockImageFolder = { file: vi.fn() };
+    mockZipInstance = {
+      file: vi.fn(),
+      folder: vi.fn().mockReturnValue(mockImageFolder),
+      generateAsync: vi.fn().mockResolvedValue(new Uint8Array([0x01, 0x02])),
+    };
+    JSZip.mockImplementation(() => mockZipInstance);
 
     // FileReaderのモック
     global.FileReader = vi.fn().mockImplementation(() => {
@@ -117,12 +127,15 @@ describe('DataManager', () => {
   });
 
   describe('saveData', () => {
-    it('should save as JSON if no images are present', async () => {
+    it('should save archive even if no images are present', async () => {
       mockCharacter.images = [];
       await dm.saveData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories);
-      expect(JSZip).not.toHaveBeenCalled();
+      expect(JSZip).toHaveBeenCalledTimes(1);
+      expect(mockZipInstance.file).toHaveBeenCalledWith('character_data.json', expect.any(String));
+      expect(mockZipInstance.folder).not.toHaveBeenCalled();
+      expect(mockZipInstance.generateAsync).toHaveBeenCalledWith({ type: 'uint8array' });
       const mockAnchor = document.createElement.mock.results[0].value;
-      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.json$/);
+      expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
       expect(mockAnchor.click).toHaveBeenCalled();
     });
 
@@ -132,34 +145,26 @@ describe('DataManager', () => {
       const sanitized = dm._sanitizeFileName(mockCharacter.name);
       await dm.saveData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories);
       const mockAnchor = document.createElement.mock.results[0].value;
-      const regex = new RegExp(`^${sanitized}_\\d{14}\\.json$`);
+      const regex = new RegExp(`^${sanitized}_\\d{14}\\.zip$`);
       expect(mockAnchor.download).toMatch(regex);
     });
 
     it('should save as ZIP if images are present', async () => {
       mockCharacter.images = ['data:image/png;base64,mockimgdata1', 'data:image/jpeg;base64,mockimgdata2'];
-      // `new JSZip()`が呼び出されたときのインスタンスの振る舞いを定義
-      const mockZipInstance = {
-        file: vi.fn(),
-        folder: vi.fn().mockReturnThis(),
-        generateAsync: vi.fn().mockResolvedValue(new Blob(['zip_blob_content'])),
-      };
-      JSZip.mockImplementation(() => mockZipInstance);
-
       await dm.saveData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories);
       expect(JSZip).toHaveBeenCalledTimes(1);
       expect(mockZipInstance.folder).toHaveBeenCalledWith('images');
 
       // fileメソッドの呼び出しを検証
       expect(mockZipInstance.file).toHaveBeenCalledWith('character_data.json', expect.any(String));
-      expect(mockZipInstance.file).toHaveBeenCalledWith('image_0.png', 'mockimgdata1', { base64: true });
-      expect(mockZipInstance.file).toHaveBeenCalledWith('image_1.jpeg', 'mockimgdata2', { base64: true });
+      expect(mockImageFolder.file).toHaveBeenCalledWith('image_0.png', 'mockimgdata1', { base64: true });
+      expect(mockImageFolder.file).toHaveBeenCalledWith('image_1.jpeg', 'mockimgdata2', { base64: true });
 
       const jsonDataCall = mockZipInstance.file.mock.calls.find((call) => call[0] === 'character_data.json');
       const jsonDataInZip = JSON.parse(jsonDataCall[1]);
       expect(jsonDataInZip.character.images).toBeUndefined();
       expect(mockZipInstance.generateAsync).toHaveBeenCalledWith({
-        type: 'blob',
+        type: 'uint8array',
       });
       const mockAnchor = document.createElement.mock.results[0].value;
       expect(mockAnchor.download).toMatch(/^TestChar_\d{14}\.zip$/);
@@ -200,7 +205,7 @@ describe('DataManager', () => {
       const mockJsonStringInZip = JSON.stringify(mockJsonDataInZip);
       const mockImageBase64Data = 'mockimagedatafromzip';
       const mockImageFileName = 'image_0.png';
-      const mockZipInstance = {
+      const zipLoadMock = {
         file: vi
           .fn()
           .mockImplementation((filename) =>
@@ -220,7 +225,7 @@ describe('DataManager', () => {
           return { forEach: vi.fn() };
         }),
       };
-      JSZip.loadAsync.mockResolvedValue(mockZipInstance);
+      JSZip.loadAsync.mockResolvedValue(zipLoadMock);
       const mockZipFileObj = new File(['zip_content_array_buffer'], 'test.zip', { type: 'application/zip' });
       const mockEvent = { target: { files: [mockZipFileObj], value: '' } };
       await new Promise((resolve) => {
@@ -238,11 +243,11 @@ describe('DataManager', () => {
     });
 
     it('should call onError if ZIP loading fails (e.g. character_data.json missing)', async () => {
-      const mockZipInstance = {
+      const zipLoadMock = {
         file: vi.fn().mockReturnValue(null),
         folder: vi.fn().mockReturnValue({ forEach: vi.fn() }),
       };
-      JSZip.loadAsync.mockResolvedValue(mockZipInstance);
+      JSZip.loadAsync.mockResolvedValue(zipLoadMock);
       const mockZipFileObj = new File(['zip_content'], 'test.zip', {
         type: 'application/zip',
       });
@@ -253,15 +258,15 @@ describe('DataManager', () => {
         dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
       });
       expect(currentFileReaderInstance.readAsArrayBuffer).toHaveBeenCalledWith(mockZipFileObj);
-      expect(onErrorMock).toHaveBeenCalledWith(expect.stringContaining('ZIPファイルに character_data.json が見つかりません。'));
+      expect(onErrorMock).toHaveBeenCalledWith(expect.stringContaining('(ZIP: character_data.json がアーカイブ内に見つかりません)'));
     });
   });
 
   describe('saveDataToAppData', () => {
     beforeEach(() => {
       dm.googleDriveManager = {
-        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
-        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.json' }),
+        createCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.zip' }),
+        updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.zip' }),
         findOrCreateAioniaCSFolder: vi.fn().mockResolvedValue('folder-id'),
         isFileInConfiguredFolder: vi.fn().mockResolvedValue(true),
       };
@@ -270,12 +275,23 @@ describe('DataManager', () => {
     test('creates new file when no id', async () => {
       const res = await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
       expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
+      const payload = dm.googleDriveManager.createCharacterFile.mock.calls[0][0];
+      expect(payload.mimeType).toBe('application/zip');
+      expect(payload.name).toBe('TestChar');
+      expect(payload.content).toBeInstanceOf(Uint8Array);
       expect(res.id).toBe('1');
     });
 
     test('updates file when id exists', async () => {
       await dm.saveDataToAppData(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
-      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith('1', expect.any(Object));
+      expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith(
+        '1',
+        expect.objectContaining({
+          mimeType: 'application/zip',
+          name: 'TestChar',
+          content: expect.any(Uint8Array),
+        }),
+      );
     });
 
     test('creates new file when existing file is outside configured folder', async () => {
