@@ -258,7 +258,7 @@ describe('DataManager', () => {
         dm.handleFileUpload(mockEvent, onSuccessMock, onErrorMock);
       });
       expect(currentFileReaderInstance.readAsArrayBuffer).toHaveBeenCalledWith(mockZipFileObj);
-      expect(onErrorMock).toHaveBeenCalledWith(expect.stringContaining('ZIP: character_data.json がアーカイブ内に見つかりません'));
+      expect(onErrorMock).toHaveBeenCalledWith(expect.stringContaining('(ZIP: character_data.json がアーカイブ内に見つかりません)'));
     });
   });
 
