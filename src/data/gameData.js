@@ -303,16 +303,6 @@ export const AioniaGameData = {
     maxInitialBonus: 20, // 初期ボーナスの上限
   },
 
-  // プレースホルダーテキスト
-  placeholderTexts: {
-    expertSkill: '専門技能',
-    expertSkillDisabled: '専門技能 (技能選択で有効)',
-    weaponName: '装備名',
-    armorName: '装備名',
-    specialSkillNote: '詳細',
-    characterMemo: 'キャラクター背景、設定、その他メモを記入',
-  },
-
   // 設定値
   config: {
     initialSpecialSkillCount: 8,

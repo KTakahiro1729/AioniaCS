@@ -1,6 +1,6 @@
 <template>
   <div id="skills" class="skills">
-    <div class="box-title">技能</div>
+    <div class="box-title">{{ sheetMessages.sections.skills.title }}</div>
     <ul class="skills-list box-content list-reset">
       <li v-for="skill in localSkills" :key="skill.id" class="skill-list">
         <div class="skill-header">
@@ -16,7 +16,7 @@
                   class="button-base list-button list-button--delete"
                   @click="characterStore.removeExpert(skill.id, expIndex)"
                   :disabled="skill.experts.length <= 1 && expert.value === ''"
-                  aria-label="専門技能を削除"
+                  :aria-label="sheetMessages.aria.removeExpert"
                 >
                   －
                 </button>
@@ -35,7 +35,7 @@
               type="button"
               class="button-base list-button list-button--add"
               @click="characterStore.addExpert(skill.id)"
-              aria-label="専門技能を追加"
+              :aria-label="sheetMessages.aria.addExpert"
             >
               ＋
             </button>
@@ -47,15 +47,16 @@
 </template>
 
 <script setup>
-import { AioniaGameData } from '../../data/gameData.js';
 import { useCharacterStore } from '../../stores/characterStore.js';
 import { useUiStore } from '../../stores/uiStore.js';
+import { messages } from '../../locales/ja.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const sheetMessages = messages.sheet;
 const localSkills = characterStore.skills;
 const expertPlaceholder = (skill) =>
-  skill.checked ? AioniaGameData.placeholderTexts.expertSkill : AioniaGameData.placeholderTexts.expertSkillDisabled;
+  skill.checked ? sheetMessages.placeholders.expertSkill : sheetMessages.placeholders.expertSkillDisabled;
 </script>
 
 <style scoped>
