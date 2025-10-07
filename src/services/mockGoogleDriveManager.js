@@ -30,6 +30,7 @@ export class MockGoogleDriveManager {
       signedIn: false,
       config: this.getDefaultConfig(),
       folderPickerQueue: [],
+      publicFileIds: [],
     };
 
     try {
@@ -62,6 +63,7 @@ export class MockGoogleDriveManager {
       signedIn: false,
       config: this.getDefaultConfig(),
       folderPickerQueue: [],
+      publicFileIds: [],
     };
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
@@ -226,8 +228,27 @@ export class MockGoogleDriveManager {
     return file ? file.content : null;
   }
 
+  async setPermissionToPublic(fileId) {
+    if (!fileId) {
+      throw new Error('File ID is required to update permissions.');
+    }
+    const file = this.state.files[fileId];
+    if (!file) {
+      throw new Error('File not found for permission update.');
+    }
+    file.isPublic = true;
+    if (!Array.isArray(this.state.publicFileIds)) {
+      this.state.publicFileIds = [];
+    }
+    if (!this.state.publicFileIds.includes(fileId)) {
+      this.state.publicFileIds.push(fileId);
+    }
+    this._saveState();
+  }
+
   async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
     const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
+    await this.setPermissionToPublic(info.id);
     return info.id;
   }
 

@@ -3,20 +3,8 @@ import { useAppInitialization } from '../../../src/composables/useAppInitializat
 import { useCharacterStore } from '../../../src/stores/characterStore.js';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
-vi.mock('../../../src/libs/sabalessshare/src/url.js', () => ({
-  parseShareUrl: vi.fn(),
-}));
-
-vi.mock('../../../src/libs/sabalessshare/src/index.js', () => ({
-  receiveSharedData: vi.fn(),
-}));
-
-vi.mock('../../../src/libs/sabalessshare/src/dynamic.js', () => ({
-  receiveDynamicData: vi.fn(),
-}));
-
-vi.mock('../../../src/services/driveStorageAdapter.js', () => ({
-  DriveStorageAdapter: vi.fn().mockImplementation((manager) => ({ manager })),
+vi.mock('../../../src/utils/characterSerialization.js', () => ({
+  deserializeCharacterPayload: vi.fn(),
 }));
 
 vi.mock('../../../src/composables/useNotifications.js', () => ({
@@ -27,38 +15,43 @@ describe('useAppInitialization', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    window.history.replaceState(null, '', '/');
   });
 
-  test('loads shared data when URL has params', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
-    parseShareUrl.mockReturnValue({ mode: 'simple' });
-    const payload = {
+  test('loads shared data when shareId is present', async () => {
+    const { deserializeCharacterPayload } = await import('../../../src/utils/characterSerialization.js');
+    deserializeCharacterPayload.mockResolvedValue({
       character: { name: 'Hero' },
-      skills: [],
+      skills: [{ id: 1 }],
       specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-    const buffer = Uint8Array.from(Buffer.from(JSON.stringify(payload))).buffer;
-    receiveSharedData.mockResolvedValue(buffer);
+      equipments: { weapon1: { name: 'Sword' } },
+      histories: [{ sessionName: 'Session' }],
+    });
 
-    const dataManager = { googleDriveManager: {} };
+    const loadFileContent = vi.fn().mockResolvedValue('{}');
+    const dataManager = { googleDriveManager: { loadFileContent } };
+
+    const replaceSpy = vi.spyOn(window.history, 'replaceState');
+    window.history.replaceState(null, '', '/?shareId=test-id');
+    replaceSpy.mockClear();
+
     const { initialize } = useAppInitialization(dataManager);
     await initialize();
 
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
-    expect(parseShareUrl).toHaveBeenCalled();
-    expect(receiveSharedData).toHaveBeenCalled();
-    expect(uiStore.isViewingShared).toBe(true);
+
+    expect(loadFileContent).toHaveBeenCalledWith('test-id');
+    expect(deserializeCharacterPayload).toHaveBeenCalledWith('{}');
     expect(charStore.character.name).toBe('Hero');
+    expect(charStore.skills).toHaveLength(1);
+    expect(uiStore.isViewingShared).toBe(true);
+    expect(replaceSpy).toHaveBeenCalledWith(null, '', '/');
+    replaceSpy.mockRestore();
   });
 
-  test('does nothing when no params', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    parseShareUrl.mockReturnValue(null);
-    const dataManager = { googleDriveManager: {} };
+  test('does nothing when shareId is missing', async () => {
+    const dataManager = { googleDriveManager: { loadFileContent: vi.fn() } };
     const { initialize } = useAppInitialization(dataManager);
     const charStore = useCharacterStore();
     charStore.character.name = 'Default';
@@ -68,53 +61,23 @@ describe('useAppInitialization', () => {
     expect(charStore.character.name).toBe('Default');
   });
 
-  test('updates loading state', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
-    parseShareUrl.mockReturnValue({ mode: 'simple' });
+  test('updates loading state while fetching', async () => {
+    const { deserializeCharacterPayload } = await import('../../../src/utils/characterSerialization.js');
     let resolve;
-    receiveSharedData.mockReturnValue(
+    const loadFileContent = vi.fn().mockReturnValue(
       new Promise((r) => {
         resolve = r;
       }),
     );
-    const { initialize } = useAppInitialization({ googleDriveManager: {} });
+    deserializeCharacterPayload.mockResolvedValue({ character: {}, skills: [], specialSkills: [], equipments: {}, histories: [] });
+    const dataManager = { googleDriveManager: { loadFileContent } };
+    window.history.replaceState(null, '', '/?shareId=loading-test');
+    const { initialize } = useAppInitialization(dataManager);
     const uiStore = useUiStore();
-    const p = initialize();
+    const initPromise = initialize();
     expect(uiStore.isLoading).toBe(true);
-    const payload = {
-      character: { name: 'Test' },
-      playerName: 'Test',
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
-    resolve(buffer);
-    await p;
+    resolve('{}');
+    await initPromise;
     expect(uiStore.isLoading).toBe(false);
-  });
-
-  test('loads dynamic shared data through Drive adapter', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveDynamicData } = await import('../../../src/libs/sabalessshare/src/dynamic.js');
-    const { DriveStorageAdapter } = await import('../../../src/services/driveStorageAdapter.js');
-    parseShareUrl.mockReturnValue({ mode: 'dynamic' });
-    const payload = {
-      character: { name: 'Dynamic' },
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
-    receiveDynamicData.mockResolvedValue(buffer);
-    const googleDriveManager = {};
-    const { initialize } = useAppInitialization({ googleDriveManager });
-    await initialize();
-    expect(DriveStorageAdapter).toHaveBeenCalledWith(googleDriveManager);
-    const adapterArg = receiveDynamicData.mock.calls[0][0].adapter;
-    expect(adapterArg.manager).toBe(googleDriveManager);
   });
 });

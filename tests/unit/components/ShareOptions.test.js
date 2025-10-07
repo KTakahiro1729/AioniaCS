@@ -11,15 +11,13 @@ describe('ShareOptions', () => {
     setActivePinia(createPinia());
   });
 
-  test('emits canGenerate updates', async () => {
+  test('emits canGenerate updates based on sign-in state', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     const wrapper = mount(ShareOptions, {
       props: { longData: false },
     });
 
-    await wrapper.find('input[value="dynamic"]').setValue();
-    await nextTick();
     let events = wrapper.emitted('update:canGenerate');
     expect(events[events.length - 1][0]).toBe(false);
 
@@ -29,16 +27,23 @@ describe('ShareOptions', () => {
     expect(events[events.length - 1][0]).toBe(true);
   });
 
-  test('truncate warning shown only when full content disabled', async () => {
+  test('emits signin event when button clicked', async () => {
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = false;
+    const wrapper = mount(ShareOptions, {
+      props: { longData: false },
+    });
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('signin')).toBeTruthy();
+  });
+
+  test('shows long data note when longData is true', () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
     const wrapper = mount(ShareOptions, {
       props: { longData: true },
     });
-    expect(wrapper.find('.share-options__warning').exists()).toBe(true);
-
-    await wrapper.find('input[type="checkbox"]').setChecked();
-    await nextTick();
-    expect(wrapper.find('.share-options__warning').exists()).toBe(false);
+    const notes = wrapper.findAll('.share-options__note');
+    expect(notes.some((node) => node.text().includes('画像やメモ'))).toBe(true);
   });
 });

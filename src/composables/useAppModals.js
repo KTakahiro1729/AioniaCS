@@ -101,16 +101,9 @@ export function useAppModals(options) {
       ],
       on: { 'update:canGenerate': updateCanGenerate, signin: handleSignInClick },
     });
-    if (result.value !== 'generate' || !result.component) return;
-    const optsComp = result.component;
-    const opts = {
-      type: optsComp.type.value,
-      includeFull: optsComp.includeFull.value,
-      password: optsComp.password.value || '',
-      expiresInDays: Number(optsComp.expires.value) || 0,
-    };
+    if (result.value !== 'generate') return;
     try {
-      const link = await generateShare(opts);
+      const link = await generateShare();
       await copyLink(link);
       modalStore.hideModal();
     } catch (err) {

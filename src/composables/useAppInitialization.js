@@ -1,98 +1,50 @@
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useUiStore } from '../stores/uiStore.js';
-import { base64ToArrayBuffer } from '../libs/sabalessshare/src/crypto.js';
-import { receiveSharedData } from '../libs/sabalessshare/src/index.js';
-import { receiveDynamicData } from '../libs/sabalessshare/src/dynamic.js';
-import { parseShareUrl } from '../libs/sabalessshare/src/url.js';
-import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
+import { deserializeCharacterPayload } from '../utils/characterSerialization.js';
 import { useNotifications } from './useNotifications.js';
-import { useModal } from './useModal.js';
-import PasswordPromptModal from '../components/modals/contents/PasswordPromptModal.vue';
 import { messages } from '../locales/ja.js';
 
 export function useAppInitialization(dataManager) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
   const { showToast } = useNotifications();
-  const { showModal } = useModal();
 
   async function initialize() {
     uiStore.setLoading(true);
-    const params = parseShareUrl(window.location);
-    if (!params) {
+    const searchParams = new URLSearchParams(window.location.search);
+    const shareId = searchParams.get('shareId');
+    if (!shareId) {
       uiStore.setLoading(false);
       return;
     }
     try {
-      let buffer;
-      if (params.mode === 'dynamic') {
-        const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
-        async function promptPassword() {
-          const result = await showModal({
-            component: PasswordPromptModal,
-            title: messages.ui.prompts.sharedDataPassword,
-            buttons: [
-              { label: 'OK', value: 'ok', variant: 'primary' },
-              {
-                label: messages.ui.modal.cancel,
-                value: 'cancel',
-                variant: 'secondary',
-              },
-            ],
-          });
-          if (!result.component || result.value !== 'ok') return null;
-          return result.component.password.value || null;
-        }
-        buffer = await receiveDynamicData({
-          location: window.location,
-          adapter,
-          passwordPromptHandler: promptPassword,
-        });
-      } else {
-        async function promptPassword() {
-          const result = await showModal({
-            component: PasswordPromptModal,
-            title: messages.ui.prompts.sharedDataPassword,
-            buttons: [
-              { label: 'OK', value: 'ok', variant: 'primary' },
-              {
-                label: messages.ui.modal.cancel,
-                value: 'cancel',
-                variant: 'secondary',
-              },
-            ],
-          });
-          if (!result.component || result.value !== 'ok') return null;
-          return result.component.password.value || null;
-        }
-        buffer = await receiveSharedData({
-          location: window.location,
-          downloadHandler: async (id) => {
-            const text = await dataManager.googleDriveManager.loadFileContent(id);
-            if (!text) throw new Error('no data');
-            const { ciphertext, iv } = JSON.parse(text);
-            return {
-              ciphertext: base64ToArrayBuffer(ciphertext),
-              iv: new Uint8Array(base64ToArrayBuffer(iv)),
-            };
-          },
-          passwordPromptHandler: promptPassword,
-        });
+      if (!dataManager.googleDriveManager || typeof dataManager.googleDriveManager.loadFileContent !== 'function') {
+        throw new Error('Google Drive manager is not available.');
       }
-      const parsed = JSON.parse(new TextDecoder().decode(buffer));
-      Object.assign(characterStore.character, parsed.character);
-      characterStore.skills.splice(0, characterStore.skills.length, ...parsed.skills);
-      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsed.specialSkills);
-      Object.assign(characterStore.equipments, parsed.equipments);
-      characterStore.histories.splice(0, characterStore.histories.length, ...parsed.histories);
+
+      const content = await dataManager.googleDriveManager.loadFileContent(shareId);
+      if (!content) {
+        throw new Error('Shared file is unavailable.');
+      }
+
+      const parsed = await deserializeCharacterPayload(content);
+      const character = parsed?.character || {};
+      const skills = Array.isArray(parsed?.skills) ? parsed.skills : [];
+      const specialSkills = Array.isArray(parsed?.specialSkills) ? parsed.specialSkills : [];
+      const equipments = parsed?.equipments || {};
+      const histories = Array.isArray(parsed?.histories) ? parsed.histories : [];
+
+      Object.assign(characterStore.character, character);
+      characterStore.skills.splice(0, characterStore.skills.length, ...skills);
+      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...specialSkills);
+      Object.assign(characterStore.equipments, equipments);
+      characterStore.histories.splice(0, characterStore.histories.length, ...histories);
       uiStore.isViewingShared = true;
+      const url = new URL(window.location.href);
+      url.searchParams.delete('shareId');
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
     } catch (err) {
-      let key = 'general';
-      if (err.name === 'InvalidLinkError') key = 'invalid';
-      else if (err.name === 'ExpiredLinkError') key = 'expired';
-      else if (err.name === 'PasswordRequiredError') key = 'passwordRequired';
-      else if (err.name === 'DecryptionError') key = 'decryptionFailed';
-      showToast({ type: 'error', ...messages.share.loadError.toast(key) });
+      showToast({ type: 'error', ...messages.share.loadError.toast('general') });
       console.error('Error loading shared data:', err);
     } finally {
       uiStore.setLoading(false);

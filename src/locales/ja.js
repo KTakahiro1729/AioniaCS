@@ -85,30 +85,11 @@ export const messages = {
       message: 'サインインしてください',
     }),
     options: {
-      reflection: {
-        title: '今後の変更を反映しますか？',
-        choices: {
-          snapshot: '反映しない',
-          dynamic: '反映する',
-        },
-        driveRequired: 'Google Drive連携が必要です',
-      },
-      additional: {
-        title: '追加オプション',
-        includeFull: '画像・メモ（長文の場合）を含める',
-        driveRequired: 'Google Drive連携が必要です',
-        truncateWarning: '内容が一部省略される可能性があります',
-        enablePassword: 'パスワード保護',
-        passwordPlaceholder: 'パスワード',
-        expires: {
-          label: '有効期限',
-          options: {
-            1: '1日',
-            7: '7日',
-            0: '無期限',
-          },
-        },
-      },
+      title: '共有内容',
+      description: 'Google Drive に保存し、共有リンクを生成します。',
+      includesImages: '画像やメモを含むすべての情報が共有されます。',
+      folderHint: 'リンク用ファイルは現在設定されている保存先フォルダに保存されます。',
+      needSignIn: '共有リンクを作成するには Google Drive にサインインしてください。',
       signIn: 'Google Drive にサインイン',
     },
     generateFailed: (err) => ({
@@ -117,6 +98,7 @@ export const messages = {
     }),
     errors: {
       uploadFailed: 'Google Drive へのアップロードに失敗しました',
+      permissionFailed: 'Google Drive の共有設定に失敗しました',
       missingReadId: '読み込み対象のIDが指定されていません',
       fetchFailed: 'Google Drive からファイルを取得できませんでした',
       missingUpdateId: '更新対象のIDが指定されていません',

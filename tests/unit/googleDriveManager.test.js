@@ -20,6 +20,9 @@ describe('GoogleDriveManager configuration and folder handling', () => {
             get: vi.fn(),
             delete: vi.fn(),
           },
+          permissions: {
+            create: vi.fn(),
+          },
         },
         request: vi.fn(),
       },
@@ -192,6 +195,20 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     gapi.client.drive.files.delete.mockResolvedValue({});
     await gdm.deleteCharacterFile('del-1');
     expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({ fileId: 'del-1' });
+  });
+
+  test('setPermissionToPublic requests anyone-with-link access', async () => {
+    await gdm.setPermissionToPublic('file-123');
+    expect(gapi.client.drive.permissions.create).toHaveBeenCalledWith({
+      fileId: 'file-123',
+      resource: { role: 'reader', type: 'anyone', allowFileDiscovery: false },
+    });
+  });
+
+  test('setPermissionToPublic validates arguments', async () => {
+    await expect(gdm.setPermissionToPublic('')).rejects.toThrow('File ID is required');
+    delete gapi.client;
+    await expect(gdm.setPermissionToPublic('abc')).rejects.toThrow('GAPI client or Drive API not loaded');
   });
 
   test('onGapiLoad rejects when gapi.load missing', async () => {

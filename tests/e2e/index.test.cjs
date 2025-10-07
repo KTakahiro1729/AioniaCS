@@ -214,4 +214,46 @@ test.describe('Character Sheet E2E Tests', () => {
 
     expect(buildPath(savedFile.parentId)).toBe('慈悲なきアイオニア/PC/第一キャンペーン');
   });
+
+  test('generates share link through unified Drive flow', async ({ page }) => {
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(INDEX_HTML_PATH);
+
+    await page.locator('#name').fill('SharedHero');
+
+    const shareButton = page.locator('button.footer-button--share');
+    await shareButton.click();
+
+    const modal = page.locator('.modal');
+    await modal.waitFor({ state: 'visible' });
+
+    const generateButton = page.locator('button:has-text("生成")');
+    await expect(generateButton).toBeDisabled();
+
+    const signInButton = page.locator('button:has-text("Google Drive にサインイン")');
+    await signInButton.click();
+
+    await expect(generateButton).toBeEnabled({ timeout: 5000 });
+
+    await page.evaluate(() => {
+      navigator.clipboard.writeText = (text) => {
+        window.__sharedLink = text;
+        return Promise.resolve();
+      };
+    });
+
+    await generateButton.click();
+    await modal.waitFor({ state: 'hidden' });
+
+    const shareState = await page.evaluate(() => ({
+      shareRecords: JSON.parse(localStorage.getItem('aioniacs.share.records')),
+      driveState: JSON.parse(localStorage.getItem('mockGoogleDriveData')),
+      copiedLink: window.__sharedLink,
+    }));
+
+    expect(shareState.copiedLink).toContain('shareId=');
+    const record = shareState.shareRecords['AioniaCS Share - SharedHero.json'];
+    expect(record).toBeTruthy();
+    expect(shareState.driveState.files[record.id].isPublic).toBe(true);
+  });
 });

@@ -706,6 +706,34 @@ export class GoogleDriveManager {
   }
 
   /**
+   * Updates a file's permissions so anyone with the link can view it.
+   * @param {string} fileId - Target file ID.
+   * @returns {Promise<void>}
+   */
+  async setPermissionToPublic(fileId) {
+    if (!fileId) {
+      throw new Error('File ID is required to update permissions.');
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      throw new Error('GAPI client or Drive API not loaded for setPermissionToPublic.');
+    }
+
+    try {
+      await gapi.client.drive.permissions.create({
+        fileId,
+        resource: {
+          role: 'reader',
+          type: 'anyone',
+          allowFileDiscovery: false,
+        },
+      });
+    } catch (error) {
+      console.error('Error setting file permission to public:', error);
+      throw new Error('Failed to update file permissions on Google Drive.');
+    }
+  }
+
+  /**
    * Uploads a file and sets sharing permissions.
    * @param {string|ArrayBuffer} fileContent
    * @param {string} fileName
@@ -740,10 +768,7 @@ export class GoogleDriveManager {
         body: multipartRequestBody,
       });
 
-      await gapi.client.drive.permissions.create({
-        fileId: res.result.id,
-        resource: { role: 'reader', type: 'anyone' },
-      });
+      await this.setPermissionToPublic(res.result.id);
       return res.result.id;
     } catch (error) {
       console.error('Error uploading and sharing file:', error);
