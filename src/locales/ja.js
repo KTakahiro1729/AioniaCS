@@ -172,6 +172,7 @@ export const messages = {
       defaultTitle: 'Aionia TRPG Character Sheet',
       cloudHub: 'Cloud Hub',
       helpLabel: '?',
+      gmTable: 'GMテーブル',
     },
     footer: {
       experience: '経験点',
@@ -310,6 +311,88 @@ export const messages = {
           memo: 'メモ',
         },
       },
+    },
+  },
+  gmTable: {
+    pageTitle: 'GMテーブル',
+    pageSubtitle: 'セッション中の仲間たちを俯瞰し、瞬時に判断するための指令卓',
+    headers: {
+      characterName: 'キャラクター名',
+    },
+    rows: {
+      memo: 'キャラクターメモ',
+      weakness: '弱点',
+      skills: '技能',
+      specialSkills: '特技',
+      weight: '荷重',
+      skillToggle: {
+        detail: '詳細表示に切り替え',
+        summary: '一覧表示に戻す',
+      },
+    },
+    characterMenu: {
+      edit: '編集',
+      reload: '再読込',
+      remove: '削除',
+    },
+    actions: {
+      backToSheet: 'キャラシへ戻る',
+      saveSession: 'GMセッション保存',
+      loadSession: 'GMセッション読み込み',
+      openCharacterMenu: (name) => `${name}の操作メニューを開く`,
+    },
+    labels: {
+      unknownCharacter: '名もなき冒険者',
+      noWeakness: '登録された弱点はありません',
+      noSkill: '習得技能なし',
+      noExpert: '専門技能なし',
+      noSpecialSkill: '特技は未習得です',
+    },
+    placeholders: {
+      characterMemo: 'セッション用メモを記入',
+    },
+    weight: {
+      penaltyNone: 'ペナルティなし',
+      penaltyLight: '軽度ペナルティ',
+      penaltyHeavy: '重度ペナルティ',
+    },
+    session: {
+      memoTitle: 'セッション全体メモ',
+      defaultFileName: 'gm-session.json',
+    },
+    toasts: {
+      added: {
+        title: 'キャラクター追加',
+        message: (fileName) => `${fileName} を読み込みました`,
+      },
+      reloaded: {
+        title: 'キャラクター更新',
+        message: (fileName) => `${fileName} を再読込しました`,
+      },
+      removed: {
+        title: 'キャラクター削除',
+        message: 'テーブルからキャラクターを削除しました',
+      },
+      loadError: {
+        title: '読み込み失敗',
+      },
+      sessionSaved: {
+        title: 'セッション保存',
+        message: '現在のテーブルをJSONとして保存しました',
+      },
+      sessionLoaded: {
+        title: 'セッション読込',
+        message: 'GMセッションデータを読み込みました',
+      },
+      sessionLoadError: {
+        title: 'セッション読込失敗',
+      },
+    },
+    errors: {
+      characterLoad: 'キャラクターデータの解析に失敗しました',
+    },
+    confirm: {
+      delete: (name) => `${name} をテーブルから削除しますか？`,
     },
   },
   outputButton: {
