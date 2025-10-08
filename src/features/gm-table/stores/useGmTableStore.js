@@ -12,13 +12,37 @@ function createId() {
   return `gm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+const PANEL_PLACEMENTS = new Set(['footer', 'left', 'right']);
+
 const defaultWindowState = () => ({
-  top: 120,
-  left: 40,
+  placement: 'footer',
   width: 360,
-  height: 420,
+  height: 280,
   minimized: false,
 });
+
+function normalizeWindowState(rawState) {
+  const defaults = defaultWindowState();
+  if (!rawState || typeof rawState !== 'object') {
+    return defaults;
+  }
+
+  if (typeof rawState.placement === 'string') {
+    return {
+      placement: PANEL_PLACEMENTS.has(rawState.placement) ? rawState.placement : defaults.placement,
+      width: typeof rawState.width === 'number' ? rawState.width : defaults.width,
+      height: typeof rawState.height === 'number' ? rawState.height : defaults.height,
+      minimized: typeof rawState.minimized === 'boolean' ? rawState.minimized : defaults.minimized,
+    };
+  }
+
+  return {
+    ...defaults,
+    width: typeof rawState.width === 'number' ? rawState.width : defaults.width,
+    height: typeof rawState.height === 'number' ? rawState.height : defaults.height,
+    minimized: typeof rawState.minimized === 'boolean' ? rawState.minimized : defaults.minimized,
+  };
+}
 
 export const useGmTableStore = defineStore('gmTable', {
   state: () => ({
@@ -115,7 +139,7 @@ export const useGmTableStore = defineStore('gmTable', {
         weaknesses: typeof rowVisibility.weaknesses === 'boolean' ? rowVisibility.weaknesses : false,
       };
       this.skillDetailExpanded = !!skillDetailExpanded;
-      this.sessionWindow = sessionWindow ? { ...defaultWindowState(), ...sessionWindow } : defaultWindowState();
+      this.sessionWindow = sessionWindow ? normalizeWindowState(sessionWindow) : defaultWindowState();
       this.columns = Array.isArray(characters)
         ? characters.map((column) => ({
             id: column.id || createId(),

@@ -359,6 +359,17 @@ export const messages = {
     session: {
       memoTitle: 'セッション全体メモ',
       defaultFileName: 'gm-session.json',
+      placement: {
+        footer: '下部',
+        left: '左側',
+        right: '右側',
+        toggleLabel: '表示位置',
+        ariaLabel: (current) => `メモ欄の表示位置を切り替え (現在: ${current})`,
+      },
+      memoActions: {
+        collapse: 'メモ欄を折りたたむ',
+        expand: 'メモ欄を展開する',
+      },
     },
     toasts: {
       added: {

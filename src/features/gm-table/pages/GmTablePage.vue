@@ -162,12 +162,23 @@ function saveSession() {
   showToast({ type: 'success', title: gmMessages.toasts.sessionSaved.title, message: gmMessages.toasts.sessionSaved.message });
 }
 
-const memoWindowPosition = computed(() => ({ top: gmStore.sessionWindow.top, left: gmStore.sessionWindow.left }));
+const memoWindowPlacement = computed(() => gmStore.sessionWindow.placement);
 const memoWindowSize = computed(() => ({ width: gmStore.sessionWindow.width, height: gmStore.sessionWindow.height }));
 
-function updateMemoPosition(position) {
-  gmStore.updateSessionWindow(position);
-}
+const pagePaddingStyle = computed(() => {
+  if (gmStore.sessionWindow.minimized) {
+    return {};
+  }
+  const style = {};
+  if (gmStore.sessionWindow.placement === 'footer') {
+    style.paddingBottom = `${Math.max(64, (gmStore.sessionWindow.height || 0) + 72)}px`;
+  } else if (gmStore.sessionWindow.placement === 'left') {
+    style.paddingLeft = `${Math.max(32, (gmStore.sessionWindow.width || 0) + 36)}px`;
+  } else if (gmStore.sessionWindow.placement === 'right') {
+    style.paddingRight = `${Math.max(32, (gmStore.sessionWindow.width || 0) + 36)}px`;
+  }
+  return style;
+});
 
 function updateMemoSize(size) {
   gmStore.updateSessionWindow(size);
@@ -177,13 +188,17 @@ function toggleMemoWindow() {
   gmStore.updateSessionWindow({ minimized: !gmStore.sessionWindow.minimized });
 }
 
+function updateMemoPlacement(nextPlacement) {
+  gmStore.updateSessionWindow({ placement: nextPlacement });
+}
+
 function goToSheet() {
   router.push({ name: 'character-sheet' });
 }
 </script>
 
 <template>
-  <div class="gm-table-page">
+  <div class="gm-table-page" :style="pagePaddingStyle">
     <GmTableHeader
       :title="gmMessages.pageTitle"
       :subtitle="gmMessages.pageSubtitle"
@@ -216,13 +231,15 @@ function goToSheet() {
     <input ref="sessionFileInput" type="file" class="gm-file-input" accept=".json" @change="handleSessionFileChange" />
     <SessionMemoWindow
       :memo="gmStore.sessionMemo"
-      :position="memoWindowPosition"
+      :placement="memoWindowPlacement"
       :size="memoWindowSize"
       :minimized="gmStore.sessionWindow.minimized"
       :title="gmMessages.session.memoTitle"
+      :placement-labels="gmMessages.session.placement"
+      :action-labels="gmMessages.session.memoActions"
       @update:memo="gmStore.updateSessionMemo"
-      @update:position="updateMemoPosition"
       @update:size="updateMemoSize"
+      @update:placement="updateMemoPlacement"
       @toggle-minimize="toggleMemoWindow"
     />
   </div>

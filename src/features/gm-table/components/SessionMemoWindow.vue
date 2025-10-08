@@ -1,112 +1,152 @@
 <template>
-  <div class="session-memo-window" :class="{ 'is-minimized': minimized }" :style="windowStyle">
-    <header class="session-memo-window__header" @pointerdown="startDrag">
-      <span class="session-memo-window__title">{{ title }}</span>
-      <div class="session-memo-window__actions">
-        <button class="session-memo-window__button" type="button" @click="$emit('toggle-minimize')">
+  <div
+    class="session-memo-panel"
+    :class="panelClasses"
+    :style="panelStyle"
+  >
+    <header class="session-memo-panel__header">
+      <span class="session-memo-panel__title">{{ title }}</span>
+      <div class="session-memo-panel__actions">
+        <button
+          class="session-memo-panel__button"
+          type="button"
+          :aria-label="placementAriaLabel"
+          @click="togglePlacement"
+        >
+          <span class="session-memo-panel__button-label">{{ togglePlacementLabel }}</span>
+          <span class="session-memo-panel__button-value">{{ placementDisplay }}</span>
+        </button>
+        <button
+          class="session-memo-panel__button session-memo-panel__button--icon"
+          type="button"
+          :aria-label="minimizeAriaLabel"
+          @click="$emit('toggle-minimize')"
+        >
           {{ minimized ? '▶' : '▼' }}
         </button>
       </div>
     </header>
-    <section v-show="!minimized" class="session-memo-window__body">
+    <section v-show="!minimized" class="session-memo-panel__body">
       <textarea
-        class="session-memo-window__textarea"
+        class="session-memo-panel__textarea"
         :value="memo"
         @input="$emit('update:memo', $event.target.value)"
       ></textarea>
     </section>
-    <div v-show="!minimized" class="session-memo-window__resize-handle" @pointerdown="startResize"></div>
+    <div
+      v-show="!minimized"
+      class="session-memo-panel__resize-handle"
+      :class="`session-memo-panel__resize-handle--${placement}`"
+      @pointerdown="startResize"
+    ></div>
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive } from 'vue';
 
+const MIN_HEIGHT = 180;
+const DEFAULT_HEIGHT = 280;
+const MIN_WIDTH = 260;
+const DEFAULT_WIDTH = 360;
+const PLACEMENTS = ['footer', 'left', 'right'];
+
 const props = defineProps({
   memo: { type: String, default: '' },
   title: { type: String, default: 'セッションメモ' },
-  position: {
-    type: Object,
-    default: () => ({ top: 120, left: 40 }),
-  },
+  placement: { type: String, default: 'footer' },
   size: {
     type: Object,
-    default: () => ({ width: 320, height: 420 }),
+    default: () => ({ width: 360, height: 280 }),
   },
   minimized: { type: Boolean, default: false },
+  placementLabels: {
+    type: Object,
+    default: () => ({
+      footer: '下部',
+      left: '左側',
+      right: '右側',
+      toggleLabel: '表示位置',
+      ariaLabel: (current) => `メモ欄の表示位置を切り替え (現在: ${current})`,
+    }),
+  },
+  actionLabels: {
+    type: Object,
+    default: () => ({
+      collapse: 'メモ欄を折りたたむ',
+      expand: 'メモ欄を展開する',
+    }),
+  },
 });
 
-const emit = defineEmits(['update:memo', 'update:position', 'update:size', 'toggle-minimize']);
+const emit = defineEmits(['update:memo', 'update:size', 'update:placement', 'toggle-minimize']);
 
-const dragState = reactive({
-  active: false,
-  pointerId: null,
-  startX: 0,
-  startY: 0,
-  baseTop: 0,
-  baseLeft: 0,
-  target: null,
+const panelClasses = computed(() => ({
+  'is-footer': props.placement === 'footer',
+  'is-left': props.placement === 'left',
+  'is-right': props.placement === 'right',
+  'is-minimized': props.minimized,
+}));
+
+const normalizedHeight = computed(() => Math.max(MIN_HEIGHT, props.size?.height ?? DEFAULT_HEIGHT));
+const normalizedWidth = computed(() => Math.max(MIN_WIDTH, props.size?.width ?? DEFAULT_WIDTH));
+
+const panelStyle = computed(() => {
+  if (props.placement === 'footer') {
+    return {
+      height: props.minimized ? undefined : `${normalizedHeight.value}px`,
+    };
+  }
+  return {
+    width: `${normalizedWidth.value}px`,
+  };
 });
+
+const placementDisplay = computed(() => props.placementLabels?.[props.placement] ?? props.placement);
+const togglePlacementLabel = computed(() => props.placementLabels?.toggleLabel ?? '表示位置');
+const placementAriaLabel = computed(() => {
+  const builder = props.placementLabels?.ariaLabel;
+  const current = placementDisplay.value;
+  if (typeof builder === 'function') {
+    return builder(current);
+  }
+  return `${togglePlacementLabel.value} (${current})`;
+});
+const minimizeAriaLabel = computed(() =>
+  props.minimized
+    ? props.actionLabels?.expand ?? 'メモ欄を展開する'
+    : props.actionLabels?.collapse ?? 'メモ欄を折りたたむ',
+);
+
 const resizeState = reactive({
   active: false,
   pointerId: null,
   startX: 0,
   startY: 0,
-  baseWidth: 0,
-  baseHeight: 0,
+  baseWidth: DEFAULT_WIDTH,
+  baseHeight: DEFAULT_HEIGHT,
   target: null,
 });
 
-const windowStyle = computed(() => ({
-  top: `${props.position.top}px`,
-  left: `${props.position.left}px`,
-  width: `${props.size.width}px`,
-  height: props.minimized ? 'auto' : `${props.size.height}px`,
-}));
-
-function startDrag(event) {
-  if (resizeState.active) return;
-  dragState.active = true;
-  dragState.pointerId = event.pointerId;
-  dragState.startX = event.clientX;
-  dragState.startY = event.clientY;
-  dragState.baseTop = props.position.top;
-  dragState.baseLeft = props.position.left;
-  dragState.target = event.currentTarget;
-  if (dragState.target?.setPointerCapture) {
-    dragState.target.setPointerCapture(event.pointerId);
+function togglePlacement() {
+  const currentIndex = PLACEMENTS.indexOf(props.placement);
+  const nextPlacement = PLACEMENTS[(currentIndex + 1) % PLACEMENTS.length] || 'footer';
+  emit('update:placement', nextPlacement);
+  if (nextPlacement === 'footer') {
+    emit('update:size', { height: Math.max(props.size?.height ?? DEFAULT_HEIGHT, MIN_HEIGHT) });
+  } else {
+    emit('update:size', { width: Math.max(props.size?.width ?? DEFAULT_WIDTH, MIN_WIDTH) });
   }
-  event.preventDefault();
-}
-
-function onDrag(event) {
-  if (!dragState.active || event.pointerId !== dragState.pointerId) return;
-  const deltaX = event.clientX - dragState.startX;
-  const deltaY = event.clientY - dragState.startY;
-  emit('update:position', {
-    top: dragState.baseTop + deltaY,
-    left: dragState.baseLeft + deltaX,
-  });
-}
-
-function endDrag(event) {
-  if (!dragState.active || event.pointerId !== dragState.pointerId) return;
-  dragState.active = false;
-  if (dragState.target?.releasePointerCapture) {
-    dragState.target.releasePointerCapture(event.pointerId);
-  }
-  dragState.pointerId = null;
-  dragState.target = null;
 }
 
 function startResize(event) {
-  if (dragState.active) return;
+  if (resizeState.active) return;
   resizeState.active = true;
   resizeState.pointerId = event.pointerId;
   resizeState.startX = event.clientX;
   resizeState.startY = event.clientY;
-  resizeState.baseWidth = props.size.width;
-  resizeState.baseHeight = props.size.height;
+  resizeState.baseWidth = props.size?.width ?? DEFAULT_WIDTH;
+  resizeState.baseHeight = props.size?.height ?? DEFAULT_HEIGHT;
   resizeState.target = event.currentTarget;
   if (resizeState.target?.setPointerCapture) {
     resizeState.target.setPointerCapture(event.pointerId);
@@ -116,11 +156,23 @@ function startResize(event) {
 
 function onResize(event) {
   if (!resizeState.active || event.pointerId !== resizeState.pointerId) return;
-  const deltaX = event.clientX - resizeState.startX;
-  const deltaY = event.clientY - resizeState.startY;
-  const width = Math.max(240, resizeState.baseWidth + deltaX);
-  const height = Math.max(200, resizeState.baseHeight + deltaY);
-  emit('update:size', { width, height });
+  if (props.placement === 'footer') {
+    const deltaY = resizeState.startY - event.clientY;
+    const height = Math.max(MIN_HEIGHT, resizeState.baseHeight + deltaY);
+    emit('update:size', { height });
+    return;
+  }
+
+  if (props.placement === 'left') {
+    const deltaX = event.clientX - resizeState.startX;
+    const width = Math.max(MIN_WIDTH, resizeState.baseWidth + deltaX);
+    emit('update:size', { width });
+    return;
+  }
+
+  const deltaX = resizeState.startX - event.clientX;
+  const width = Math.max(MIN_WIDTH, resizeState.baseWidth + deltaX);
+  emit('update:size', { width });
 }
 
 function endResize(event) {
@@ -134,12 +186,10 @@ function endResize(event) {
 }
 
 function onPointerMove(event) {
-  onDrag(event);
   onResize(event);
 }
 
 function onPointerUp(event) {
-  endDrag(event);
   endResize(event);
 }
 
@@ -166,4 +216,3 @@ if (import.meta.hot) {
 </script>
 
 <style scoped src="./SessionMemoWindow.css"></style>
-
