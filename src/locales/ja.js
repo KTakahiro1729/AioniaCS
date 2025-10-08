@@ -81,10 +81,23 @@ export const messages = {
       shareFailed: '共有リンクの取得に失敗しました',
       managerMissing: 'Google Drive マネージャーが設定されていません',
     },
+    loadError: {
+      toast: (key = 'general') => {
+        const messagesMap = {
+          general: '共有データの読み込みに失敗しました',
+          fetchFailed: '共有データの取得に失敗しました',
+          parseFailed: '共有データの解析に失敗しました',
+        };
+        return {
+          title: '共有データエラー',
+          message: messagesMap[key] || messagesMap.general,
+        };
+      },
+    },
     modal: {
       signInMessage: '共有リンクを作成するには Google Drive にサインインしてください。',
       signInButton: 'Google Drive にサインイン',
-      instructions: '共有リンクをコピーして相手に送ってください。リンクから Drive 上のキャラシを閲覧できます。',
+      instructions: '共有リンクをコピーして相手に送ってください。リンクを開くと閲覧モードでキャラシを表示します。',
       generating: '共有リンクを作成しています…',
       ready: '共有リンクが作成されました。',
       retry: '再試行',

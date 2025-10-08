@@ -40,11 +40,16 @@ export function useShare(dataManager) {
       uiStore.setCurrentDriveFileId(result.id);
     }
 
-    const link = await manager.ensureFilePublic(uiStore.currentDriveFileId || fileId);
-    if (!link) {
+    const publishedLink = await manager.ensureFilePublic(uiStore.currentDriveFileId || fileId);
+    if (!publishedLink) {
       throw new Error(messages.share.errors.shareFailed);
     }
-    return link;
+
+    const shareUrl = new URL(window.location.href);
+    shareUrl.hash = '';
+    shareUrl.searchParams.delete('sharedId');
+    shareUrl.searchParams.set('sharedId', uiStore.currentDriveFileId || fileId);
+    return shareUrl.toString();
   }
 
   async function copyLink(link) {

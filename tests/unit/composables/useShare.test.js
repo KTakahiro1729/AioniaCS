@@ -18,6 +18,8 @@ describe('useShare', () => {
     characterStore.specialSkills = [];
     characterStore.equipments = {};
     characterStore.histories = [];
+    const origin = window.location.origin;
+    window.history.replaceState({}, '', `${origin}/app/index.html?foo=1#hash`);
   });
 
   test('throws when not signed in', async () => {
@@ -66,7 +68,7 @@ describe('useShare', () => {
     const share = useShare(dataManager);
     const link = await share.createShareLink();
 
-    expect(link).toBe('https://drive.link/file123');
+    expect(link).toBe(`${window.location.origin}/app/index.html?foo=1&sharedId=file123`);
     expect(uiStore.currentDriveFileId).toBe('file123');
     expect(dataManager.saveCharacterToDrive).toHaveBeenCalled();
     expect(dataManager.googleDriveManager.ensureFilePublic).toHaveBeenCalledWith('file123');
