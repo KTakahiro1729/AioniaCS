@@ -297,8 +297,6 @@ td.writein-area {
   position: relative;
   display: flex;
   flex-direction: column;
-
-  /* 横並びに変更 */
 }
 
 /* 装備品のヘッダー（左側中央縦書き） */
@@ -334,8 +332,6 @@ td.writein-area {
 
   /* 3.5cm ≈ 132px */
   border-left: 0.5pt solid #a6a6a6;
-
-  /* 灰色に変更 */
   padding-left: 5px;
   position: relative;
   display: flex;
