@@ -1,17 +1,20 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import { resolve } from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   base: './',
-  plugins: [vue(), visualizer({ open: true })],
+  plugins: [vue(), basicSsl(), visualizer({ open: true })],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
     },
   },
   server: {
+    https: true,
+    port: 5173,
     fs: {
       '@': resolve(__dirname, 'src'),
       allow: ['.'],

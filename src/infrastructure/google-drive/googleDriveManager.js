@@ -341,6 +341,7 @@ export class GoogleDriveManager {
           client_id: this.clientId,
           scope: this.scope,
           callback: () => {},
+          ux_mode: 'redirect',
         });
         console.log('GDM: GIS One Tap and Token Client initialized.');
         this.updateUiStore((store) => {
@@ -411,12 +412,12 @@ export class GoogleDriveManager {
     const payload = decodeJwtPayload(response.credential);
     this.loginHint = payload?.email || payload?.sub || null;
 
-    this.requestDriveAccessToken().catch((error) => {
-      console.error('Failed to obtain Drive access token:', error);
+    this.requestDriveAccessToken({ silent: true }).catch((error) => {
+      console.log('Silent token request failed, waiting for user interaction:', error);
     });
   }
 
-  requestDriveAccessToken({ prompt = '', allowInteractiveFallback = true } = {}) {
+  requestDriveAccessToken({ silent = false } = {}) {
     if (!this.tokenClient) {
       const error = new Error('GIS Token Client not initialized.');
       this.handleTokenFailure(error);
@@ -424,18 +425,16 @@ export class GoogleDriveManager {
     }
 
     return new Promise((resolve, reject) => {
+      const prompt = silent ? '' : 'consent';
       const requestOptions = { prompt };
+
       if (this.loginHint) {
         requestOptions.hint = this.loginHint;
       }
 
       this.tokenClient.callback = (resp) => {
         if (resp && resp.error) {
-          if (resp.error === 'interaction_required' && allowInteractiveFallback) {
-            this.requestDriveAccessToken({ prompt: 'consent', allowInteractiveFallback: false }).then(resolve).catch(reject);
-            return;
-          }
-          const error = new Error(resp.error);
+          const error = new Error(`Token request failed: ${resp.error}`);
           this.handleTokenFailure(error);
           reject(error);
           return;
@@ -482,13 +481,17 @@ export class GoogleDriveManager {
    */
   handleSignIn(callback) {
     this.pendingSignInCallback = callback || null;
-    if (!this.oneTapInitialized) {
-      const error = new Error('Google One Tap not initialized.');
+
+    if (!this.tokenClient) {
+      const error = new Error('Google authentication is not ready.');
       console.error('GDM:', error.message);
       this.handleTokenFailure(error);
       return;
     }
-    this.promptOneTap({ isManual: true });
+
+    this.requestDriveAccessToken({ silent: false }).catch((error) => {
+      console.error('Interactive sign-in failed:', error);
+    });
   }
 
   /**
