@@ -1,13 +1,13 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useGoogleDrive } from '../../../src/composables/useGoogleDrive.js';
-import { useCharacterStore } from '../../../src/stores/characterStore.js';
-import { useUiStore } from '../../../src/stores/uiStore.js';
+import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
-vi.mock('../../../src/composables/useModal.js', () => ({
+vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
 }));
 
-import { useModal } from '../../../src/composables/useModal.js';
+import { useModal } from '@/features/modals/composables/useModal.js';
 
 function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
   const showFolderPicker = vi.fn();

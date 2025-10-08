@@ -1,9 +1,9 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useShare } from '../../../src/composables/useShare.js';
-import { useCharacterStore } from '../../../src/stores/characterStore.js';
-import { useUiStore } from '../../../src/stores/uiStore.js';
+import { useShare } from '@/features/cloud-sync/composables/useShare.js';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
-vi.mock('../../../src/composables/useNotifications.js', () => ({
+vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
   useNotifications: () => ({
     showToast: vi.fn(),
   }),

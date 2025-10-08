@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { ref } from 'vue';
-import { useHeaderVisibility } from '../../../src/composables/useHeaderVisibility.js';
+import { useHeaderVisibility } from '@/shared/composables/useHeaderVisibility.js';
 
 vi.stubGlobal('requestAnimationFrame', (fn) => fn());
 

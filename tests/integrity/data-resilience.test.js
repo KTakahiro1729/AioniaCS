@@ -1,11 +1,11 @@
 import { describe, it, beforeEach, expect } from 'vitest';
-import { DataManager } from '../../src/services/dataManager.js';
+import { DataManager } from '@/features/character-sheet/services/dataManager.js';
 import {
   initializeMockGoogleDriveManager,
   resetMockGoogleDriveManagerForTests,
   getMockGoogleDriveManagerInstance,
-} from '../../src/services/mockGoogleDriveManager.js';
-import { AioniaGameData } from '../../src/data/gameData.js';
+} from '@/infrastructure/google-drive/mockGoogleDriveManager.js';
+import { AioniaGameData } from '@/data/gameData.js';
 
 describe('DataManager data integrity', () => {
   let dm;

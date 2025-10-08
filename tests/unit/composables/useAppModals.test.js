@@ -1,12 +1,12 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useAppModals } from '../../../src/composables/useAppModals.js';
-import { useModal } from '../../../src/composables/useModal.js';
-import { isDesktopDevice } from '../../../src/utils/device.js';
+import { useAppModals } from '@/features/modals/composables/useAppModals.js';
+import { useModal } from '@/features/modals/composables/useModal.js';
+import { isDesktopDevice } from '@/shared/utils/device.js';
 
-vi.mock('../../../src/composables/useModal.js', () => ({
+vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
 }));
-vi.mock('../../../src/utils/device.js', () => ({
+vi.mock('@/shared/utils/device.js', () => ({
   isDesktopDevice: vi.fn(),
 }));
 

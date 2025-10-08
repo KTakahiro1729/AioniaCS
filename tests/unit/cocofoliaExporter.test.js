@@ -1,4 +1,4 @@
-import { CocofoliaExporter } from '../../src/services/cocofoliaExporter.js';
+import { CocofoliaExporter } from '@/features/character-sheet/services/cocofoliaExporter.js';
 
 describe('CocofoliaExporter', () => {
   let exporter;

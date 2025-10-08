@@ -1,5 +1,5 @@
 // tests/unit/utils.test.js
-import { deepClone, createWeaknessArray } from '../../src/utils/utils.js';
+import { deepClone, createWeaknessArray } from '@/shared/utils/utils.js';
 
 describe('deepClone', () => {
   test('returns a deep copy of objects', () => {

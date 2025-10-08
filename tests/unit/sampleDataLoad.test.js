@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { setActivePinia, createPinia } from 'pinia';
-import { DataManager } from '../../src/services/dataManager.js';
-import { AioniaGameData } from '../../src/data/gameData.js';
-import { useCharacterStore } from '../../src/stores/characterStore.js';
+import { DataManager } from '@/features/character-sheet/services/dataManager.js';
+import { AioniaGameData } from '@/data/gameData.js';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 
 const sampleDir = path.resolve(__dirname, '../../sample-data');
 const sampleFiles = fs.readdirSync(sampleDir).filter((f) => f.endsWith('.json'));

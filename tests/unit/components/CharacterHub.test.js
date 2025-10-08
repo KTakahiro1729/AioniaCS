@@ -1,11 +1,11 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { flushPromises, mount } from '@vue/test-utils';
 import { ref } from 'vue';
-import CharacterHub from '../../../src/components/ui/CharacterHub.vue';
-import { useGoogleDrive } from '../../../src/composables/useGoogleDrive.js';
-import { useUiStore } from '../../../src/stores/uiStore.js';
+import CharacterHub from '@/features/character-sheet/components/ui/CharacterHub.vue';
+import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
-vi.mock('../../../src/composables/useGoogleDrive.js', () => ({
+vi.mock('@/features/cloud-sync/composables/useGoogleDrive.js', () => ({
   useGoogleDrive: vi.fn(),
 }));
 

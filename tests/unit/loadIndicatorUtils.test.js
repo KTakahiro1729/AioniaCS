@@ -1,4 +1,4 @@
-import { calculateStepClasses } from '../../src/utils/loadIndicator.js';
+import { calculateStepClasses } from '@/shared/utils/loadIndicator.js';
 
 describe('calculateStepClasses', () => {
   test('load 0', () => {

@@ -2,13 +2,13 @@ import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import ShareOptions from '../../../src/components/modals/contents/ShareOptions.vue';
-import { useUiStore } from '../../../src/stores/uiStore.js';
+import ShareOptions from '@/features/modals/components/contents/ShareOptions.vue';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 const mockCreateShareLink = vi.fn();
 const mockCopyLink = vi.fn();
 
-vi.mock('../../../src/composables/useShare.js', () => ({
+vi.mock('@/features/cloud-sync/composables/useShare.js', () => ({
   useShare: () => ({
     createShareLink: mockCreateShareLink,
     copyLink: mockCopyLink,
