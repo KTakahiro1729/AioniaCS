@@ -3,6 +3,14 @@
   padding: 96px 24px 48px;
   background: var(--color-background);
   color: var(--color-text-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.gm-table-page__workspace {
+  flex: 1;
+  display: flex;
 }
 
 .gm-file-input {
@@ -12,5 +20,10 @@
 @media (max-width: 960px) {
   .gm-table-page {
     padding: 96px 12px 48px;
+    gap: 16px;
+  }
+
+  .gm-table-page__workspace {
+    min-height: 0;
   }
 }

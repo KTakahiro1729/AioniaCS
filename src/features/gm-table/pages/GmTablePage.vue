@@ -7,7 +7,7 @@ import { deserializeCharacterPayload } from '@/shared/utils/characterSerializati
 import { messages } from '@/locales/ja.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import SessionMemoWindow from '../components/SessionMemoWindow.vue';
+import SessionMemoFrame from '../components/SessionMemoFrame.vue';
 import GmTableHeader from '../components/GmTableHeader.vue';
 import GmTableLayout from '../components/GmTableLayout.vue';
 import { useGmTableStore } from '../stores/useGmTableStore.js';
@@ -162,19 +162,10 @@ function saveSession() {
   showToast({ type: 'success', title: gmMessages.toasts.sessionSaved.title, message: gmMessages.toasts.sessionSaved.message });
 }
 
-const memoWindowPosition = computed(() => ({ top: gmStore.sessionWindow.top, left: gmStore.sessionWindow.left }));
-const memoWindowSize = computed(() => ({ width: gmStore.sessionWindow.width, height: gmStore.sessionWindow.height }));
+const memoLayout = computed(() => gmStore.sessionMemoLayout);
 
-function updateMemoPosition(position) {
-  gmStore.updateSessionWindow(position);
-}
-
-function updateMemoSize(size) {
-  gmStore.updateSessionWindow(size);
-}
-
-function toggleMemoWindow() {
-  gmStore.updateSessionWindow({ minimized: !gmStore.sessionWindow.minimized });
+function updateMemoLayout(partial) {
+  gmStore.updateSessionMemoLayout(partial);
 }
 
 function goToSheet() {
@@ -195,36 +186,39 @@ function goToSheet() {
       @save="saveSession"
       @load="triggerSessionLoad"
     />
-    <GmTableLayout
-      :columns="gmStore.columns"
-      :gm-messages="gmMessages"
-      :row-visibility="gmStore.rowVisibility"
-      :skill-detail-expanded="gmStore.skillDetailExpanded"
-      :active-menu-id="activeMenuId"
-      @toggle-memo-row="toggleMemoRow"
-      @toggle-weakness-row="toggleWeaknessRow"
-      @toggle-skill-detail="toggleSkillDetail"
-      @open-menu="openMenu"
-      @edit-character="editCharacter"
-      @reload-character="reloadCharacter"
-      @delete-character="deleteCharacter"
-      @set-character-memo="(id, value) => gmStore.setCharacterMemo(id, value)"
-      @add-character="triggerAddCharacter"
-    />
+    <div class="gm-table-page__workspace">
+      <SessionMemoFrame
+        :memo="gmStore.sessionMemo"
+        :position="memoLayout.position"
+        :width="memoLayout.width"
+        :height="memoLayout.height"
+        :title="gmMessages.session.memoTitle"
+        @update:memo="gmStore.updateSessionMemo"
+        @update:position="(position) => updateMemoLayout({ position })"
+        @update:width="(width) => updateMemoLayout({ width })"
+        @update:height="(height) => updateMemoLayout({ height })"
+      >
+        <GmTableLayout
+          :columns="gmStore.columns"
+          :gm-messages="gmMessages"
+          :row-visibility="gmStore.rowVisibility"
+          :skill-detail-expanded="gmStore.skillDetailExpanded"
+          :active-menu-id="activeMenuId"
+          @toggle-memo-row="toggleMemoRow"
+          @toggle-weakness-row="toggleWeaknessRow"
+          @toggle-skill-detail="toggleSkillDetail"
+          @open-menu="openMenu"
+          @edit-character="editCharacter"
+          @reload-character="reloadCharacter"
+          @delete-character="deleteCharacter"
+          @set-character-memo="(id, value) => gmStore.setCharacterMemo(id, value)"
+          @add-character="triggerAddCharacter"
+        />
+      </SessionMemoFrame>
+    </div>
     <input ref="characterFileInput" type="file" class="gm-file-input" accept=".json,.zip" @change="handleCharacterFileChange" />
     <input ref="reloadFileInput" type="file" class="gm-file-input" accept=".json,.zip" @change="handleReloadFileChange" />
     <input ref="sessionFileInput" type="file" class="gm-file-input" accept=".json" @change="handleSessionFileChange" />
-    <SessionMemoWindow
-      :memo="gmStore.sessionMemo"
-      :position="memoWindowPosition"
-      :size="memoWindowSize"
-      :minimized="gmStore.sessionWindow.minimized"
-      :title="gmMessages.session.memoTitle"
-      @update:memo="gmStore.updateSessionMemo"
-      @update:position="updateMemoPosition"
-      @update:size="updateMemoSize"
-      @toggle-minimize="toggleMemoWindow"
-    />
   </div>
 </template>
 

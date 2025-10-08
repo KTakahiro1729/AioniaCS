@@ -12,12 +12,13 @@ function createId() {
   return `gm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-const defaultWindowState = () => ({
-  top: 120,
-  left: 40,
+const MIN_MEMO_WIDTH = 260;
+const MIN_MEMO_HEIGHT = 180;
+
+const defaultMemoLayout = () => ({
+  position: 'bottom',
   width: 360,
-  height: 420,
-  minimized: false,
+  height: 260,
 });
 
 export const useGmTableStore = defineStore('gmTable', {
@@ -29,7 +30,7 @@ export const useGmTableStore = defineStore('gmTable', {
       weaknesses: false,
     },
     skillDetailExpanded: false,
-    sessionWindow: defaultWindowState(),
+    sessionMemoLayout: defaultMemoLayout(),
   }),
   getters: {
     hasCharacters(state) {
@@ -80,14 +81,28 @@ export const useGmTableStore = defineStore('gmTable', {
     updateSessionMemo(value) {
       this.sessionMemo = value;
     },
-    updateSessionWindow(partial) {
-      this.sessionWindow = {
-        ...this.sessionWindow,
-        ...partial,
-      };
+    updateSessionMemoLayout(partial) {
+      if (!partial || typeof partial !== 'object') return;
+      const next = { ...this.sessionMemoLayout };
+      if (partial.position && ['bottom', 'left', 'right'].includes(partial.position)) {
+        next.position = partial.position;
+      }
+      if (Object.prototype.hasOwnProperty.call(partial, 'width')) {
+        const width = Number(partial.width);
+        if (!Number.isNaN(width)) {
+          next.width = Math.max(MIN_MEMO_WIDTH, width);
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(partial, 'height')) {
+        const height = Number(partial.height);
+        if (!Number.isNaN(height)) {
+          next.height = Math.max(MIN_MEMO_HEIGHT, height);
+        }
+      }
+      this.sessionMemoLayout = next;
     },
-    resetWindowState() {
-      this.sessionWindow = defaultWindowState();
+    resetMemoLayout() {
+      this.sessionMemoLayout = defaultMemoLayout();
     },
     toSessionPayload() {
       return {
@@ -95,7 +110,7 @@ export const useGmTableStore = defineStore('gmTable', {
         sessionMemo: this.sessionMemo,
         rowVisibility: { ...this.rowVisibility },
         skillDetailExpanded: this.skillDetailExpanded,
-        sessionWindow: { ...this.sessionWindow },
+        sessionMemoLayout: { ...this.sessionMemoLayout },
         characters: this.columns.map((column) => ({
           id: column.id,
           memo: column.memo,
@@ -107,7 +122,14 @@ export const useGmTableStore = defineStore('gmTable', {
     },
     loadFromSession(payload) {
       if (!payload || typeof payload !== 'object') return;
-      const { sessionMemo = '', rowVisibility = {}, skillDetailExpanded = false, sessionWindow = null, characters = [] } = payload;
+      const {
+        sessionMemo = '',
+        rowVisibility = {},
+        skillDetailExpanded = false,
+        sessionMemoLayout = null,
+        sessionWindow = null,
+        characters = [],
+      } = payload;
 
       this.sessionMemo = sessionMemo || '';
       this.rowVisibility = {
@@ -115,7 +137,16 @@ export const useGmTableStore = defineStore('gmTable', {
         weaknesses: typeof rowVisibility.weaknesses === 'boolean' ? rowVisibility.weaknesses : false,
       };
       this.skillDetailExpanded = !!skillDetailExpanded;
-      this.sessionWindow = sessionWindow ? { ...defaultWindowState(), ...sessionWindow } : defaultWindowState();
+      if (sessionMemoLayout && typeof sessionMemoLayout === 'object') {
+        this.sessionMemoLayout = defaultMemoLayout();
+        this.updateSessionMemoLayout(sessionMemoLayout);
+      } else if (sessionWindow && typeof sessionWindow === 'object') {
+        const { width = 360, height = 260 } = sessionWindow;
+        this.sessionMemoLayout = defaultMemoLayout();
+        this.updateSessionMemoLayout({ width, height });
+      } else {
+        this.sessionMemoLayout = defaultMemoLayout();
+      }
       this.columns = Array.isArray(characters)
         ? characters.map((column) => ({
             id: column.id || createId(),

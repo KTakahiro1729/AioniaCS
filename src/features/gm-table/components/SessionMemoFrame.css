@@ -1,0 +1,177 @@
+.session-memo-frame {
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--color-panel-body) 94%, transparent);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 22px 48px rgb(0 0 0 / 65%);
+}
+
+.session-memo-frame__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--color-panel-header);
+  color: var(--color-text-normal);
+  font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
+}
+
+.session-memo-frame__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.session-memo-frame__position-switch {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.session-memo-frame__position-button {
+  min-width: 56px;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-normal);
+  background: var(--color-panel-sub-header);
+  color: var(--color-text-normal);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.session-memo-frame__position-button.is-active {
+  background: var(--color-accent);
+  color: var(--color-text-strong);
+  transform: translateY(-1px);
+}
+
+.session-memo-frame__position-button:not(.is-active):hover {
+  background: color-mix(in srgb, var(--color-accent) 35%, var(--color-panel-sub-header));
+}
+
+.session-memo-frame__body {
+  display: flex;
+  flex: 1;
+  min-height: 320px;
+  background: color-mix(in srgb, var(--color-panel-body) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.session-memo-frame__main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 1.25rem;
+}
+
+.session-memo-frame__panel {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  background: var(--color-panel-body);
+  border-left: 1px solid var(--color-border-normal);
+  min-height: 0;
+  min-width: 0;
+}
+
+.session-memo-frame__textarea {
+  flex: 1;
+  width: 100%;
+  border: none;
+  padding: 1rem;
+  background: var(--color-input-bg);
+  color: var(--color-text-normal);
+  resize: none;
+  font-family: 'Shippori Mincho', serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+}
+
+.session-memo-frame__divider {
+  background: var(--color-border-strong);
+  flex: 0 0 auto;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.session-memo-frame__divider:hover,
+.session-memo-frame__divider:active {
+  background: var(--color-accent);
+}
+
+.session-memo-frame.is-bottom .session-memo-frame__body {
+  flex-direction: column;
+}
+
+.session-memo-frame.is-bottom .session-memo-frame__divider {
+  cursor: row-resize;
+  height: 10px;
+}
+
+.session-memo-frame.is-bottom .session-memo-frame__panel {
+  border-left: none;
+  border-top: 1px solid var(--color-border-normal);
+}
+
+.session-memo-frame.is-left .session-memo-frame__body,
+.session-memo-frame.is-right .session-memo-frame__body {
+  flex-direction: row;
+}
+
+.session-memo-frame.is-left .session-memo-frame__panel {
+  border-left: none;
+  border-right: 1px solid var(--color-border-normal);
+  order: 1;
+}
+
+.session-memo-frame.is-left .session-memo-frame__divider {
+  order: 2;
+}
+
+.session-memo-frame.is-left .session-memo-frame__main {
+  order: 3;
+}
+
+.session-memo-frame.is-left .session-memo-frame__divider,
+.session-memo-frame.is-right .session-memo-frame__divider {
+  cursor: col-resize;
+  width: 10px;
+}
+
+.session-memo-frame.is-right .session-memo-frame__panel {
+  order: 3;
+}
+
+.session-memo-frame.is-right .session-memo-frame__divider {
+  order: 2;
+}
+
+.session-memo-frame.is-right .session-memo-frame__main {
+  order: 1;
+}
+
+@media (max-width: 960px) {
+  .session-memo-frame {
+    border-radius: 12px;
+  }
+
+  .session-memo-frame__header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .session-memo-frame__main {
+    padding: 0.75rem;
+  }
+
+  .session-memo-frame__position-switch {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
