@@ -4,6 +4,14 @@
       <span class="icon-svg icon-svg-cloud" aria-label="cloud"></span>
     </button>
     <div class="main-header__title">{{ titleText }}</div>
+    <button
+      v-if="showGmTableButton"
+      class="button-base gm-table-button"
+      type="button"
+      @click="$emit('open-gm-table')"
+    >
+      {{ gmTableLabel }}
+    </button>
     <div
       class="button-base header-help-icon"
       ref="helpIcon"
@@ -28,9 +36,11 @@ const props = defineProps({
   defaultTitle: String,
   cloudHubLabel: String,
   helpLabel: String,
+  gmTableLabel: { type: String, default: 'GMテーブル' },
+  showGmTableButton: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['open-hub', 'help-mouseover', 'help-mouseleave', 'help-click']);
+const emit = defineEmits(['open-hub', 'help-mouseover', 'help-mouseleave', 'help-click', 'open-gm-table']);
 
 const headerEl = ref(null);
 const helpIcon = ref(null);
@@ -68,6 +78,25 @@ defineExpose({ headerEl, helpIcon });
   font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
   color: var(--color-accent);
   font-size: min(4vw, 30px);
+}
+
+.gm-table-button {
+  margin-right: 12px;
+  padding: 8px 18px;
+  font-size: 16px;
+  border: 1px solid var(--color-border-normal);
+  background: var(--color-panel-body);
+  color: var(--color-text-normal);
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 35%);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.gm-table-button:hover,
+.gm-table-button:focus {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: var(--color-accent-light);
 }
 
 .google-drive-button-container {
