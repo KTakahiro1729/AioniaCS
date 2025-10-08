@@ -1,98 +1,84 @@
-// tests/unit/imageManager.test.js
+import { describe, it, beforeAll, beforeEach, expect, vi } from 'vitest';
 
-import { vi } from 'vitest';
-// Mocking FileReader
-global.FileReader = class {
+import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
+import { messages } from '@/locales/ja.js';
+
+let fileReaderBehavior;
+
+class MockFileReader {
   constructor() {
     this.onload = null;
     this.onerror = null;
   }
 
-  readAsDataURL(file) {
-    if (file && file.name === 'error.png') {
-      // Simulate an error
-      if (this.onerror) {
-        this.onerror(new Error('Simulated FileReader error'));
-      }
-    } else if (file) {
-      // Simulate a successful read
-      if (this.onload) {
-        this.onload({
-          target: {
-            result: `data:image/png;base64,mock_base64_data_for_${file.name}`,
-          },
-        });
-      }
-    } else {
-      if (this.onerror) {
-        this.onerror(new Error('No file provided to FileReader mock'));
-      }
+  readAsDataURL() {
+    if (fileReaderBehavior?.type === 'error') {
+      this.onerror?.(fileReaderBehavior.error || new Error('Mock read error'));
+      return;
     }
+
+    const result = fileReaderBehavior?.result || 'data:image/mock;base64,default';
+    this.onload?.({ target: { result } });
   }
-};
-
-// Assuming imageManager.js attaches ImageManager to window
-// If not, you might need to require/import it and handle its global availability.
-// For this example, let's assume src/imageManager.js has been loaded or is mocked
-// such that window.ImageManager is available.
-
-// If src/imageManager.js is not automatically available in the test runner,
-// you might need to manually load it or mock its structure:
-if (typeof window.ImageManager === 'undefined') {
-  window.ImageManager = {
-    loadImage: vi.fn((file) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (e) => reject(e);
-        if (file) {
-          reader.readAsDataURL(file);
-        } else {
-          reject(new Error('No file provided.'));
-        }
-      });
-    }),
-    // removeImage can be mocked if needed, but the subtask says to skip its tests
-  };
 }
+
+beforeAll(() => {
+  global.FileReader = MockFileReader;
+});
+
+beforeEach(() => {
+  fileReaderBehavior = { type: 'success', result: 'data:image/png;base64,mock-data' };
+});
 
 describe('ImageManager', () => {
   describe('loadImage', () => {
-    it('should resolve with a base64 data URL for a valid file', async () => {
-      const mockFile = { name: 'sample.png', type: 'image/png' };
-      // Use the actual ImageManager.loadImage if available and properly set up,
-      // otherwise the mock defined above will be used.
-      const imageData = await window.ImageManager.loadImage(mockFile);
-      expect(imageData).toMatch(/^data:image\/png;base64,/);
-      expect(imageData).toContain('mock_base64_data_for_sample.png');
+    const validFile = { name: 'sample.png', type: 'image/png', size: 1024 };
+
+    it('resolves with FileReader data when reading succeeds', async () => {
+      fileReaderBehavior = { type: 'success', result: 'data:image/png;base64,success' };
+
+      await expect(ImageManager.loadImage(validFile)).resolves.toBe('data:image/png;base64,success');
     });
 
-    it('should reject if no file is provided', async () => {
-      await expect(window.ImageManager.loadImage(null)).rejects.toThrow('No file provided.');
+    it('rejects with readError message when FileReader fails', async () => {
+      fileReaderBehavior = { type: 'error', error: new Error('FileReader failure') };
+
+      await expect(ImageManager.loadImage(validFile)).rejects.toThrow(messages.image.uploadErrors.readError);
     });
 
-    it('should reject if FileReader encounters an error', async () => {
-      const mockErrorFile = { name: 'error.png', type: 'image/png' };
-      await expect(window.ImageManager.loadImage(mockErrorFile)).rejects.toThrow('Simulated FileReader error');
+    it('rejects with noFile message when no file is provided', async () => {
+      await expect(ImageManager.loadImage(null)).rejects.toThrow(messages.image.uploadErrors.noFile);
     });
 
-    // Example of how you might test with a real instance if imageManager.js was loaded
-    // This requires a proper JSDOM setup where src/imageManager.js can execute.
-    it('should process file using mocked FileReader successfully (alternative)', () => {
-      // This test assumes ImageManager is the actual implementation from src/imageManager.js
-      // and that imageManager.js has been loaded into the test environment (e.g., by JSDOM)
-      // For this to work, the ImageManager mock above should be conditional or removed if
-      // the actual script is loaded.
+    it('rejects with unsupportedType message when MIME type is not allowed', async () => {
+      const unsupportedFile = { name: 'sample.txt', type: 'text/plain', size: 1024 };
 
-      // const actualImageManager = require('../../src/imageManager'); // This won't work directly due to window
-      // For now, we rely on the global window.ImageManager which might be the mock or the real one.
+      await expect(ImageManager.loadImage(unsupportedFile)).rejects.toThrow(messages.image.uploadErrors.unsupportedType);
+    });
 
-      const mockFile = { name: 'another.jpeg', type: 'image/jpeg' };
-      return window.ImageManager.loadImage(mockFile).then((data) => {
-        expect(data).toBe(`data:image/png;base64,mock_base64_data_for_${mockFile.name}`);
-      });
+    it('rejects with tooLarge message when file size exceeds 10MB', async () => {
+      const oversizedFile = { name: 'huge.png', type: 'image/png', size: 11 * 1024 * 1024 };
+
+      await expect(ImageManager.loadImage(oversizedFile)).rejects.toThrow(messages.image.uploadErrors.tooLarge);
     });
   });
 
-  // Tests for removeImage would go here if needed
+  describe('removeImage', () => {
+    it('returns a new array without the removed image when index is valid', () => {
+      const images = ['a', 'b', 'c'];
+
+      const result = ImageManager.removeImage(images, 1);
+
+      expect(result).toEqual(['a', 'c']);
+      expect(result).not.toBe(images);
+    });
+
+    it('returns the original array when index is invalid', () => {
+      const images = ['a', 'b'];
+
+      const result = ImageManager.removeImage(images, 5);
+
+      expect(result).toBe(images);
+    });
+  });
 });
