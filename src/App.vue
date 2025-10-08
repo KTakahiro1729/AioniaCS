@@ -134,9 +134,6 @@ onMounted(initialize);
 </template>
 
 <style scoped>
-.hidden {
-  display: none !important;
-}
 .view-mode-banner {
   background: #333;
   color: #fff;
