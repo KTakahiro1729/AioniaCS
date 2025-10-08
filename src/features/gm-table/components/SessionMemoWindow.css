@@ -74,14 +74,41 @@
 }
 
 .session-memo-window__resize-handle {
+  position: absolute;
   width: 18px;
   height: 18px;
-  position: absolute;
+}
+
+.session-memo-window__resize-handle--se {
   right: 8px;
   bottom: 8px;
   cursor: se-resize;
   border-right: 2px solid var(--color-border-normal);
   border-bottom: 2px solid var(--color-border-normal);
+}
+
+.session-memo-window__resize-handle--sw {
+  left: 8px;
+  bottom: 8px;
+  cursor: sw-resize;
+  border-left: 2px solid var(--color-border-normal);
+  border-bottom: 2px solid var(--color-border-normal);
+}
+
+.session-memo-window__resize-handle--ne {
+  right: 8px;
+  top: 8px;
+  cursor: ne-resize;
+  border-right: 2px solid var(--color-border-normal);
+  border-top: 2px solid var(--color-border-normal);
+}
+
+.session-memo-window__resize-handle--nw {
+  left: 8px;
+  top: 8px;
+  cursor: nw-resize;
+  border-left: 2px solid var(--color-border-normal);
+  border-top: 2px solid var(--color-border-normal);
 }
 
 .is-minimized {
