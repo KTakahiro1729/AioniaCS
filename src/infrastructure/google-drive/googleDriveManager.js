@@ -34,6 +34,21 @@ function sanitizeFileName(name) {
   return sanitized || '名もなき冒険者';
 }
 
+function decodeJwtPayload(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), '='));
+    return JSON.parse(decoded);
+  } catch (error) {
+    console.error('Failed to decode Google credential payload:', error);
+    return null;
+  }
+}
+
 export class GoogleDriveManager {
   constructor(apiKey, clientId) {
     if (singletonInstance) {
@@ -55,12 +70,31 @@ export class GoogleDriveManager {
     this.configFileId = null;
     this.config = null;
     this.cachedFolderPath = null;
+    this.oneTapInitialized = false;
+    this.pendingSignInCallback = null;
+    this.loginHint = null;
+    this.uiStore = null;
+    this.pendingCredential = null;
+
+    this.handleCredentialResponse = this.handleCredentialResponse.bind(this);
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
     this.handleSignOut = this.handleSignOut.bind(this);
 
     singletonInstance = this;
+  }
+
+  attachUiStore(store) {
+    if (store) {
+      this.uiStore = store;
+    }
+  }
+
+  updateUiStore(updater) {
+    if (this.uiStore && typeof updater === 'function') {
+      updater(this.uiStore);
+    }
   }
 
   getDefaultConfig() {
@@ -228,12 +262,18 @@ export class GoogleDriveManager {
       if (typeof gapi === 'undefined' || !gapi.load) {
         const err = new Error('GAPI core script not available for gapi.load.');
         console.error('GDM: ' + err.message);
+        this.updateUiStore((store) => {
+          store.isGapiInitialized = false;
+        });
         return reject(err);
       }
       gapi.load('client:picker', () => {
         if (typeof gapi.client === 'undefined' || !gapi.client.init) {
           const err = new Error('GAPI client script not available for gapi.client.init.');
           console.error('GDM: ' + err.message);
+          this.updateUiStore((store) => {
+            store.isGapiInitialized = false;
+          });
           return reject(err);
         }
         gapi.client
@@ -245,10 +285,16 @@ export class GoogleDriveManager {
           .then(() => {
             this.pickerApiLoaded = true;
             console.log('GDM: GAPI client and Picker initialized.');
+            this.updateUiStore((store) => {
+              store.isGapiInitialized = true;
+            });
             resolve();
           })
           .catch((error) => {
             console.error('GDM: Error initializing GAPI client:', error);
+            this.updateUiStore((store) => {
+              store.isGapiInitialized = false;
+            });
             reject(error);
           });
       });
@@ -259,7 +305,7 @@ export class GoogleDriveManager {
 
   /**
    * Called when the Google Identity Services (GIS) script is loaded.
-   * Initializes the token client.
+   * Initializes the One Tap client and OAuth token client.
    * @returns {Promise<void>}
    */
   onGisLoad() {
@@ -268,23 +314,45 @@ export class GoogleDriveManager {
     }
 
     this.gisLoadPromise = new Promise((resolve, reject) => {
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2 || !google.accounts.oauth2.initTokenClient) {
-        const err = new Error(
-          'GIS library not fully available to initialize token client (google.accounts.oauth2.initTokenClient is undefined).',
-        );
+      if (
+        typeof google === 'undefined' ||
+        !google.accounts ||
+        !google.accounts.oauth2 ||
+        !google.accounts.oauth2.initTokenClient ||
+        !google.accounts.id ||
+        !google.accounts.id.initialize
+      ) {
+        const err = new Error('GIS library not fully available to initialize One Tap and token client.');
         console.error('GDM: ' + err.message);
+        this.updateUiStore((store) => {
+          store.isGisInitialized = false;
+        });
         return reject(err);
       }
       try {
+        google.accounts.id.initialize({
+          client_id: this.clientId,
+          callback: this.handleCredentialResponse,
+          auto_select: true,
+          cancel_on_tap_outside: false,
+        });
+        this.oneTapInitialized = true;
         this.tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: this.clientId,
           scope: this.scope,
-          callback: '', // Callback will be set dynamically per request for actual token requests
+          callback: () => {},
         });
-        console.log('GDM: GIS Token Client initialized.');
+        console.log('GDM: GIS One Tap and Token Client initialized.');
+        this.updateUiStore((store) => {
+          store.isGisInitialized = true;
+        });
+        this.promptOneTap();
         resolve();
       } catch (error) {
-        console.error('GDM: Error initializing GIS Token Client:', error);
+        console.error('GDM: Error initializing GIS services:', error);
+        this.updateUiStore((store) => {
+          store.isGisInitialized = false;
+        });
         reject(error);
       }
     });
@@ -292,67 +360,135 @@ export class GoogleDriveManager {
     return this.gisLoadPromise;
   }
 
+  promptOneTap(options = {}) {
+    if (!this.oneTapInitialized || !google?.accounts?.id?.prompt) {
+      console.error('Google One Tap is not initialized.');
+      if (options.isManual && this.pendingSignInCallback) {
+        const error = new Error('Google One Tap is not initialized.');
+        this.handleTokenFailure(error);
+      }
+      return;
+    }
+
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed()) {
+        const reason = notification.getNotDisplayedReason();
+        console.error('Google One Tap prompt not displayed:', reason);
+        if (options.isManual && this.pendingSignInCallback) {
+          this.handleTokenFailure(new Error(`One Tap prompt unavailable: ${reason}`));
+        }
+        return;
+      }
+
+      if (notification.isSkippedMoment()) {
+        const reason = notification.getSkippedReason();
+        console.warn('Google One Tap prompt skipped:', reason);
+        if (options.isManual && this.pendingSignInCallback) {
+          this.handleTokenFailure(new Error(`Sign-in skipped: ${reason}`));
+        }
+        return;
+      }
+
+      if (notification.isDismissedMoment && notification.isDismissedMoment()) {
+        const reason = notification.getDismissedReason ? notification.getDismissedReason() : 'unknown';
+        console.warn('Google One Tap prompt dismissed:', reason);
+        if (options.isManual && this.pendingSignInCallback) {
+          this.handleTokenFailure(new Error(`Sign-in dismissed: ${reason}`));
+        }
+      }
+    });
+  }
+
+  handleCredentialResponse(response) {
+    if (!response || !response.credential) {
+      const error = new Error('Missing credential from Google One Tap response.');
+      console.error('GDM:', error.message);
+      this.handleTokenFailure(error);
+      return;
+    }
+
+    this.pendingCredential = response;
+    const payload = decodeJwtPayload(response.credential);
+    this.loginHint = payload?.email || payload?.sub || null;
+
+    this.requestDriveAccessToken().catch((error) => {
+      console.error('Failed to obtain Drive access token:', error);
+    });
+  }
+
+  requestDriveAccessToken({ prompt = '', allowInteractiveFallback = true } = {}) {
+    if (!this.tokenClient) {
+      const error = new Error('GIS Token Client not initialized.');
+      this.handleTokenFailure(error);
+      return Promise.reject(error);
+    }
+
+    return new Promise((resolve, reject) => {
+      const requestOptions = { prompt };
+      if (this.loginHint) {
+        requestOptions.hint = this.loginHint;
+      }
+
+      this.tokenClient.callback = (resp) => {
+        if (resp && resp.error) {
+          if (resp.error === 'interaction_required' && allowInteractiveFallback) {
+            this.requestDriveAccessToken({ prompt: 'consent', allowInteractiveFallback: false }).then(resolve).catch(reject);
+            return;
+          }
+          const error = new Error(resp.error);
+          this.handleTokenFailure(error);
+          reject(error);
+          return;
+        }
+        this.handleTokenSuccess(resp);
+        resolve(resp);
+      };
+
+      try {
+        this.tokenClient.requestAccessToken(requestOptions);
+      } catch (error) {
+        this.handleTokenFailure(error);
+        reject(error);
+      }
+    });
+  }
+
+  handleTokenSuccess() {
+    this.updateUiStore((store) => {
+      store.isSignedIn = true;
+    });
+    if (this.pendingSignInCallback) {
+      this.pendingSignInCallback(null, { signedIn: true });
+      this.pendingSignInCallback = null;
+    }
+  }
+
+  handleTokenFailure(error) {
+    if (error) {
+      console.error('Google Drive sign-in failed:', error);
+    }
+    this.updateUiStore((store) => {
+      store.isSignedIn = false;
+    });
+    if (this.pendingSignInCallback) {
+      this.pendingSignInCallback(error);
+      this.pendingSignInCallback = null;
+    }
+  }
+
   /**
    * Initiates the Google Sign-In flow.
    * @param {function} callback - Called with the sign-in status/user profile or error.
    */
   handleSignIn(callback) {
-    if (!this.tokenClient) {
-      console.error('GIS Token Client not initialized.');
-      if (callback) callback(new Error('GIS Token Client not initialized.'));
+    this.pendingSignInCallback = callback || null;
+    if (!this.oneTapInitialized) {
+      const error = new Error('Google One Tap not initialized.');
+      console.error('GDM:', error.message);
+      this.handleTokenFailure(error);
       return;
     }
-
-    // Set a dynamic callback for this specific sign-in attempt
-    this.tokenClient.callback = (resp) => {
-      if (resp.error) {
-        console.error('Google Sign-In error:', resp.error);
-        if (callback) callback(new Error(resp.error));
-        return;
-      }
-      // GIS automatically manages token refresh.
-      // No need to manually get user profile here, gapi.client will use the token.
-      // The app can check gapi.auth.getToken() to see if it's signed in.
-      console.log('Sign-in successful, token obtained.');
-      if (callback) callback(null, { signedIn: true }); // Indicate success
-    };
-
-    // Prompt the user to select an account and grant access
-    // Check if already has an access token
-    if (gapi.client.getToken() === null) {
-      this.tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      // Already has a token, consider as signed in
-      this.tokenClient.requestAccessToken({ prompt: '' }); // Try to get token without prompt
-    }
-  }
-
-  /**
-   * Attempts to silently restore an existing Drive session.
-   * @returns {Promise<{signedIn: boolean}>}
-   */
-  restoreDriveSession() {
-    if (!this.tokenClient) {
-      return Promise.reject(new Error('GIS Token Client not initialized.'));
-    }
-
-    return new Promise((resolve, reject) => {
-      this.tokenClient.callback = (resp) => {
-        if (resp && resp.error) {
-          console.error('Silent token request failed:', resp.error);
-          reject(new Error(resp.error));
-          return;
-        }
-        console.log('Drive session restored silently.');
-        resolve({ signedIn: true });
-      };
-
-      try {
-        this.tokenClient.requestAccessToken({ prompt: '' });
-      } catch (error) {
-        reject(error);
-      }
-    });
+    this.promptOneTap({ isManual: true });
   }
 
   /**
@@ -360,15 +496,30 @@ export class GoogleDriveManager {
    * @param {function} callback - Called after sign-out.
    */
   handleSignOut(callback) {
+    const finalize = () => {
+      this.pendingCredential = null;
+      this.loginHint = null;
+      if (google?.accounts?.id?.disableAutoSelect) {
+        google.accounts.id.disableAutoSelect();
+      }
+      this.updateUiStore((store) => {
+        store.isSignedIn = false;
+        if (typeof store.clearCurrentDriveFileId === 'function') {
+          store.clearCurrentDriveFileId();
+        }
+      });
+      if (callback) callback();
+    };
+
     const token = gapi.client.getToken();
     if (token !== null) {
       google.accounts.oauth2.revoke(token.access_token, () => {
-        gapi.client.setToken(''); // Clear GAPI's token
+        gapi.client.setToken('');
         console.log('User signed out and token revoked.');
-        if (callback) callback();
+        finalize();
       });
     } else {
-      if (callback) callback();
+      finalize();
     }
   }
 

@@ -6,6 +6,11 @@ describe('GoogleDriveManager auth', () => {
     resetGoogleDriveManagerForTests();
     global.google = {
       accounts: {
+        id: {
+          initialize: vi.fn(),
+          prompt: vi.fn(),
+          disableAutoSelect: vi.fn(),
+        },
         oauth2: {
           initTokenClient: vi.fn().mockReturnValue({
             requestAccessToken: vi.fn(),
@@ -25,11 +30,13 @@ describe('GoogleDriveManager auth', () => {
   test('onGisLoad initializes token client with minimal scopes', async () => {
     const gdm = initializeGoogleDriveManager('k', 'c');
     await gdm.onGisLoad();
-    expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalledWith({
-      client_id: 'c',
-      scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
-      callback: '',
-    });
+    expect(google.accounts.id.initialize).toHaveBeenCalledWith(expect.objectContaining({ client_id: 'c', auto_select: true }));
+    expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client_id: 'c',
+        scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
+      }),
+    );
   });
 
   test('handleSignOut revokes token and clears gapi token', () => {

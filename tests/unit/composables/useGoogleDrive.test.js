@@ -8,8 +8,15 @@ import { resetGoogleDriveManagerForTests } from '@/infrastructure/google-drive/g
 vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
 }));
+vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
+  useNotifications: vi.fn(() => ({
+    showToast: vi.fn(),
+    showAsyncToast: vi.fn((promise) => promise),
+  })),
+}));
 
 import { useModal } from '@/features/modals/composables/useModal.js';
+import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 
 function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
   const showFolderPicker = vi.fn();
@@ -36,10 +43,13 @@ describe('useGoogleDrive', () => {
 
   beforeEach(() => {
     resetGoogleDriveManagerForTests();
-    localStorage.clear();
     setActivePinia(createPinia());
     showModalMock = vi.fn().mockResolvedValue({ value: 'overwrite' });
     useModal.mockReturnValue({ showModal: showModalMock });
+    useNotifications.mockReturnValue({
+      showToast: vi.fn(),
+      showAsyncToast: vi.fn((promise) => promise.catch(() => {})),
+    });
   });
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
@@ -179,9 +189,13 @@ describe('useGoogleDrive', () => {
     expect(selected).toBe(desiredPath);
   });
 
-  test('handleSignInClick stores auto sign-in flag without affecting manual flow', async () => {
+  test('handleSignInClick resolves and refreshes config on success', async () => {
     const loadConfig = vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア' });
-    const handleSignIn = vi.fn((cb) => cb(null, { signedIn: true }));
+    const handleSignIn = vi.fn((cb) => {
+      const uiStore = useUiStore();
+      uiStore.isSignedIn = true;
+      cb(null, { signedIn: true });
+    });
     const dataManager = {
       findDriveFileByCharacterName: vi.fn(),
       saveCharacterToDrive: vi.fn(),
@@ -195,65 +209,59 @@ describe('useGoogleDrive', () => {
     const { handleSignInClick } = useGoogleDrive(dataManager);
     handleSignInClick();
 
-    await Promise.resolve();
+    await flushDriveEffects();
 
     expect(handleSignIn).toHaveBeenCalled();
-    expect(localStorage.getItem('aionia:drive:autoSignIn')).toBe('1');
-  });
-
-  test('restoreDriveSession auto signs in when drive becomes ready', async () => {
-    localStorage.setItem('aionia:drive:autoSignIn', '1');
-    const restoreDriveSession = vi.fn().mockResolvedValue({ signedIn: true });
-    const loadConfig = vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア/PC' });
-    const dataManager = {
-      findDriveFileByCharacterName: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
-      googleDriveManager: {},
-      setGoogleDriveManager(manager) {
-        Object.assign(manager, { restoreDriveSession, loadConfig });
-        this.googleDriveManager = manager;
-      },
-    };
-
-    useGoogleDrive(dataManager);
-    const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
-
-    await flushDriveEffects();
-
-    expect(restoreDriveSession).toHaveBeenCalled();
-    expect(uiStore.isSignedIn).toBe(true);
     expect(loadConfig).toHaveBeenCalled();
-    expect(localStorage.getItem('aionia:drive:autoSignIn')).toBe('1');
   });
 
-  test('failed restoreDriveSession clears auto sign-in flag', async () => {
-    localStorage.setItem('aionia:drive:autoSignIn', '1');
-    const restoreDriveSession = vi.fn().mockRejectedValue(new Error('no token'));
+  test('handleSignInClick surfaces errors from manager', async () => {
+    const error = new Error('One Tap canceled');
+    const handleSignIn = vi.fn((cb) => cb(error));
     const dataManager = {
       findDriveFileByCharacterName: vi.fn(),
       saveCharacterToDrive: vi.fn(),
       googleDriveManager: {},
       setGoogleDriveManager(manager) {
-        Object.assign(manager, { restoreDriveSession });
+        Object.assign(manager, { handleSignIn });
         this.googleDriveManager = manager;
       },
     };
 
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { handleSignInClick } = useGoogleDrive(dataManager);
+    handleSignIn.mockClear();
 
-    useGoogleDrive(dataManager);
-    const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    handleSignInClick();
 
     await flushDriveEffects();
 
-    expect(restoreDriveSession).toHaveBeenCalled();
-    expect(uiStore.isSignedIn).toBe(false);
-    expect(localStorage.getItem('aionia:drive:autoSignIn')).toBeNull();
+    expect(handleSignIn).toHaveBeenCalled();
+    expect(useUiStore().isSignedIn).toBe(false);
+  });
 
-    consoleErrorSpy.mockRestore();
+  test('drive folder refreshes when uiStore becomes signed in', async () => {
+    const loadConfig = vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア/PC' });
+    const managerStub = {
+      loadConfig,
+      attachUiStore: vi.fn(),
+    };
+    const dataManager = {
+      findDriveFileByCharacterName: vi.fn(),
+      saveCharacterToDrive: vi.fn(),
+      googleDriveManager: {},
+      setGoogleDriveManager(manager) {
+        Object.assign(manager, managerStub);
+        this.googleDriveManager = manager;
+      },
+    };
+
+    useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+
+    uiStore.isSignedIn = true;
+    await flushDriveEffects();
+
+    expect(loadConfig).toHaveBeenCalled();
+    expect(uiStore.driveFolderPath).toBe('慈悲なきアイオニア/PC');
   });
 });

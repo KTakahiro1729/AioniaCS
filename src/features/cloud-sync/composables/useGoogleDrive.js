@@ -9,8 +9,6 @@ import { useCharacterStore } from '@/features/character-sheet/stores/characterSt
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { useModal } from '@/features/modals/composables/useModal.js';
 import { messages } from '@/locales/ja.js';
-
-const AUTO_SIGN_IN_STORAGE_KEY = 'aionia:drive:autoSignIn';
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
 const getDriveManagerInstance = useMock ? getMockGoogleDriveManagerInstance : getGoogleDriveManagerInstance;
 const initializeDriveManager = useMock ? initializeMockGoogleDriveManager : initializeGoogleDriveManager;
@@ -36,6 +34,10 @@ export function useGoogleDrive(dataManager) {
       googleDriveManager.value = initializeDriveManager(apiKey, clientId);
     }
 
+    if (googleDriveManager.value && typeof googleDriveManager.value.attachUiStore === 'function') {
+      googleDriveManager.value.attachUiStore(uiStore);
+    }
+
     if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
       dataManager.setGoogleDriveManager(googleDriveManager.value);
     }
@@ -50,13 +52,8 @@ export function useGoogleDrive(dataManager) {
     const signInPromise = new Promise((resolve, reject) => {
       googleDriveManager.value.handleSignIn((error, authResult) => {
         if (error || !authResult || !authResult.signedIn) {
-          uiStore.isSignedIn = false;
           reject(error || new Error('Ensure pop-ups are enabled.'));
         } else {
-          uiStore.isSignedIn = true;
-          try {
-            localStorage.setItem(AUTO_SIGN_IN_STORAGE_KEY, '1');
-          } catch {}
           resolve();
         }
       });
@@ -72,11 +69,6 @@ export function useGoogleDrive(dataManager) {
   function handleSignOutClick() {
     if (!googleDriveManager.value) return;
     googleDriveManager.value.handleSignOut(() => {
-      uiStore.isSignedIn = false;
-      uiStore.clearCurrentDriveFileId();
-      try {
-        localStorage.removeItem(AUTO_SIGN_IN_STORAGE_KEY);
-      } catch {}
       showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
     });
   }
@@ -283,27 +275,23 @@ export function useGoogleDrive(dataManager) {
     scriptsWatched = true;
 
     const handleGapiLoaded = async () => {
-      if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
+      if (!googleDriveManager.value) return;
       console.info('Google API Loading...');
       try {
         await googleDriveManager.value.onGapiLoad();
         console.info('Google API Ready');
-        uiStore.isGapiInitialized = true;
       } catch {
-        uiStore.isGapiInitialized = false;
         showToast({ type: 'error', ...messages.googleDrive.apiInitError() });
       }
     };
 
     const handleGisLoaded = async () => {
-      if (uiStore.isGisInitialized || !googleDriveManager.value) return;
+      if (!googleDriveManager.value) return;
       console.info('Google Sign-In Loading...');
       try {
         await googleDriveManager.value.onGisLoad();
         console.info('Google Sign-In Ready');
-        uiStore.isGisInitialized = true;
       } catch {
-        uiStore.isGisInitialized = false;
         showToast({ type: 'error', ...messages.googleDrive.signInInitError() });
       }
     };
@@ -336,36 +324,12 @@ export function useGoogleDrive(dataManager) {
   syncGoogleDriveManager();
 
   watch(
-    isDriveReady,
-    async (ready) => {
-      if (!ready) {
-        return;
-      }
-      let shouldRestore = false;
-      try {
-        shouldRestore = Boolean(localStorage.getItem(AUTO_SIGN_IN_STORAGE_KEY));
-      } catch {
-        shouldRestore = false;
-      }
-      if (!shouldRestore) {
-        return;
-      }
-      const manager = googleDriveManager.value;
-      if (!manager || typeof manager.restoreDriveSession !== 'function') {
-        return;
-      }
-      try {
-        await manager.restoreDriveSession();
-        uiStore.isSignedIn = true;
-        await refreshDriveFolderPath();
-      } catch (error) {
-        try {
-          localStorage.removeItem(AUTO_SIGN_IN_STORAGE_KEY);
-        } catch {}
-        console.error('Failed to restore Drive session:', error);
+    () => uiStore.isSignedIn,
+    (signedIn) => {
+      if (signedIn) {
+        refreshDriveFolderPath();
       }
     },
-    { immediate: true },
   );
 
   onMounted(() => {
