@@ -11,8 +11,6 @@ import { messages } from './locales/ja.js';
 import { useAppModals } from './composables/useAppModals.js';
 import { useAppInitialization } from './composables/useAppInitialization.js';
 
-// --- Module Imports ---
-// This approach is standard for Vite/ESM projects, making dependencies explicit.
 import { AioniaGameData } from './data/gameData.js';
 import CharacterSheetLayout from './layouts/CharacterSheetLayout.vue';
 import MainHeader from './components/ui/MainHeader.vue';
@@ -21,7 +19,6 @@ import HelpPanel from './components/ui/HelpPanel.vue';
 import NotificationContainer from './components/notifications/NotificationContainer.vue';
 import BaseModal from './components/modals/BaseModal.vue';
 import { useModalStore } from './stores/modalStore.js';
-// --- Template Refs ---
 const mainHeader = ref(null);
 const helpPanelRef = ref(null);
 
@@ -62,14 +59,10 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
   },
 });
 
-// --- Computed Properties (formerly `computed`) ---
-
 const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
 const currentExperiencePoints = computed(() => characterStore.currentExperiencePoints);
 const currentWeight = computed(() => characterStore.currentWeight);
 const experienceStatusClass = computed(() => uiStore.experienceStatusClass);
-
-// --- Watchers (formerly `watch`) ---
 
 watch(
   () => characterStore.calculatedScar,
@@ -98,7 +91,6 @@ watch(
   },
 );
 
-// --- Lifecycle Hooks ---
 const { initialize } = useAppInitialization(dataManager);
 onMounted(initialize);
 </script>
@@ -137,7 +129,6 @@ onMounted(initialize);
     @share="openShareModal"
   />
   <HelpPanel ref="helpPanelRef" :is-visible="isHelpVisible" :help-text="AioniaGameData.helpText" @close="closeHelpPanel" />
-  <!-- CharacterHub and ShareModal are now injected via BaseModal -->
   <BaseModal />
   <NotificationContainer />
 </template>
