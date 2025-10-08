@@ -179,7 +179,7 @@ test.describe('Character Sheet E2E Tests', () => {
       manager.state.folderPickerQueue = [path];
     }, desiredPath);
 
-    const changeButton = page.locator('.character-hub--change-button');
+    const changeButton = page.locator('.character-hub__change-button');
     await changeButton.click();
     await expect(folderInput).toHaveValue(desiredPath);
 

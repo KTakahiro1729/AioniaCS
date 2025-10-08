@@ -45,7 +45,7 @@ describe('CharacterHub', () => {
 
   test('folder picker button triggers prompt', async () => {
     const { wrapper, promptForDriveFolder } = mountComponent();
-    const changeButton = wrapper.get('.character-hub--change-button');
+    const changeButton = wrapper.get('.character-hub__change-button');
 
     await changeButton.trigger('click');
 
@@ -56,7 +56,7 @@ describe('CharacterHub', () => {
     const desiredPath = '慈悲なきアイオニア/PC/第二キャンペーン';
     const promptForDriveFolder = vi.fn().mockResolvedValue(desiredPath);
     const { wrapper } = mountComponent({ promptForDriveFolder });
-    const changeButton = wrapper.get('.character-hub--change-button');
+    const changeButton = wrapper.get('.character-hub__change-button');
 
     await changeButton.trigger('click');
     await flushPromises();

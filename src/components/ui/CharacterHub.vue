@@ -1,13 +1,13 @@
 <template>
   <div class="character-hub">
     <template v-if="uiStore.isSignedIn">
-      <div class="character-hub--actions">
-        <div class="character-hub--config">
-          <label class="character-hub--label" for="drive_folder_path">{{ hubMessages.driveFolder.label }}</label>
-          <div class="character-hub--input-group">
+      <div class="character-hub__actions">
+        <div class="character-hub__config">
+          <label class="character-hub__label" for="drive_folder_path">{{ hubMessages.driveFolder.label }}</label>
+          <div class="character-hub__input-group">
             <input
               id="drive_folder_path"
-              class="character-hub--input"
+              class="character-hub__input"
               type="text"
               v-model="folderPathInput"
               :disabled="!uiStore.isSignedIn"
@@ -17,7 +17,7 @@
             />
             <button
               type="button"
-              class="button-base character-hub--change-button"
+              class="button-base character-hub__change-button"
               :disabled="!isFolderPickerEnabled"
               @click="openFolderPicker"
             >
@@ -25,21 +25,21 @@
             </button>
           </div>
         </div>
-        <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="loadCharacterFromDrive">
+        <button class="button-base character-hub__button" :disabled="!isDriveReady" @click="loadCharacterFromDrive">
           {{ hubMessages.buttons.load }}
         </button>
-        <button class="button-base character-hub--button" :disabled="!isDriveReady" @click="saveNewCharacter">
+        <button class="button-base character-hub__button" :disabled="!isDriveReady" @click="saveNewCharacter">
           {{ hubMessages.buttons.saveNew }}
         </button>
-        <button class="button-base character-hub--button" :disabled="!isOverwriteEnabled" @click="saveOverwrite">
+        <button class="button-base character-hub__button" :disabled="!isOverwriteEnabled" @click="saveOverwrite">
           {{ hubMessages.buttons.overwrite }}
         </button>
-        <button class="button-base character-hub--button" @click="emitSignOut">{{ hubMessages.buttons.signOut }}</button>
+        <button class="button-base character-hub__button" @click="emitSignOut">{{ hubMessages.buttons.signOut }}</button>
       </div>
     </template>
     <template v-else>
-      <div class="character-hub--actions">
-        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="emitSignIn">
+      <div class="character-hub__actions">
+        <button class="button-base character-hub__button" :disabled="!canSignIn" @click="emitSignIn">
           {{ hubMessages.buttons.signIn }}
         </button>
       </div>
@@ -140,19 +140,19 @@ async function openFolderPicker() {
   justify-content: center;
 }
 
-.character-hub--config {
+.character-hub__config {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
 }
 
-.character-hub--label {
+.character-hub__label {
   font-size: 0.9rem;
   font-weight: 600;
 }
 
-.character-hub--input {
+.character-hub__input {
   width: 100%;
   flex: 1 1 auto;
   padding: 8px 10px;
@@ -162,23 +162,23 @@ async function openFolderPicker() {
   color: var(--color-text-primary, #fff);
 }
 
-.character-hub--input-group {
+.character-hub__input-group {
   display: flex;
   align-items: stretch;
   width: 100%;
 }
 
-.character-hub--input-group .character-hub--input {
+.character-hub__input-group .character-hub__input {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   border-right: none;
 }
 
-.character-hub--input-group .character-hub--input:disabled {
+.character-hub__input-group .character-hub__input:disabled {
   border-color: var(--color-border-normal);
 }
 
-.character-hub--change-button {
+.character-hub__change-button {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   padding-inline: 5px;
@@ -189,24 +189,24 @@ async function openFolderPicker() {
   white-space: nowrap;
 }
 
-.character-hub--change-button:disabled {
+.character-hub__change-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.character-hub--input:disabled {
+.character-hub__input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.character-hub--actions {
+.character-hub__actions {
   display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
 }
 
-.character-hub--button {
+.character-hub__button {
   width: 100%;
   padding: 10px 12px;
   font-size: 1rem;
@@ -214,7 +214,7 @@ async function openFolderPicker() {
   text-align: center;
 }
 
-.character-hub--button:disabled {
+.character-hub__button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
