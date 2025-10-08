@@ -231,6 +231,13 @@ export class MockGoogleDriveManager {
     return info.id;
   }
 
+  async shareCharacterFile(fileId) {
+    if (!fileId || !this.state.files[fileId]) {
+      return null;
+    }
+    return `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+  }
+
   showFilePicker(callback, parentFolderId = null) {
     const files = Object.values(this.state.files).filter((file) => (parentFolderId ? file.parentId === parentFolderId : true));
     const first = files[0];

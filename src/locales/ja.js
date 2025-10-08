@@ -1,11 +1,3 @@
-const shareLoadErrorTexts = {
-  general: '共有データ読み込み失敗',
-  invalid: '共有リンクが不正です',
-  expired: '共有リンクの有効期限が切れています',
-  passwordRequired: 'パスワードが必要です',
-  decryptionFailed: '復号に失敗しました',
-};
-
 export const messages = {
   googleDrive: {
     signIn: {
@@ -82,53 +74,22 @@ export const messages = {
     copyFailed: (err) => ({ title: 'コピー失敗', message: err.message }),
     needSignIn: () => ({
       title: 'Google Drive',
-      message: 'サインインしてください',
+      message: '共有機能を利用するにはGoogle Driveにサインインしてください',
     }),
-    options: {
-      reflection: {
-        title: '今後の変更を反映しますか？',
-        choices: {
-          snapshot: '反映しない',
-          dynamic: '反映する',
-        },
-        driveRequired: 'Google Drive連携が必要です',
-      },
-      additional: {
-        title: '追加オプション',
-        includeFull: '画像・メモ（長文の場合）を含める',
-        driveRequired: 'Google Drive連携が必要です',
-        truncateWarning: '内容が一部省略される可能性があります',
-        enablePassword: 'パスワード保護',
-        passwordPlaceholder: 'パスワード',
-        expires: {
-          label: '有効期限',
-          options: {
-            1: '1日',
-            7: '7日',
-            0: '無期限',
-          },
-        },
-      },
+    panel: {
+      description: 'Google Driveに保存したキャラシートを共有リンクとして公開します。',
+      signInRequired: '共有リンクを作成するにはGoogle Driveにサインインしてください。',
       signIn: 'Google Drive にサインイン',
+      linkLabel: '共有リンク',
+      copy: 'コピー',
+      generate: '共有リンクを生成',
+      empty: '共有リンクはまだ生成されていません。',
+      generating: '共有リンクを生成しています…',
     },
-    generateFailed: (err) => ({
-      title: '共有リンク生成失敗',
-      message: err.message,
-    }),
     errors: {
-      uploadFailed: 'Google Drive へのアップロードに失敗しました',
-      missingReadId: '読み込み対象のIDが指定されていません',
-      fetchFailed: 'Google Drive からファイルを取得できませんでした',
-      missingUpdateId: '更新対象のIDが指定されていません',
-      updateFailed: 'Google Drive の共有ファイル更新に失敗しました',
+      saveFailed: 'Google Drive への保存に失敗しました',
+      linkFailed: '共有リンクの取得に失敗しました',
       managerMissing: 'Google Drive マネージャーが設定されていません',
-    },
-    loadError: {
-      ...shareLoadErrorTexts,
-      toast: (key) => ({
-        title: '共有データエラー',
-        message: shareLoadErrorTexts[key] || shareLoadErrorTexts.general,
-      }),
     },
   },
   characterHub: {

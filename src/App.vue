@@ -99,7 +99,7 @@ watch(
 );
 
 // --- Lifecycle Hooks ---
-const { initialize } = useAppInitialization(dataManager);
+const { initialize } = useAppInitialization();
 onMounted(initialize);
 </script>
 

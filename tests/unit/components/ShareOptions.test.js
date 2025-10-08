@@ -2,7 +2,6 @@ import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import { nextTick } from 'vue';
 import ShareOptions from '../../../src/components/modals/contents/ShareOptions.vue';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
@@ -11,34 +10,39 @@ describe('ShareOptions', () => {
     setActivePinia(createPinia());
   });
 
-  test('emits canGenerate updates', async () => {
+  test('shows sign-in prompt when signed out', () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     const wrapper = mount(ShareOptions, {
-      props: { longData: false },
+      props: { shareLink: '', isGenerating: false },
     });
-
-    await wrapper.find('input[value="dynamic"]').setValue();
-    await nextTick();
-    let events = wrapper.emitted('update:canGenerate');
-    expect(events[events.length - 1][0]).toBe(false);
-
-    uiStore.isSignedIn = true;
-    await nextTick();
-    events = wrapper.emitted('update:canGenerate');
-    expect(events[events.length - 1][0]).toBe(true);
+    expect(wrapper.find('.share-options__signin').exists()).toBe(true);
+    expect(wrapper.find('.share-options__generate').attributes('disabled')).toBeDefined();
   });
 
-  test('truncate warning shown only when full content disabled', async () => {
+  test('emits share event when generate button clicked', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
     const wrapper = mount(ShareOptions, {
-      props: { longData: true },
+      props: { shareLink: '', isGenerating: false },
     });
-    expect(wrapper.find('.share-options__warning').exists()).toBe(true);
+    await wrapper.find('.share-options__generate').trigger('click');
+    expect(wrapper.emitted('share')).toBeTruthy();
+  });
 
-    await wrapper.find('input[type="checkbox"]').setChecked();
-    await nextTick();
-    expect(wrapper.find('.share-options__warning').exists()).toBe(false);
+  test('copy button disabled without link and emits copy when link present', async () => {
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    const wrapper = mount(ShareOptions, {
+      props: { shareLink: '', isGenerating: false },
+    });
+    const copyButton = wrapper.find('.share-options__copy');
+    expect(copyButton.attributes('disabled')).toBeDefined();
+
+    await wrapper.setProps({ shareLink: 'https://example.com' });
+    expect(wrapper.find('input').element.value).toBe('https://example.com');
+    expect(copyButton.attributes('disabled')).toBeUndefined();
+    await copyButton.trigger('click');
+    expect(wrapper.emitted('copy')).toBeTruthy();
   });
 });

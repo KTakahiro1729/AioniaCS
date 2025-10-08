@@ -7,7 +7,6 @@ const ShareOptions = defineAsyncComponent(() => import('../components/modals/con
 
 import { useShare } from './useShare.js';
 import { useNotifications } from './useNotifications.js';
-import { useModalStore } from '../stores/modalStore.js';
 import { isDesktopDevice } from '../utils/device.js';
 import { messages } from '../locales/ja.js';
 
@@ -75,51 +74,49 @@ export function useAppModals(options) {
       }
       return;
     }
-    const { generateShare, copyLink, isLongData } = useShare(dataManager);
+    const { generateShareLink, copyLink } = useShare(dataManager);
     const { showToast } = useNotifications();
-    const modalStore = useModalStore();
-    const generateButton = reactive({
-      label: messages.ui.modal.generate,
-      value: 'generate',
-      variant: 'primary',
-      disabled: true,
-    });
-    function updateCanGenerate(v) {
-      generateButton.disabled = !v;
+    const shareModalProps = reactive({ shareLink: '', isGenerating: false });
+
+    async function handleShareRequest() {
+      shareModalProps.isGenerating = true;
+      shareModalProps.shareLink = '';
+      try {
+        const link = await generateShareLink();
+        shareModalProps.shareLink = link;
+      } catch (err) {
+        showToast({
+          type: 'error',
+          title: messages.ui.modal.shareFailed,
+          message: err.message,
+        });
+      } finally {
+        shareModalProps.isGenerating = false;
+      }
     }
-    const result = await showModal({
+
+    async function handleCopyRequest() {
+      if (!shareModalProps.shareLink) return;
+      await copyLink(shareModalProps.shareLink);
+    }
+
+    await showModal({
       component: ShareOptions,
-      props: { longData: isLongData() },
+      props: shareModalProps,
       title: messages.ui.modal.shareTitle,
       buttons: [
-        generateButton,
         {
           label: messages.ui.modal.cancel,
           value: 'cancel',
           variant: 'secondary',
         },
       ],
-      on: { 'update:canGenerate': updateCanGenerate, signin: handleSignInClick },
+      on: {
+        signin: handleSignInClick,
+        share: handleShareRequest,
+        copy: handleCopyRequest,
+      },
     });
-    if (result.value !== 'generate' || !result.component) return;
-    const optsComp = result.component;
-    const opts = {
-      type: optsComp.type.value,
-      includeFull: optsComp.includeFull.value,
-      password: optsComp.password.value || '',
-      expiresInDays: Number(optsComp.expires.value) || 0,
-    };
-    try {
-      const link = await generateShare(opts);
-      await copyLink(link);
-      modalStore.hideModal();
-    } catch (err) {
-      showToast({
-        type: 'error',
-        title: messages.ui.modal.shareFailed,
-        message: err.message,
-      });
-    }
   }
 
   return { openHub, openIoModal, openShareModal };

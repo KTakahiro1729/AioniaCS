@@ -751,6 +751,44 @@ export class GoogleDriveManager {
     }
   }
 
+  async shareCharacterFile(fileId) {
+    if (!fileId) {
+      console.error('No fileId provided for shareCharacterFile.');
+      return null;
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for shareCharacterFile.');
+      return null;
+    }
+
+    try {
+      await gapi.client.drive.permissions.create({
+        fileId,
+        resource: { role: 'reader', type: 'anyone' },
+      });
+    } catch (error) {
+      const reason = error?.result?.error?.errors?.[0]?.reason;
+      if (error.status !== 409 && reason !== 'alreadyExists') {
+        console.error('Error setting share permission:', error);
+        throw error;
+      }
+    }
+
+    try {
+      const response = await gapi.client.drive.files.get({
+        fileId,
+        fields: 'id, webViewLink, webContentLink',
+      });
+      const { webViewLink, webContentLink } = response.result || {};
+      if (webViewLink) return webViewLink;
+      if (webContentLink) return webContentLink;
+      return `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+    } catch (error) {
+      console.error('Error retrieving share link:', error);
+      return null;
+    }
+  }
+
   /**
    * Shows the Google File Picker to select a file.
    * @param {function} callback - Function to call with the result (error, {id, name}).

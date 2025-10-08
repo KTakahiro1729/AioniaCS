@@ -180,7 +180,7 @@ export async function deserializeCharacterPayload(content) {
       try {
         const bytes = isLikelyBase64(content) ? base64ToUint8Array(content) : stringToUint8Array(content);
         return deserializeCharacterPayload(bytes);
-      } catch (nestedError) {
+      } catch {
         throw jsonError;
       }
     }

@@ -191,7 +191,6 @@ export class CocofoliaExporter {
    * ココフォリア用のコマンドを構築
    */
   buildCocofoliaCommands(character, skills, equipments, weaponDamage) {
-    const scar = Number(character.currentScar) || 0;
     let commands = `1d100>={ダメージ}+{傷痕} 〈ダメージチェック〉\n1d100>={ストレス} 〈ストレスチェック〉\n:傷痕={傷痕}+{ダメージ}/2 〈治癒①〉\n:ダメージ=0                 〈治癒②〉\n`;
 
     // 技能チェックコマンド
