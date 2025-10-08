@@ -104,10 +104,7 @@ export function useAppModals(options) {
     if (result.value !== 'generate' || !result.component) return;
     const optsComp = result.component;
     const opts = {
-      type: optsComp.type.value,
-      includeFull: optsComp.includeFull.value,
-      password: optsComp.password.value || '',
-      expiresInDays: Number(optsComp.expires.value) || 0,
+      includeFull: Boolean(optsComp.includeFull.value),
     };
     try {
       const link = await generateShare(opts);

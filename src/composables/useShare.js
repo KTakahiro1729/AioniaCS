@@ -1,11 +1,44 @@
-import { createShareLink } from '../libs/sabalessshare/src/index.js';
-import { createDynamicLink } from '../libs/sabalessshare/src/dynamic.js';
-import { arrayBufferToBase64 } from '../libs/sabalessshare/src/crypto.js';
-import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
-import { serializeCharacterForExport } from '../utils/characterSerialization.js';
+import { serializeCharacterForExport, toTimestampString } from '../utils/characterSerialization.js';
+
+const SHARE_FILE_EXTENSION = '.json';
+
+function sanitizeFileName(name) {
+  const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
+  return sanitized || 'shared-character';
+}
+
+function buildShareFileName(characterName) {
+  const timestamp = toTimestampString(new Date());
+  return `${sanitizeFileName(characterName)}_share_${timestamp}${SHARE_FILE_EXTENSION}`;
+}
+
+function decodeBuffer(buffer) {
+  if (typeof buffer === 'string') {
+    return buffer;
+  }
+  if (buffer instanceof ArrayBuffer) {
+    return new TextDecoder().decode(new Uint8Array(buffer));
+  }
+  if (ArrayBuffer.isView(buffer)) {
+    return new TextDecoder().decode(buffer);
+  }
+  return '';
+}
+
+function buildDriveShareUrl(fileId) {
+  const { origin } = window.location;
+  let { pathname } = window.location;
+  if (pathname.endsWith('/index.html')) {
+    pathname = pathname.slice(0, -'/index.html'.length);
+  }
+  if (!pathname.endsWith('/')) {
+    pathname += '/';
+  }
+  return `${origin}${pathname}#/share/drive/${encodeURIComponent(fileId)}`;
+}
 
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
@@ -44,44 +77,32 @@ export function useShare(dataManager) {
     return payload.length > 7000; // rough threshold
   }
 
-  async function _uploadHandler(data) {
+  async function generateShare(options = {}) {
+    const { includeFull = false } = options;
+    const data = _collectData(includeFull);
     const manager = dataManager.googleDriveManager;
     if (!manager || typeof manager.uploadAndShareFile !== 'function') {
       throw new Error(messages.share.needSignIn().message);
     }
-    const payload = JSON.stringify({
-      ciphertext: arrayBufferToBase64(data.ciphertext),
-      iv: arrayBufferToBase64(data.iv),
-    });
-    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json');
-    if (!id) {
+    if (typeof manager.setPermissionToPublic !== 'function') {
+      throw new Error(messages.share.errors.permissionUnsupported);
+    }
+
+    const fileName = buildShareFileName(characterStore.character.name);
+    const payload = decodeBuffer(data);
+    const fileId = await manager.uploadAndShareFile(payload, fileName, 'application/json');
+    if (!fileId) {
       throw new Error(messages.share.errors.uploadFailed);
     }
-    return id;
-  }
 
-  async function generateShare(options) {
-    const { type, includeFull, password, expiresInDays } = options;
-    const data = _collectData(includeFull);
-    if (type === 'dynamic') {
-      const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
-      const { shareLink } = await createDynamicLink({
-        data,
-        adapter,
-        password: password || undefined,
-        expiresInDays,
-      });
-      return shareLink;
+    try {
+      await manager.setPermissionToPublic(fileId);
+    } catch (error) {
+      console.error('Failed to set Drive permissions for shared file:', error);
+      throw new Error(messages.share.errors.permissionFailed);
     }
-    const mode = includeFull ? 'cloud' : 'simple';
-    return createShareLink({
-      data,
-      mode,
-      uploadHandler: _uploadHandler,
-      shortenUrlHandler: async (longUrl) => longUrl,
-      password: password || undefined,
-      expiresInDays,
-    });
+
+    return buildDriveShareUrl(fileId);
   }
 
   async function copyLink(link) {

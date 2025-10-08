@@ -214,4 +214,46 @@ test.describe('Character Sheet E2E Tests', () => {
 
     expect(buildPath(savedFile.parentId)).toBe('慈悲なきアイオニア/PC/第一キャンペーン');
   });
+
+  test('generates and loads Drive share link', async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.clear();
+    });
+
+    await page.locator('#name').fill('共有テスト');
+
+    await page.evaluate(() => {
+      window.__copiedText = null;
+      navigator.clipboard.writeText = async (text) => {
+        window.__copiedText = text;
+      };
+    });
+
+    await page.locator('button.footer-button--share').click();
+
+    const modal = page.locator('.modal');
+    await modal.waitFor({ state: 'visible' });
+
+    const signInButton = page.locator('button:has-text("Google Drive にサインイン")');
+    await expect(signInButton).toBeVisible();
+    await signInButton.click();
+    await signInButton.waitFor({ state: 'detached' });
+
+    const generateButton = page.locator('button:has-text("生成")');
+    await expect(generateButton).toBeEnabled({ timeout: 10000 });
+    await generateButton.click();
+
+    await modal.waitFor({ state: 'hidden' });
+
+    const shareLink = await page.evaluate(() => window.__copiedText);
+    expect(shareLink).toMatch(/#\/share\/drive\//);
+
+    const driveState = await page.evaluate(() => JSON.parse(localStorage.getItem('mockGoogleDriveData')));
+    const fileId = shareLink.split('/share/drive/')[1];
+    expect(driveState.files[fileId]).toBeTruthy();
+
+    await page.goto(shareLink);
+    await expect(page.locator('.view-mode-banner')).toBeVisible();
+    await expect(page.locator('#name')).toHaveValue('共有テスト');
+  });
 });

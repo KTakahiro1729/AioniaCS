@@ -1,99 +1,101 @@
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useUiStore } from '../stores/uiStore.js';
-import { base64ToArrayBuffer } from '../libs/sabalessshare/src/crypto.js';
-import { receiveSharedData } from '../libs/sabalessshare/src/index.js';
-import { receiveDynamicData } from '../libs/sabalessshare/src/dynamic.js';
-import { parseShareUrl } from '../libs/sabalessshare/src/url.js';
-import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useNotifications } from './useNotifications.js';
-import { useModal } from './useModal.js';
-import PasswordPromptModal from '../components/modals/contents/PasswordPromptModal.vue';
 import { messages } from '../locales/ja.js';
+
+function parseDriveShareRoute(location) {
+  const hash = location.hash || '';
+  const match = hash.match(/^#\/share\/drive\/([^/?#]+)/i);
+  if (!match) {
+    return null;
+  }
+  try {
+    return { fileId: decodeURIComponent(match[1]) };
+  } catch (error) {
+    console.error('Failed to decode shared file ID:', error);
+    return null;
+  }
+}
+
+function createShareError(key) {
+  const message = messages.share.loadError[key] || messages.share.loadError.general;
+  const error = new Error(message);
+  error.shareErrorKey = key;
+  return error;
+}
+
+function normalizeDriveContent(content) {
+  if (content == null) {
+    return null;
+  }
+  if (typeof content === 'string') {
+    return content;
+  }
+  if (content instanceof ArrayBuffer) {
+    return new TextDecoder().decode(new Uint8Array(content));
+  }
+  if (ArrayBuffer.isView(content)) {
+    return new TextDecoder().decode(content);
+  }
+  try {
+    return JSON.stringify(content);
+  } catch (error) {
+    console.error('Failed to normalize Drive file content:', error);
+    return null;
+  }
+}
 
 export function useAppInitialization(dataManager) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
   const { showToast } = useNotifications();
-  const { showModal } = useModal();
 
   async function initialize() {
     uiStore.setLoading(true);
-    const params = parseShareUrl(window.location);
+    const params = parseDriveShareRoute(window.location);
     if (!params) {
       uiStore.setLoading(false);
       return;
     }
+
     try {
-      let buffer;
-      if (params.mode === 'dynamic') {
-        const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
-        async function promptPassword() {
-          const result = await showModal({
-            component: PasswordPromptModal,
-            title: messages.ui.prompts.sharedDataPassword,
-            buttons: [
-              { label: 'OK', value: 'ok', variant: 'primary' },
-              {
-                label: messages.ui.modal.cancel,
-                value: 'cancel',
-                variant: 'secondary',
-              },
-            ],
-          });
-          if (!result.component || result.value !== 'ok') return null;
-          return result.component.password.value || null;
-        }
-        buffer = await receiveDynamicData({
-          location: window.location,
-          adapter,
-          passwordPromptHandler: promptPassword,
-        });
-      } else {
-        async function promptPassword() {
-          const result = await showModal({
-            component: PasswordPromptModal,
-            title: messages.ui.prompts.sharedDataPassword,
-            buttons: [
-              { label: 'OK', value: 'ok', variant: 'primary' },
-              {
-                label: messages.ui.modal.cancel,
-                value: 'cancel',
-                variant: 'secondary',
-              },
-            ],
-          });
-          if (!result.component || result.value !== 'ok') return null;
-          return result.component.password.value || null;
-        }
-        buffer = await receiveSharedData({
-          location: window.location,
-          downloadHandler: async (id) => {
-            const text = await dataManager.googleDriveManager.loadFileContent(id);
-            if (!text) throw new Error('no data');
-            const { ciphertext, iv } = JSON.parse(text);
-            return {
-              ciphertext: base64ToArrayBuffer(ciphertext),
-              iv: new Uint8Array(base64ToArrayBuffer(iv)),
-            };
-          },
-          passwordPromptHandler: promptPassword,
-        });
+      const manager = dataManager.googleDriveManager;
+      if (!manager || typeof manager.loadFileContent !== 'function') {
+        throw createShareError('signInRequired');
       }
-      const parsed = JSON.parse(new TextDecoder().decode(buffer));
-      Object.assign(characterStore.character, parsed.character);
-      characterStore.skills.splice(0, characterStore.skills.length, ...parsed.skills);
-      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsed.specialSkills);
-      Object.assign(characterStore.equipments, parsed.equipments);
-      characterStore.histories.splice(0, characterStore.histories.length, ...parsed.histories);
+
+      const fileContent = await manager.loadFileContent(params.fileId);
+      if (!fileContent) {
+        throw createShareError('general');
+      }
+
+      const normalized = normalizeDriveContent(fileContent);
+      if (!normalized) {
+        throw createShareError('general');
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(normalized);
+      } catch (error) {
+        console.error('Failed to parse shared data JSON:', error);
+        throw createShareError('general');
+      }
+
+      if (!parsed || typeof parsed !== 'object') {
+        throw createShareError('general');
+      }
+
+      Object.assign(characterStore.character, parsed.character || {});
+      characterStore.skills.splice(0, characterStore.skills.length, ...(parsed.skills || []));
+      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...(parsed.specialSkills || []));
+      Object.assign(characterStore.equipments, parsed.equipments || {});
+      characterStore.histories.splice(0, characterStore.histories.length, ...(parsed.histories || []));
       uiStore.isViewingShared = true;
-    } catch (err) {
-      let key = 'general';
-      if (err.name === 'InvalidLinkError') key = 'invalid';
-      else if (err.name === 'ExpiredLinkError') key = 'expired';
-      else if (err.name === 'PasswordRequiredError') key = 'passwordRequired';
-      else if (err.name === 'DecryptionError') key = 'decryptionFailed';
+    } catch (error) {
+      const key = error.shareErrorKey || 'general';
       showToast({ type: 'error', ...messages.share.loadError.toast(key) });
-      console.error('Error loading shared data:', err);
+      console.error('Error loading shared data:', error);
     } finally {
       uiStore.setLoading(false);
     }

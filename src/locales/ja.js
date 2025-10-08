@@ -4,6 +4,7 @@ const shareLoadErrorTexts = {
   expired: '共有リンクの有効期限が切れています',
   passwordRequired: 'パスワードが必要です',
   decryptionFailed: '復号に失敗しました',
+  signInRequired: '共有データを読み込むにはGoogle Driveにサインインしてください',
 };
 
 export const messages = {
@@ -85,30 +86,9 @@ export const messages = {
       message: 'サインインしてください',
     }),
     options: {
-      reflection: {
-        title: '今後の変更を反映しますか？',
-        choices: {
-          snapshot: '反映しない',
-          dynamic: '反映する',
-        },
-        driveRequired: 'Google Drive連携が必要です',
-      },
-      additional: {
-        title: '追加オプション',
-        includeFull: '画像・メモ（長文の場合）を含める',
-        driveRequired: 'Google Drive連携が必要です',
-        truncateWarning: '内容が一部省略される可能性があります',
-        enablePassword: 'パスワード保護',
-        passwordPlaceholder: 'パスワード',
-        expires: {
-          label: '有効期限',
-          options: {
-            1: '1日',
-            7: '7日',
-            0: '無期限',
-          },
-        },
-      },
+      description: '共有リンクを生成するにはGoogle Driveへのサインインが必要です。',
+      includeFull: '画像・メモ（長文の場合）を含める',
+      truncateWarning: '内容が一部省略される可能性があります',
       signIn: 'Google Drive にサインイン',
     },
     generateFailed: (err) => ({
@@ -122,6 +102,8 @@ export const messages = {
       missingUpdateId: '更新対象のIDが指定されていません',
       updateFailed: 'Google Drive の共有ファイル更新に失敗しました',
       managerMissing: 'Google Drive マネージャーが設定されていません',
+      permissionFailed: 'Google Drive の公開設定に失敗しました',
+      permissionUnsupported: 'Google Drive の公開設定機能が利用できません',
     },
     loadError: {
       ...shareLoadErrorTexts,

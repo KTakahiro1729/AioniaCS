@@ -226,8 +226,19 @@ export class MockGoogleDriveManager {
     return file ? file.content : null;
   }
 
+  async setPermissionToPublic(fileId) {
+    const file = this.state.files[fileId];
+    if (!file) {
+      throw new Error('File not found');
+    }
+    file.isPublic = true;
+    this._saveState();
+    return true;
+  }
+
   async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
     const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
+    await this.setPermissionToPublic(info.id);
     return info.id;
   }
 

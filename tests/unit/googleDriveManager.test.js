@@ -20,6 +20,9 @@ describe('GoogleDriveManager configuration and folder handling', () => {
             get: vi.fn(),
             delete: vi.fn(),
           },
+          permissions: {
+            create: vi.fn(),
+          },
         },
         request: vi.fn(),
       },
@@ -154,6 +157,35 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(call.path).toBe('/upload/drive/v3/files/file-1');
     expect(call.method).toBe('PATCH');
     expect(call.body).toContain('Content-Type: application/zip');
+  });
+
+  test('setPermissionToPublic delegates to Drive API', async () => {
+    await expect(gdm.setPermissionToPublic('file-123')).resolves.toBe(true);
+    expect(gapi.client.drive.permissions.create).toHaveBeenCalledWith({
+      fileId: 'file-123',
+      resource: { role: 'reader', type: 'anyone' },
+    });
+  });
+
+  test('setPermissionToPublic ignores already existing permission errors', async () => {
+    gapi.client.drive.permissions.create.mockRejectedValueOnce({ status: 409 });
+    await expect(gdm.setPermissionToPublic('file-abc')).resolves.toBe(true);
+  });
+
+  test('setPermissionToPublic rethrows unexpected errors', async () => {
+    const error = new Error('forbidden');
+    gapi.client.drive.permissions.create.mockRejectedValueOnce(error);
+    await expect(gdm.setPermissionToPublic('file-err')).rejects.toBe(error);
+  });
+
+  test('uploadAndShareFile sets public permission after upload', async () => {
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'share-1' } });
+    const result = await gdm.uploadAndShareFile('{}', 'share.json', 'application/json');
+    expect(result).toBe('share-1');
+    expect(gapi.client.drive.permissions.create).toHaveBeenCalledWith({
+      fileId: 'share-1',
+      resource: { role: 'reader', type: 'anyone' },
+    });
   });
 
   test('findFileByName queries configured folder', async () => {

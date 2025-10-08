@@ -11,15 +11,13 @@ describe('ShareOptions', () => {
     setActivePinia(createPinia());
   });
 
-  test('emits canGenerate updates', async () => {
+  test('emits canGenerate updates based on sign-in state', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     const wrapper = mount(ShareOptions, {
       props: { longData: false },
     });
 
-    await wrapper.find('input[value="dynamic"]').setValue();
-    await nextTick();
     let events = wrapper.emitted('update:canGenerate');
     expect(events[events.length - 1][0]).toBe(false);
 

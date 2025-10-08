@@ -589,6 +589,29 @@ export class GoogleDriveManager {
     }
   }
 
+  async setPermissionToPublic(fileId) {
+    if (!fileId) {
+      throw new Error('File ID is required to update permissions.');
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      throw new Error('GAPI client or Drive API not loaded for setPermissionToPublic.');
+    }
+    try {
+      await gapi.client.drive.permissions.create({
+        fileId,
+        resource: { role: 'reader', type: 'anyone' },
+      });
+      return true;
+    } catch (error) {
+      const reason = error?.result?.error?.errors?.[0]?.reason;
+      if (error.status === 409 || reason === 'alreadyExists') {
+        return true;
+      }
+      console.error('Error setting file permission to public:', error);
+      throw error;
+    }
+  }
+
   /**
    * Finds or creates the configured character folder in the user's Drive root.
    * @returns {Promise<string|null>} The ID of the folder, or null if not available.
@@ -740,10 +763,7 @@ export class GoogleDriveManager {
         body: multipartRequestBody,
       });
 
-      await gapi.client.drive.permissions.create({
-        fileId: res.result.id,
-        resource: { role: 'reader', type: 'anyone' },
-      });
+      await this.setPermissionToPublic(res.result.id);
       return res.result.id;
     } catch (error) {
       console.error('Error uploading and sharing file:', error);
