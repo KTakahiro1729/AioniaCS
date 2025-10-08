@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useCharacterStore } from '../../../src/stores/characterStore.js';
-import { AioniaGameData } from '../../../src/data/gameData.js';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { AioniaGameData } from '@/data/gameData.js';
 
 describe('characterStore', () => {
   beforeEach(() => {

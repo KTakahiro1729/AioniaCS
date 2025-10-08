@@ -1,4 +1,4 @@
-import { initializeGoogleDriveManager, resetGoogleDriveManagerForTests } from '../../src/services/googleDriveManager.js';
+import { initializeGoogleDriveManager, resetGoogleDriveManagerForTests } from '@/infrastructure/google-drive/googleDriveManager.js';
 import { vi } from 'vitest';
 
 describe('GoogleDriveManager auth', () => {

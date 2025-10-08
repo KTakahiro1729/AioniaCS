@@ -2,7 +2,7 @@
   "name": "aioniacs",
   "version": "1.0.0",
   "description": "慈悲なきアイオニアのための非公式キャラクターシート作成ツールです",
-  "main": "src/main.js",
+  "main": "src/app/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",

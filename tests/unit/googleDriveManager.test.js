@@ -3,7 +3,7 @@ import {
   initializeGoogleDriveManager,
   getGoogleDriveManagerInstance,
   resetGoogleDriveManagerForTests,
-} from '../../src/services/googleDriveManager.js';
+} from '@/infrastructure/google-drive/googleDriveManager.js';
 import { vi } from 'vitest';
 
 describe('GoogleDriveManager configuration and folder handling', () => {

@@ -169,7 +169,7 @@ test.describe('Character Sheet E2E Tests', () => {
     const desiredPath = '慈悲なきアイオニア/PC/第一キャンペーン';
 
     await page.evaluate(async (path) => {
-      const module = await import('/src/services/mockGoogleDriveManager.js');
+      const module = await import('/src/infrastructure/google-drive/mockGoogleDriveManager.js');
       let manager;
       try {
         manager = module.getMockGoogleDriveManagerInstance();

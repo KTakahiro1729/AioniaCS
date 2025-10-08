@@ -2,8 +2,8 @@ import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import MainFooter from '../../../src/components/ui/MainFooter.vue';
-import { useUiStore } from '../../../src/stores/uiStore.js';
+import MainFooter from '@/features/character-sheet/components/ui/MainFooter.vue';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 describe('MainFooter', () => {
   beforeEach(() => {

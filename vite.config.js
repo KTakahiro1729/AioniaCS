@@ -7,11 +7,13 @@ export default defineConfig({
   base: './',
   plugins: [vue(), visualizer({ open: true })],
   resolve: {
-    alias: {},
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
   },
   server: {
     fs: {
-      '@': resolve(__dirname, 'src/'),
+      '@': resolve(__dirname, 'src'),
       allow: ['.'],
     },
   },
@@ -22,6 +24,7 @@ export default defineConfig({
     include: ['tests/unit/**/*.test.js', 'tests/integrity/**/*.test.js'],
     exclude: ['tests/e2e/**', 'node_modules/**'],
     alias: {
+      '@': resolve(__dirname, 'src'),
       '\\?raw$': resolve(__dirname, 'tests/unit/__mocks__/raw.js'),
     },
   },

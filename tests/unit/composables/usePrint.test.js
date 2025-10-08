@@ -1,7 +1,7 @@
-vi.mock('../../public/print-template.html?raw', () => '');
-vi.mock('../../public/style/css/print-styles.css?raw', () => '');
+vi.mock('@/features/character-sheet/assets/print/print-template.html?raw', () => '');
+vi.mock('@/features/character-sheet/assets/print/print-styles.css?raw', () => '');
 
-import { formatSkills, formatAbilities } from '../../../src/composables/usePrint.js';
+import { formatSkills, formatAbilities } from '@/features/character-sheet/composables/usePrint.js';
 
 describe('usePrint utilities', () => {
   test('formatSkills builds skill string', () => {

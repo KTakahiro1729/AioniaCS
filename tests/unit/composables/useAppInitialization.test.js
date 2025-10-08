@@ -3,20 +3,20 @@ const { mockShowToast, mockDeserialize } = vi.hoisted(() => ({
   mockDeserialize: vi.fn(),
 }));
 
-vi.mock('../../../src/composables/useNotifications.js', () => ({
+vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
   useNotifications: () => ({
     showToast: mockShowToast,
   }),
 }));
 
-vi.mock('../../../src/utils/characterSerialization.js', () => ({
+vi.mock('@/shared/utils/characterSerialization.js', () => ({
   deserializeCharacterPayload: mockDeserialize,
 }));
 
 import { setActivePinia, createPinia } from 'pinia';
-import { useAppInitialization } from '../../../src/composables/useAppInitialization.js';
-import { useUiStore } from '../../../src/stores/uiStore.js';
-import { useCharacterStore } from '../../../src/stores/characterStore.js';
+import { useAppInitialization } from '@/app/providers/useAppInitialization.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 
 describe('useAppInitialization', () => {
   const originalFetch = global.fetch;

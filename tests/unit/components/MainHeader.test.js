@@ -2,9 +2,9 @@ import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import MainHeader from '../../../src/components/ui/MainHeader.vue';
-import { useCharacterStore } from '../../../src/stores/characterStore.js';
-import { useUiStore } from '../../../src/stores/uiStore.js';
+import MainHeader from '@/features/character-sheet/components/ui/MainHeader.vue';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 describe('MainHeader', () => {
   beforeEach(() => {

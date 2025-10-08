@@ -2,8 +2,8 @@ import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import SpecialSkillsSection from '../../../src/components/sections/SpecialSkillsSection.vue';
-import { useCharacterStore } from '../../../src/stores/characterStore.js';
+import SpecialSkillsSection from '@/features/character-sheet/components/sections/SpecialSkillsSection.vue';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 
 describe('SpecialSkillsSection', () => {
   beforeEach(() => {

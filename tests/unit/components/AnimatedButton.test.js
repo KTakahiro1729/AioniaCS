@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import AnimatedButton from '../../../src/components/common/AnimatedButton.vue';
+import AnimatedButton from '@/shared/ui/base/AnimatedButton.vue';
 import { nextTick } from 'vue';
 
 describe('AnimatedButton', () => {

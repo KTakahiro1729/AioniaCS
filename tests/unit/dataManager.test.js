@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
-import { DataManager } from '../../src/services/dataManager.js';
-import { AioniaGameData } from '../../src/data/gameData.js';
-import { deepClone } from '../../src/utils/utils.js';
+import { DataManager } from '@/features/character-sheet/services/dataManager.js';
+import { AioniaGameData } from '@/data/gameData.js';
+import { deepClone } from '@/shared/utils/utils.js';
 import JSZip from 'jszip';
 
 // vi.mock をファイルのトップレベルに記述します。

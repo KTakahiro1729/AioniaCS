@@ -1,5 +1,5 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useUiStore } from '../../../src/stores/uiStore.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 describe('uiStore drive state', () => {
   beforeEach(() => {

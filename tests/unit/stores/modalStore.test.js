@@ -1,5 +1,5 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useModalStore } from '../../../src/stores/modalStore.js';
+import { useModalStore } from '@/features/modals/stores/modalStore.js';
 
 describe('modalStore', () => {
   beforeEach(() => {
