@@ -15,6 +15,7 @@ export function useAppModals(options) {
   const { showModal } = useModal();
   const {
     dataManager,
+    saveCharacterToDrive,
     handleSignInClick,
     handleSignOutClick,
     saveData,
