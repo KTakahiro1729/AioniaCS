@@ -166,12 +166,13 @@ if (import.meta.hot) {
 </script>
 
 <style scoped>
+
 .session-memo-window {
   position: fixed;
   display: flex;
   flex-direction: column;
-  background: rgba(24, 21, 32, 0.95);
-  border: 1px solid var(--color-border-strong);
+  background: var(--color-panel-body);
+  border: 1px solid var(--color-border-normal);
   box-shadow: 0 12px 32px rgb(0 0 0 / 70%);
   border-radius: 12px;
   backdrop-filter: blur(6px);
@@ -185,8 +186,8 @@ if (import.meta.hot) {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0.75rem;
-  background: linear-gradient(135deg, rgba(68, 54, 89, 0.95), rgba(30, 26, 46, 0.95));
-  color: var(--color-text-inverse);
+  background: var(--color-panel-header);
+  color: var(--color-text-normal);
   font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
   user-select: none;
 }
@@ -205,8 +206,8 @@ if (import.meta.hot) {
   height: 32px;
   border-radius: 50%;
   border: 1px solid var(--color-border-normal);
-  background: rgba(15, 12, 22, 0.65);
-  color: var(--color-text-inverse);
+  background: var(--color-panel-sub-header);
+  color: var(--color-text-normal);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -228,7 +229,7 @@ if (import.meta.hot) {
 .session-memo-window__textarea {
   width: 100%;
   height: 100%;
-  background: rgba(12, 10, 18, 0.75);
+  background: var(--color-input-bg);
   border: 1px solid var(--color-border-normal);
   border-radius: 8px;
   color: var(--color-text-normal);
@@ -246,8 +247,8 @@ if (import.meta.hot) {
   right: 8px;
   bottom: 8px;
   cursor: se-resize;
-  border-right: 2px solid rgba(255, 255, 255, 0.4);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+  border-right: 2px solid var(--color-border-normal);
+  border-bottom: 2px solid var(--color-border-normal);
 }
 
 .is-minimized {
