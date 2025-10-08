@@ -9,11 +9,46 @@ function getSharedDriveId(location) {
   return params.get('sharedId');
 }
 
-function buildDriveDownloadUrl(fileId) {
-  const url = new URL('https://drive.google.com/uc');
-  url.searchParams.set('export', 'download');
-  url.searchParams.set('id', fileId);
-  return url.toString();
+function normalizeApiKey(rawKey) {
+  if (typeof rawKey === 'string') {
+    const trimmed = rawKey.trim();
+    if (!trimmed || trimmed.toLowerCase() === 'undefined' || trimmed.toLowerCase() === 'null') {
+      return null;
+    }
+    return trimmed;
+  }
+
+  if (!rawKey) {
+    return null;
+  }
+
+  return rawKey;
+}
+
+function resolveDriveApiKey(dataManager) {
+  const managerKey = normalizeApiKey(dataManager?.googleDriveManager?.apiKey);
+  if (managerKey) {
+    return managerKey;
+  }
+
+  const metaEnv = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
+  const envKey = normalizeApiKey(metaEnv?.VITE_GOOGLE_API_KEY);
+  return envKey || null;
+}
+
+function buildDriveDownloadUrl(fileId, dataManager) {
+  const apiKey = resolveDriveApiKey(dataManager);
+  if (apiKey) {
+    const url = new URL(`https://www.googleapis.com/drive/v3/files/${fileId}`);
+    url.searchParams.set('alt', 'media');
+    url.searchParams.set('key', apiKey);
+    return url.toString();
+  }
+
+  const fallbackUrl = new URL('https://drive.usercontent.google.com/download');
+  fallbackUrl.searchParams.set('id', fileId);
+  fallbackUrl.searchParams.set('export', 'download');
+  return fallbackUrl.toString();
 }
 
 export function useAppInitialization(dataManager) {
@@ -32,7 +67,7 @@ export function useAppInitialization(dataManager) {
     }
 
     try {
-      const response = await fetch(buildDriveDownloadUrl(fileId));
+      const response = await fetch(buildDriveDownloadUrl(fileId, dataManager));
       if (!response.ok) {
         const error = new Error('Failed to fetch shared character data.');
         error.code = 'fetchFailed';
