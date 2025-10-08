@@ -752,6 +752,54 @@ export class GoogleDriveManager {
   }
 
   /**
+   * Ensures that a file is publicly accessible and returns a shareable link.
+   * @param {string} fileId - The Drive file ID to publish.
+   * @returns {Promise<string|null>} The shareable URL or null on failure.
+   */
+  async ensureFilePublic(fileId) {
+    if (!fileId) {
+      console.error('No fileId provided to ensureFilePublic.');
+      return null;
+    }
+
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for ensureFilePublic.');
+      return null;
+    }
+
+    try {
+      await gapi.client.drive.permissions.create({
+        fileId,
+        resource: { role: 'reader', type: 'anyone' },
+      });
+    } catch (error) {
+      const reason = error?.result?.error?.errors?.[0]?.reason;
+      if (error.status !== 409 && reason !== 'alreadyExists') {
+        console.error('Failed to update file permissions for sharing:', error);
+        return null;
+      }
+    }
+
+    try {
+      const response = await gapi.client.drive.files.get({
+        fileId,
+        fields: 'id, webViewLink, webContentLink',
+      });
+      const file = response.result;
+      if (file?.webViewLink) {
+        return file.webViewLink;
+      }
+      if (file?.webContentLink) {
+        return file.webContentLink;
+      }
+      return `https://drive.google.com/file/d/${fileId}/view?usp=drivesdk`;
+    } catch (error) {
+      console.error('Failed to fetch share link from Drive:', error);
+      return null;
+    }
+  }
+
+  /**
    * Shows the Google File Picker to select a file.
    * @param {function} callback - Function to call with the result (error, {id, name}).
    * @param {string|null} parentFolderId - Optional ID of the folder to start in.

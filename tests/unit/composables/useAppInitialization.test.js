@@ -1,120 +1,157 @@
-import { setActivePinia, createPinia } from 'pinia';
-import { useAppInitialization } from '../../../src/composables/useAppInitialization.js';
-import { useCharacterStore } from '../../../src/stores/characterStore.js';
-import { useUiStore } from '../../../src/stores/uiStore.js';
-
-vi.mock('../../../src/libs/sabalessshare/src/url.js', () => ({
-  parseShareUrl: vi.fn(),
-}));
-
-vi.mock('../../../src/libs/sabalessshare/src/index.js', () => ({
-  receiveSharedData: vi.fn(),
-}));
-
-vi.mock('../../../src/libs/sabalessshare/src/dynamic.js', () => ({
-  receiveDynamicData: vi.fn(),
-}));
-
-vi.mock('../../../src/services/driveStorageAdapter.js', () => ({
-  DriveStorageAdapter: vi.fn().mockImplementation((manager) => ({ manager })),
+const { mockShowToast, mockDeserialize } = vi.hoisted(() => ({
+  mockShowToast: vi.fn(),
+  mockDeserialize: vi.fn(),
 }));
 
 vi.mock('../../../src/composables/useNotifications.js', () => ({
-  useNotifications: () => ({ showToast: vi.fn() }),
+  useNotifications: () => ({
+    showToast: mockShowToast,
+  }),
 }));
 
+vi.mock('../../../src/utils/characterSerialization.js', () => ({
+  deserializeCharacterPayload: mockDeserialize,
+}));
+
+import { setActivePinia, createPinia } from 'pinia';
+import { useAppInitialization } from '../../../src/composables/useAppInitialization.js';
+import { useUiStore } from '../../../src/stores/uiStore.js';
+import { useCharacterStore } from '../../../src/stores/characterStore.js';
+
 describe('useAppInitialization', () => {
+  const originalFetch = global.fetch;
+  const originalApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+
   beforeEach(() => {
     setActivePinia(createPinia());
-    vi.clearAllMocks();
+    mockShowToast.mockClear();
+    mockDeserialize.mockReset();
+    window.history.replaceState({}, '', `${window.location.origin}/`);
+    import.meta.env.VITE_GOOGLE_API_KEY = originalApiKey;
   });
 
-  test('loads shared data when URL has params', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
-    parseShareUrl.mockReturnValue({ mode: 'simple' });
-    const payload = {
-      character: { name: 'Hero' },
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-    const buffer = Uint8Array.from(Buffer.from(JSON.stringify(payload))).buffer;
-    receiveSharedData.mockResolvedValue(buffer);
-
-    const dataManager = { googleDriveManager: {} };
-    const { initialize } = useAppInitialization(dataManager);
-    await initialize();
-
-    const charStore = useCharacterStore();
-    const uiStore = useUiStore();
-    expect(parseShareUrl).toHaveBeenCalled();
-    expect(receiveSharedData).toHaveBeenCalled();
-    expect(uiStore.isViewingShared).toBe(true);
-    expect(charStore.character.name).toBe('Hero');
+  afterEach(() => {
+    if (originalFetch) {
+      global.fetch = originalFetch;
+    } else {
+      delete global.fetch;
+    }
+    import.meta.env.VITE_GOOGLE_API_KEY = originalApiKey;
   });
 
-  test('does nothing when no params', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    parseShareUrl.mockReturnValue(null);
-    const dataManager = { googleDriveManager: {} };
-    const { initialize } = useAppInitialization(dataManager);
-    const charStore = useCharacterStore();
-    charStore.character.name = 'Default';
-    await initialize();
+  test('resets loading state when no shared id is present', async () => {
+    global.fetch = vi.fn();
     const uiStore = useUiStore();
+    uiStore.setLoading(true);
+    uiStore.isViewingShared = true;
+
+    const { initialize } = useAppInitialization({ parseLoadedData: vi.fn() });
+    await initialize();
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(uiStore.isLoading).toBe(false);
     expect(uiStore.isViewingShared).toBe(false);
-    expect(charStore.character.name).toBe('Default');
+    expect(mockShowToast).not.toHaveBeenCalled();
   });
 
-  test('updates loading state', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
-    parseShareUrl.mockReturnValue({ mode: 'simple' });
-    let resolve;
-    receiveSharedData.mockReturnValue(
-      new Promise((r) => {
-        resolve = r;
+  test('loads shared character data when shared id is present', async () => {
+    const buffer = new TextEncoder().encode('dummy').buffer;
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response(buffer, {
+        status: 200,
       }),
     );
-    const { initialize } = useAppInitialization({ googleDriveManager: {} });
-    const uiStore = useUiStore();
-    const p = initialize();
-    expect(uiStore.isLoading).toBe(true);
-    const payload = {
-      character: { name: 'Test' },
-      playerName: 'Test',
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
+
+    window.history.replaceState({}, '', `${window.location.origin}/?sharedId=file123`);
+
+    const parsedData = {
+      character: { name: 'Shared Hero', memo: 'notes' },
+      skills: ['skill-a'],
+      specialSkills: ['special-a'],
+      equipments: {
+        weapon1: { group: 'Blade', name: 'Sword' },
+        weapon2: { group: '', name: '' },
+        armor: { group: '', name: '' },
+      },
+      histories: ['history-a'],
     };
-    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
-    resolve(buffer);
-    await p;
+
+    mockDeserialize.mockResolvedValueOnce(parsedData);
+
+    const dataManager = {
+      parseLoadedData: vi.fn().mockReturnValue(parsedData),
+      googleDriveManager: { apiKey: 'drive-api-key' },
+    };
+
+    const uiStore = useUiStore();
+    const characterStore = useCharacterStore();
+
+    const { initialize } = useAppInitialization(dataManager);
+    await initialize();
+
+    expect(global.fetch).toHaveBeenCalledWith('https://www.googleapis.com/drive/v3/files/file123?alt=media&key=drive-api-key');
+    expect(mockDeserialize).toHaveBeenCalled();
+    expect(dataManager.parseLoadedData).toHaveBeenCalledWith(parsedData);
+    expect(uiStore.isViewingShared).toBe(true);
+    expect(uiStore.currentDriveFileId).toBeNull();
+    expect(characterStore.character.name).toBe('Shared Hero');
+    expect(characterStore.skills).toEqual(['skill-a']);
+    expect(characterStore.specialSkills).toEqual(['special-a']);
+    expect(characterStore.equipments.weapon1).toEqual({ group: 'Blade', name: 'Sword' });
+    expect(characterStore.histories).toEqual(['history-a']);
     expect(uiStore.isLoading).toBe(false);
+    expect(mockShowToast).not.toHaveBeenCalled();
   });
 
-  test('loads dynamic shared data through Drive adapter', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveDynamicData } = await import('../../../src/libs/sabalessshare/src/dynamic.js');
-    const { DriveStorageAdapter } = await import('../../../src/services/driveStorageAdapter.js');
-    parseShareUrl.mockReturnValue({ mode: 'dynamic' });
-    const payload = {
-      character: { name: 'Dynamic' },
+  test('shows error toast when fetching shared data fails', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 404,
+      }),
+    );
+
+    window.history.replaceState({}, '', `${window.location.origin}/?sharedId=missing`);
+
+    const dataManager = { parseLoadedData: vi.fn() };
+    const uiStore = useUiStore();
+
+    const { initialize } = useAppInitialization(dataManager);
+    await initialize();
+
+    expect(uiStore.isViewingShared).toBe(false);
+    expect(uiStore.isLoading).toBe(false);
+    expect(mockShowToast).toHaveBeenCalled();
+  });
+
+  test('falls back to googleusercontent host when no API key is configured', async () => {
+    const buffer = new TextEncoder().encode('dummy').buffer;
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response(buffer, {
+        status: 200,
+      }),
+    );
+
+    window.history.replaceState({}, '', `${window.location.origin}/?sharedId=file999`);
+
+    const parsedData = {
+      character: { name: 'Fallback Hero', memo: '' },
       skills: [],
       specialSkills: [],
       equipments: {},
       histories: [],
     };
-    const buffer = new TextEncoder().encode(JSON.stringify(payload)).buffer;
-    receiveDynamicData.mockResolvedValue(buffer);
-    const googleDriveManager = {};
-    const { initialize } = useAppInitialization({ googleDriveManager });
+
+    mockDeserialize.mockResolvedValueOnce(parsedData);
+
+    import.meta.env.VITE_GOOGLE_API_KEY = undefined;
+
+    const dataManager = {
+      parseLoadedData: vi.fn().mockReturnValue(parsedData),
+    };
+
+    const { initialize } = useAppInitialization(dataManager);
     await initialize();
-    expect(DriveStorageAdapter).toHaveBeenCalledWith(googleDriveManager);
-    const adapterArg = receiveDynamicData.mock.calls[0][0].adapter;
-    expect(adapterArg.manager).toBe(googleDriveManager);
+
+    expect(global.fetch).toHaveBeenCalledWith('https://drive.usercontent.google.com/download?id=file999&export=download');
   });
 });

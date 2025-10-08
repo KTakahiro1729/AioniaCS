@@ -1,11 +1,3 @@
-const shareLoadErrorTexts = {
-  general: '共有データ読み込み失敗',
-  invalid: '共有リンクが不正です',
-  expired: '共有リンクの有効期限が切れています',
-  passwordRequired: 'パスワードが必要です',
-  decryptionFailed: '復号に失敗しました',
-};
-
 export const messages = {
   googleDrive: {
     signIn: {
@@ -84,51 +76,33 @@ export const messages = {
       title: 'Google Drive',
       message: 'サインインしてください',
     }),
-    options: {
-      reflection: {
-        title: '今後の変更を反映しますか？',
-        choices: {
-          snapshot: '反映しない',
-          dynamic: '反映する',
-        },
-        driveRequired: 'Google Drive連携が必要です',
-      },
-      additional: {
-        title: '追加オプション',
-        includeFull: '画像・メモ（長文の場合）を含める',
-        driveRequired: 'Google Drive連携が必要です',
-        truncateWarning: '内容が一部省略される可能性があります',
-        enablePassword: 'パスワード保護',
-        passwordPlaceholder: 'パスワード',
-        expires: {
-          label: '有効期限',
-          options: {
-            1: '1日',
-            7: '7日',
-            0: '無期限',
-          },
-        },
-      },
-      signIn: 'Google Drive にサインイン',
-    },
-    generateFailed: (err) => ({
-      title: '共有リンク生成失敗',
-      message: err.message,
-    }),
     errors: {
-      uploadFailed: 'Google Drive へのアップロードに失敗しました',
-      missingReadId: '読み込み対象のIDが指定されていません',
-      fetchFailed: 'Google Drive からファイルを取得できませんでした',
-      missingUpdateId: '更新対象のIDが指定されていません',
-      updateFailed: 'Google Drive の共有ファイル更新に失敗しました',
+      saveFailed: 'Google Drive への保存に失敗しました',
+      shareFailed: '共有リンクの取得に失敗しました',
       managerMissing: 'Google Drive マネージャーが設定されていません',
     },
     loadError: {
-      ...shareLoadErrorTexts,
-      toast: (key) => ({
-        title: '共有データエラー',
-        message: shareLoadErrorTexts[key] || shareLoadErrorTexts.general,
-      }),
+      toast: (key = 'general') => {
+        const messagesMap = {
+          general: '共有データの読み込みに失敗しました',
+          fetchFailed: '共有データの取得に失敗しました',
+          parseFailed: '共有データの解析に失敗しました',
+        };
+        return {
+          title: '共有データエラー',
+          message: messagesMap[key] || messagesMap.general,
+        };
+      },
+    },
+    modal: {
+      signInMessage: '共有リンクを作成するには Google Drive にサインインしてください。',
+      signInButton: 'Google Drive にサインイン',
+      instructions: '共有リンクをコピーして相手に送ってください。リンクを開くと閲覧モードでキャラシを表示します。',
+      generating: '共有リンクを作成しています…',
+      ready: '共有リンクが作成されました。',
+      retry: '再試行',
+      copy: 'コピー',
+      errorDefault: '共有リンクの作成に失敗しました。時間をおいて再度お試しください。',
     },
   },
   characterHub: {
@@ -223,10 +197,8 @@ export const messages = {
     },
     modal: {
       hubTitle: 'クラウド連携',
-      generate: '生成',
-      shareTitle: '共有リンクを生成',
+      shareTitle: '共有リンク',
       cancel: 'キャンセル',
-      shareFailed: '共有リンク生成失敗',
       io: {
         title: '入出力',
         buttons: {
