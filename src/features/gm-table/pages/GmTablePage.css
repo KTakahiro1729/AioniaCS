@@ -5,6 +5,30 @@
   color: var(--color-text-normal);
 }
 
+.gm-table-page__workspace {
+  display: flex;
+  gap: 24px;
+  margin-top: 24px;
+  align-items: stretch;
+}
+
+.gm-table-page__workspace--bottom {
+  flex-direction: column;
+}
+
+.gm-table-page__workspace--left {
+  flex-direction: row;
+}
+
+.gm-table-page__workspace--right {
+  flex-direction: row-reverse;
+}
+
+.gm-table-page__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .gm-file-input {
   display: none;
 }
@@ -12,5 +36,15 @@
 @media (max-width: 960px) {
   .gm-table-page {
     padding: 96px 12px 48px;
+  }
+
+  .gm-table-page__workspace {
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .gm-table-page__workspace--left,
+  .gm-table-page__workspace--right {
+    flex-direction: column;
   }
 }

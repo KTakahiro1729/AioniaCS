@@ -12,13 +12,34 @@ function createId() {
   return `gm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+const ORIENTATIONS = ['bottom', 'left', 'right'];
+const MIN_WINDOW_WIDTH = 260;
+const MIN_WINDOW_HEIGHT = 180;
+
 const defaultWindowState = () => ({
-  top: 120,
-  left: 40,
+  orientation: 'bottom',
   width: 360,
-  height: 420,
-  minimized: false,
+  height: 320,
 });
+
+function normalizeWindowState(raw) {
+  const defaults = defaultWindowState();
+  if (!raw || typeof raw !== 'object') {
+    return defaults;
+  }
+
+  const normalized = {
+    ...defaults,
+    width: typeof raw.width === 'number' ? Math.max(MIN_WINDOW_WIDTH, raw.width) : defaults.width,
+    height: typeof raw.height === 'number' ? Math.max(MIN_WINDOW_HEIGHT, raw.height) : defaults.height,
+  };
+
+  if (typeof raw.orientation === 'string' && ORIENTATIONS.includes(raw.orientation)) {
+    normalized.orientation = raw.orientation;
+  }
+
+  return normalized;
+}
 
 export const useGmTableStore = defineStore('gmTable', {
   state: () => ({
@@ -81,10 +102,21 @@ export const useGmTableStore = defineStore('gmTable', {
       this.sessionMemo = value;
     },
     updateSessionWindow(partial) {
-      this.sessionWindow = {
-        ...this.sessionWindow,
-        ...partial,
-      };
+      if (!partial || typeof partial !== 'object') return;
+      const next = { ...this.sessionWindow };
+      if (Object.prototype.hasOwnProperty.call(partial, 'orientation')) {
+        const orientation = partial.orientation;
+        if (typeof orientation === 'string' && ORIENTATIONS.includes(orientation)) {
+          next.orientation = orientation;
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(partial, 'width') && typeof partial.width === 'number') {
+        next.width = Math.max(MIN_WINDOW_WIDTH, partial.width);
+      }
+      if (Object.prototype.hasOwnProperty.call(partial, 'height') && typeof partial.height === 'number') {
+        next.height = Math.max(MIN_WINDOW_HEIGHT, partial.height);
+      }
+      this.sessionWindow = next;
     },
     resetWindowState() {
       this.sessionWindow = defaultWindowState();
@@ -115,7 +147,7 @@ export const useGmTableStore = defineStore('gmTable', {
         weaknesses: typeof rowVisibility.weaknesses === 'boolean' ? rowVisibility.weaknesses : false,
       };
       this.skillDetailExpanded = !!skillDetailExpanded;
-      this.sessionWindow = sessionWindow ? { ...defaultWindowState(), ...sessionWindow } : defaultWindowState();
+      this.sessionWindow = sessionWindow ? normalizeWindowState(sessionWindow) : defaultWindowState();
       this.columns = Array.isArray(characters)
         ? characters.map((column) => ({
             id: column.id || createId(),

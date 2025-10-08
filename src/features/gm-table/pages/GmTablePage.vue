@@ -162,24 +162,22 @@ function saveSession() {
   showToast({ type: 'success', title: gmMessages.toasts.sessionSaved.title, message: gmMessages.toasts.sessionSaved.message });
 }
 
-const memoWindowPosition = computed(() => ({ top: gmStore.sessionWindow.top, left: gmStore.sessionWindow.left }));
-const memoWindowSize = computed(() => ({ width: gmStore.sessionWindow.width, height: gmStore.sessionWindow.height }));
-
-function updateMemoPosition(position) {
-  gmStore.updateSessionWindow(position);
-}
-
 function updateMemoSize(size) {
   gmStore.updateSessionWindow(size);
 }
 
-function toggleMemoWindow() {
-  gmStore.updateSessionWindow({ minimized: !gmStore.sessionWindow.minimized });
+function updateMemoOrientation(orientation) {
+  gmStore.updateSessionWindow({ orientation });
 }
 
 function goToSheet() {
   router.push({ name: 'character-sheet' });
 }
+
+const workspaceClasses = computed(() => [
+  'gm-table-page__workspace',
+  `gm-table-page__workspace--${gmStore.sessionWindow.orientation}`,
+]);
 </script>
 
 <template>
@@ -195,36 +193,41 @@ function goToSheet() {
       @save="saveSession"
       @load="triggerSessionLoad"
     />
-    <GmTableLayout
-      :columns="gmStore.columns"
-      :gm-messages="gmMessages"
-      :row-visibility="gmStore.rowVisibility"
-      :skill-detail-expanded="gmStore.skillDetailExpanded"
-      :active-menu-id="activeMenuId"
-      @toggle-memo-row="toggleMemoRow"
-      @toggle-weakness-row="toggleWeaknessRow"
-      @toggle-skill-detail="toggleSkillDetail"
-      @open-menu="openMenu"
-      @edit-character="editCharacter"
-      @reload-character="reloadCharacter"
-      @delete-character="deleteCharacter"
-      @set-character-memo="(id, value) => gmStore.setCharacterMemo(id, value)"
-      @add-character="triggerAddCharacter"
-    />
+    <div :class="workspaceClasses">
+      <div class="gm-table-page__main">
+        <GmTableLayout
+          :columns="gmStore.columns"
+          :gm-messages="gmMessages"
+          :row-visibility="gmStore.rowVisibility"
+          :skill-detail-expanded="gmStore.skillDetailExpanded"
+          :active-menu-id="activeMenuId"
+          @toggle-memo-row="toggleMemoRow"
+          @toggle-weakness-row="toggleWeaknessRow"
+          @toggle-skill-detail="toggleSkillDetail"
+          @open-menu="openMenu"
+          @edit-character="editCharacter"
+          @reload-character="reloadCharacter"
+          @delete-character="deleteCharacter"
+          @set-character-memo="(id, value) => gmStore.setCharacterMemo(id, value)"
+          @add-character="triggerAddCharacter"
+        />
+      </div>
+      <SessionMemoWindow
+        :memo="gmStore.sessionMemo"
+        :width="gmStore.sessionWindow.width"
+        :height="gmStore.sessionWindow.height"
+        :orientation="gmStore.sessionWindow.orientation"
+        :title="gmMessages.session.memoTitle"
+        :orientation-labels="gmMessages.session.positionLabels"
+        :position-toggle-label="gmMessages.session.positionToggle"
+        @update:memo="gmStore.updateSessionMemo"
+        @update:size="updateMemoSize"
+        @update:orientation="updateMemoOrientation"
+      />
+    </div>
     <input ref="characterFileInput" type="file" class="gm-file-input" accept=".json,.zip" @change="handleCharacterFileChange" />
     <input ref="reloadFileInput" type="file" class="gm-file-input" accept=".json,.zip" @change="handleReloadFileChange" />
     <input ref="sessionFileInput" type="file" class="gm-file-input" accept=".json" @change="handleSessionFileChange" />
-    <SessionMemoWindow
-      :memo="gmStore.sessionMemo"
-      :position="memoWindowPosition"
-      :size="memoWindowSize"
-      :minimized="gmStore.sessionWindow.minimized"
-      :title="gmMessages.session.memoTitle"
-      @update:memo="gmStore.updateSessionMemo"
-      @update:position="updateMemoPosition"
-      @update:size="updateMemoSize"
-      @toggle-minimize="toggleMemoWindow"
-    />
   </div>
 </template>
 
