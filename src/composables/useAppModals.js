@@ -1,13 +1,9 @@
-import { reactive, defineAsyncComponent } from 'vue';
+import { defineAsyncComponent } from 'vue';
 import { useModal } from './useModal.js';
 import { useUiStore } from '../stores/uiStore.js';
 const CharacterHub = defineAsyncComponent(() => import('../components/ui/CharacterHub.vue'));
 const IoModal = defineAsyncComponent(() => import('../components/modals/contents/IoModal.vue'));
 const ShareOptions = defineAsyncComponent(() => import('../components/modals/contents/ShareOptions.vue'));
-
-import { useShare } from './useShare.js';
-import { useNotifications } from './useNotifications.js';
-import { useModalStore } from '../stores/modalStore.js';
 import { isDesktopDevice } from '../utils/device.js';
 import { messages } from '../locales/ja.js';
 
@@ -75,51 +71,19 @@ export function useAppModals(options) {
       }
       return;
     }
-    const { generateShare, copyLink, isLongData } = useShare(dataManager);
-    const { showToast } = useNotifications();
-    const modalStore = useModalStore();
-    const generateButton = reactive({
-      label: messages.ui.modal.generate,
-      value: 'generate',
-      variant: 'primary',
-      disabled: true,
-    });
-    function updateCanGenerate(v) {
-      generateButton.disabled = !v;
-    }
-    const result = await showModal({
+    await showModal({
       component: ShareOptions,
-      props: { longData: isLongData() },
+      props: { dataManager },
       title: messages.ui.modal.shareTitle,
       buttons: [
-        generateButton,
         {
           label: messages.ui.modal.cancel,
           value: 'cancel',
           variant: 'secondary',
         },
       ],
-      on: { 'update:canGenerate': updateCanGenerate, signin: handleSignInClick },
+      on: { signin: handleSignInClick },
     });
-    if (result.value !== 'generate' || !result.component) return;
-    const optsComp = result.component;
-    const opts = {
-      type: optsComp.type.value,
-      includeFull: optsComp.includeFull.value,
-      password: optsComp.password.value || '',
-      expiresInDays: Number(optsComp.expires.value) || 0,
-    };
-    try {
-      const link = await generateShare(opts);
-      await copyLink(link);
-      modalStore.hideModal();
-    } catch (err) {
-      showToast({
-        type: 'error',
-        title: messages.ui.modal.shareFailed,
-        message: err.message,
-      });
-    }
   }
 
   return { openHub, openIoModal, openShareModal };

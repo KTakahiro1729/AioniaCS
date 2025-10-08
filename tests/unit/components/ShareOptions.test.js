@@ -1,44 +1,73 @@
 import * as Vue from 'vue';
 global.Vue = Vue;
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import { nextTick } from 'vue';
 import ShareOptions from '../../../src/components/modals/contents/ShareOptions.vue';
 import { useUiStore } from '../../../src/stores/uiStore.js';
+
+const mockCreateShareLink = vi.fn();
+const mockCopyLink = vi.fn();
+
+vi.mock('../../../src/composables/useShare.js', () => ({
+  useShare: () => ({
+    createShareLink: mockCreateShareLink,
+    copyLink: mockCopyLink,
+  }),
+}));
 
 describe('ShareOptions', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    mockCreateShareLink.mockReset();
+    mockCopyLink.mockReset();
   });
 
-  test('emits canGenerate updates', async () => {
+  test('renders sign-in prompt when user is not signed in', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
+
     const wrapper = mount(ShareOptions, {
-      props: { longData: false },
+      props: { dataManager: {} },
     });
 
-    await wrapper.find('input[value="dynamic"]').setValue();
-    await nextTick();
-    let events = wrapper.emitted('update:canGenerate');
-    expect(events[events.length - 1][0]).toBe(false);
-
-    uiStore.isSignedIn = true;
-    await nextTick();
-    events = wrapper.emitted('update:canGenerate');
-    expect(events[events.length - 1][0]).toBe(true);
+    expect(wrapper.text()).toContain('共有リンクを作成するには Google Drive にサインインしてください。');
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('signin')).toBeTruthy();
   });
 
-  test('truncate warning shown only when full content disabled', async () => {
+  test('displays generated link and copies it', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
-    const wrapper = mount(ShareOptions, {
-      props: { longData: true },
-    });
-    expect(wrapper.find('.share-options__warning').exists()).toBe(true);
+    mockCreateShareLink.mockResolvedValueOnce('https://example.com/share');
 
-    await wrapper.find('input[type="checkbox"]').setChecked();
-    await nextTick();
-    expect(wrapper.find('.share-options__warning').exists()).toBe(false);
+    const wrapper = mount(ShareOptions, {
+      props: { dataManager: {} },
+    });
+
+    await flushPromises();
+    const input = wrapper.find('input.share-modal__input');
+    expect(input.element.value).toBe('https://example.com/share');
+
+    await wrapper.find('button.share-modal__copy').trigger('click');
+    expect(mockCopyLink).toHaveBeenCalledWith('https://example.com/share');
+  });
+
+  test('shows error and retries generation', async () => {
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    mockCreateShareLink.mockRejectedValueOnce(new Error('temp error')).mockResolvedValueOnce('https://retry-link');
+
+    const wrapper = mount(ShareOptions, {
+      props: { dataManager: {} },
+    });
+
+    await flushPromises();
+    expect(wrapper.text()).toContain('temp error');
+
+    await wrapper.find('button.share-modal__retry').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('input.share-modal__input').element.value).toBe('https://retry-link');
+    expect(mockCreateShareLink).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,109 +1,181 @@
 <template>
-  <div class="share-options">
-    <section class="share-options__section">
-      <h3 class="share-options__heading">{{ shareOptions.reflection.title }}</h3>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="radio" value="snapshot" v-model="type" />
-          {{ shareOptions.reflection.choices.snapshot }}
-        </label>
-      </div>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="radio" value="dynamic" v-model="type" />
-          {{ shareOptions.reflection.choices.dynamic }}
-          <div class="share-options__note">{{ shareOptions.reflection.driveRequired }}</div>
-        </label>
-      </div>
-    </section>
-    <section class="share-options__section">
-      <h3 class="share-options__heading">{{ shareOptions.additional.title }}</h3>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="checkbox" v-model="includeFull" />
-          {{ shareOptions.additional.includeFull }}
-          <div class="share-options__note">{{ shareOptions.additional.driveRequired }}</div>
-        </label>
-      </div>
-      <p v-if="showTruncateWarning" class="share-options__warning">{{ shareOptions.additional.truncateWarning }}</p>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="checkbox" v-model="enablePassword" />
-          {{ shareOptions.additional.enablePassword }}
-        </label>
-      </div>
-      <div class="share-options__row" v-if="enablePassword">
+  <div class="share-modal">
+    <div v-if="!isSignedIn" class="share-modal__signin">
+      <p class="share-modal__message">{{ shareMessages.signInMessage }}</p>
+      <button class="button-base share-modal__signin-button" @click="handleSigninClick">
+        {{ shareMessages.signInButton }}
+      </button>
+    </div>
+    <div v-else class="share-modal__content">
+      <p class="share-modal__message">{{ shareMessages.instructions }}</p>
+      <div class="share-modal__field">
         <input
+          ref="inputRef"
+          class="share-modal__input"
           type="text"
-          v-model="password"
-          class="share-options__password-input"
-          :placeholder="shareOptions.additional.passwordPlaceholder"
+          :value="shareLink"
+          readonly
+          placeholder="https://"
+          @focus="$event.target.select()"
         />
+        <button class="button-base share-modal__copy" :disabled="!canCopy" @click="copyShareLink">
+          {{ shareMessages.copy }}
+        </button>
       </div>
-      <div class="share-options__row">
-        <label class="share-options__option"
-          >{{ shareOptions.additional.expires.label }}
-          <select v-model="expires">
-            <option value="1">{{ shareOptions.additional.expires.options[1] }}</option>
-            <option value="7">{{ shareOptions.additional.expires.options[7] }}</option>
-            <option value="0">{{ shareOptions.additional.expires.options[0] }}</option>
-          </select>
-        </label>
+      <p v-if="isLoading" class="share-modal__status">{{ shareMessages.generating }}</p>
+      <p v-else-if="shareLink" class="share-modal__status share-modal__status--success">
+        {{ shareMessages.ready }}
+      </p>
+      <div v-else-if="error" class="share-modal__error">
+        <p>{{ error }}</p>
+        <button class="button-base share-modal__retry" @click="retryShare">{{ shareMessages.retry }}</button>
       </div>
-    </section>
-    <button class="button-base share-options__signin" v-if="needSignin" @click="handleSignin">
-      {{ shareOptions.signIn }}
-    </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, defineExpose, watchEffect } from 'vue';
-import { storeToRefs } from 'pinia';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useUiStore } from '../../../stores/uiStore.js';
+import { useShare } from '../../../composables/useShare.js';
 import { messages } from '../../../locales/ja.js';
-const props = defineProps({ longData: Boolean });
-const emit = defineEmits(['signin', 'update:canGenerate']);
-const type = ref('snapshot');
-const includeFull = ref(false);
-const enablePassword = ref(false);
-const password = ref('');
-const expires = ref('0');
-const uiStore = useUiStore();
-const { isSignedIn } = storeToRefs(uiStore);
-const shareOptions = messages.share.options;
-const needSignin = computed(() => (type.value === 'dynamic' || includeFull.value) && !isSignedIn.value);
-const showTruncateWarning = computed(() => props.longData && !includeFull.value);
-const canGenerate = computed(() => !needSignin.value);
-watchEffect(() => {
-  emit('update:canGenerate', canGenerate.value);
+
+const props = defineProps({
+  dataManager: {
+    type: Object,
+    required: true,
+  },
 });
 
-defineExpose({ type, includeFull, password, expires, enablePassword });
+const emit = defineEmits(['signin']);
 
-function handleSignin() {
+const uiStore = useUiStore();
+const { createShareLink, copyLink } = useShare(props.dataManager);
+
+const shareLink = ref('');
+const isLoading = ref(false);
+const error = ref('');
+const hasAttempted = ref(false);
+const inputRef = ref(null);
+
+const shareMessages = messages.share.modal;
+const isSignedIn = computed(() => uiStore.isSignedIn);
+const canCopy = computed(() => Boolean(shareLink.value) && !isLoading.value);
+
+async function beginShare() {
+  if (!isSignedIn.value || isLoading.value) {
+    return;
+  }
+  isLoading.value = true;
+  error.value = '';
+  hasAttempted.value = true;
+  try {
+    const link = await createShareLink();
+    shareLink.value = link;
+    queueMicrotask(() => {
+      if (inputRef.value) {
+        inputRef.value.focus();
+        inputRef.value.select();
+      }
+    });
+  } catch (err) {
+    shareLink.value = '';
+    error.value = err?.message || shareMessages.errorDefault;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function handleSigninClick() {
   emit('signin');
 }
+
+function copyShareLink() {
+  if (!shareLink.value) return;
+  copyLink(shareLink.value);
+}
+
+function retryShare() {
+  beginShare();
+}
+
+watch(isSignedIn, (signedIn, wasSignedIn) => {
+  if (signedIn && !wasSignedIn) {
+    beginShare();
+  } else if (!signedIn) {
+    shareLink.value = '';
+    error.value = '';
+    hasAttempted.value = false;
+  }
+});
+
+onMounted(() => {
+  if (isSignedIn.value && !hasAttempted.value) {
+    beginShare();
+  }
+});
 </script>
 
 <style scoped>
-.share-options__section {
-  margin-bottom: 16px;
+.share-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-.share-options__heading {
-  margin-bottom: 8px;
+
+.share-modal__message {
+  margin: 0;
+  line-height: 1.5;
 }
-.share-options__row {
-  margin-bottom: 8px;
+
+.share-modal__signin {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.share-options__note {
-  margin-left: 50px;
-  color: var(--color-text-muted);
+
+.share-modal__signin-button {
+  align-self: flex-start;
 }
-.share-options__warning {
-  color: #f88;
+
+.share-modal__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.share-options__signin {
-  margin-top: 10px;
+
+.share-modal__field {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.share-modal__input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--color-border, #444);
+  background: var(--color-surface, #111);
+  color: var(--color-text, #eee);
+}
+
+.share-modal__copy,
+.share-modal__retry {
+  white-space: nowrap;
+}
+
+.share-modal__status {
+  margin: 0;
+  color: var(--color-text-muted, #aaa);
+}
+
+.share-modal__status--success {
+  color: var(--color-accent, #8fbcbb);
+}
+
+.share-modal__error {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-error, #f88);
 }
 </style>
