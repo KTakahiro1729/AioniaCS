@@ -1,7 +1,9 @@
 import { setActivePinia, createPinia } from 'pinia';
+import { nextTick } from 'vue';
 import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
+import { resetGoogleDriveManagerForTests } from '@/infrastructure/google-drive/googleDriveManager.js';
 
 vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
@@ -23,10 +25,18 @@ function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC
   };
 }
 
+async function flushDriveEffects() {
+  await nextTick();
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 describe('useGoogleDrive', () => {
   let showModalMock;
 
   beforeEach(() => {
+    resetGoogleDriveManagerForTests();
+    localStorage.clear();
     setActivePinia(createPinia());
     showModalMock = vi.fn().mockResolvedValue({ value: 'overwrite' });
     useModal.mockReturnValue({ showModal: showModalMock });
@@ -167,5 +177,83 @@ describe('useGoogleDrive', () => {
     expect(stubManager.setCharacterFolderPath).toHaveBeenCalledWith(desiredPath);
     expect(uiStore.driveFolderPath).toBe(desiredPath);
     expect(selected).toBe(desiredPath);
+  });
+
+  test('handleSignInClick stores auto sign-in flag without affecting manual flow', async () => {
+    const loadConfig = vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア' });
+    const handleSignIn = vi.fn((cb) => cb(null, { signedIn: true }));
+    const dataManager = {
+      findDriveFileByCharacterName: vi.fn(),
+      saveCharacterToDrive: vi.fn(),
+      googleDriveManager: {},
+      setGoogleDriveManager(manager) {
+        Object.assign(manager, { loadConfig, handleSignIn });
+        this.googleDriveManager = manager;
+      },
+    };
+
+    const { handleSignInClick } = useGoogleDrive(dataManager);
+    handleSignInClick();
+
+    await Promise.resolve();
+
+    expect(handleSignIn).toHaveBeenCalled();
+    expect(localStorage.getItem('aionia:drive:autoSignIn')).toBe('1');
+  });
+
+  test('restoreDriveSession auto signs in when drive becomes ready', async () => {
+    localStorage.setItem('aionia:drive:autoSignIn', '1');
+    const restoreDriveSession = vi.fn().mockResolvedValue({ signedIn: true });
+    const loadConfig = vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア/PC' });
+    const dataManager = {
+      findDriveFileByCharacterName: vi.fn(),
+      saveCharacterToDrive: vi.fn(),
+      googleDriveManager: {},
+      setGoogleDriveManager(manager) {
+        Object.assign(manager, { restoreDriveSession, loadConfig });
+        this.googleDriveManager = manager;
+      },
+    };
+
+    useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
+
+    await flushDriveEffects();
+
+    expect(restoreDriveSession).toHaveBeenCalled();
+    expect(uiStore.isSignedIn).toBe(true);
+    expect(loadConfig).toHaveBeenCalled();
+    expect(localStorage.getItem('aionia:drive:autoSignIn')).toBe('1');
+  });
+
+  test('failed restoreDriveSession clears auto sign-in flag', async () => {
+    localStorage.setItem('aionia:drive:autoSignIn', '1');
+    const restoreDriveSession = vi.fn().mockRejectedValue(new Error('no token'));
+    const dataManager = {
+      findDriveFileByCharacterName: vi.fn(),
+      saveCharacterToDrive: vi.fn(),
+      googleDriveManager: {},
+      setGoogleDriveManager(manager) {
+        Object.assign(manager, { restoreDriveSession });
+        this.googleDriveManager = manager;
+      },
+    };
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
+
+    await flushDriveEffects();
+
+    expect(restoreDriveSession).toHaveBeenCalled();
+    expect(uiStore.isSignedIn).toBe(false);
+    expect(localStorage.getItem('aionia:drive:autoSignIn')).toBeNull();
+
+    consoleErrorSpy.mockRestore();
   });
 });

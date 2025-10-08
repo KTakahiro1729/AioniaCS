@@ -328,6 +328,34 @@ export class GoogleDriveManager {
   }
 
   /**
+   * Attempts to silently restore an existing Drive session.
+   * @returns {Promise<{signedIn: boolean}>}
+   */
+  restoreDriveSession() {
+    if (!this.tokenClient) {
+      return Promise.reject(new Error('GIS Token Client not initialized.'));
+    }
+
+    return new Promise((resolve, reject) => {
+      this.tokenClient.callback = (resp) => {
+        if (resp && resp.error) {
+          console.error('Silent token request failed:', resp.error);
+          reject(new Error(resp.error));
+          return;
+        }
+        console.log('Drive session restored silently.');
+        resolve({ signedIn: true });
+      };
+
+      try {
+        this.tokenClient.requestAccessToken({ prompt: '' });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
    * Handles Google Sign-Out.
    * @param {function} callback - Called after sign-out.
    */

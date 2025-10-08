@@ -1,4 +1,4 @@
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { getGoogleDriveManagerInstance, initializeGoogleDriveManager } from '@/infrastructure/google-drive/googleDriveManager.js';
 import {
   getMockGoogleDriveManagerInstance,
@@ -10,6 +10,7 @@ import { useNotifications } from '@/features/notifications/composables/useNotifi
 import { useModal } from '@/features/modals/composables/useModal.js';
 import { messages } from '@/locales/ja.js';
 
+const AUTO_SIGN_IN_STORAGE_KEY = 'aionia:drive:autoSignIn';
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
 const getDriveManagerInstance = useMock ? getMockGoogleDriveManagerInstance : getGoogleDriveManagerInstance;
 const initializeDriveManager = useMock ? initializeMockGoogleDriveManager : initializeGoogleDriveManager;
@@ -53,6 +54,9 @@ export function useGoogleDrive(dataManager) {
           reject(error || new Error('Ensure pop-ups are enabled.'));
         } else {
           uiStore.isSignedIn = true;
+          try {
+            localStorage.setItem(AUTO_SIGN_IN_STORAGE_KEY, '1');
+          } catch {}
           resolve();
         }
       });
@@ -70,6 +74,9 @@ export function useGoogleDrive(dataManager) {
     googleDriveManager.value.handleSignOut(() => {
       uiStore.isSignedIn = false;
       uiStore.clearCurrentDriveFileId();
+      try {
+        localStorage.removeItem(AUTO_SIGN_IN_STORAGE_KEY);
+      } catch {}
       showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
     });
   }
@@ -327,6 +334,39 @@ export function useGoogleDrive(dataManager) {
   }
 
   syncGoogleDriveManager();
+
+  watch(
+    isDriveReady,
+    async (ready) => {
+      if (!ready) {
+        return;
+      }
+      let shouldRestore = false;
+      try {
+        shouldRestore = Boolean(localStorage.getItem(AUTO_SIGN_IN_STORAGE_KEY));
+      } catch {
+        shouldRestore = false;
+      }
+      if (!shouldRestore) {
+        return;
+      }
+      const manager = googleDriveManager.value;
+      if (!manager || typeof manager.restoreDriveSession !== 'function') {
+        return;
+      }
+      try {
+        await manager.restoreDriveSession();
+        uiStore.isSignedIn = true;
+        await refreshDriveFolderPath();
+      } catch (error) {
+        try {
+          localStorage.removeItem(AUTO_SIGN_IN_STORAGE_KEY);
+        } catch {}
+        console.error('Failed to restore Drive session:', error);
+      }
+    },
+    { immediate: true },
+  );
 
   onMounted(() => {
     initializeGoogleDrive();
