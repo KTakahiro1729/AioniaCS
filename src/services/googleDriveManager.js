@@ -751,6 +751,29 @@ export class GoogleDriveManager {
     }
   }
 
+  async ensureFileIsShared(fileId) {
+    if (!fileId) {
+      return null;
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      console.error('GAPI client or Drive API not loaded for ensureFileIsShared.');
+      return null;
+    }
+    try {
+      await gapi.client.drive.permissions.create({
+        fileId,
+        resource: { role: 'reader', type: 'anyone' },
+      });
+    } catch (error) {
+      const reason = error?.result?.error?.errors?.[0]?.reason;
+      if (reason !== 'alreadyExists') {
+        console.error('Error updating file permissions:', error);
+        return null;
+      }
+    }
+    return fileId;
+  }
+
   /**
    * Shows the Google File Picker to select a file.
    * @param {function} callback - Function to call with the result (error, {id, name}).

@@ -1,109 +1,155 @@
 <template>
-  <div class="share-options">
-    <section class="share-options__section">
-      <h3 class="share-options__heading">{{ shareOptions.reflection.title }}</h3>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="radio" value="snapshot" v-model="type" />
-          {{ shareOptions.reflection.choices.snapshot }}
-        </label>
+  <div class="share-modal">
+    <div v-if="!isSignedIn" class="share-modal__signin">
+      <p class="share-modal__description">{{ shareMessages.signInRequired }}</p>
+      <button class="button-base" type="button" @click="handleSignin">{{ shareMessages.signIn }}</button>
+    </div>
+    <div v-else class="share-modal__content">
+      <label class="share-modal__label" for="share-link">{{ shareMessages.linkLabel }}</label>
+      <input
+        id="share-link"
+        ref="linkInput"
+        class="share-modal__input"
+        type="text"
+        :value="shareLink"
+        readonly
+        :placeholder="shareMessages.linkPlaceholder"
+        @focus="selectLink"
+      />
+      <div class="share-modal__actions">
+        <button class="button-base button-base--primary" type="button" :disabled="isGenerating" @click="emitShare">
+          <span v-if="isGenerating" class="share-modal__spinner"></span>
+          {{ shareMessages.shareButton }}
+        </button>
+        <button class="button-base" type="button" :disabled="!canCopy" @click="emitCopy">{{ shareMessages.copyButton }}</button>
       </div>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="radio" value="dynamic" v-model="type" />
-          {{ shareOptions.reflection.choices.dynamic }}
-          <div class="share-options__note">{{ shareOptions.reflection.driveRequired }}</div>
-        </label>
-      </div>
-    </section>
-    <section class="share-options__section">
-      <h3 class="share-options__heading">{{ shareOptions.additional.title }}</h3>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="checkbox" v-model="includeFull" />
-          {{ shareOptions.additional.includeFull }}
-          <div class="share-options__note">{{ shareOptions.additional.driveRequired }}</div>
-        </label>
-      </div>
-      <p v-if="showTruncateWarning" class="share-options__warning">{{ shareOptions.additional.truncateWarning }}</p>
-      <div class="share-options__row">
-        <label class="share-options__option">
-          <input type="checkbox" v-model="enablePassword" />
-          {{ shareOptions.additional.enablePassword }}
-        </label>
-      </div>
-      <div class="share-options__row" v-if="enablePassword">
-        <input
-          type="text"
-          v-model="password"
-          class="share-options__password-input"
-          :placeholder="shareOptions.additional.passwordPlaceholder"
-        />
-      </div>
-      <div class="share-options__row">
-        <label class="share-options__option"
-          >{{ shareOptions.additional.expires.label }}
-          <select v-model="expires">
-            <option value="1">{{ shareOptions.additional.expires.options[1] }}</option>
-            <option value="7">{{ shareOptions.additional.expires.options[7] }}</option>
-            <option value="0">{{ shareOptions.additional.expires.options[0] }}</option>
-          </select>
-        </label>
-      </div>
-    </section>
-    <button class="button-base share-options__signin" v-if="needSignin" @click="handleSignin">
-      {{ shareOptions.signIn }}
-    </button>
+      <p v-if="isGenerating" class="share-modal__status">{{ shareMessages.generating }}</p>
+      <p v-else-if="shareLink" class="share-modal__status">{{ shareMessages.generated }}</p>
+      <p v-else class="share-modal__status">{{ shareMessages.empty }}</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, defineExpose, watchEffect } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useUiStore } from '../../../stores/uiStore.js';
 import { messages } from '../../../locales/ja.js';
-const props = defineProps({ longData: Boolean });
-const emit = defineEmits(['signin', 'update:canGenerate']);
-const type = ref('snapshot');
-const includeFull = ref(false);
-const enablePassword = ref(false);
-const password = ref('');
-const expires = ref('0');
-const uiStore = useUiStore();
-const { isSignedIn } = storeToRefs(uiStore);
-const shareOptions = messages.share.options;
-const needSignin = computed(() => (type.value === 'dynamic' || includeFull.value) && !isSignedIn.value);
-const showTruncateWarning = computed(() => props.longData && !includeFull.value);
-const canGenerate = computed(() => !needSignin.value);
-watchEffect(() => {
-  emit('update:canGenerate', canGenerate.value);
+
+const props = defineProps({
+  shareLink: {
+    type: String,
+    default: '',
+  },
+  isGenerating: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-defineExpose({ type, includeFull, password, expires, enablePassword });
+const emit = defineEmits(['signin', 'share', 'copy']);
+
+const uiStore = useUiStore();
+const { isSignedIn } = storeToRefs(uiStore);
+const linkInput = ref(null);
+const shareMessages = messages.share.modal;
+
+const canCopy = computed(() => Boolean(props.shareLink) && !props.isGenerating);
+
+watch(
+  () => props.shareLink,
+  (link) => {
+    if (link && linkInput.value) {
+      linkInput.value.select();
+    }
+  },
+);
 
 function handleSignin() {
   emit('signin');
 }
+
+function emitShare() {
+  emit('share');
+}
+
+function emitCopy() {
+  if (!canCopy.value) return;
+  emit('copy', props.shareLink);
+}
+
+function selectLink(event) {
+  event.target?.select?.();
+}
 </script>
 
 <style scoped>
-.share-options__section {
-  margin-bottom: 16px;
+.share-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-.share-options__heading {
-  margin-bottom: 8px;
+
+.share-modal__signin {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
 }
-.share-options__row {
-  margin-bottom: 8px;
+
+.share-modal__description {
+  margin: 0;
+  color: var(--color-text-default);
 }
-.share-options__note {
-  margin-left: 50px;
+
+.share-modal__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.share-modal__label {
+  font-weight: bold;
+}
+
+.share-modal__input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 4px;
+  background-color: #111;
+  color: var(--color-text-default);
+}
+
+.share-modal__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.share-modal__status {
+  margin: 0;
+  font-size: 0.9rem;
   color: var(--color-text-muted);
 }
-.share-options__warning {
-  color: #f88;
+
+.share-modal__spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: share-spin 1s linear infinite;
+  vertical-align: middle;
 }
-.share-options__signin {
-  margin-top: 10px;
+
+@keyframes share-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

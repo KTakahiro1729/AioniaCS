@@ -4,17 +4,15 @@ import { resolve } from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-  base: './', 
+  base: './',
   plugins: [vue(), visualizer({ open: true })],
   resolve: {
-    alias: {
-      '@sabalessshare': resolve(__dirname, 'src/libs/sabalessshare/src'),
-    },
+    alias: {},
   },
   server: {
     fs: {
       '@': resolve(__dirname, 'src/'),
-      allow: ['src/libs/sabalessshare', '.'],
+      allow: ['.'],
     },
   },
   test: {
@@ -22,10 +20,9 @@ export default defineConfig({
     globals: true,
     setupFiles: './tests/unit/setup.js',
     include: ['tests/unit/**/*.test.js', 'tests/integrity/**/*.test.js'],
-    exclude: ['tests/e2e/**', 'src/libs/sabalessshare/**', 'node_modules/**'],
+    exclude: ['tests/e2e/**', 'node_modules/**'],
     alias: {
       '\\?raw$': resolve(__dirname, 'tests/unit/__mocks__/raw.js'),
-      '@sabalessshare': resolve(__dirname, 'src/libs/sabalessshare/src'),
     },
   },
 });

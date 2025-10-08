@@ -2,7 +2,6 @@ import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
-import { nextTick } from 'vue';
 import ShareOptions from '../../../src/components/modals/contents/ShareOptions.vue';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
@@ -11,34 +10,30 @@ describe('ShareOptions', () => {
     setActivePinia(createPinia());
   });
 
-  test('emits canGenerate updates', async () => {
-    const uiStore = useUiStore();
-    uiStore.isSignedIn = false;
+  test('shows sign-in prompt when user is not signed in', () => {
     const wrapper = mount(ShareOptions, {
-      props: { longData: false },
+      props: { shareLink: '', isGenerating: false },
     });
-
-    await wrapper.find('input[value="dynamic"]').setValue();
-    await nextTick();
-    let events = wrapper.emitted('update:canGenerate');
-    expect(events[events.length - 1][0]).toBe(false);
-
-    uiStore.isSignedIn = true;
-    await nextTick();
-    events = wrapper.emitted('update:canGenerate');
-    expect(events[events.length - 1][0]).toBe(true);
+    expect(wrapper.text()).toContain('共有リンクを作成するには');
+    wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('signin')).toHaveLength(1);
   });
 
-  test('truncate warning shown only when full content disabled', async () => {
+  test('emits share and copy events when signed in', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
     const wrapper = mount(ShareOptions, {
-      props: { longData: true },
+      props: { shareLink: '', isGenerating: false },
     });
-    expect(wrapper.find('.share-options__warning').exists()).toBe(true);
 
-    await wrapper.find('input[type="checkbox"]').setChecked();
-    await nextTick();
-    expect(wrapper.find('.share-options__warning').exists()).toBe(false);
+    await wrapper.find('.button-base--primary').trigger('click');
+    expect(wrapper.emitted('share')).toHaveLength(1);
+
+    const copyButton = wrapper.find('.share-modal__actions button:last-child');
+    expect(copyButton.attributes('disabled')).toBeDefined();
+    await wrapper.setProps({ shareLink: 'https://example.com' });
+    await copyButton.trigger('click');
+    expect(wrapper.emitted('copy')).toHaveLength(1);
+    expect(wrapper.emitted('copy')[0]).toEqual(['https://example.com']);
   });
 });

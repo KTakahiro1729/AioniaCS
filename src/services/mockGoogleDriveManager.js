@@ -231,6 +231,17 @@ export class MockGoogleDriveManager {
     return info.id;
   }
 
+  async ensureFileIsShared(fileId) {
+    if (!fileId) return null;
+    const file = this.state.files[fileId];
+    if (!file) {
+      return null;
+    }
+    this.state.sharedFiles.add(fileId);
+    this._saveState();
+    return fileId;
+  }
+
   showFilePicker(callback, parentFolderId = null) {
     const files = Object.values(this.state.files).filter((file) => (parentFolderId ? file.parentId === parentFolderId : true));
     const first = files[0];

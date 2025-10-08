@@ -1,9 +1,6 @@
 const shareLoadErrorTexts = {
-  general: '共有データ読み込み失敗',
-  invalid: '共有リンクが不正です',
-  expired: '共有リンクの有効期限が切れています',
-  passwordRequired: 'パスワードが必要です',
-  decryptionFailed: '復号に失敗しました',
+  general: '共有データを読み込めませんでした',
+  notFound: '共有データが見つかりませんでした',
 };
 
 export const messages = {
@@ -82,46 +79,23 @@ export const messages = {
     copyFailed: (err) => ({ title: 'コピー失敗', message: err.message }),
     needSignIn: () => ({
       title: 'Google Drive',
-      message: 'サインインしてください',
+      message: '共有するにはサインインしてください',
     }),
-    options: {
-      reflection: {
-        title: '今後の変更を反映しますか？',
-        choices: {
-          snapshot: '反映しない',
-          dynamic: '反映する',
-        },
-        driveRequired: 'Google Drive連携が必要です',
-      },
-      additional: {
-        title: '追加オプション',
-        includeFull: '画像・メモ（長文の場合）を含める',
-        driveRequired: 'Google Drive連携が必要です',
-        truncateWarning: '内容が一部省略される可能性があります',
-        enablePassword: 'パスワード保護',
-        passwordPlaceholder: 'パスワード',
-        expires: {
-          label: '有効期限',
-          options: {
-            1: '1日',
-            7: '7日',
-            0: '無期限',
-          },
-        },
-      },
+    modal: {
+      signInRequired: '共有リンクを作成するには Google Drive にサインインしてください。',
       signIn: 'Google Drive にサインイン',
+      linkLabel: '共有URL',
+      linkPlaceholder: '共有ボタンを押すとURLが表示されます',
+      shareButton: '共有',
+      copyButton: 'コピー',
+      generating: '共有URLを生成しています…',
+      generated: '共有URLを生成しました。コピーして共有してください。',
+      empty: '共有ボタンを押すとURLを生成します。',
     },
-    generateFailed: (err) => ({
-      title: '共有リンク生成失敗',
-      message: err.message,
-    }),
     errors: {
-      uploadFailed: 'Google Drive へのアップロードに失敗しました',
-      missingReadId: '読み込み対象のIDが指定されていません',
-      fetchFailed: 'Google Drive からファイルを取得できませんでした',
-      missingUpdateId: '更新対象のIDが指定されていません',
-      updateFailed: 'Google Drive の共有ファイル更新に失敗しました',
+      makePublicFailed: 'ファイルの共有設定に失敗しました',
       managerMissing: 'Google Drive マネージャーが設定されていません',
+      unsupportedShare: '共有機能を利用できません',
     },
     loadError: {
       ...shareLoadErrorTexts,
@@ -223,8 +197,7 @@ export const messages = {
     },
     modal: {
       hubTitle: 'クラウド連携',
-      generate: '生成',
-      shareTitle: '共有リンクを生成',
+      shareTitle: '共有リンク',
       cancel: 'キャンセル',
       shareFailed: '共有リンク生成失敗',
       io: {

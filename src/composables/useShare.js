@@ -1,87 +1,52 @@
-import { createShareLink } from '../libs/sabalessshare/src/index.js';
-import { createDynamicLink } from '../libs/sabalessshare/src/dynamic.js';
-import { arrayBufferToBase64 } from '../libs/sabalessshare/src/crypto.js';
-import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
-import { useCharacterStore } from '../stores/characterStore.js';
+import { useUiStore } from '../stores/uiStore.js';
 import { useNotifications } from './useNotifications.js';
 import { messages } from '../locales/ja.js';
-import { serializeCharacterForExport } from '../utils/characterSerialization.js';
 
-export function useShare(dataManager) {
-  const characterStore = useCharacterStore();
+export function useShare(dataManager, saveCharacterToDrive) {
+  const uiStore = useUiStore();
   const { showToast } = useNotifications();
 
-  function _collectData(includeFull) {
-    const { data, images } = serializeCharacterForExport({
-      character: characterStore.character,
-      skills: characterStore.skills,
-      specialSkills: characterStore.specialSkills,
-      equipments: characterStore.equipments,
-      histories: characterStore.histories,
-      includeImages: includeFull,
-    });
-
-    if (includeFull && images.length > 0) {
-      data.character.images = images;
-    }
-
-    return new TextEncoder().encode(JSON.stringify(data)).buffer;
-  }
-
-  function isLongData() {
-    const { data } = serializeCharacterForExport({
-      character: characterStore.character,
-      skills: characterStore.skills,
-      specialSkills: characterStore.specialSkills,
-      equipments: characterStore.equipments,
-      histories: characterStore.histories,
-      includeImages: false,
-    });
-    const payload = JSON.stringify({
-      character: data.character,
-      skills: data.skills,
-    });
-    return payload.length > 7000; // rough threshold
-  }
-
-  async function _uploadHandler(data) {
+  async function ensureDriveFile() {
     const manager = dataManager.googleDriveManager;
-    if (!manager || typeof manager.uploadAndShareFile !== 'function') {
+    if (!manager || !uiStore.isSignedIn) {
       throw new Error(messages.share.needSignIn().message);
     }
-    const payload = JSON.stringify({
-      ciphertext: arrayBufferToBase64(data.ciphertext),
-      iv: arrayBufferToBase64(data.iv),
-    });
-    const id = await manager.uploadAndShareFile(payload, 'share.enc', 'application/json');
-    if (!id) {
-      throw new Error(messages.share.errors.uploadFailed);
+
+    if (typeof saveCharacterToDrive === 'function') {
+      const result = await saveCharacterToDrive(false);
+      if (!result || !result.id) {
+        return null;
+      }
+      return result.id;
     }
-    return id;
+
+    throw new Error(messages.share.errors.unsupportedShare);
   }
 
-  async function generateShare(options) {
-    const { type, includeFull, password, expiresInDays } = options;
-    const data = _collectData(includeFull);
-    if (type === 'dynamic') {
-      const adapter = new DriveStorageAdapter(dataManager.googleDriveManager);
-      const { shareLink } = await createDynamicLink({
-        data,
-        adapter,
-        password: password || undefined,
-        expiresInDays,
-      });
-      return shareLink;
+  async function ensurePublicAccess(fileId) {
+    if (!fileId) {
+      return null;
     }
-    const mode = includeFull ? 'cloud' : 'simple';
-    return createShareLink({
-      data,
-      mode,
-      uploadHandler: _uploadHandler,
-      shortenUrlHandler: async (longUrl) => longUrl,
-      password: password || undefined,
-      expiresInDays,
-    });
+    const manager = dataManager.googleDriveManager;
+    if (!manager || typeof manager.ensureFileIsShared !== 'function') {
+      throw new Error(messages.share.errors.managerMissing);
+    }
+    const shared = await manager.ensureFileIsShared(fileId);
+    if (!shared) {
+      throw new Error(messages.share.errors.makePublicFailed);
+    }
+    return fileId;
+  }
+
+  async function generateShare() {
+    const fileId = await ensureDriveFile();
+    if (!fileId) {
+      return null;
+    }
+    await ensurePublicAccess(fileId);
+    const { origin, pathname } = window.location;
+    const base = `${origin}${pathname}`;
+    return `${base}?shareId=${encodeURIComponent(fileId)}`;
   }
 
   async function copyLink(link) {
@@ -93,5 +58,5 @@ export function useShare(dataManager) {
     }
   }
 
-  return { generateShare, copyLink, isLongData };
+  return { generateShare, copyLink };
 }
