@@ -228,21 +228,5 @@ function goToSheet() {
   </div>
 </template>
 
-<style scoped>
-.gm-table-page {
-  min-height: 100vh;
-  padding: 96px 24px 48px;
-  background: var(--color-background);
-  color: var(--color-text-normal);
-}
+<style scoped src="./GmTablePage.css"></style>
 
-.gm-file-input {
-  display: none;
-}
-
-@media (max-width: 960px) {
-  .gm-table-page {
-    padding: 96px 12px 48px;
-  }
-}
-</style>
