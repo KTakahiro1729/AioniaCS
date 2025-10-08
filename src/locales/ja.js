@@ -359,6 +359,16 @@ export const messages = {
     session: {
       memoTitle: 'セッション全体メモ',
       defaultFileName: 'gm-session.json',
+      positionToggle: 'メモ表示位置の切り替え',
+      positionLabels: {
+        bottom: 'フッター表示',
+        left: '左サイド表示',
+        right: '右サイド表示',
+      },
+      toggleLabels: {
+        minimize: 'メモを折りたたむ',
+        restore: 'メモを展開する',
+      },
     },
     toasts: {
       added: {

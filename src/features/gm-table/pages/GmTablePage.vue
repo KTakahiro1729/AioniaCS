@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { DataManager } from '@/features/character-sheet/services/dataManager.js';
 import { AioniaGameData } from '@/data/gameData.js';
@@ -162,15 +162,12 @@ function saveSession() {
   showToast({ type: 'success', title: gmMessages.toasts.sessionSaved.title, message: gmMessages.toasts.sessionSaved.message });
 }
 
-const memoWindowPosition = computed(() => ({ top: gmStore.sessionWindow.top, left: gmStore.sessionWindow.left }));
-const memoWindowSize = computed(() => ({ width: gmStore.sessionWindow.width, height: gmStore.sessionWindow.height }));
-
-function updateMemoPosition(position) {
-  gmStore.updateSessionWindow(position);
-}
-
 function updateMemoSize(size) {
   gmStore.updateSessionWindow(size);
+}
+
+function updateMemoOrientation(orientation) {
+  gmStore.updateSessionWindow({ orientation });
 }
 
 function toggleMemoWindow() {
@@ -216,13 +213,17 @@ function goToSheet() {
     <input ref="sessionFileInput" type="file" class="gm-file-input" accept=".json" @change="handleSessionFileChange" />
     <SessionMemoWindow
       :memo="gmStore.sessionMemo"
-      :position="memoWindowPosition"
-      :size="memoWindowSize"
+      :width="gmStore.sessionWindow.width"
+      :height="gmStore.sessionWindow.height"
+      :orientation="gmStore.sessionWindow.orientation"
       :minimized="gmStore.sessionWindow.minimized"
       :title="gmMessages.session.memoTitle"
+      :orientation-labels="gmMessages.session.positionLabels"
+      :position-toggle-label="gmMessages.session.positionToggle"
+      :minimize-labels="gmMessages.session.toggleLabels"
       @update:memo="gmStore.updateSessionMemo"
-      @update:position="updateMemoPosition"
       @update:size="updateMemoSize"
+      @update:orientation="updateMemoOrientation"
       @toggle-minimize="toggleMemoWindow"
     />
   </div>
