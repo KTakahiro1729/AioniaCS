@@ -13,6 +13,7 @@ app.use(
     clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
     authorizationParams: {
       audience: import.meta.env.VITE_AUTH0_API_AUDIENCE,
+      scope: import.meta.env.VITE_AUTH0_DRIVE_SCOPE,
       redirect_uri: window.location.origin,
     },
   }),

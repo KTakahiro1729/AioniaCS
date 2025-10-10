@@ -25,7 +25,9 @@ describe('useShare', () => {
     setActivePinia(createPinia());
     isAuthenticated.value = false;
     getAccessTokenSilently.mockReset();
-    getAccessTokenSilently.mockResolvedValue('share-token');
+    getAccessTokenSilently.mockResolvedValue({ access_token: 'share-token' });
+    import.meta.env.VITE_AUTH0_API_AUDIENCE = 'test-audience';
+    import.meta.env.VITE_AUTH0_DRIVE_SCOPE = 'drive.scope value';
     const characterStore = useCharacterStore();
     characterStore.character = { name: 'Hero' };
     characterStore.skills = [];
@@ -34,6 +36,11 @@ describe('useShare', () => {
     characterStore.histories = [];
     const origin = window.location.origin;
     window.history.replaceState({}, '', `${origin}/app/index.html?foo=1#hash`);
+  });
+
+  afterEach(() => {
+    import.meta.env.VITE_AUTH0_API_AUDIENCE = undefined;
+    import.meta.env.VITE_AUTH0_DRIVE_SCOPE = undefined;
   });
 
   test('throws when not signed in', async () => {
@@ -89,6 +96,13 @@ describe('useShare', () => {
 
     expect(link).toBe(`${window.location.origin}/app/index.html?foo=1&sharedId=file123`);
     expect(uiStore.currentDriveFileId).toBe('file123');
+    expect(getAccessTokenSilently).toHaveBeenCalledWith({
+      authorizationParams: {
+        audience: 'test-audience',
+        scope: 'drive.scope value',
+      },
+      detailedResponse: true,
+    });
     const callArgs = dataManager.saveCharacterToDrive.mock.calls[0];
     expect(callArgs[0]).toEqual(expect.objectContaining({ name: 'Hero' }));
     expect(callArgs[1]).toEqual([]);

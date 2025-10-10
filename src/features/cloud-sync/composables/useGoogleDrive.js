@@ -63,13 +63,23 @@ export function useGoogleDrive(dataManager) {
     }
 
     try {
+      const authorizationParams = {};
+      const audience = import.meta.env.VITE_AUTH0_API_AUDIENCE;
+      const scope = import.meta.env.VITE_AUTH0_DRIVE_SCOPE;
+      if (audience) {
+        authorizationParams.audience = audience;
+      }
+      if (scope) {
+        authorizationParams.scope = scope;
+      }
+
       const tokenResult = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: import.meta.env.VITE_AUTH0_API_AUDIENCE,
-        },
+        ...(Object.keys(authorizationParams).length > 0 ? { authorizationParams } : {}),
         detailedResponse: true,
       });
-      const accessToken = typeof tokenResult === 'string' ? tokenResult : tokenResult?.access_token;
+      const accessToken =
+        (typeof tokenResult === 'object' && tokenResult?.resource_server?.access_token) ||
+        (typeof tokenResult === 'string' ? tokenResult : tokenResult?.access_token);
       if (!accessToken) {
         throw new Error('アクセストークンの取得に失敗しました');
       }
