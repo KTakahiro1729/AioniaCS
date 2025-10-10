@@ -20,13 +20,9 @@ describe('useAppModals', () => {
     useModal.mockReturnValue({ showModal: showModalMock });
   });
 
-  test('openHub wires sign events', async () => {
-    const handleSignInClick = vi.fn();
-    const handleSignOutClick = vi.fn();
+  test('openHub opens without auth event wiring', async () => {
     const { openHub } = useAppModals({
       dataManager: {},
-      handleSignInClick,
-      handleSignOutClick,
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),
@@ -36,8 +32,7 @@ describe('useAppModals', () => {
     });
     await openHub();
     const args = showModalMock.mock.calls[0][0];
-    expect(args.on['sign-in']).toBe(handleSignInClick);
-    expect(args.on['sign-out']).toBe(handleSignOutClick);
+    expect(args.on).toBeUndefined();
   });
 
   test('desktop uses direct print', async () => {
@@ -46,8 +41,6 @@ describe('useAppModals', () => {
     const openPreviewPage = vi.fn();
     const { openIoModal } = useAppModals({
       dataManager: {},
-      handleSignInClick: vi.fn(),
-      handleSignOutClick: vi.fn(),
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),
@@ -66,8 +59,6 @@ describe('useAppModals', () => {
     const openPreviewPage = vi.fn();
     const { openIoModal } = useAppModals({
       dataManager: {},
-      handleSignInClick: vi.fn(),
-      handleSignOutClick: vi.fn(),
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),

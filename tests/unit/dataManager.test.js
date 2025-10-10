@@ -273,9 +273,15 @@ describe('DataManager', () => {
     });
 
     test('creates new file when no id', async () => {
-      const res = await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null);
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
-      const payload = dm.googleDriveManager.createCharacterFile.mock.calls[0][0];
+      const token = 'drive-token';
+      const res = await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, null, {
+        accessToken: token,
+      });
+      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalledWith(
+        token,
+        expect.objectContaining({ name: 'TestChar', mimeType: 'application/zip' }),
+      );
+      const payload = dm.googleDriveManager.createCharacterFile.mock.calls[0][1];
       expect(payload.mimeType).toBe('application/zip');
       expect(payload.name).toBe('TestChar');
       expect(payload.content).toBeInstanceOf(Uint8Array);
@@ -283,8 +289,12 @@ describe('DataManager', () => {
     });
 
     test('updates file when id exists', async () => {
-      await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      const token = 'drive-token';
+      await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1', {
+        accessToken: token,
+      });
       expect(dm.googleDriveManager.updateCharacterFile).toHaveBeenCalledWith(
+        token,
         '1',
         expect.objectContaining({
           mimeType: 'application/zip',
@@ -297,11 +307,15 @@ describe('DataManager', () => {
     test('creates new file when existing file is outside configured folder', async () => {
       dm.googleDriveManager.isFileInConfiguredFolder.mockResolvedValue(false);
 
-      await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1');
+      const token = 'drive-token';
 
-      expect(dm.googleDriveManager.isFileInConfiguredFolder).toHaveBeenCalledWith('1');
+      await dm.saveCharacterToDrive(mockCharacter, mockSkills, mockSpecialSkills, mockEquipments, mockHistories, '1', {
+        accessToken: token,
+      });
+
+      expect(dm.googleDriveManager.isFileInConfiguredFolder).toHaveBeenCalledWith(token, '1');
       expect(dm.googleDriveManager.updateCharacterFile).not.toHaveBeenCalled();
-      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
+      expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalledWith(token, expect.objectContaining({ name: 'TestChar' }));
     });
   });
 });

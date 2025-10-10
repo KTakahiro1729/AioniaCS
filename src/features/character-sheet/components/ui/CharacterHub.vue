@@ -1,7 +1,8 @@
 <template>
   <div class="character-hub">
-    <template v-if="uiStore.isSignedIn">
+    <template v-if="isSignedIn">
       <div class="character-hub--actions">
+        <div v-if="userDisplayName" class="character-hub--user">{{ userDisplayName }}</div>
         <div class="character-hub--config">
           <label class="character-hub--label" for="drive_folder_path">{{ hubMessages.driveFolder.label }}</label>
           <div class="character-hub--input-group">
@@ -10,7 +11,7 @@
               class="character-hub--input"
               type="text"
               v-model="folderPathInput"
-              :disabled="!uiStore.isSignedIn"
+              :disabled="!isSignedIn"
               :placeholder="hubMessages.driveFolder.placeholder"
               @blur="commitFolderPath"
               @keyup.enter.prevent="commitFolderPath"
@@ -34,12 +35,14 @@
         <button class="button-base character-hub--button" :disabled="!isOverwriteEnabled" @click="saveOverwrite">
           {{ hubMessages.buttons.overwrite }}
         </button>
-        <button class="button-base character-hub--button" @click="emitSignOut">{{ hubMessages.buttons.signOut }}</button>
+        <button class="button-base character-hub--button" :disabled="isAuthLoading" @click="signOut">
+          {{ hubMessages.buttons.signOut }}
+        </button>
       </div>
     </template>
     <template v-else>
       <div class="character-hub--actions">
-        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="emitSignIn">
+        <button class="button-base character-hub--button" :disabled="!canSignIn" @click="signIn">
           {{ hubMessages.buttons.signIn }}
         </button>
       </div>
@@ -49,6 +52,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { useAuth0 } from '@auth0/auth0-vue';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
 import { messages } from '@/locales/ja.js';
@@ -60,24 +64,26 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['sign-in', 'sign-out']);
-
 const uiStore = useUiStore();
 const {
   loadCharacterFromDrive: loadFromDrive,
   saveCharacterToDrive,
   isDriveReady,
-  canSignInToGoogle,
   updateDriveFolderPath,
   promptForDriveFolder,
 } = useGoogleDrive(props.dataManager);
 
-const canSignIn = computed(() => canSignInToGoogle.value);
+const { isAuthenticated, isLoading, user, loginWithRedirect, logout } = useAuth0();
+
+const isSignedIn = computed(() => isAuthenticated.value);
+const isAuthLoading = computed(() => isLoading.value);
+const canSignIn = computed(() => !isSignedIn.value && !isAuthLoading.value);
 const isOverwriteEnabled = computed(() => isDriveReady.value && !!uiStore.currentDriveFileId);
 const folderPathInput = ref(uiStore.driveFolderPath);
 const hubMessages = messages.characterHub;
 const changeFolderLabel = hubMessages.driveFolder.changeButton;
-const isFolderPickerEnabled = computed(() => isDriveReady.value && uiStore.isSignedIn);
+const isFolderPickerEnabled = computed(() => isDriveReady.value && isSignedIn.value);
+const userDisplayName = computed(() => user.value?.name || user.value?.email || '');
 
 watch(
   () => uiStore.driveFolderPath,
@@ -92,12 +98,18 @@ function loadCharacterFromDrive() {
   return loadFromDrive();
 }
 
-function emitSignIn() {
-  emit('sign-in');
+function signIn() {
+  if (isAuthLoading.value) {
+    return;
+  }
+  loginWithRedirect();
 }
 
-function emitSignOut() {
-  emit('sign-out');
+function signOut() {
+  if (isAuthLoading.value) {
+    return;
+  }
+  logout({ returnTo: window.location.origin });
 }
 
 function saveNewCharacter() {
@@ -113,7 +125,7 @@ function saveOverwrite() {
 }
 
 async function commitFolderPath() {
-  if (!uiStore.isSignedIn) {
+  if (!isSignedIn.value) {
     folderPathInput.value = uiStore.driveFolderPath;
     return;
   }
@@ -138,6 +150,12 @@ async function openFolderPicker() {
 .character-hub {
   display: flex;
   justify-content: center;
+}
+
+.character-hub--user {
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-align: center;
 }
 
 .character-hub--config {

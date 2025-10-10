@@ -10,17 +10,7 @@ import { messages } from '@/locales/ja.js';
 export function useAppModals(options) {
   const uiStore = useUiStore();
   const { showModal } = useModal();
-  const {
-    dataManager,
-    handleSignInClick,
-    handleSignOutClick,
-    saveData,
-    handleFileUpload,
-    outputToCocofolia,
-    printCharacterSheet,
-    openPreviewPage,
-    copyEditCallback,
-  } = options;
+  const { dataManager, saveData, handleFileUpload, outputToCocofolia, printCharacterSheet, openPreviewPage, copyEditCallback } = options;
 
   async function openHub() {
     await showModal({
@@ -30,10 +20,6 @@ export function useAppModals(options) {
         dataManager,
       },
       buttons: [],
-      on: {
-        'sign-in': handleSignInClick,
-        'sign-out': handleSignOutClick,
-      },
     });
   }
 
@@ -82,7 +68,6 @@ export function useAppModals(options) {
           variant: 'secondary',
         },
       ],
-      on: { signin: handleSignInClick },
     });
   }
 

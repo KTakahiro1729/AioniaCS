@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useAuth0 } from '@auth0/auth0-vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
@@ -24,18 +25,13 @@ const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const { isAuthenticated } = useAuth0();
 useKeyboardHandling();
 
 const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataExport();
 const { printCharacterSheet, openPreviewPage } = usePrint();
 
-const {
-  canSignInToGoogle,
-  handleSignInClick,
-  handleSignOutClick,
-  saveCharacterToDrive,
-  saveOrUpdateCurrentCharacterInDrive,
-} = useGoogleDrive(dataManager);
+const { saveOrUpdateCurrentCharacterInDrive } = useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
   helpPanelRef,
@@ -46,9 +42,6 @@ const modalStore = useModalStore();
 
 const { openHub, openIoModal, openShareModal } = useAppModals({
   dataManager,
-  saveCharacterToDrive,
-  handleSignInClick,
-  handleSignOutClick,
   saveData,
   handleFileUpload,
   outputToCocofolia,
@@ -58,6 +51,17 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
     uiStore.isViewingShared = false;
   },
 });
+
+watch(
+  isAuthenticated,
+  (signedIn) => {
+    uiStore.isSignedIn = signedIn;
+    if (!signedIn) {
+      uiStore.clearCurrentDriveFileId();
+    }
+  },
+  { immediate: true },
+);
 
 const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
 const currentExperiencePoints = computed(() => characterStore.currentExperiencePoints);

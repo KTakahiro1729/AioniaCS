@@ -2,7 +2,11 @@
   <div class="share-modal">
     <div v-if="!isSignedIn" class="share-modal__signin">
       <p class="share-modal__message">{{ shareMessages.signInMessage }}</p>
-      <button class="button-base share-modal__signin-button" @click="handleSigninClick">
+      <button
+        class="button-base share-modal__signin-button"
+        :disabled="isAuthLoading"
+        @click="handleSigninClick"
+      >
         {{ shareMessages.signInButton }}
       </button>
     </div>
@@ -22,7 +26,7 @@
           {{ shareMessages.copy }}
         </button>
       </div>
-      <p v-if="isLoading" class="share-modal__status">{{ shareMessages.generating }}</p>
+      <p v-if="isGenerating" class="share-modal__status">{{ shareMessages.generating }}</p>
       <p v-else-if="shareLink" class="share-modal__status share-modal__status--success">
         {{ shareMessages.ready }}
       </p>
@@ -36,7 +40,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
+import { useAuth0 } from '@auth0/auth0-vue';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { messages } from '@/locales/ja.js';
 
@@ -47,26 +51,25 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['signin']);
-
-const uiStore = useUiStore();
 const { createShareLink, copyLink } = useShare(props.dataManager);
+const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
 
 const shareLink = ref('');
-const isLoading = ref(false);
+const isGenerating = ref(false);
 const error = ref('');
 const hasAttempted = ref(false);
 const inputRef = ref(null);
 
 const shareMessages = messages.share.modal;
-const isSignedIn = computed(() => uiStore.isSignedIn);
-const canCopy = computed(() => Boolean(shareLink.value) && !isLoading.value);
+const isSignedIn = computed(() => isAuthenticated.value);
+const isAuthLoading = computed(() => isLoading.value);
+const canCopy = computed(() => Boolean(shareLink.value) && !isGenerating.value);
 
 async function beginShare() {
-  if (!isSignedIn.value || isLoading.value) {
+  if (!isSignedIn.value || isGenerating.value) {
     return;
   }
-  isLoading.value = true;
+  isGenerating.value = true;
   error.value = '';
   hasAttempted.value = true;
   try {
@@ -82,12 +85,15 @@ async function beginShare() {
     shareLink.value = '';
     error.value = err?.message || shareMessages.errorDefault;
   } finally {
-    isLoading.value = false;
+    isGenerating.value = false;
   }
 }
 
 function handleSigninClick() {
-  emit('signin');
+  if (isAuthLoading.value) {
+    return;
+  }
+  loginWithRedirect();
 }
 
 function copyShareLink() {

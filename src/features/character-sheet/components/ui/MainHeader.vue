@@ -4,6 +4,7 @@
       <span class="icon-svg icon-svg-cloud" aria-label="cloud"></span>
     </button>
     <div class="main-header__title">{{ titleText }}</div>
+    <div v-if="userDisplayName" class="main-header__user">{{ userDisplayName }}</div>
     <div
       class="button-base header-help-icon"
       ref="helpIcon"
@@ -20,6 +21,7 @@
 
 <script setup>
 import { ref, computed, defineExpose } from 'vue';
+import { useAuth0 } from '@auth0/auth0-vue';
 import { useHeaderVisibility } from '@/shared/composables/useHeaderVisibility.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 
@@ -36,10 +38,17 @@ const headerEl = ref(null);
 const helpIcon = ref(null);
 
 const characterStore = useCharacterStore();
+const { user, isAuthenticated } = useAuth0();
 
 useHeaderVisibility(headerEl);
 
 const titleText = computed(() => characterStore.character.name || props.defaultTitle);
+const userDisplayName = computed(() => {
+  if (!isAuthenticated.value) {
+    return '';
+  }
+  return user.value?.name || user.value?.email || '';
+});
 
 defineExpose({ headerEl, helpIcon });
 </script>
@@ -68,6 +77,17 @@ defineExpose({ headerEl, helpIcon });
   font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
   color: var(--color-accent);
   font-size: min(4vw, 30px);
+}
+
+.main-header__user {
+  margin-right: 12px;
+  color: var(--color-text-primary, #fff);
+  font-size: 0.9rem;
+  max-width: 200px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .google-drive-button-container {

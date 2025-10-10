@@ -102,15 +102,15 @@ export class MockGoogleDriveManager {
     return segments.join('/');
   }
 
-  async ensureFolderPath(path) {
+  async ensureFolderPath(_accessToken = null, path) {
     const normalized = this.normalizeFolderPath(path);
     let parentId = 'root';
     let currentFolder = null;
 
     for (const segment of this.getFolderSegments(normalized)) {
-      let folder = await this.findFolder(segment, parentId);
+      let folder = await this.findFolder(_accessToken, segment, parentId);
       if (!folder) {
-        folder = await this.createFolder(segment, parentId);
+        folder = await this.createFolder(_accessToken, segment, parentId);
       }
       if (!folder) {
         return { folder: null, normalized };
@@ -142,27 +142,27 @@ export class MockGoogleDriveManager {
     if (callback) callback();
   }
 
-  async loadConfig() {
+  async loadConfig(_accessToken = null) {
     this.state.config.characterFolderPath = this.normalizeFolderPath(this.state.config.characterFolderPath);
     return this.state.config;
   }
 
-  async saveConfig() {
+  async saveConfig(_accessToken = null) {
     this._saveState();
     return { id: this.configFileId, name: 'aioniacs.cfg' };
   }
 
-  async setCharacterFolderPath(path) {
+  async setCharacterFolderPath(_accessToken = null, path) {
     const normalized = this.normalizeFolderPath(path);
     this.state.config.characterFolderPath = normalized;
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
-    await this.saveConfig();
+    await this.saveConfig(_accessToken);
     return normalized;
   }
 
-  async createFolder(name, parentId = 'root') {
-    const existing = await this.findFolder(name, parentId);
+  async createFolder(_accessToken = null, name, parentId = 'root') {
+    const existing = await this.findFolder(_accessToken, name, parentId);
     if (existing) {
       return existing;
     }
@@ -173,22 +173,22 @@ export class MockGoogleDriveManager {
     return folder;
   }
 
-  async findFolder(name, parentId = 'root') {
+  async findFolder(_accessToken = null, name, parentId = 'root') {
     return Object.values(this.state.folders).find((folder) => folder.name === name && folder.parentId === parentId) || null;
   }
 
-  async getOrCreateAppFolder() {
-    return this.findOrCreateConfiguredCharacterFolder();
+  async getOrCreateAppFolder(_accessToken = null) {
+    return this.findOrCreateConfiguredCharacterFolder(_accessToken);
   }
 
-  async ensureConfiguredFolder() {
-    const config = await this.loadConfig();
+  async ensureConfiguredFolder(_accessToken = null) {
+    const config = await this.loadConfig(_accessToken);
     const path = this.normalizeFolderPath(config.characterFolderPath);
     if (this.configuredFolderId && this.cachedFolderPath === path) {
       return this.configuredFolderId;
     }
 
-    const { folder, normalized } = await this.ensureFolderPath(path);
+    const { folder, normalized } = await this.ensureFolderPath(_accessToken, path);
     if (!folder) {
       return null;
     }
@@ -198,17 +198,17 @@ export class MockGoogleDriveManager {
     return folder.id;
   }
 
-  async findOrCreateConfiguredCharacterFolder() {
-    return this.ensureConfiguredFolder();
+  async findOrCreateConfiguredCharacterFolder(_accessToken = null) {
+    return this.ensureConfiguredFolder(_accessToken);
   }
 
-  async listFiles(folderId) {
+  async listFiles(_accessToken = null, folderId) {
     return Object.values(this.state.files)
       .filter((file) => file.parentId === folderId)
       .map((file) => ({ id: file.id, name: file.name }));
   }
 
-  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
+  async saveFile(_accessToken = null, folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
     const id = fileId || `file-${this.state.fileCounter++}`;
     this.state.files[id] = {
       id,
@@ -221,17 +221,17 @@ export class MockGoogleDriveManager {
     return { id, name: fileName };
   }
 
-  async loadFileContent(fileId) {
+  async loadFileContent(_accessToken = null, fileId) {
     const file = this.state.files[fileId];
     return file ? file.content : null;
   }
 
-  async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
-    const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
+  async uploadAndShareFile(_accessToken = null, fileContent, fileName, mimeType = 'application/json') {
+    const info = await this.saveFile(_accessToken, 'shared', fileName, fileContent, null, mimeType);
     return info.id;
   }
 
-  async ensureFilePublic(fileId) {
+  async ensureFilePublic(_accessToken = null, fileId) {
     if (!fileId) {
       return null;
     }
@@ -260,7 +260,7 @@ export class MockGoogleDriveManager {
       const targetPath = this.normalizeFolderPath(queue.shift());
       this.state.folderPickerQueue = queue;
       this._saveState();
-      this.ensureFolderPath(targetPath)
+      this.ensureFolderPath(null, targetPath)
         .then(({ folder, normalized }) => {
           if (!folder) {
             callback?.(new Error('No folders available.'));
@@ -284,41 +284,41 @@ export class MockGoogleDriveManager {
     }
   }
 
-  async findFileByName(fileName) {
+  async findFileByName(_accessToken = null, fileName) {
     if (!fileName) return null;
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
+    const folderId = await this.findOrCreateConfiguredCharacterFolder(_accessToken);
     if (!folderId) return null;
     const file = Object.values(this.state.files).find((entry) => entry.parentId === folderId && entry.name === fileName);
     return file ? { id: file.id, name: file.name } : null;
   }
 
-  async isFileInConfiguredFolder(fileId) {
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
+  async isFileInConfiguredFolder(_accessToken = null, fileId) {
+    const folderId = await this.findOrCreateConfiguredCharacterFolder(_accessToken);
     if (!folderId) return false;
     const file = this.state.files[fileId];
     return file ? file.parentId === folderId : false;
   }
 
-  async createCharacterFile(payload) {
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
+  async createCharacterFile(_accessToken = null, payload) {
+    const folderId = await this.findOrCreateConfiguredCharacterFolder(_accessToken);
     if (!folderId) return null;
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
+    return this.saveFile(_accessToken, folderId, fileName, payload?.content || '', null, mimeType);
   }
 
-  async updateCharacterFile(id, payload) {
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
+  async updateCharacterFile(_accessToken = null, id, payload) {
+    const folderId = await this.findOrCreateConfiguredCharacterFolder(_accessToken);
     if (!folderId) return null;
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
+    return this.saveFile(_accessToken, folderId, fileName, payload?.content || '', id, mimeType);
   }
 
   async loadCharacterFile(id) {
-    const content = await this.loadFileContent(id);
+    const content = await this.loadFileContent(null, id);
     return content ? await deserializeCharacterPayload(content) : null;
   }
 

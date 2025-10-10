@@ -113,11 +113,13 @@ export class DataManager {
    * @param {string} fileName - The desired name for the file.
    * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
    */
-  async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId) {
+  async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId, options = {}) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
+
+    const accessToken = options?.accessToken;
 
     const { data, images } = serializeCharacterForExport({
       character,
@@ -132,6 +134,7 @@ export class DataManager {
 
     try {
       const result = await this.googleDriveManager.saveFile(
+        accessToken,
         targetFolderId,
         sanitizedFileName,
         archive.content,
@@ -149,11 +152,13 @@ export class DataManager {
    * Saves character data to the configured Google Drive character folder.
    * Handles both creating new files and updating existing ones without index management.
    */
-  async saveCharacterToDrive(character, skills, specialSkills, equipments, histories, currentFileId) {
+  async saveCharacterToDrive(character, skills, specialSkills, equipments, histories, currentFileId, options = {}) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
+
+    const accessToken = options?.accessToken;
 
     const { data, images } = serializeCharacterForExport({
       character,
@@ -167,35 +172,35 @@ export class DataManager {
 
     let targetFileId = currentFileId;
     if (targetFileId) {
-      const isInConfiguredFolder = await this.googleDriveManager.isFileInConfiguredFolder(targetFileId);
+      const isInConfiguredFolder = await this.googleDriveManager.isFileInConfiguredFolder(accessToken, targetFileId);
       if (!isInConfiguredFolder) {
         targetFileId = null;
       }
     }
 
     if (targetFileId) {
-      return this.googleDriveManager.updateCharacterFile(targetFileId, {
+      return this.googleDriveManager.updateCharacterFile(accessToken, targetFileId, {
         content: archive.content,
         mimeType: archive.mimeType,
         name: this._sanitizeFileName(character.name),
       });
     }
 
-    return this.googleDriveManager.createCharacterFile({
+    return this.googleDriveManager.createCharacterFile(accessToken, {
       content: archive.content,
       mimeType: archive.mimeType,
       name: this._sanitizeFileName(character.name),
     });
   }
 
-  async findDriveFileByCharacterName(characterName) {
+  async findDriveFileByCharacterName(characterName, options = {}) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
     const fileName = this.getDriveFileName(characterName);
-    return this.googleDriveManager.findFileByName(fileName);
+    return this.googleDriveManager.findFileByName(options?.accessToken, fileName);
   }
 
   /**
@@ -203,14 +208,14 @@ export class DataManager {
    * @param {string} fileId - The ID of the file to load.
    * @returns {Promise<object|null>} Parsed character data or null on error.
    */
-  async loadDataFromDrive(fileId) {
+  async loadDataFromDrive(fileId, options = {}) {
     if (!this.googleDriveManager) {
       console.error('GoogleDriveManager not set in DataManager.');
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
     try {
-      const fileContent = await this.googleDriveManager.loadFileContent(fileId);
+      const fileContent = await this.googleDriveManager.loadFileContent(options?.accessToken, fileId);
       if (fileContent) {
         const rawJsonData = await deserializeCharacterPayload(fileContent);
         const parsedData = this.parseLoadedData(rawJsonData);

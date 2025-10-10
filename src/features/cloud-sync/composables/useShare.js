@@ -1,15 +1,45 @@
+import { useAuth0 } from '@auth0/auth0-vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/locales/ja.js';
 
+const useMockDrive = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
+
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
   const { showToast } = useNotifications();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+
+  async function resolveAccessToken() {
+    if (useMockDrive) {
+      return 'mock-access-token';
+    }
+
+    if (!isAuthenticated.value) {
+      throw new Error(messages.share.needSignIn().message);
+    }
+
+    try {
+      const tokenResult = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_API_AUDIENCE,
+        },
+        detailedResponse: true,
+      });
+      const accessToken = typeof tokenResult === 'string' ? tokenResult : tokenResult?.access_token;
+      if (!accessToken) {
+        throw new Error('アクセストークンの取得に失敗しました');
+      }
+      return accessToken;
+    } catch (error) {
+      throw new Error(error?.message || 'アクセストークンの取得に失敗しました');
+    }
+  }
 
   async function createShareLink() {
-    if (!uiStore.isSignedIn) {
+    if (!uiStore.isSignedIn && !useMockDrive) {
       throw new Error(messages.share.needSignIn().message);
     }
 
@@ -18,6 +48,8 @@ export function useShare(dataManager) {
       throw new Error(messages.share.errors.managerMissing);
     }
 
+    const accessToken = await resolveAccessToken();
+
     const result = await dataManager.saveCharacterToDrive(
       characterStore.character,
       characterStore.skills,
@@ -25,6 +57,7 @@ export function useShare(dataManager) {
       characterStore.equipments,
       characterStore.histories,
       uiStore.currentDriveFileId,
+      { accessToken },
     );
 
     const fileId = result?.id || uiStore.currentDriveFileId;
@@ -40,7 +73,7 @@ export function useShare(dataManager) {
       uiStore.setCurrentDriveFileId(result.id);
     }
 
-    const publishedLink = await manager.ensureFilePublic(uiStore.currentDriveFileId || fileId);
+    const publishedLink = await manager.ensureFilePublic(accessToken, uiStore.currentDriveFileId || fileId);
     if (!publishedLink) {
       throw new Error(messages.share.errors.shareFailed);
     }
