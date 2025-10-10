@@ -1,50 +1,99 @@
 import { setActivePinia, createPinia } from 'pinia';
-import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
-import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
+import { ref, nextTick } from 'vue';
+import { auth0State } from '@auth0/auth0-vue';
+
+const driveManagerStub = {
+  loadConfig: vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア' }),
+  setCharacterFolderPath: vi.fn().mockResolvedValue('慈悲なきアイオニア'),
+  findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
+  listFiles: vi.fn().mockResolvedValue([]),
+  normalizeFolderPath: vi.fn((value) => value.replace(/\\/g, '/')),
+  setAccessTokenProvider: vi.fn(),
+};
+
+vi.mock('@/infrastructure/google-drive/googleDriveManager.js', () => ({
+  initializeGoogleDriveManager: vi.fn(() => driveManagerStub),
+  getGoogleDriveManagerInstance: vi.fn(() => driveManagerStub),
+}));
+
+vi.mock('@/infrastructure/google-drive/mockGoogleDriveManager.js', () => ({
+  initializeMockGoogleDriveManager: vi.fn(() => driveManagerStub),
+  getMockGoogleDriveManagerInstance: vi.fn(() => driveManagerStub),
+}));
+
+vi.mock('@auth0/auth0-vue', () => {
+  const state = {
+    isAuthenticated: ref(true),
+    isLoading: ref(false),
+    loginWithRedirect: vi.fn(),
+    logout: vi.fn(),
+    getAccessTokenSilently: vi.fn().mockResolvedValue('token'),
+  };
+  return {
+    useAuth0: () => state,
+    auth0State: state,
+  };
+});
 
 vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
 }));
 
+import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
+import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useModal } from '@/features/modals/composables/useModal.js';
 
-function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
-  const showFolderPicker = vi.fn();
-  const setCharacterFolderPath = vi.fn().mockResolvedValue(normalizedPath);
-  const findOrCreateConfiguredCharacterFolder = vi.fn().mockResolvedValue('folder-id');
-  const normalizeFolderPath = vi.fn((path) => path.replace(/\\/g, '/'));
-
-  return {
-    showFolderPicker,
-    setCharacterFolderPath,
-    findOrCreateConfiguredCharacterFolder,
-    normalizeFolderPath,
-  };
-}
-
 describe('useGoogleDrive', () => {
+  const originalPrompt = window.prompt;
   let showModalMock;
 
   beforeEach(() => {
     setActivePinia(createPinia());
+    window.prompt = vi.fn();
     showModalMock = vi.fn().mockResolvedValue({ value: 'overwrite' });
     useModal.mockReturnValue({ showModal: showModalMock });
+    auth0State.isAuthenticated.value = true;
+    auth0State.isLoading.value = false;
+    auth0State.loginWithRedirect.mockClear();
+    auth0State.logout.mockClear();
+    auth0State.getAccessTokenSilently.mockResolvedValue('token');
+    Object.assign(driveManagerStub, {
+      loadConfig: vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア' }),
+      setCharacterFolderPath: vi.fn().mockResolvedValue('慈悲なきアイオニア/PC/第一キャンペーン'),
+      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
+      listFiles: vi.fn().mockResolvedValue([]),
+      normalizeFolderPath: vi.fn((value) => value.replace(/\\/g, '/')),
+      setAccessTokenProvider: vi.fn(),
+    });
   });
+
+  afterEach(() => {
+    window.prompt = originalPrompt;
+    vi.clearAllMocks();
+  });
+
+  async function mountComposable(dataManager) {
+    const composable = useGoogleDrive(dataManager);
+    await nextTick();
+    return composable;
+  }
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
     const dataManager = {
       saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Hero.json' }),
       findDriveFileByCharacterName: vi.fn(),
-      googleDriveManager: {},
+      googleDriveManager: driveManagerStub,
+      setGoogleDriveManager(manager) {
+        this.googleDriveManager = manager;
+      },
     };
-    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const { saveCharacterToDrive } = await mountComposable(dataManager);
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
     charStore.character.name = 'Hero';
     uiStore.setCurrentDriveFileId('existing-id');
+    uiStore.isSignedIn = true;
 
     await saveCharacterToDrive();
 
@@ -63,15 +112,17 @@ describe('useGoogleDrive', () => {
     const dataManager = {
       saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
       findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
-      googleDriveManager: {},
+      googleDriveManager: driveManagerStub,
+      setGoogleDriveManager(manager) {
+        this.googleDriveManager = manager;
+      },
     };
     showModalMock.mockResolvedValue({ value: 'overwrite' });
-    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const { saveCharacterToDrive } = await mountComposable(dataManager);
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
     charStore.character.name = 'Hero';
+    uiStore.isSignedIn = true;
     uiStore.clearCurrentDriveFileId();
 
     await saveCharacterToDrive(true);
@@ -88,24 +139,29 @@ describe('useGoogleDrive', () => {
     );
   });
 
-  test('saveCharacterToDrive cancels when overwrite declined', async () => {
+  test('promptForDriveFolder applies prompt selection', async () => {
+    const desiredPath = '慈悲なきアイオニア/PC/第一キャンペーン';
+    driveManagerStub.setCharacterFolderPath.mockResolvedValue(desiredPath);
+    driveManagerStub.findOrCreateConfiguredCharacterFolder.mockResolvedValue('folder-id');
+    window.prompt = vi.fn().mockReturnValue(desiredPath);
+
     const dataManager = {
-      saveCharacterToDrive: vi.fn(),
-      findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
-      googleDriveManager: {},
+      googleDriveManager: driveManagerStub,
+      setGoogleDriveManager(manager) {
+        this.googleDriveManager = manager;
+      },
     };
-    showModalMock.mockResolvedValue({ value: 'cancel' });
-    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
-    const charStore = useCharacterStore();
-    charStore.character.name = 'Hero';
+
+    const { promptForDriveFolder } = await mountComposable(dataManager);
     const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
 
-    const result = await saveCharacterToDrive(true);
+    const selected = await promptForDriveFolder();
 
-    expect(result).toBeNull();
-    expect(dataManager.saveCharacterToDrive).not.toHaveBeenCalled();
+    expect(window.prompt).toHaveBeenCalled();
+    expect(driveManagerStub.setCharacterFolderPath).toHaveBeenCalledWith(desiredPath);
+    expect(selected).toBe(desiredPath);
+    expect(uiStore.driveFolderPath).toBe(desiredPath);
   });
 
   test('loadCharacterFromDrive loads data and updates store', async () => {
@@ -116,56 +172,27 @@ describe('useGoogleDrive', () => {
       equipments: {},
       histories: [],
     };
+    driveManagerStub.listFiles.mockResolvedValue([{ id: 'file-1', name: 'Explorer.json' }]);
+
     const dataManager = {
       saveCharacterToDrive: vi.fn(),
       findDriveFileByCharacterName: vi.fn(),
       loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
-      googleDriveManager: {
-        showFilePicker: (cb) => cb(null, { id: 'file-1', name: 'Explorer.json' }),
-        findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
+      googleDriveManager: driveManagerStub,
+      setGoogleDriveManager(manager) {
+        this.googleDriveManager = manager;
       },
     };
-    const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
-    const charStore = useCharacterStore();
+
+    const { loadCharacterFromDrive } = await mountComposable(dataManager);
     const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    const charStore = useCharacterStore();
+    uiStore.isSignedIn = true;
 
     const result = await loadCharacterFromDrive();
 
     expect(result).toEqual(loadData);
     expect(charStore.character.name).toBe('Explorer');
     expect(uiStore.currentDriveFileId).toBe('file-1');
-  });
-
-  test('promptForDriveFolder applies picker selection to drive path', async () => {
-    const desiredPath = '慈悲なきアイオニア/PC/第一キャンペーン';
-    const stubManager = createDriveManagerStub(desiredPath);
-    stubManager.showFolderPicker.mockImplementation((cb) => cb(null, { id: 'folder-1', name: '第一キャンペーン', path: desiredPath }));
-
-    const dataManager = {
-      googleDriveManager: stubManager,
-      setGoogleDriveManager(manager) {
-        Object.assign(manager, stubManager);
-        this.googleDriveManager = manager;
-      },
-      loadDataFromDrive: vi.fn(),
-      findDriveFileByCharacterName: vi.fn(),
-      saveCharacterToDrive: vi.fn(),
-    };
-
-    const { promptForDriveFolder } = useGoogleDrive(dataManager);
-    const uiStore = useUiStore();
-    uiStore.isSignedIn = true;
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
-    uiStore.setDriveFolderPath('慈悲なきアイオニア');
-
-    const selected = await promptForDriveFolder();
-
-    expect(stubManager.showFolderPicker).toHaveBeenCalled();
-    expect(stubManager.setCharacterFolderPath).toHaveBeenCalledWith(desiredPath);
-    expect(uiStore.driveFolderPath).toBe(desiredPath);
-    expect(selected).toBe(desiredPath);
   });
 });

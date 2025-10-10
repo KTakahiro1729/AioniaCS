@@ -1,49 +1,40 @@
 import { initializeGoogleDriveManager, resetGoogleDriveManagerForTests } from '@/infrastructure/google-drive/googleDriveManager.js';
 import { vi } from 'vitest';
 
-describe('GoogleDriveManager auth', () => {
+function jsonResponse(body) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+describe('GoogleDriveManager auth integration', () => {
   beforeEach(() => {
     resetGoogleDriveManagerForTests();
-    global.google = {
-      accounts: {
-        oauth2: {
-          initTokenClient: vi.fn().mockReturnValue({
-            requestAccessToken: vi.fn(),
-          }),
-          revoke: vi.fn((token, cb) => cb()),
-        },
-      },
-    };
-    global.gapi = {
-      client: {
-        getToken: vi.fn(() => null),
-        setToken: vi.fn(),
-      },
-    };
-  });
-
-  test('onGisLoad initializes token client with minimal scopes', async () => {
-    const gdm = initializeGoogleDriveManager('k', 'c');
-    await gdm.onGisLoad();
-    expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalledWith({
-      client_id: 'c',
-      scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
-      callback: '',
-    });
-  });
-
-  test('handleSignOut revokes token and clears gapi token', () => {
-    const gdm = initializeGoogleDriveManager('k', 'c');
-    gdm.tokenClient = { requestAccessToken: vi.fn() };
-    gapi.client.getToken.mockReturnValue({ access_token: 't' });
-    const cb = vi.fn();
-    gdm.handleSignOut(cb);
-    expect(google.accounts.oauth2.revoke).toHaveBeenCalledWith('t', expect.any(Function));
-    expect(gapi.client.setToken).toHaveBeenCalledWith('');
-    expect(cb).toHaveBeenCalled();
+    global.fetch = vi.fn();
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     resetGoogleDriveManagerForTests();
+  });
+
+  test('uses access token provider when making requests', async () => {
+    const provider = vi.fn().mockResolvedValue('token');
+    fetch.mockResolvedValueOnce(jsonResponse({ files: [] })).mockResolvedValueOnce(jsonResponse({ id: 'cfg', name: 'aioniacs.cfg' }));
+
+    const manager = initializeGoogleDriveManager();
+    manager.setAccessTokenProvider(provider);
+
+    await manager.loadConfig();
+
+    expect(provider).toHaveBeenCalled();
+    const headers = fetch.mock.calls[0][1].headers;
+    expect(headers.get('Authorization')).toBe('Bearer token');
+  });
+
+  test('throws when no access token provider configured', async () => {
+    const manager = initializeGoogleDriveManager();
+    await expect(manager.loadConfig()).rejects.toThrow('No access token provider configured');
   });
 });

@@ -5,8 +5,6 @@ export const useUiStore = defineStore('ui', {
   state: () => ({
     isCloudSaveSuccess: false,
     isSignedIn: false,
-    isGapiInitialized: false,
-    isGisInitialized: false,
     isLoading: false,
     driveFolderPath: '慈悲なきアイオニア',
     currentDriveFileId: null,
@@ -24,7 +22,7 @@ export const useUiStore = defineStore('ui', {
         : 'status-display--experience-ok';
     },
     canSignInToGoogle(state) {
-      return state.isGapiInitialized && state.isGisInitialized && !state.isSignedIn;
+      return !state.isSignedIn && !state.isLoading;
     },
     canOperateDrive(state) {
       return state.isSignedIn;

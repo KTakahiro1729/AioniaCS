@@ -31,8 +31,6 @@ describe('CharacterHub', () => {
 
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
 
     const wrapper = mount(CharacterHub, {
       props: {
