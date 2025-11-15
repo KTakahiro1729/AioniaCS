@@ -1,5 +1,6 @@
 import { computed } from 'vue';
 import { useAuth0 } from '@auth0/auth0-vue';
+import { jwtDecode } from 'jwt-decode';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
@@ -65,7 +66,7 @@ export function useGoogleDrive(dataManager) {
     try {
       const authorizationParams = {};
       const audience = import.meta.env.VITE_AUTH0_API_AUDIENCE;
-      const scope = import.meta.env.VITE_AUTH0_DRIVE_SCOPE;
+      const scope = import.meta.env.VITE_AUTH0_DRIVE;
       if (audience) {
         authorizationParams.audience = audience;
       }
@@ -77,13 +78,20 @@ export function useGoogleDrive(dataManager) {
         ...(Object.keys(authorizationParams).length > 0 ? { authorizationParams } : {}),
         detailedResponse: true,
       });
-      const accessToken =
-        (typeof tokenResult === 'object' && tokenResult?.resource_server?.access_token) ||
-        (typeof tokenResult === 'string' ? tokenResult : tokenResult?.access_token);
-      if (!accessToken) {
-        throw new Error('アクセストークンの取得に失敗しました');
+
+      if (!tokenResult.id_token) {
+        throw new Error('id_token の取得に失敗しました');
       }
-      return accessToken;
+
+      const decodedIdToken = jwtDecode(tokenResult.id_token);
+
+      const googleTokenClaim = 'https://example.com/google_access_token';
+      const googleAccessToken = decodedIdToken[googleTokenClaim];
+
+      if (!googleAccessToken) {
+        throw new Error('Google Access Token が id_token 内に見つかりませんでした');
+      }
+      return googleAccessToken;
     } catch (error) {
       if (error?.error === 'login_required' || error?.error === 'consent_required') {
         const err = messages.googleDrive.config.requiresSignIn();
