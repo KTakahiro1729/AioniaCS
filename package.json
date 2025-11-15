@@ -30,7 +30,8 @@
     "marked": "^15.0.12",
     "pako": "^2.1.0",
     "pinia": "^2.1.7",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "vue-router": "^4.6.3"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.24.7",
