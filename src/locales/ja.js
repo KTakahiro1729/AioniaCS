@@ -76,6 +76,15 @@ export const messages = {
       title: 'Google Drive',
       message: 'サインインしてください',
     }),
+    toast: {
+      creating: () => ({ title: '共有リンク', message: '作成中...' }),
+      success: () => ({ title: '共有リンク', message: 'URLをコピーしました' }),
+      error: (err) => ({
+        title: '共有失敗',
+        message: err?.message || '共有リンクの生成に失敗しました',
+      }),
+      clipboardUnavailable: 'クリップボードにアクセスできません',
+    },
     errors: {
       saveFailed: 'Google Drive への保存に失敗しました',
       shareFailed: '共有リンクの取得に失敗しました',
@@ -170,12 +179,14 @@ export const messages = {
   ui: {
     header: {
       defaultTitle: 'Aionia TRPG Character Sheet',
-      cloudHub: 'Cloud Hub',
       helpLabel: '?',
+      newCharacter: '新規作成',
+      signIn: 'Googleにログイン',
+      signOut: 'ログアウト',
     },
     footer: {
       experience: '経験点',
-      io: '入出力',
+      output: '出力',
       share: '共有',
       copyEdit: '自分用にコピーして編集',
     },
@@ -199,14 +210,29 @@ export const messages = {
       hubTitle: 'クラウド連携',
       shareTitle: '共有リンク',
       cancel: 'キャンセル',
+      load: {
+        title: '読込',
+        buttons: {
+          loadLocal: 'ローカルから読み込む',
+          loadDrive: 'Driveから読み込む',
+        },
+        signInMessage: 'Drive機能を使うにはGoogleにサインインしてください。',
+      },
       io: {
         title: '入出力',
         buttons: {
-          saveLocal: '端末保存',
-          loadLocal: '端末読込',
+          saveLocal: 'ローカルファイルで出力',
           output: '駒出力',
           print: '印刷',
           driveFolder: 'フォルダ変更',
+          chatPalette: 'チャットパレットを出力',
+        },
+        chatPalette: {
+          success: () => ({ title: 'チャットパレット', message: 'クリップボードにコピーしました' }),
+          error: (err) => ({
+            title: 'チャットパレット',
+            message: err?.message || 'コピーに失敗しました',
+          }),
         },
       },
     },

@@ -12,7 +12,6 @@ describe('MainFooter', () => {
 
   test('local save and file upload when signed out', async () => {
     const saveLocal = vi.fn();
-    const fileUpload = vi.fn();
     const wrapper = mount(MainFooter, {
       props: {
         experienceStatusClass: '',
@@ -21,10 +20,8 @@ describe('MainFooter', () => {
         experienceLabel: 'EXP',
         isViewingShared: false,
         saveLocal,
-        handleFileUpload: fileUpload,
-        openHub: vi.fn(),
         saveToDrive: vi.fn(),
-        ioLabel: 'io',
+        outputLabel: 'output',
         shareLabel: 'share',
         copyEditLabel: 'copy',
       },
@@ -33,13 +30,13 @@ describe('MainFooter', () => {
     uiStore.isSignedIn = false;
     await wrapper.find('.footer-button--save').trigger('click');
     expect(saveLocal).toHaveBeenCalled();
-    await wrapper.find('#load_input_vue').trigger('change');
-    expect(fileUpload).toHaveBeenCalled();
+    await wrapper.find('.footer-button--load').trigger('click');
+    expect(wrapper.emitted('open-load-modal')).toBeTruthy();
+    expect(wrapper.find('.footer-button--share').attributes('disabled')).toBeDefined();
   });
 
   test('drive actions when signed in', async () => {
     const saveDrive = vi.fn();
-    const openHub = vi.fn();
     const wrapper = mount(MainFooter, {
       props: {
         experienceStatusClass: '',
@@ -48,10 +45,8 @@ describe('MainFooter', () => {
         experienceLabel: 'EXP',
         isViewingShared: false,
         saveLocal: vi.fn(),
-        handleFileUpload: vi.fn(),
-        openHub,
         saveToDrive: saveDrive,
-        ioLabel: 'io',
+        outputLabel: 'output',
         shareLabel: 'share',
         copyEditLabel: 'copy',
       },
@@ -61,10 +56,12 @@ describe('MainFooter', () => {
     uiStore.currentDriveFileId = null;
     await wrapper.find('.footer-button--save').trigger('click');
     expect(saveDrive).toHaveBeenCalled();
-    await wrapper.find('.footer-button--load').trigger('click');
-    expect(openHub).toHaveBeenCalled();
+    await wrapper.find('.footer-button--output').trigger('click');
+    expect(wrapper.emitted('open-output-modal')).toBeTruthy();
     uiStore.currentDriveFileId = 'id';
     await wrapper.find('.footer-button--save').trigger('click');
     expect(saveDrive).toHaveBeenCalledTimes(2);
+    await wrapper.find('.footer-button--share').trigger('click');
+    expect(wrapper.emitted('share')).toBeTruthy();
   });
 });
