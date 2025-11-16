@@ -73,7 +73,7 @@ const {
   promptForDriveFolder,
 } = useGoogleDrive(props.dataManager);
 
-const { isAuthenticated, isLoading, user, loginWithRedirect, logout } = useAuth0();
+const { isAuthenticated, isLoading, user, loginWithPopup, logout } = useAuth0();
 
 const isSignedIn = computed(() => isAuthenticated.value);
 const isAuthLoading = computed(() => isLoading.value);
@@ -98,11 +98,31 @@ function loadCharacterFromDrive() {
   return loadFromDrive();
 }
 
-function signIn() {
+async function signIn() {
   if (isAuthLoading.value) {
     return;
   }
-  loginWithRedirect();
+
+  const driveScope = import.meta.env.VITE_AUTH0_DRIVE_SCOPE;
+  const audience = import.meta.env.VITE_AUTH0_API_AUDIENCE;
+
+  console.log('[Debug] CharacterHub.signIn: ポップアップログインを試みます。');
+  console.log(`[Debug] CharacterHub.signIn: Scope: "${driveScope}"`);
+
+  if (!driveScope || !driveScope.includes('offline_access')) {
+    console.error('[Debug] CharacterHub.signIn: CRITICAL: offline_access が VITE_AUTH0_DRIVE_SCOPE に含まれていません！');
+  }
+
+  try {
+    await loginWithPopup({
+      authorizationParams: {
+        scope: driveScope,
+        audience: audience,
+      },
+    });
+  } catch (error) {
+    console.error('[Debug] CharacterHub.signIn: ポップアップログインに失敗しました。', error);
+  }
 }
 
 function signOut() {
@@ -200,8 +220,8 @@ async function openFolderPicker() {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   padding-inline: 5px;
-  padding:5px;
-  height:unset;
+  padding: 5px;
+  height: unset;
   font-size: 0.95rem;
   font-weight: 600;
   white-space: nowrap;

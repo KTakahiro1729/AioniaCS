@@ -79,18 +79,28 @@ export function useGoogleDrive(dataManager) {
         detailedResponse: true,
       });
 
-      if (!tokenResult.id_token) {
-        throw new Error('id_token の取得に失敗しました');
+      console.log('[Debug] resolveAccessToken: getAccessTokenSilently から応答がありました。', tokenResult);
+
+      console.log('[Debug] resolveAccessToken: access_token をデコードして Google トークンを抽出します...');
+
+      if (!tokenResult.access_token) {
+        console.error('[Debug] resolveAccessToken: 応答に access_token がありません。');
+        throw new Error('access_token の取得に失敗しました');
       }
 
-      const decodedIdToken = jwtDecode(tokenResult.id_token);
+      const decodedAccessToken = jwtDecode(tokenResult.access_token);
 
       const googleTokenClaim = 'https://example.com/google_access_token';
-      const googleAccessToken = decodedIdToken[googleTokenClaim];
+      const googleAccessToken = decodedAccessToken[googleTokenClaim];
 
       if (!googleAccessToken) {
-        throw new Error('Google Access Token が id_token 内に見つかりませんでした');
+        console.error(`[Debug] resolveAccessToken: access_token に ${googleTokenClaim} が見つかりません。`, decodedAccessToken);
+        throw new Error('Google Access Token が access_token 内に見つかりませんでした');
       }
+
+      console.log(
+        `[Debug] resolveAccessToken: Google Access Token の抽出に成功しました (Value): ${String(googleAccessToken).substring(0, 20)}...`,
+      );
       return googleAccessToken;
     } catch (error) {
       if (error?.error === 'login_required' || error?.error === 'consent_required') {
@@ -102,12 +112,25 @@ export function useGoogleDrive(dataManager) {
   }
 
   async function promptForDriveFolder() {
-    showToast({
-      type: 'info',
-      title: 'Google Drive',
-      message: 'フォルダ選択ダイアログは現在利用できません。入力欄に直接パスを指定してください。',
-    });
-    return uiStore.driveFolderPath;
+    if (!googleDriveManager || typeof googleDriveManager.showFolderPicker !== 'function') {
+      showToast({ type: 'error', ...messages.googleDrive.folderPicker.error(new Error('Picker unavailable')) });
+      return uiStore.driveFolderPath;
+    }
+
+    try {
+      const accessToken = await resolveAccessToken();
+      const folder = await googleDriveManager.showFolderPicker(accessToken);
+
+      const targetPath = folder.path || folder.name;
+      const normalized = await updateDriveFolderPath(targetPath);
+      return normalized;
+    } catch (error) {
+      if (error.message.includes('Picker cancelled')) {
+      } else {
+        showToast({ type: 'error', ...messages.googleDrive.folderPicker.error(error) });
+      }
+      return uiStore.driveFolderPath;
+    }
   }
 
   async function refreshDriveFolderPath() {
@@ -165,23 +188,14 @@ export function useGoogleDrive(dataManager) {
     }
 
     try {
+      if (!googleDriveManager || typeof googleDriveManager.showFilePicker !== 'function') {
+        throw new Error('File Picker is not available.');
+      }
+
       const folderId = await googleDriveManager.ensureConfiguredFolder(accessToken);
-      const files = await googleDriveManager.listFiles(accessToken, folderId);
-      if (!files || files.length === 0) {
-        showToast({
-          type: 'error',
-          ...messages.googleDrive.load.error(new Error('保存済みのキャラクターが見つかりません')),
-        });
-        return null;
-      }
+      const file = await googleDriveManager.showFilePicker(accessToken, folderId, ['application/json', 'application/zip']);
 
-      const targetFile = files[0];
-      const confirmation = await showModal(messages.characterHub.loadConfirm(targetFile.name));
-      if (!confirmation || confirmation.value !== 'load') {
-        return null;
-      }
-
-      const loadPromise = dataManager.loadDataFromDrive(targetFile.id, { accessToken }).then((parsedData) => {
+      const loadPromise = dataManager.loadDataFromDrive(file.id, { accessToken }).then((parsedData) => {
         if (!parsedData) {
           throw new Error('キャラクターデータの読み込みに失敗しました');
         }
@@ -202,7 +216,11 @@ export function useGoogleDrive(dataManager) {
 
       return await loadPromise;
     } catch (error) {
-      showToast({ type: 'error', ...messages.googleDrive.load.error(error) });
+      if (error.message.includes('Picker cancelled')) {
+      } else {
+        console.log;
+        showToast({ type: 'error', ...messages.googleDrive.load.error(error) });
+      }
       return null;
     }
   }

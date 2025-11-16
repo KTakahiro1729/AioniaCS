@@ -4,6 +4,9 @@ export function useNotifications() {
   const store = useNotificationStore();
 
   function showToast(options) {
+    if (options && options.type === 'error') {
+      console.error(`[Toast Error] ${options.title || 'Error'}: ${options.message || 'An unknown error occurred.'}`, options.details || '');
+    }
     return store.addToast(options);
   }
 
@@ -31,6 +34,7 @@ export function useNotifications() {
                 ...(messages.error || {}),
                 message: (messages.error && messages.error.message) || err.message,
               };
+        console.error('[Async Toast Error]', err);
         finalize(errorOpts, 'error');
       });
     return promise;

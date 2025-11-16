@@ -1,3 +1,5 @@
+// src/infrastructure/google-drive/googleDriveManager.js
+
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3';
 const CONFIG_FILE_NAME = 'aionia-config.json';
@@ -50,6 +52,153 @@ function createMultipartBody(metadata, fileContent, fileMimeType) {
 
   return { body, contentType: `multipart/related; boundary=${boundary}` };
 }
+
+// --- ▼▼▼ Picker API 関連のコード ▼▼▼ ---
+
+let isPickerApiLoaded = false;
+let pickerApiLoadPromise = null;
+
+/**
+ * GAPI と Picker API を非同期でロードする
+ * @returns {Promise<void>}
+ */
+function loadPickerApi() {
+  if (isPickerApiLoaded) {
+    return Promise.resolve();
+  }
+  if (pickerApiLoadPromise) {
+    return pickerApiLoadPromise;
+  }
+
+  pickerApiLoadPromise = new Promise((resolve, reject) => {
+    if (typeof gapi === 'undefined') {
+      // index.html に <script async defer src="https://apis.google.com/js/api.js"></script> が必要
+      return reject(new Error('GAPI (api.js) が index.html でロードされていません。'));
+    }
+
+    gapi.load('picker', () => {
+      isPickerApiLoaded = true;
+      console.info('Google Picker API Ready');
+      resolve();
+    });
+  });
+
+  return pickerApiLoadPromise;
+}
+
+/**
+ * Picker UI を表示し、ファイルを選択させる
+ * @param {string} accessToken - Auth0 から取得した Google アクセストークン
+ * @param {string|null} parentFolderId - 表示を開始するフォルダID
+ * @param {Array<string>} mimeTypes - 許可するMIMEタイプ
+ * @returns {Promise<{id: string, name: string}>}
+ */
+async function showFilePicker(accessToken, parentFolderId = null, mimeTypes = ['application/json', 'application/zip']) {
+  await loadPickerApi();
+  if (!accessToken) {
+    throw new Error('アクセストークンが必要です');
+  }
+
+  return new Promise((resolve, reject) => {
+    const view = new google.picker.View(google.picker.ViewId.DOCS);
+    if (parentFolderId) {
+      view.setParent(parentFolderId);
+    }
+    if (mimeTypes && mimeTypes.length > 0) {
+      view.setMimeTypes(mimeTypes.join(','));
+    }
+
+    const picker = new google.picker.PickerBuilder()
+      .setOrigin(window.location.origin)
+      .addView(view)
+      .enableFeature(google.picker.Feature.NAV_HIDDEN)
+      .setOAuthToken(accessToken)
+      .setCallback((data) => {
+        if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
+          const doc = data[google.picker.Response.DOCUMENTS][0];
+          resolve({ id: doc.id, name: doc.name });
+        } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
+          reject(new Error('Picker cancelled by user.'));
+        }
+      })
+      .build();
+
+    picker.setVisible(true);
+  });
+}
+
+/**
+ * フォルダ選択用の Picker UI を表示する
+ * @param {string} accessToken - Auth0 から取得した Google アクセストークン
+ * @param {function} driveFetch - driveFetch 関数 (パス解決に利用)
+ * @returns {Promise<{id: string, name: string, path: string}>}
+ */
+async function showFolderPicker(accessToken, driveFetch) {
+  await loadPickerApi();
+  if (!accessToken) {
+    throw new Error('アクセストークンが必要です');
+  }
+
+  // フォルダパスを解決する内部関数
+  const buildFolderPathFromId = async (folderId) => {
+    const segments = [];
+    let currentId = folderId;
+    const visited = new Set();
+    let iterations = 0;
+    const maxDepth = 50;
+
+    while (currentId && currentId !== 'root' && iterations < maxDepth) {
+      if (visited.has(currentId)) break;
+      visited.add(currentId);
+      iterations += 1;
+
+      try {
+        const file = await driveFetch(accessToken, `/files/${encodeURIComponent(currentId)}?fields=id,name,parents`, {
+          supportsAllDrives: true,
+        });
+        if (!file) break;
+        if (file.name) segments.unshift(file.name);
+        const parents = Array.isArray(file.parents) ? file.parents : [];
+        if (parents.length === 0 || parents.includes('root')) break;
+        [currentId] = parents;
+      } catch (error) {
+        console.warn('Error resolving folder path segment:', error);
+        break;
+      }
+    }
+    return segments.length > 0 ? segments.join('/') : null;
+  };
+
+  return new Promise((resolve, reject) => {
+    const view = new google.picker.DocsView();
+    view.setIncludeFolders(true);
+    view.setSelectFolderEnabled(true);
+    view.setMimeTypes('application/vnd.google-apps.folder');
+
+    const picker = new google.picker.PickerBuilder()
+      .setOrigin(window.location.origin)
+      .addView(view)
+      .setTitle('Select a folder')
+      .setOAuthToken(accessToken)
+      .setCallback(async (data) => {
+        if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
+          const folder = data[google.picker.Response.DOCUMENTS][0];
+          try {
+            const path = await buildFolderPathFromId(folder.id);
+            resolve({ id: folder.id, name: folder.name, path: path || folder.name });
+          } catch (error) {
+            reject(error);
+          }
+        } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
+          reject(new Error('Folder Picker cancelled by user.'));
+        }
+      })
+      .build();
+
+    picker.setVisible(true);
+  });
+}
+// --- ▲▲▲ Picker API 関連のコード ▲▲▲ ---
 
 export function createGoogleDriveManager({ fetchImpl = globalThis.fetch } = {}) {
   if (typeof fetchImpl !== 'function') {
@@ -405,6 +554,10 @@ export function createGoogleDriveManager({ fetchImpl = globalThis.fetch } = {}) 
     findFileByName,
     loadFileContent,
     ensureFilePublic,
+    // --- ▼▼▼ Picker 関数を return に追加 ▼▼▼ ---
+    showFilePicker,
+    showFolderPicker: (accessToken) => showFolderPicker(accessToken, driveFetch),
+    // --- ▲▲▲ Picker 関数を return に追加 ▲▲▲ ---
   };
 }
 
