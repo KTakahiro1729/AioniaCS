@@ -958,6 +958,27 @@ export class GoogleDriveManager {
     return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
   }
 
+  async renameFile(fileId, newName) {
+    if (!fileId || !newName) {
+      throw new Error('File ID and new name are required to rename a file.');
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      throw new Error('GAPI client or Drive API not loaded for renameFile.');
+    }
+
+    try {
+      const response = await gapi.client.drive.files.update({
+        fileId,
+        fields: 'id, name',
+        resource: { name: newName },
+      });
+      return { id: response.result.id, name: response.result.name };
+    } catch (error) {
+      console.error('Error renaming Drive file:', error);
+      throw error;
+    }
+  }
+
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
     return content ? await deserializeCharacterPayload(content) : null;

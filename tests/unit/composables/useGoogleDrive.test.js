@@ -37,6 +37,7 @@ describe('useGoogleDrive', () => {
       saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Hero.json' }),
       findDriveFileByCharacterName: vi.fn(),
       googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
     };
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
@@ -64,6 +65,7 @@ describe('useGoogleDrive', () => {
       saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
       findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
       googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
     };
     showModalMock.mockResolvedValue({ value: 'overwrite' });
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
@@ -93,6 +95,7 @@ describe('useGoogleDrive', () => {
       saveCharacterToDrive: vi.fn(),
       findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
       googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
     };
     showModalMock.mockResolvedValue({ value: 'cancel' });
     const { saveCharacterToDrive } = useGoogleDrive(dataManager);
@@ -124,6 +127,7 @@ describe('useGoogleDrive', () => {
         showFilePicker: (cb) => cb(null, { id: 'file-1', name: 'Explorer.json' }),
         findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
       },
+      getDriveFileName: vi.fn().mockReturnValue('Explorer.json'),
     };
     const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
@@ -152,6 +156,7 @@ describe('useGoogleDrive', () => {
       loadDataFromDrive: vi.fn(),
       findDriveFileByCharacterName: vi.fn(),
       saveCharacterToDrive: vi.fn(),
+      getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
     };
 
     const { promptForDriveFolder } = useGoogleDrive(dataManager);
@@ -167,5 +172,27 @@ describe('useGoogleDrive', () => {
     expect(stubManager.setCharacterFolderPath).toHaveBeenCalledWith(desiredPath);
     expect(uiStore.driveFolderPath).toBe(desiredPath);
     expect(selected).toBe(desiredPath);
+  });
+
+  test('saveCharacterToDrive renames file when saved name differs from character name', async () => {
+    const renameFile = vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Knight.zip' });
+    const dataManager = {
+      saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Hero.zip' }),
+      findDriveFileByCharacterName: vi.fn(),
+      googleDriveManager: { renameFile },
+      getDriveFileName: vi.fn().mockReturnValue('Knight.zip'),
+    };
+    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const charStore = useCharacterStore();
+    const uiStore = useUiStore();
+    charStore.character.name = 'Knight';
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
+    uiStore.setCurrentDriveFileId('existing-id');
+
+    const result = await saveCharacterToDrive();
+
+    expect(renameFile).toHaveBeenCalledWith('existing-id', 'Knight.zip');
+    expect(result).toEqual({ id: 'existing-id', name: 'Knight.zip' });
   });
 });

@@ -317,6 +317,19 @@ export class MockGoogleDriveManager {
     return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
   }
 
+  async renameFile(id, newName) {
+    if (!id || !newName) {
+      throw new Error('File ID and new name are required to rename a file.');
+    }
+    const file = this.state.files[id];
+    if (!file) {
+      throw new Error('File not found');
+    }
+    file.name = newName;
+    this._saveState();
+    return { id, name: newName };
+  }
+
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
     return content ? await deserializeCharacterPayload(content) : null;

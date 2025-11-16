@@ -5,9 +5,9 @@
       {{ maxExperiencePoints }}
     </div>
     <div class="main-footer__actions">
-      <button class="button-base footer-button footer-button--load" @click="$emit('open-load-modal')" :title="loadButton.title">
-        <span class="icon-svg icon-svg--footer" :class="loadButton.icon"></span>
-        {{ loadButton.label }}
+      <button class="button-base footer-button footer-button--load" @click="$emit('open-load-modal')" :title="loadLabel">
+        <span class="icon-svg icon-svg--footer" :class="loadIconClass"></span>
+        {{ loadLabel }}
       </button>
       <button class="button-base footer-button footer-button--output" @click="$emit('open-output-modal')">
         <span class="icon-svg icon-svg--footer icon-svg-io"></span>
@@ -22,9 +22,14 @@
         <span class="icon-svg icon-svg--footer icon-svg-share"></span>
         {{ isViewingShared ? copyEditLabel : shareLabel }}
       </button>
-      <button class="button-base footer-button footer-button--save" @click="handleSave" :title="saveButton.title">
-        <span class="icon-svg icon-svg--footer" :class="saveButton.icon"></span>
-        {{ saveButton.label }}
+      <button
+        class="button-base footer-button footer-button--save"
+        :disabled="isSaveDisabled"
+        @click="handleSave"
+        :title="saveLabel"
+      >
+        <span class="icon-svg icon-svg--footer" :class="saveIconClass"></span>
+        {{ saveLabel }}
       </button>
     </div>
   </div>
@@ -33,7 +38,6 @@
 <script setup>
 import { computed } from 'vue';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { useDynamicButtons } from '@/features/cloud-sync/composables/useDynamicButtons.js';
 
 const props = defineProps({
   experienceStatusClass: String,
@@ -42,26 +46,30 @@ const props = defineProps({
   maxExperiencePoints: Number,
   currentWeight: Number,
   isViewingShared: Boolean,
-  saveLocal: Function,
   saveToDrive: Function,
   outputLabel: String,
   shareLabel: String,
   copyEditLabel: String,
+  loadLabel: String,
+  saveLabel: String,
 });
 
 const emit = defineEmits(['open-load-modal', 'open-output-modal', 'share']);
 
 const uiStore = useUiStore();
-const { saveButton, loadButton } = useDynamicButtons();
 
 const isShareDisabled = computed(() => !uiStore.isSignedIn && !props.isViewingShared);
+const isSaveDisabled = computed(() => !uiStore.isSignedIn);
+const loadIconClass = computed(() =>
+  uiStore.isSignedIn ? 'icon-svg-cloud-download' : 'icon-svg-local-upload',
+);
+const saveIconClass = computed(() => 'icon-svg-cloud-upload');
 
 function handleSave() {
-  if (uiStore.isSignedIn) {
-    props.saveToDrive();
-  } else {
-    props.saveLocal();
+  if (isSaveDisabled.value) {
+    return;
   }
+  props.saveToDrive();
 }
 
 function handleShareClick() {

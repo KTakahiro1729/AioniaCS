@@ -202,6 +202,7 @@ export const messages = {
       saveLocalTitle: '端末に保存',
       loadLocal: '読み込み',
       loadLocalTitle: '端末から読込む',
+      save: '保存',
     },
     prompts: {
       sharedDataPassword: '共有データのパスワードを入力してください',

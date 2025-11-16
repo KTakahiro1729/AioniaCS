@@ -19,6 +19,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
             create: vi.fn(),
             get: vi.fn(),
             delete: vi.fn(),
+            update: vi.fn(),
           },
         },
         request: vi.fn(),
@@ -154,6 +155,19 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(call.path).toBe('/upload/drive/v3/files/file-1');
     expect(call.method).toBe('PATCH');
     expect(call.body).toContain('Content-Type: application/zip');
+  });
+
+  test('renameFile updates file metadata without uploading content', async () => {
+    gapi.client.drive.files.update.mockResolvedValue({ result: { id: 'file-rename', name: 'Knight.zip' } });
+
+    const result = await gdm.renameFile('file-rename', 'Knight.zip');
+
+    expect(gapi.client.drive.files.update).toHaveBeenCalledWith({
+      fileId: 'file-rename',
+      fields: 'id, name',
+      resource: { name: 'Knight.zip' },
+    });
+    expect(result).toEqual({ id: 'file-rename', name: 'Knight.zip' });
   });
 
   test('findFileByName queries configured folder', async () => {

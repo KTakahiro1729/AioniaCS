@@ -40,7 +40,9 @@ describe('MainHeader', () => {
       },
     });
     await wrapper.find('.main-header__section--left .main-header__button').trigger('click');
-    expect(wrapper.emitted('new-character')).toHaveLength(1);
+    const newCharacterEmits = wrapper.emitted('new-character');
+    expect(newCharacterEmits).toHaveLength(1);
+    expect(newCharacterEmits[0][0]).toEqual({ isSignedIn: false });
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     await wrapper.vm.$nextTick();

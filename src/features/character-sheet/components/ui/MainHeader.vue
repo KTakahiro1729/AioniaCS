@@ -1,7 +1,7 @@
 <template>
   <header class="main-header" ref="headerEl">
     <div class="main-header__section main-header__section--left">
-      <button class="button-base main-header__button" @click="$emit('new-character')">
+      <button class="button-base main-header__button" @click="handleNewCharacterClick">
         {{ newCharacterLabel }}
       </button>
       <button
@@ -52,6 +52,10 @@ useHeaderVisibility(headerEl);
 
 const titleText = computed(() => characterStore.character.name || props.defaultTitle);
 const isSignedIn = computed(() => uiStore.isSignedIn);
+
+function handleNewCharacterClick() {
+  emit('new-character', { isSignedIn: isSignedIn.value });
+}
 
 function handleAuthClick() {
   emit(isSignedIn.value ? 'sign-out' : 'sign-in');
