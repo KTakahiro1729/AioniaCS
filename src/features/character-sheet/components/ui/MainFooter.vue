@@ -4,34 +4,27 @@
       {{ experienceLabel }} {{ currentExperiencePoints }} /
       {{ maxExperiencePoints }}
     </div>
-    <div class="main-footer__actions">
-      <button class="button-base footer-button footer-button--load" @click="$emit('open-load-modal')" :title="loadLabel">
-        <span class="icon-svg icon-svg--footer" :class="loadIconClass"></span>
-        {{ loadLabel }}
-      </button>
-      <button class="button-base footer-button footer-button--output" @click="$emit('open-output-modal')">
-        <span class="icon-svg icon-svg--footer icon-svg-io"></span>
-        {{ outputLabel }}
-      </button>
-      <button
-        class="button-base footer-button footer-button--share"
-        :aria-label="isViewingShared ? copyEditLabel : shareLabel"
-        :disabled="isShareDisabled"
-        @click="handleShareClick"
-      >
-        <span class="icon-svg icon-svg--footer icon-svg-share"></span>
-        {{ isViewingShared ? copyEditLabel : shareLabel }}
-      </button>
-      <button
-        class="button-base footer-button footer-button--save"
-        :disabled="isSaveDisabled"
-        @click="handleSave"
-        :title="saveLabel"
-      >
-        <span class="icon-svg icon-svg--footer" :class="saveIconClass"></span>
-        {{ saveLabel }}
-      </button>
-    </div>
+    <button class="button-base footer-button footer-button--load" @click="$emit('open-load-modal')" :title="loadLabel">
+      <span class="icon-svg icon-svg--footer" :class="loadIconClass"></span>
+      {{ loadLabel }}
+    </button>
+    <button class="button-base footer-button footer-button--output" @click="$emit('open-output-modal')">
+      <span class="icon-svg icon-svg--footer icon-svg-io"></span>
+      {{ outputLabel }}
+    </button>
+    <button
+      class="button-base footer-button footer-button--share"
+      :aria-label="isViewingShared ? copyEditLabel : shareLabel"
+      :disabled="isShareDisabled"
+      @click="handleShareClick"
+    >
+      <span class="icon-svg icon-svg--footer icon-svg-share"></span>
+      {{ isViewingShared ? copyEditLabel : shareLabel }}
+    </button>
+    <button class="button-base footer-button footer-button--save" :disabled="isSaveDisabled" @click="handleSave" :title="saveLabel">
+      <span class="icon-svg icon-svg--footer" :class="saveIconClass"></span>
+      {{ saveLabel }}
+    </button>
   </div>
 </template>
 
@@ -60,9 +53,7 @@ const uiStore = useUiStore();
 
 const isShareDisabled = computed(() => !uiStore.isSignedIn && !props.isViewingShared);
 const isSaveDisabled = computed(() => !uiStore.isSignedIn);
-const loadIconClass = computed(() =>
-  uiStore.isSignedIn ? 'icon-svg-cloud-download' : 'icon-svg-local-upload',
-);
+const loadIconClass = computed(() => (uiStore.isSignedIn ? 'icon-svg-cloud-download' : 'icon-svg-local-upload'));
 const saveIconClass = computed(() => 'icon-svg-cloud-upload');
 
 function handleSave() {
@@ -81,22 +72,8 @@ function handleShareClick() {
 </script>
 
 <style scoped>
-.main-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.main-footer__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
 .footer-button {
-  width: 110px;
+  width: 100px;
   flex-shrink: 0;
   justify-content: center;
 }
@@ -124,21 +101,9 @@ function handleShareClick() {
   background-color: var(--color-status-experience-over-bg);
 }
 
-.footer-button--output {
-  user-select: none;
-}
-
-.footer-button--save {
-  padding: 0;
-}
-
-.footer-button--load {
-  padding: 0;
-}
-
 .icon-svg--footer {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   margin: -3px;
   margin-right: 3px;
 }

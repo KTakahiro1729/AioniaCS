@@ -98,7 +98,8 @@ defineExpose({ headerEl, helpIcon });
 }
 
 .main-header__button {
-  min-width: 120px;
+  min-width: 50px;
+  height: 50px;
   justify-content: center;
 }
 

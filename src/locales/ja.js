@@ -144,7 +144,7 @@ export const messages = {
     header: {
       defaultTitle: 'Aionia TRPG Character Sheet',
       helpLabel: '?',
-      newCharacter: '新規作成',
+      newCharacter: '新規',
       signIn: 'ログイン',
       signOut: 'ログアウト',
     },
