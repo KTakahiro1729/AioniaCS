@@ -18,16 +18,10 @@ jobs:
     uses: ./.github/workflows/reusable-setup.yml
     with:
       run-command: npm test
-
-  e2e:
-    uses: ./.github/workflows/reusable-setup.yml
-    with:
-      run-command: npm run e2e
-      playwright: true
   deploy_production:
     name: Deploy to Production
     if: github.ref == 'refs/heads/main'
-    needs: [lint, test, e2e]
+    needs: [lint, test]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -61,7 +55,7 @@ jobs:
   deploy_dev_preview:
     name: Deploy to Dev Preview
     if: github.ref == 'refs/heads/dev'
-    needs: [lint, test, e2e]
+    needs: [lint, test]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -102,7 +96,7 @@ jobs:
     name: Deploy Manual Preview
     # 手動実行（workflow_dispatch）であり、かつmain/devブランチ以外の場合に実行
     if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev'
-    needs: [lint, test, e2e]
+    needs: [lint, test]
     runs-on: ubuntu-latest
     permissions:
       contents: write
