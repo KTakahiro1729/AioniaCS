@@ -76,6 +76,15 @@ export const messages = {
       title: 'Google Drive',
       message: 'サインインしてください',
     }),
+    toast: {
+      creating: () => ({ title: '共有リンク', message: '作成中...' }),
+      success: () => ({ title: '共有リンク', message: 'URLをコピーしました' }),
+      error: (err) => ({
+        title: '共有失敗',
+        message: err?.message || '共有リンクの生成に失敗しました',
+      }),
+      clipboardUnavailable: 'クリップボードにアクセスできません',
+    },
     errors: {
       saveFailed: 'Google Drive への保存に失敗しました',
       shareFailed: '共有リンクの取得に失敗しました',
@@ -106,49 +115,13 @@ export const messages = {
     },
   },
   characterHub: {
-    loadConfirm: (name) => ({
-      title: '読込確認',
-      message: `${name} を読み込みますか？`,
-      buttons: [
-        { label: '読込', value: 'load', variant: 'primary' },
-        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
-      ],
-    }),
-    deleteConfirm: (name) => ({
-      title: '削除確認',
-      message: `${name} を削除しますか？`,
-      buttons: [
-        { label: '削除', value: 'delete', variant: 'primary' },
-        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
-      ],
-    }),
-    delete: {
-      successToast: () => ({ title: '削除完了', message: '' }),
-      asyncToast: {
-        loading: () => ({ title: '削除', message: '削除中...' }),
-        success: () => ({ title: '削除完了', message: '' }),
-        error: (err) => ({ title: '削除失敗', message: err.message || '' }),
-      },
-    },
-    export: {
-      loading: () => ({ title: 'エクスポート', message: 'エクスポート中...' }),
-      success: () => ({ title: 'エクスポート完了', message: '' }),
-      error: (err) => ({
-        title: 'エクスポート失敗',
-        message: err.message || '',
-      }),
-    },
     driveFolder: {
       changeButton: '選択',
       label: '保存先フォルダ',
       placeholder: '慈悲なきアイオニア',
     },
     buttons: {
-      load: 'Driveから読み込む',
-      saveNew: '新しい冒険者として保存',
-      overwrite: '上書き保存',
-      signOut: 'ログアウト',
-      signIn: 'Googleにログイン',
+      signIn: 'ログイン',
     },
   },
   image: {
@@ -170,12 +143,14 @@ export const messages = {
   ui: {
     header: {
       defaultTitle: 'Aionia TRPG Character Sheet',
-      cloudHub: 'Cloud Hub',
       helpLabel: '?',
+      newCharacter: '新規作成',
+      signIn: 'ログイン',
+      signOut: 'ログアウト',
     },
     footer: {
       experience: '経験点',
-      io: '入出力',
+      output: '出力',
       share: '共有',
       copyEdit: '自分用にコピーして編集',
     },
@@ -189,8 +164,9 @@ export const messages = {
       loadCloudTitle: 'Google Driveから読込む',
       saveLocal: '端末保存',
       saveLocalTitle: '端末に保存',
-      loadLocal: '読み込み',
+      loadLocal: '読込',
       loadLocalTitle: '端末から読込む',
+      save: '保存',
     },
     prompts: {
       sharedDataPassword: '共有データのパスワードを入力してください',
@@ -199,14 +175,29 @@ export const messages = {
       hubTitle: 'クラウド連携',
       shareTitle: '共有リンク',
       cancel: 'キャンセル',
+      load: {
+        title: '読込',
+        buttons: {
+          loadLocal: 'ローカルから読み込む',
+          loadDrive: 'Driveから読み込む',
+        },
+        signInMessage: 'Drive機能を使うにはGoogleにサインインしてください。',
+      },
       io: {
         title: '入出力',
         buttons: {
-          saveLocal: '端末保存',
-          loadLocal: '端末読込',
+          saveLocal: 'ローカルファイルで出力',
           output: '駒出力',
           print: '印刷',
           driveFolder: 'フォルダ変更',
+          chatPalette: 'チャットパレットを出力',
+        },
+        chatPalette: {
+          success: () => ({ title: 'チャットパレット', message: 'クリップボードにコピーしました' }),
+          error: (err) => ({
+            title: 'チャットパレット',
+            message: err?.message || 'コピーに失敗しました',
+          }),
         },
       },
     },

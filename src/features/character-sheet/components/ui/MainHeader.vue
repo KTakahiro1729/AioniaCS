@@ -1,19 +1,26 @@
 <template>
   <header class="main-header" ref="headerEl">
-    <button class="button-base icon-button" :title="cloudHubLabel" @click="$emit('open-hub')">
-      <span class="icon-svg icon-svg-cloud" aria-label="cloud"></span>
-    </button>
+    <div class="main-header__section main-header__section--left">
+      <button class="button-base main-header__button" @click="handleNewCharacterClick">
+        {{ newCharacterLabel }}
+      </button>
+      <button
+        class="button-base header-help-icon"
+        ref="helpIcon"
+        :class="{ 'header-help-icon--fixed': helpState === 'fixed' }"
+        @mouseover="$emit('help-mouseover')"
+        @mouseleave="$emit('help-mouseleave')"
+        @click="$emit('help-click')"
+        type="button"
+      >
+        {{ helpLabel }}
+      </button>
+    </div>
     <div class="main-header__title">{{ titleText }}</div>
-    <div
-      class="button-base header-help-icon"
-      ref="helpIcon"
-      :class="{ 'header-help-icon--fixed': helpState === 'fixed' }"
-      @mouseover="$emit('help-mouseover')"
-      @mouseleave="$emit('help-mouseleave')"
-      @click="$emit('help-click')"
-      tabindex="0"
-    >
-      {{ helpLabel }}
+    <div class="main-header__section main-header__section--right">
+      <button class="button-base main-header__button" @click="handleAuthClick">
+        {{ isSignedIn ? signOutLabel : signInLabel }}
+      </button>
     </div>
   </header>
 </template>
@@ -22,24 +29,37 @@
 import { ref, computed, defineExpose } from 'vue';
 import { useHeaderVisibility } from '@/shared/composables/useHeaderVisibility.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 const props = defineProps({
   helpState: String,
   defaultTitle: String,
-  cloudHubLabel: String,
   helpLabel: String,
+  newCharacterLabel: String,
+  signInLabel: String,
+  signOutLabel: String,
 });
 
-const emit = defineEmits(['open-hub', 'help-mouseover', 'help-mouseleave', 'help-click']);
+const emit = defineEmits(['new-character', 'help-mouseover', 'help-mouseleave', 'help-click', 'sign-in', 'sign-out']);
 
 const headerEl = ref(null);
 const helpIcon = ref(null);
 
 const characterStore = useCharacterStore();
+const uiStore = useUiStore();
 
 useHeaderVisibility(headerEl);
 
 const titleText = computed(() => characterStore.character.name || props.defaultTitle);
+const isSignedIn = computed(() => uiStore.isSignedIn);
+
+function handleNewCharacterClick() {
+  emit('new-character', { isSignedIn: isSignedIn.value });
+}
+
+function handleAuthClick() {
+  emit(isSignedIn.value ? 'sign-out' : 'sign-in');
+}
 
 defineExpose({ headerEl, helpIcon });
 </script>
@@ -62,52 +82,40 @@ defineExpose({ headerEl, helpIcon });
   will-change: transform;
 }
 
-.main-header__title {
+.main-header__section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   flex: 1;
+}
+
+.main-header__section--left {
+  justify-content: flex-start;
+}
+
+.main-header__section--right {
+  justify-content: flex-end;
+}
+
+.main-header__button {
+  min-width: 120px;
+  justify-content: center;
+}
+
+.main-header__title {
+  flex: 2;
   text-align: center;
   font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
   color: var(--color-accent);
   font-size: min(4vw, 30px);
 }
 
-.google-drive-button-container {
-  position: relative;
-}
-
-.icon-button {
-  padding: 8px;
-  background-color: var(--color-panel-body);
-  border: 1px solid var(--color-border-normal);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
-}
-
-.icon-button:hover {
-  border-color: var(--color-accent);
-  background-color: var(--color-panel-header);
-}
-
-.icon-button .icon-svg {
-  width: 48px;
-  height: 48px;
-}
-
-.icon-button:hover .icon-svg {
-  border-color: var(--color-accent-light);
-  background-color: var(--color-accent-light);
-}
-
 .header-help-icon {
-  cursor: pointer;
-  font-size: 25px;
-  font-weight: 400;
   width: 50px;
   height: 50px;
+  font-size: 25px;
+  font-weight: 400;
+  padding: 0;
 }
 
 .header-help-icon--fixed,

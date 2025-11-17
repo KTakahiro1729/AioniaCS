@@ -31,10 +31,14 @@ const { printCharacterSheet, openPreviewPage } = usePrint();
 
 const {
   canSignInToGoogle,
+  isDriveReady,
   handleSignInClick,
   handleSignOutClick,
   saveCharacterToDrive,
   saveOrUpdateCurrentCharacterInDrive,
+  loadCharacterFromDrive,
+  promptForDriveFolder,
+  updateDriveFolderPath,
 } = useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
@@ -44,11 +48,27 @@ const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLe
 
 const modalStore = useModalStore();
 
-const { openHub, openIoModal, openShareModal } = useAppModals({
+const handleCreateNewCharacter = async (payload) => {
+  characterStore.initializeAll();
+  uiStore.clearCurrentDriveFileId();
+  uiStore.isViewingShared = false;
+  const shouldCreateCloudFile = payload?.isSignedIn ?? uiStore.isSignedIn;
+  if (!shouldCreateCloudFile) {
+    return;
+  }
+  try {
+    const result = await saveCharacterToDrive(true);
+    if (result?.id) {
+      uiStore.setCurrentDriveFileId(result.id);
+    }
+  } catch (error) {
+    console.error('Failed to create Drive file for new character:', error);
+  }
+};
+
+const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   dataManager,
-  saveCharacterToDrive,
   handleSignInClick,
-  handleSignOutClick,
   saveData,
   handleFileUpload,
   outputToCocofolia,
@@ -57,6 +77,11 @@ const { openHub, openIoModal, openShareModal } = useAppModals({
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
+  loadCharacterFromDrive,
+  promptForDriveFolder,
+  updateDriveFolderPath,
+  canSignInToGoogle,
+  isDriveReady,
 });
 
 const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
@@ -100,9 +125,13 @@ onMounted(initialize);
     ref="mainHeader"
     :help-state="helpState"
     :default-title="messages.ui.header.defaultTitle"
-    :cloud-hub-label="messages.ui.header.cloudHub"
     :help-label="messages.ui.header.helpLabel"
-    @open-hub="openHub"
+    :new-character-label="messages.ui.header.newCharacter"
+    :sign-in-label="messages.ui.header.signIn"
+    :sign-out-label="messages.ui.header.signOut"
+    @new-character="handleCreateNewCharacter"
+    @sign-in="handleSignInClick"
+    @sign-out="handleSignOutClick"
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
@@ -116,16 +145,16 @@ onMounted(initialize);
     :current-experience-points="currentExperiencePoints"
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
-    :save-local="saveData"
-    :handle-file-upload="handleFileUpload"
-    :open-hub="openHub"
     :save-to-drive="saveOrUpdateCurrentCharacterInDrive"
     :experience-label="messages.ui.footer.experience"
-    :io-label="messages.ui.footer.io"
+    :output-label="messages.ui.footer.output"
     :share-label="messages.ui.footer.share"
     :copy-edit-label="messages.ui.footer.copyEdit"
+    :load-label="messages.ui.buttons.loadLocal"
+    :save-label="messages.ui.buttons.save"
     :is-viewing-shared="uiStore.isViewingShared"
-    @io="openIoModal"
+    @open-load-modal="openLoadModal"
+    @open-output-modal="openIoModal"
     @share="openShareModal"
   />
   <HelpPanel ref="helpPanelRef" :is-visible="isHelpVisible" :help-text="AioniaGameData.helpText" @close="closeHelpPanel" />

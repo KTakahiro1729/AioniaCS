@@ -15,9 +15,11 @@ describe('MainHeader', () => {
     const wrapper = mount(MainHeader, {
       props: {
         defaultTitle: 'Default',
-        cloudHubLabel: 'hub',
         helpLabel: '?',
         helpState: 'closed',
+        newCharacterLabel: 'new',
+        signInLabel: 'sign in',
+        signOutLabel: 'sign out',
       },
     });
     const charStore = useCharacterStore();
@@ -26,18 +28,29 @@ describe('MainHeader', () => {
     expect(wrapper.find('.main-header__title').text()).toBe('Hero');
   });
 
-  test('cloud hub hidden when not signed in', async () => {
+  test('emits new character and sign events', async () => {
     const wrapper = mount(MainHeader, {
       props: {
         defaultTitle: 'Default',
-        cloudHubLabel: 'hub',
         helpLabel: '?',
         helpState: 'closed',
+        newCharacterLabel: 'new',
+        signInLabel: 'sign in',
+        signOutLabel: 'sign out',
       },
     });
+    await wrapper.find('.main-header__section--left .main-header__button').trigger('click');
+    const newCharacterEmits = wrapper.emitted('new-character');
+    expect(newCharacterEmits).toHaveLength(1);
+    expect(newCharacterEmits[0][0]).toEqual({ isSignedIn: false });
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     await wrapper.vm.$nextTick();
-    expect(wrapper.find('.icon-button').exists()).toBe(true);
+    await wrapper.find('.main-header__section--right .main-header__button').trigger('click');
+    expect(wrapper.emitted('sign-in')).toHaveLength(1);
+    uiStore.isSignedIn = true;
+    await wrapper.vm.$nextTick();
+    await wrapper.find('.main-header__section--right .main-header__button').trigger('click');
+    expect(wrapper.emitted('sign-out')).toHaveLength(1);
   });
 });

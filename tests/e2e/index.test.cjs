@@ -154,7 +154,7 @@ test.describe('Character Sheet E2E Tests', () => {
     const modal = page.locator('.modal');
     await modal.waitFor({ state: 'visible' });
 
-    const signInButton = page.locator('button:has-text("Googleにログイン")');
+    const signInButton = page.locator('button:has-text("ログイン")');
     await signInButton.waitFor({ state: 'visible' });
     await expect(signInButton).toBeEnabled({ timeout: 10000 });
     await signInButton.click();

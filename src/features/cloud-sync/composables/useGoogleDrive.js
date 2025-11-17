@@ -241,10 +241,11 @@ export function useGoogleDrive(dataManager) {
         characterStore.histories,
         targetFileId,
       )
-      .then((result) => {
+      .then(async (result) => {
         if (result) {
           uiStore.isCloudSaveSuccess = true;
           uiStore.setCurrentDriveFileId(result.id);
+          return renameDriveFileIfNeeded(result);
         }
         return result;
       });
@@ -256,6 +257,26 @@ export function useGoogleDrive(dataManager) {
     });
 
     return savePromise;
+  }
+
+  async function renameDriveFileIfNeeded(result) {
+    const driveManager = dataManager.googleDriveManager;
+    if (
+      !result?.id ||
+      !driveManager ||
+      typeof driveManager.renameFile !== 'function' ||
+      typeof dataManager.getDriveFileName !== 'function'
+    ) {
+      return result;
+    }
+
+    const desiredName = dataManager.getDriveFileName(characterStore.character.name);
+    if (!desiredName || result.name === desiredName) {
+      return result;
+    }
+
+    const renamed = await driveManager.renameFile(result.id, desiredName);
+    return renamed || result;
   }
 
   function handleSaveToDriveClick() {
