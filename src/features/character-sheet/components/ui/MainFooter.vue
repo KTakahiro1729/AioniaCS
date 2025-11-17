@@ -95,6 +95,12 @@ function handleShareClick() {
   gap: 12px;
 }
 
+.footer-button {
+  width: 110px;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
 .status-display {
   padding: 7px 14px;
   border-radius: 3px;
@@ -119,15 +125,7 @@ function handleShareClick() {
 }
 
 .footer-button--output {
-  width: 175px;
   user-select: none;
-}
-
-.footer-button--save,
-.footer-button--load {
-  width: 140px;
-  flex-shrink: 0;
-  justify-content: center;
 }
 
 .footer-button--save {

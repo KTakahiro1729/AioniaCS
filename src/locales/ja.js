@@ -115,49 +115,13 @@ export const messages = {
     },
   },
   characterHub: {
-    loadConfirm: (name) => ({
-      title: '読込確認',
-      message: `${name} を読み込みますか？`,
-      buttons: [
-        { label: '読込', value: 'load', variant: 'primary' },
-        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
-      ],
-    }),
-    deleteConfirm: (name) => ({
-      title: '削除確認',
-      message: `${name} を削除しますか？`,
-      buttons: [
-        { label: '削除', value: 'delete', variant: 'primary' },
-        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
-      ],
-    }),
-    delete: {
-      successToast: () => ({ title: '削除完了', message: '' }),
-      asyncToast: {
-        loading: () => ({ title: '削除', message: '削除中...' }),
-        success: () => ({ title: '削除完了', message: '' }),
-        error: (err) => ({ title: '削除失敗', message: err.message || '' }),
-      },
-    },
-    export: {
-      loading: () => ({ title: 'エクスポート', message: 'エクスポート中...' }),
-      success: () => ({ title: 'エクスポート完了', message: '' }),
-      error: (err) => ({
-        title: 'エクスポート失敗',
-        message: err.message || '',
-      }),
-    },
     driveFolder: {
       changeButton: '選択',
       label: '保存先フォルダ',
       placeholder: '慈悲なきアイオニア',
     },
     buttons: {
-      load: 'Driveから読み込む',
-      saveNew: '新しい冒険者として保存',
-      overwrite: '上書き保存',
-      signOut: 'ログアウト',
-      signIn: 'Googleにログイン',
+      signIn: 'ログイン',
     },
   },
   image: {
@@ -181,7 +145,7 @@ export const messages = {
       defaultTitle: 'Aionia TRPG Character Sheet',
       helpLabel: '?',
       newCharacter: '新規作成',
-      signIn: 'Googleにログイン',
+      signIn: 'ログイン',
       signOut: 'ログアウト',
     },
     footer: {
@@ -200,7 +164,7 @@ export const messages = {
       loadCloudTitle: 'Google Driveから読込む',
       saveLocal: '端末保存',
       saveLocalTitle: '端末に保存',
-      loadLocal: '読み込み',
+      loadLocal: '読込',
       loadLocalTitle: '端末から読込む',
       save: '保存',
     },
