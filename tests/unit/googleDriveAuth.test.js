@@ -32,12 +32,12 @@ describe('GoogleDriveManager auth', () => {
     });
   });
 
-  test('handleSignOut revokes token and clears gapi token', () => {
+  test('handleSignOut revokes token and clears gapi token', async () => {
     const gdm = initializeGoogleDriveManager('k', 'c');
     gdm.tokenClient = { requestAccessToken: vi.fn() };
     gapi.client.getToken.mockReturnValue({ access_token: 't' });
     const cb = vi.fn();
-    gdm.handleSignOut(cb);
+    await gdm.handleSignOut(cb);
     expect(google.accounts.oauth2.revoke).toHaveBeenCalledWith('t', expect.any(Function));
     expect(gapi.client.setToken).toHaveBeenCalledWith('');
     expect(cb).toHaveBeenCalled();

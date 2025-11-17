@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
@@ -5,6 +6,17 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
+}));
+
+vi.mock('@auth0/auth0-vue', () => ({
+  useAuth0: () => ({
+    isAuthenticated: { value: true },
+    isLoading: { value: false },
+    user: { value: { email: 'tester@example.com' } },
+    loginWithRedirect: vi.fn(),
+    logout: vi.fn(),
+    getAccessTokenSilently: vi.fn().mockResolvedValue('auth0-token'),
+  }),
 }));
 
 import { useModal } from '@/features/modals/composables/useModal.js';
@@ -43,6 +55,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.setDriveAccessToken('token');
     charStore.character.name = 'Hero';
     uiStore.setCurrentDriveFileId('existing-id');
 
@@ -71,6 +84,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.setDriveAccessToken('token');
     charStore.character.name = 'Hero';
     uiStore.clearCurrentDriveFileId();
 
@@ -101,6 +115,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.setDriveAccessToken('token');
 
     const result = await saveCharacterToDrive(true);
 
@@ -130,6 +145,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.setDriveAccessToken('token');
 
     const result = await loadCharacterFromDrive();
 

@@ -4,11 +4,13 @@ import {
   getMockGoogleDriveManagerInstance,
   initializeMockGoogleDriveManager,
 } from '@/infrastructure/google-drive/mockGoogleDriveManager.js';
+import { useAuth0Client } from '@/app/providers/useAuth0Client.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { useModal } from '@/features/modals/composables/useModal.js';
 import { messages } from '@/locales/ja.js';
+import { fetchDriveAccessTokenFromAuth0 } from '@/features/cloud-sync/services/auth0DriveTokenClient.js';
 
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
 const getDriveManagerInstance = useMock ? getMockGoogleDriveManagerInstance : getGoogleDriveManagerInstance;
@@ -22,9 +24,11 @@ export function useGoogleDrive(dataManager) {
   const googleDriveManager = ref(null);
   const { showToast, showAsyncToast } = useNotifications();
   const { showModal } = useModal();
+  const auth0Client = useAuth0Client();
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
-  const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isGisInitialized);
+  const hasDriveToken = computed(() => !!uiStore.driveAccessToken);
+  const isDriveReady = computed(() => uiStore.isGapiInitialized && hasDriveToken.value);
 
   function syncGoogleDriveManager() {
     try {
@@ -39,25 +43,57 @@ export function useGoogleDrive(dataManager) {
       dataManager.setGoogleDriveManager(googleDriveManager.value);
     }
 
+    if (googleDriveManager.value && uiStore.driveAccessToken) {
+      googleDriveManager.value.applyExternalAccessToken(uiStore.driveAccessToken);
+    }
+
     if (googleDriveManager.value && uiStore.isSignedIn) {
       refreshDriveFolderPath();
     }
   }
 
+  async function acquireDriveAccessToken({ promptConsent = false } = {}) {
+    if (!googleDriveManager.value) {
+      return null;
+    }
+
+    if (uiStore.driveAccessToken) {
+      await googleDriveManager.value.applyExternalAccessToken(uiStore.driveAccessToken);
+      return uiStore.driveAccessToken;
+    }
+
+    try {
+      const accessToken = await googleDriveManager.value.requestDriveAccessToken({ prompt: promptConsent ? 'consent' : '' });
+      uiStore.setDriveAccessToken(accessToken);
+      return accessToken;
+    } catch (error) {
+      try {
+        const auth0Token = await fetchDriveAccessTokenFromAuth0(auth0Client.getAccessToken);
+        if (auth0Token) {
+          await googleDriveManager.value.applyExternalAccessToken(auth0Token);
+          uiStore.setDriveAccessToken(auth0Token);
+          return auth0Token;
+        }
+      } catch (bridgeError) {
+        console.error('Auth0 Drive token bridge failed:', bridgeError);
+      }
+      throw error;
+    }
+  }
+
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
-    const signInPromise = new Promise((resolve, reject) => {
-      googleDriveManager.value.handleSignIn((error, authResult) => {
-        if (error || !authResult || !authResult.signedIn) {
-          uiStore.isSignedIn = false;
-          reject(error || new Error('Ensure pop-ups are enabled.'));
-        } else {
-          uiStore.isSignedIn = true;
-          resolve();
-        }
-      });
-    });
-    signInPromise.then(() => refreshDriveFolderPath()).catch(() => {});
+
+    const signInPromise = (async () => {
+      await auth0Client.ensureLogin();
+      const token = await acquireDriveAccessToken({ promptConsent: true });
+      if (!token) {
+        throw new Error('Drive access token unavailable.');
+      }
+      uiStore.setDriveAccessToken(token);
+      await refreshDriveFolderPath();
+    })();
+
     showAsyncToast(signInPromise, {
       loading: messages.googleDrive.signIn.loading(),
       success: messages.googleDrive.signIn.success(),
@@ -65,13 +101,14 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
-  function handleSignOutClick() {
+  async function handleSignOutClick() {
     if (!googleDriveManager.value) return;
-    googleDriveManager.value.handleSignOut(() => {
-      uiStore.isSignedIn = false;
-      uiStore.clearCurrentDriveFileId();
-      showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
-    });
+
+    await googleDriveManager.value.revokeAccessToken();
+    uiStore.setDriveAccessToken(null);
+    uiStore.clearCurrentDriveFileId();
+    await auth0Client.logout();
+    showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
   }
 
   async function promptForDriveFolder() {

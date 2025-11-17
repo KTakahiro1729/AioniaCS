@@ -17,6 +17,7 @@ export class MockGoogleDriveManager {
     this.storageKey = 'mockGoogleDriveData';
     this.configFileId = 'mock-config';
     this.pickerApiLoaded = true;
+    this.driveAccessToken = null;
     this._loadState();
     singletonInstance = this;
   }
@@ -46,6 +47,7 @@ export class MockGoogleDriveManager {
 
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
+    this.driveAccessToken = null;
     this._saveState();
   }
 
@@ -65,6 +67,7 @@ export class MockGoogleDriveManager {
     };
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
+    this.driveAccessToken = null;
     this._saveState();
   }
 
@@ -132,14 +135,34 @@ export class MockGoogleDriveManager {
 
   handleSignIn(callback) {
     this.state.signedIn = true;
+    this.driveAccessToken = 'mock-access-token';
     this._saveState();
-    if (callback) callback(null, { signedIn: true });
+    if (callback) callback(null, { signedIn: true, accessToken: this.driveAccessToken });
   }
 
   handleSignOut(callback) {
     this.state.signedIn = false;
+    this.driveAccessToken = null;
     this._saveState();
     if (callback) callback();
+  }
+
+  setAccessToken(accessToken) {
+    this.driveAccessToken = accessToken;
+  }
+
+  requestDriveAccessToken() {
+    this.driveAccessToken = 'mock-access-token';
+    return Promise.resolve(this.driveAccessToken);
+  }
+
+  async applyExternalAccessToken(accessToken) {
+    this.setAccessToken(accessToken);
+    return accessToken;
+  }
+
+  async revokeAccessToken() {
+    this.driveAccessToken = null;
   }
 
   async loadConfig() {

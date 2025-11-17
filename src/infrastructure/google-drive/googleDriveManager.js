@@ -55,6 +55,7 @@ export class GoogleDriveManager {
     this.configFileId = null;
     this.config = null;
     this.cachedFolderPath = null;
+    this.activeAccessToken = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
@@ -292,56 +293,70 @@ export class GoogleDriveManager {
     return this.gisLoadPromise;
   }
 
-  /**
-   * Initiates the Google Sign-In flow.
-   * @param {function} callback - Called with the sign-in status/user profile or error.
-   */
-  handleSignIn(callback) {
-    if (!this.tokenClient) {
-      console.error('GIS Token Client not initialized.');
-      if (callback) callback(new Error('GIS Token Client not initialized.'));
-      return;
-    }
-
-    // Set a dynamic callback for this specific sign-in attempt
-    this.tokenClient.callback = (resp) => {
-      if (resp.error) {
-        console.error('Google Sign-In error:', resp.error);
-        if (callback) callback(new Error(resp.error));
-        return;
-      }
-      // GIS automatically manages token refresh.
-      // No need to manually get user profile here, gapi.client will use the token.
-      // The app can check gapi.auth.getToken() to see if it's signed in.
-      console.log('Sign-in successful, token obtained.');
-      if (callback) callback(null, { signedIn: true }); // Indicate success
-    };
-
-    // Prompt the user to select an account and grant access
-    // Check if already has an access token
-    if (gapi.client.getToken() === null) {
-      this.tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      // Already has a token, consider as signed in
-      this.tokenClient.requestAccessToken({ prompt: '' }); // Try to get token without prompt
+  setAccessToken(accessToken) {
+    this.activeAccessToken = accessToken || null;
+    if (typeof gapi !== 'undefined' && gapi.client) {
+      gapi.client.setToken(accessToken ? { access_token: accessToken } : '');
     }
   }
 
-  /**
-   * Handles Google Sign-Out.
-   * @param {function} callback - Called after sign-out.
-   */
-  handleSignOut(callback) {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-      google.accounts.oauth2.revoke(token.access_token, () => {
-        gapi.client.setToken(''); // Clear GAPI's token
-        console.log('User signed out and token revoked.');
-        if (callback) callback();
-      });
-    } else {
-      if (callback) callback();
+  requestDriveAccessToken(options = {}) {
+    if (!this.tokenClient) {
+      const error = new Error('GIS Token Client not initialized.');
+      console.error('GDM: ' + error.message);
+      return Promise.reject(error);
     }
+
+    return new Promise((resolve, reject) => {
+      this.tokenClient.callback = (resp) => {
+        if (resp.error) {
+          console.error('Google Sign-In error:', resp.error);
+          reject(new Error(resp.error));
+          return;
+        }
+        const token = resp.access_token || (typeof gapi !== 'undefined' && gapi.client ? gapi.client.getToken()?.access_token : null);
+        if (!token) {
+          reject(new Error('No access token returned from GIS.'));
+          return;
+        }
+        this.setAccessToken(token);
+        resolve(token);
+      };
+
+      const requestOptions = { prompt: options.prompt ?? 'consent' };
+      this.tokenClient.requestAccessToken(requestOptions);
+    });
+  }
+
+  async handleSignIn(callback) {
+    try {
+      const accessToken = await this.requestDriveAccessToken({ prompt: 'consent' });
+      if (callback) callback(null, { signedIn: true, accessToken });
+      return { signedIn: true, accessToken };
+    } catch (error) {
+      if (callback) callback(error);
+      throw error;
+    }
+  }
+
+  async handleSignOut(callback) {
+    await this.revokeAccessToken();
+    if (callback) callback();
+  }
+
+  async applyExternalAccessToken(accessToken) {
+    this.setAccessToken(accessToken);
+    return accessToken;
+  }
+
+  async revokeAccessToken() {
+    const token = typeof gapi !== 'undefined' && gapi.client ? gapi.client.getToken() : null;
+    if (token?.access_token && typeof google !== 'undefined' && google.accounts?.oauth2?.revoke) {
+      await new Promise((resolve) => {
+        google.accounts.oauth2.revoke(token.access_token, () => resolve());
+      });
+    }
+    this.setAccessToken(null);
   }
 
   // --- Placeholder methods for Drive functionality ---

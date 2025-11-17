@@ -10,6 +10,7 @@ export const useUiStore = defineStore('ui', {
     isLoading: false,
     driveFolderPath: '慈悲なきアイオニア',
     currentDriveFileId: null,
+    driveAccessToken: null,
     isViewingShared: false,
     pendingDriveSaves: {},
     showHeader: true,
@@ -39,6 +40,10 @@ export const useUiStore = defineStore('ui', {
     },
     clearCurrentDriveFileId() {
       this.currentDriveFileId = null;
+    },
+    setDriveAccessToken(token) {
+      this.driveAccessToken = token;
+      this.isSignedIn = !!token;
     },
     setDriveFolderPath(path) {
       this.driveFolderPath = path;
