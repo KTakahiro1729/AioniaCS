@@ -1,13 +1,15 @@
 <template>
   <div class="load-modal">
-    <section class="load-modal__section">
-      <label class="button-base load-modal__button">
-        {{ loadLocalLabel }}
-        <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
-      </label>
+    <section v-if="!isSignedIn" class="load-modal__section">
+      <p class="load-modal__signin-message">{{ signInMessage }}</p>
+      <button class="button-base load-modal__button" :disabled="!canSignIn" data-test="load-modal-signin" @click="$emit('sign-in')">
+        {{ signInLabel }}
+      </button>
     </section>
-
     <section class="load-modal__section load-modal__section--drive">
+      <button class="button-base load-modal__button" v-if="canUseDrive" data-test="load-modal-drive-button" @click="$emit('load-drive')">
+        {{ loadDriveLabel }}
+      </button>
       <div class="load-modal__config">
         <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
         <div class="load-modal__input-group">
@@ -31,26 +33,12 @@
           </button>
         </div>
       </div>
-      <button
-        class="button-base load-modal__button"
-        :disabled="!canUseDrive"
-        data-test="load-modal-drive-button"
-        @click="$emit('load-drive')"
-      >
-        {{ loadDriveLabel }}
-      </button>
     </section>
-
-    <section v-if="!isSignedIn" class="load-modal__section load-modal__section--signin">
-      <p class="load-modal__signin-message">{{ signInMessage }}</p>
-      <button
-        class="button-base load-modal__button"
-        :disabled="!canSignIn"
-        data-test="load-modal-signin"
-        @click="$emit('sign-in')"
-      >
-        {{ signInLabel }}
-      </button>
+    <section class="load-modal__section load-modal__section--local">
+      <label class="button-base load-modal__button">
+        {{ loadLocalLabel }}
+        <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
+      </label>
     </section>
   </div>
 </template>
@@ -164,7 +152,7 @@ function handleLocalChange(event) {
   padding-inline: 12px;
 }
 
-.load-modal__section--signin {
+.load-modal__section--local {
   border-top: 1px solid var(--color-border-normal);
   padding-top: 12px;
 }

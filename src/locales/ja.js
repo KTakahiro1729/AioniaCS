@@ -121,7 +121,7 @@ export const messages = {
       placeholder: '慈悲なきアイオニア',
     },
     buttons: {
-      signIn: 'ログイン',
+      signIn: 'ログイン／Driveから読み込む',
     },
   },
   image: {
