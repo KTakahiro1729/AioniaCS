@@ -22,7 +22,7 @@ export default defineConfig({
     globals: true,
     setupFiles: './tests/unit/setup.js',
     include: ['tests/unit/**/*.test.js', 'tests/integrity/**/*.test.js'],
-    exclude: ['tests/e2e/**', 'node_modules/**'],
+    exclude: ['node_modules/**'],
     alias: {
       '@': resolve(__dirname, 'src'),
       '\\?raw$': resolve(__dirname, 'tests/unit/__mocks__/raw.js'),
