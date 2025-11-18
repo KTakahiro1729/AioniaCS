@@ -23,8 +23,8 @@ export function useGoogleDrive(dataManager) {
   const { showToast, showAsyncToast } = useNotifications();
   const { showModal } = useModal();
 
-  const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
-  const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isGisInitialized);
+  const canSignInToGoogle = computed(() => !uiStore.isSignedIn);
+  const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isSignedIn);
 
   function syncGoogleDriveManager() {
     try {
@@ -46,32 +46,15 @@ export function useGoogleDrive(dataManager) {
 
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
-    const signInPromise = new Promise((resolve, reject) => {
-      googleDriveManager.value.handleSignIn((error, authResult) => {
-        if (error || !authResult || !authResult.signedIn) {
-          uiStore.isSignedIn = false;
-          reject(error || new Error('Ensure pop-ups are enabled.'));
-        } else {
-          uiStore.isSignedIn = true;
-          resolve();
-        }
-      });
-    });
-    signInPromise.then(() => refreshDriveFolderPath()).catch(() => {});
-    showAsyncToast(signInPromise, {
-      loading: messages.googleDrive.signIn.loading(),
-      success: messages.googleDrive.signIn.success(),
-      error: (err) => messages.googleDrive.signIn.error(err),
-    });
+    googleDriveManager.value.handleSignIn();
   }
 
-  function handleSignOutClick() {
+  async function handleSignOutClick() {
     if (!googleDriveManager.value) return;
-    googleDriveManager.value.handleSignOut(() => {
-      uiStore.isSignedIn = false;
-      uiStore.clearCurrentDriveFileId();
-      showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
-    });
+    await googleDriveManager.value.handleSignOut();
+    uiStore.isSignedIn = false;
+    uiStore.clearCurrentDriveFileId();
+    showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
   }
 
   async function promptForDriveFolder() {
@@ -303,22 +286,16 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGapiLoad();
         console.info('Google API Ready');
         uiStore.isGapiInitialized = true;
-      } catch {
+        const restored = await googleDriveManager.value.restoreSession();
+        uiStore.isSignedIn = restored;
+        if (restored) {
+          refreshDriveFolderPath();
+        }
+      } catch (error) {
+        console.error('Failed to initialize Google API:', error);
         uiStore.isGapiInitialized = false;
+        uiStore.isSignedIn = false;
         showToast({ type: 'error', ...messages.googleDrive.apiInitError() });
-      }
-    };
-
-    const handleGisLoaded = async () => {
-      if (uiStore.isGisInitialized || !googleDriveManager.value) return;
-      console.info('Google Sign-In Loading...');
-      try {
-        await googleDriveManager.value.onGisLoad();
-        console.info('Google Sign-In Ready');
-        uiStore.isGisInitialized = true;
-      } catch {
-        uiStore.isGisInitialized = false;
-        showToast({ type: 'error', ...messages.googleDrive.signInInitError() });
       }
     };
 
@@ -341,10 +318,6 @@ export function useGoogleDrive(dataManager) {
     waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
       .then(handleGapiLoaded)
       .catch(() => showToast({ type: 'error', ...messages.googleDrive.apiInitError() }));
-
-    waitForScript('script[src="https://accounts.google.com/gsi/client"]', () => window.google && window.google.accounts)
-      .then(handleGisLoaded)
-      .catch(() => showToast({ type: 'error', ...messages.googleDrive.signInInitError() }));
   }
 
   syncGoogleDriveManager();

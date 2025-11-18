@@ -126,14 +126,14 @@ export class MockGoogleDriveManager {
     return Promise.resolve();
   }
 
-  async onGisLoad() {
-    return Promise.resolve();
+  async restoreSession() {
+    return this.state.signedIn;
   }
 
   handleSignIn(callback) {
     this.state.signedIn = true;
     this._saveState();
-    if (callback) callback(null, { signedIn: true });
+    if (callback) callback(null, { redirected: true });
   }
 
   handleSignOut(callback) {
