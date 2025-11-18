@@ -35,22 +35,21 @@ function sanitizeFileName(name) {
 }
 
 export class GoogleDriveManager {
-  constructor(apiKey, clientId) {
+  constructor(apiKey) {
     if (singletonInstance) {
       throw new Error('GoogleDriveManager has already been instantiated. Use getGoogleDriveManagerInstance().');
     }
 
     this.apiKey = apiKey;
-    this.clientId = clientId;
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
     this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
-    this.gapiLoadedCallback = null;
-    this.gisLoadedCallback = null;
-    this.tokenClient = null;
     this.pickerApiLoaded = false;
     this.aioniaFolderId = null;
     this.gapiLoadPromise = null;
-    this.gisLoadPromise = null;
+    this.refreshTimeoutId = null;
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
+    this.refreshPromise = null;
     this.configFileName = 'aioniacs.cfg';
     this.configFileId = null;
     this.config = null;
@@ -61,6 +60,74 @@ export class GoogleDriveManager {
     this.handleSignOut = this.handleSignOut.bind(this);
 
     singletonInstance = this;
+  }
+
+  clearAccessToken() {
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
+    if (this.refreshTimeoutId) {
+      clearTimeout(this.refreshTimeoutId);
+      this.refreshTimeoutId = null;
+    }
+    if (typeof gapi !== 'undefined' && gapi.client) {
+      gapi.client.setToken(null);
+    }
+  }
+
+  scheduleRefresh(expiresInSeconds) {
+    if (this.refreshTimeoutId) {
+      clearTimeout(this.refreshTimeoutId);
+    }
+    const refreshDelayMs = Math.max((expiresInSeconds - 300) * 1000, 5000);
+    this.refreshTimeoutId = setTimeout(() => {
+      this.refreshAccessToken().catch((error) => {
+        console.error('Failed to refresh Google access token:', error);
+      });
+    }, refreshDelayMs);
+  }
+
+  async setAccessToken(accessToken, expiresInSeconds) {
+    if (!accessToken || !expiresInSeconds) {
+      throw new Error('Invalid access token response.');
+    }
+    await this.onGapiLoad();
+    gapi.client.setToken({ access_token: accessToken });
+    this.accessToken = accessToken;
+    this.tokenExpiresAt = Date.now() + expiresInSeconds * 1000;
+    this.scheduleRefresh(expiresInSeconds);
+    return { accessToken, expiresIn: expiresInSeconds };
+  }
+
+  async refreshAccessToken() {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+    this.refreshPromise = fetch('/api/auth/refresh', { credentials: 'include' })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('Token refresh failed');
+        }
+        const payload = await response.json();
+        return this.setAccessToken(payload.accessToken, payload.expiresIn);
+      })
+      .catch((error) => {
+        this.clearAccessToken();
+        throw error;
+      })
+      .finally(() => {
+        this.refreshPromise = null;
+      });
+    return this.refreshPromise;
+  }
+
+  async trySilentLogin() {
+    try {
+      await this.refreshAccessToken();
+      return true;
+    } catch (error) {
+      console.warn('Silent Google login failed:', error);
+      return false;
+    }
   }
 
   getDefaultConfig() {
@@ -240,7 +307,7 @@ export class GoogleDriveManager {
           .init({
             apiKey: this.apiKey,
             discoveryDocs: this.discoveryDocs,
-            // scope: this.scope, // Scope is handled by GIS token client for Drive data access
+            // Access token is provided via backend-issued OAuth tokens
           })
           .then(() => {
             this.pickerApiLoaded = true;
@@ -257,91 +324,56 @@ export class GoogleDriveManager {
     return this.gapiLoadPromise;
   }
 
-  /**
-   * Called when the Google Identity Services (GIS) script is loaded.
-   * Initializes the token client.
-   * @returns {Promise<void>}
-   */
-  onGisLoad() {
-    if (this.gisLoadPromise) {
-      return this.gisLoadPromise;
-    }
-
-    this.gisLoadPromise = new Promise((resolve, reject) => {
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2 || !google.accounts.oauth2.initTokenClient) {
-        const err = new Error(
-          'GIS library not fully available to initialize token client (google.accounts.oauth2.initTokenClient is undefined).',
-        );
-        console.error('GDM: ' + err.message);
-        return reject(err);
-      }
-      try {
-        this.tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: this.clientId,
-          scope: this.scope,
-          callback: '', // Callback will be set dynamically per request for actual token requests
-        });
-        console.log('GDM: GIS Token Client initialized.');
-        resolve();
-      } catch (error) {
-        console.error('GDM: Error initializing GIS Token Client:', error);
-        reject(error);
-      }
-    });
-
-    return this.gisLoadPromise;
-  }
-
-  /**
-   * Initiates the Google Sign-In flow.
-   * @param {function} callback - Called with the sign-in status/user profile or error.
-   */
   handleSignIn(callback) {
-    if (!this.tokenClient) {
-      console.error('GIS Token Client not initialized.');
-      if (callback) callback(new Error('GIS Token Client not initialized.'));
+    const popup = window.open('/api/auth/login', 'google-drive-auth', 'width=500,height=700');
+    if (!popup) {
+      if (callback) callback(new Error('Authentication popup was blocked.'));
       return;
     }
+    popup.focus();
 
-    // Set a dynamic callback for this specific sign-in attempt
-    this.tokenClient.callback = (resp) => {
-      if (resp.error) {
-        console.error('Google Sign-In error:', resp.error);
-        if (callback) callback(new Error(resp.error));
+    const handleMessage = async (event) => {
+      if (event.origin !== window.location.origin) {
         return;
       }
-      // GIS automatically manages token refresh.
-      // No need to manually get user profile here, gapi.client will use the token.
-      // The app can check gapi.auth.getToken() to see if it's signed in.
-      console.log('Sign-in successful, token obtained.');
-      if (callback) callback(null, { signedIn: true }); // Indicate success
+      const data = event.data || {};
+      if (data.type !== 'google-drive-auth') {
+        return;
+      }
+
+      window.removeEventListener('message', handleMessage);
+      clearInterval(popupWatcher);
+      if (data.error) {
+        if (callback) callback(new Error(data.error));
+        return;
+      }
+      try {
+        await this.setAccessToken(data.accessToken, data.expiresIn);
+        if (callback) callback(null, { signedIn: true });
+      } catch (error) {
+        if (callback) callback(error);
+      }
     };
 
-    // Prompt the user to select an account and grant access
-    // Check if already has an access token
-    if (gapi.client.getToken() === null) {
-      this.tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      // Already has a token, consider as signed in
-      this.tokenClient.requestAccessToken({ prompt: '' }); // Try to get token without prompt
-    }
+    const popupWatcher = setInterval(() => {
+      if (popup.closed) {
+        window.removeEventListener('message', handleMessage);
+        clearInterval(popupWatcher);
+        if (callback) callback(new Error('Authentication was canceled.'));
+      }
+    }, 500);
+
+    window.addEventListener('message', handleMessage);
   }
 
-  /**
-   * Handles Google Sign-Out.
-   * @param {function} callback - Called after sign-out.
-   */
-  handleSignOut(callback) {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-      google.accounts.oauth2.revoke(token.access_token, () => {
-        gapi.client.setToken(''); // Clear GAPI's token
-        console.log('User signed out and token revoked.');
-        if (callback) callback();
-      });
-    } else {
-      if (callback) callback();
+  async handleSignOut(callback) {
+    this.clearAccessToken();
+    try {
+      await fetch('/api/auth/refresh', { method: 'DELETE', credentials: 'include' });
+    } catch (error) {
+      console.error('Failed to clear refresh token cookie:', error);
     }
+    if (callback) callback();
   }
 
   // --- Placeholder methods for Drive functionality ---
@@ -990,12 +1022,12 @@ export class GoogleDriveManager {
   }
 }
 
-export function initializeGoogleDriveManager(apiKey, clientId) {
+export function initializeGoogleDriveManager(apiKey) {
   if (singletonInstance) {
     return singletonInstance;
   }
 
-  return new GoogleDriveManager(apiKey, clientId);
+  return new GoogleDriveManager(apiKey);
 }
 
 export function getGoogleDriveManagerInstance() {

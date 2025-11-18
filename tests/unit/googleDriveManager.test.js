@@ -25,7 +25,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
         request: vi.fn(),
       },
     };
-    gdm = initializeGoogleDriveManager('key', 'client');
+    gdm = initializeGoogleDriveManager('key');
   });
 
   afterEach(() => {
@@ -214,8 +214,8 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   });
 
   test('singleton pattern remains enforced', () => {
-    expect(() => new GoogleDriveManager('other', 'other')).toThrow('already been instantiated');
-    expect(initializeGoogleDriveManager('second', 'second')).toBe(gdm);
+    expect(() => new GoogleDriveManager('other')).toThrow('already been instantiated');
+    expect(initializeGoogleDriveManager('second')).toBe(gdm);
     expect(getGoogleDriveManagerInstance()).toBe(gdm);
   });
 });

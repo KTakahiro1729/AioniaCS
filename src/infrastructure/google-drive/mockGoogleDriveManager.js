@@ -8,12 +8,11 @@ function sanitizeFileName(name) {
 let singletonInstance = null;
 
 export class MockGoogleDriveManager {
-  constructor(apiKey, clientId) {
+  constructor(apiKey) {
     if (singletonInstance) {
       throw new Error('MockGoogleDriveManager has already been instantiated. Use getMockGoogleDriveManagerInstance().');
     }
     this.apiKey = apiKey;
-    this.clientId = clientId;
     this.storageKey = 'mockGoogleDriveData';
     this.configFileId = 'mock-config';
     this.pickerApiLoaded = true;
@@ -341,11 +340,11 @@ export class MockGoogleDriveManager {
   }
 }
 
-export function initializeMockGoogleDriveManager(apiKey, clientId) {
+export function initializeMockGoogleDriveManager(apiKey) {
   if (singletonInstance) {
     return singletonInstance;
   }
-  return new MockGoogleDriveManager(apiKey, clientId);
+  return new MockGoogleDriveManager(apiKey);
 }
 
 export function getMockGoogleDriveManagerInstance() {

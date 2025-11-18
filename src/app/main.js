@@ -6,9 +6,9 @@ import '@/shared/styles/style.css';
 
 const useMockDrive = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
 if (useMockDrive) {
-  initializeMockGoogleDriveManager(import.meta.env.VITE_GOOGLE_API_KEY, import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  initializeMockGoogleDriveManager(import.meta.env.VITE_GOOGLE_API_KEY);
 } else {
-  initializeGoogleDriveManager(import.meta.env.VITE_GOOGLE_API_KEY, import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  initializeGoogleDriveManager(import.meta.env.VITE_GOOGLE_API_KEY);
 }
 
 const app = createApp(App);

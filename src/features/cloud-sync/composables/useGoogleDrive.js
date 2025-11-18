@@ -24,15 +24,14 @@ export function useGoogleDrive(dataManager) {
   const { showModal } = useModal();
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
-  const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isGisInitialized);
+  const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isSignedIn);
 
   function syncGoogleDriveManager() {
     try {
       googleDriveManager.value = getDriveManagerInstance();
     } catch {
       const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      googleDriveManager.value = initializeDriveManager(apiKey, clientId);
+      googleDriveManager.value = initializeDriveManager(apiKey);
     }
 
     if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
@@ -303,22 +302,15 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGapiLoad();
         console.info('Google API Ready');
         uiStore.isGapiInitialized = true;
+        const signedIn = await googleDriveManager.value.trySilentLogin();
+        uiStore.isSignedIn = signedIn;
+        if (signedIn) {
+          await refreshDriveFolderPath();
+        }
       } catch {
         uiStore.isGapiInitialized = false;
+        uiStore.isSignedIn = false;
         showToast({ type: 'error', ...messages.googleDrive.apiInitError() });
-      }
-    };
-
-    const handleGisLoaded = async () => {
-      if (uiStore.isGisInitialized || !googleDriveManager.value) return;
-      console.info('Google Sign-In Loading...');
-      try {
-        await googleDriveManager.value.onGisLoad();
-        console.info('Google Sign-In Ready');
-        uiStore.isGisInitialized = true;
-      } catch {
-        uiStore.isGisInitialized = false;
-        showToast({ type: 'error', ...messages.googleDrive.signInInitError() });
       }
     };
 
@@ -341,10 +333,6 @@ export function useGoogleDrive(dataManager) {
     waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
       .then(handleGapiLoaded)
       .catch(() => showToast({ type: 'error', ...messages.googleDrive.apiInitError() }));
-
-    waitForScript('script[src="https://accounts.google.com/gsi/client"]', () => window.google && window.google.accounts)
-      .then(handleGisLoaded)
-      .catch(() => showToast({ type: 'error', ...messages.googleDrive.signInInitError() }));
   }
 
   syncGoogleDriveManager();

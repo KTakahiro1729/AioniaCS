@@ -29,3 +29,4 @@ test-results/
 .VSCodeCounter
 stats.html
 .env
+.dev.vars

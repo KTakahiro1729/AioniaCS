@@ -43,7 +43,7 @@ describe('useGoogleDrive', () => {
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
     charStore.character.name = 'Hero';
     uiStore.setCurrentDriveFileId('existing-id');
 
@@ -72,7 +72,7 @@ describe('useGoogleDrive', () => {
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
     charStore.character.name = 'Hero';
     uiStore.clearCurrentDriveFileId();
 
@@ -103,7 +103,7 @@ describe('useGoogleDrive', () => {
     charStore.character.name = 'Hero';
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
 
     const result = await saveCharacterToDrive(true);
 
@@ -133,7 +133,7 @@ describe('useGoogleDrive', () => {
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
 
     const result = await loadCharacterFromDrive();
 
@@ -163,7 +163,6 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
     uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
     uiStore.setDriveFolderPath('慈悲なきアイオニア');
 
     const selected = await promptForDriveFolder();
@@ -187,7 +186,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     charStore.character.name = 'Knight';
     uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
     uiStore.setCurrentDriveFileId('existing-id');
 
     const result = await saveCharacterToDrive();
