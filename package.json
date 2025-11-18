@@ -13,8 +13,6 @@
     "lint:html": "htmlhint \"**/*.html\"",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "e2e": "playwright test",
-    "pree2e": "playwright install",
     "prepare": "husky",
     "format": "prettier --write ."
   },
@@ -33,7 +31,6 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.24.7",
-    "@playwright/test": "^1.52.0",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vitest/ui": "^1.4.0",
     "cross-env": "^7.0.3",
