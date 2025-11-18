@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+import { handle } from 'hono/cloudflare-pages';
 
 const SESSION_COOKIE_NAME = 'aioniacs_session';
 const STATE_COOKIE_NAME = 'aioniacs_oauth_state';
@@ -269,7 +270,6 @@ app.post('/api/auth/logout', async (c) => {
   return c.json({ success: true });
 });
 
-export default app;
 export { app };
 
-export const onRequest = async (context) => app.fetch(context.request, context.env, context.ctx);
+export const onRequest = handle(app);
