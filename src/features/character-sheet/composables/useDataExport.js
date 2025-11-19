@@ -16,6 +16,7 @@ export function useDataExport() {
   const uiStore = useUiStore();
 
   async function saveData() {
+    const snapshot = buildSnapshotFromStore(characterStore);
     await dataManager.saveData(
       characterStore.character,
       characterStore.skills,
@@ -23,7 +24,7 @@ export function useDataExport() {
       characterStore.equipments,
       characterStore.histories,
     );
-    uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
+    uiStore.setLastSavedSnapshot(snapshot);
   }
 
   function handleFileUpload(event) {

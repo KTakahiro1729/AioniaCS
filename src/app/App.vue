@@ -71,9 +71,21 @@ async function confirmDiscardingUnsavedChanges() {
 }
 
 const handleCreateNewCharacter = async (payload) => {
-  const confirmed = await confirmDiscardingUnsavedChanges();
-  if (!confirmed) {
-    return;
+  if (hasUnsavedChanges()) {
+    const result = await showModal(messages.ui.confirmations.unsavedChanges);
+    const choice = result?.value;
+
+    if (choice === 'save') {
+      const saved = await saveOrUpdateCurrentCharacterInDrive();
+      if (!saved) {
+        return;
+      }
+    } else if (choice === 'discard') {
+      // 「保存せず続行」: 何もしない
+    } else {
+      // 「キャンセル」またはモーダルを閉じた場合: 中断
+      return;
+    }
   }
   clearLocalDraft();
   characterStore.initializeAll();

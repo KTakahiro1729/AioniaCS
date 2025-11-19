@@ -220,6 +220,8 @@ export function useGoogleDrive(dataManager) {
       targetFileId = uiStore.currentDriveFileId;
     }
 
+    const snapshotToSave = buildSnapshotFromStore(characterStore);
+
     const savePromise = dataManager
       .saveCharacterToDrive(
         characterStore.character,
@@ -233,7 +235,7 @@ export function useGoogleDrive(dataManager) {
         if (result) {
           uiStore.isCloudSaveSuccess = true;
           uiStore.setCurrentDriveFileId(result.id);
-          uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
+          uiStore.setLastSavedSnapshot(snapshotToSave);
           return renameDriveFileIfNeeded(result);
         }
         return result;
