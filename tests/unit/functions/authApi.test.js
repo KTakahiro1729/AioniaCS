@@ -116,7 +116,11 @@ describe('Cloudflare auth functions', () => {
       env,
     );
 
-    expect(res.status).toBe(302);
+    expect(res.status).toBe(200);
+
+    const body = await res.text();
+    expect(body).toContain('window.opener.postMessage');
+
     const sessionId = readCookie(res.headers, 'aioniacs_session');
     expect(sessionId).toBeTruthy();
     const stored = db.sessions.get(sessionId);

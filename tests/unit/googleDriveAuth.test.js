@@ -13,14 +13,17 @@ describe('GoogleDriveManager auth', () => {
         setToken: vi.fn(),
       },
     };
+    vi.spyOn(window, 'open').mockImplementation(() => ({ closed: false }));
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+
     Object.defineProperty(window, 'location', {
-      value: { href: 'http://localhost' },
+      value: { href: 'http://localhost', origin: 'http://localhost' },
       writable: true,
     });
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
     resetGoogleDriveManagerForTests();
   });
 
@@ -39,10 +42,15 @@ describe('GoogleDriveManager auth', () => {
     expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'server-access', expires_in: 3600 });
   });
 
-  test('handleSignIn navigates to login endpoint', () => {
+  test('handleSignIn opens login endpoint in a popup', () => {
     const gdm = initializeGoogleDriveManager('k', 'c');
     gdm.handleSignIn();
-    expect(window.location.href).toContain('/api/auth/login');
+
+    expect(window.open).toHaveBeenCalledWith(
+      expect.stringContaining('/api/auth/login'),
+      'google_auth_popup',
+      expect.stringContaining('width=500'),
+    );
   });
 
   test('handleSignOut clears token and calls logout API', async () => {

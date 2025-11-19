@@ -218,8 +218,23 @@ app.get('/api/auth/callback', async (c) => {
 
     setCookie(c, SESSION_COOKIE_NAME, sessionId, buildCookieOptions(SESSION_TTL_SECONDS));
     deleteCookie(c, STATE_COOKIE_NAME, { path: '/' });
-
-    return c.redirect('/', 302);
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <body>
+        <script>
+          // 親ウィンドウにメッセージを送る
+          if (window.opener) {
+            window.opener.postMessage({ type: 'AIONIACS_AUTH_SUCCESS' }, window.location.origin);
+          }
+          // 自分（ポップアップ）を閉じる
+          window.close();
+        </script>
+        <p>認証が完了しました。ウィンドウを閉じてください。</p>
+      </body>
+      </html>
+    `;
+    return c.html(html);
   } catch (error) {
     console.error('OAuth callback error:', error);
     return c.json({ error: 'Failed to complete authorization.' }, 500);

@@ -44,9 +44,21 @@ export function useGoogleDrive(dataManager) {
     }
   }
 
-  function handleSignInClick() {
+  async function handleSignInClick() {
     if (!googleDriveManager.value) return;
-    googleDriveManager.value.handleSignIn();
+
+    // サインイン処理の完了を待つ
+    const success = await googleDriveManager.value.handleSignIn();
+
+    if (success) {
+      // 成功したら状態を更新して設定を再読み込み
+      uiStore.isSignedIn = true;
+      await refreshDriveFolderPath();
+      showToast({ type: 'success', message: 'Googleドライブに接続しました' });
+    } else {
+      // 必要であればエラー時のToastなどを追加
+      // console.error('Sign in failed or cancelled');
+    }
   }
 
   async function handleSignOutClick() {

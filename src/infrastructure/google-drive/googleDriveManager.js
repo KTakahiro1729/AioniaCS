@@ -313,13 +313,43 @@ export class GoogleDriveManager {
     }
   }
 
-  handleSignIn(callback) {
-    if (typeof window !== 'undefined') {
-      window.location.href = this.loginEndpoint;
-    }
-    if (callback) {
-      callback(null, { redirected: true });
-    }
+  async handleSignIn() {
+    if (typeof window === 'undefined') return false;
+
+    return new Promise((resolve) => {
+      // ポップアップを画面中央に配置するための計算
+      const width = 500;
+      const height = 600;
+      const left = (window.screen.width - width) / 2;
+      const top = (window.screen.height - height) / 2;
+
+      // 認証エンドポイントをポップアップで開く
+      const popup = window.open(this.loginEndpoint, 'google_auth_popup', `width=${width},height=${height},top=${top},left=${left}`);
+
+      if (!popup) {
+        console.error('Popup blocked');
+        alert('ポップアップがブロックされました。許可してください。');
+        resolve(false);
+        return;
+      }
+
+      // バックエンドからのメッセージ受信リスナー
+      const receiveMessage = async (event) => {
+        // セキュリティチェック: オリジンが一致しない場合は無視
+        if (event.origin !== window.location.origin) return;
+
+        // バックエンドから送信されるメッセージタイプを確認
+        if (event.data && event.data.type === 'AIONIACS_AUTH_SUCCESS') {
+          window.removeEventListener('message', receiveMessage);
+
+          // ポップアップ認証成功後、セッションを復元してトークンを取得する
+          const success = await this.restoreSession();
+          resolve(success);
+        }
+      };
+
+      window.addEventListener('message', receiveMessage);
+    });
   }
 
   async handleSignOut(callback) {
