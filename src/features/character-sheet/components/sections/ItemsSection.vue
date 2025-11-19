@@ -160,11 +160,4 @@ const equipmentDescriptions = computed(() => {
   min-height: 45px;
   resize: vertical;
 }
-
-.description-toggle {
-  display: inline-flex;
-  align-items: center;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.8em;
-}
 </style>
