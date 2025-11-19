@@ -244,7 +244,7 @@ export function useGoogleDrive(dataManager) {
     showAsyncToast(
       savePromise,
       {
-        loading: messages.googleDrive.save.loading(),
+        loading: isNewFile ? messages.googleDrive.save.newLoading() : messages.googleDrive.save.loading(),
         success: isNewFile ? messages.googleDrive.save.newSuccess() : messages.googleDrive.save.success(),
         error: (err) => messages.googleDrive.save.error(err),
       },

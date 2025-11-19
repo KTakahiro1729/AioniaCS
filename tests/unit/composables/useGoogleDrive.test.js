@@ -167,6 +167,7 @@ describe('useGoogleDrive', () => {
 
     expect(showAsyncToastMock).toHaveBeenCalled();
     const toastOptions = showAsyncToastMock.mock.calls[showAsyncToastMock.mock.calls.length - 1][1];
+    expect(toastOptions.loading).toEqual(messages.googleDrive.save.newLoading());
     expect(toastOptions.success).toEqual(messages.googleDrive.save.newSuccess());
   });
 
@@ -187,6 +188,7 @@ describe('useGoogleDrive', () => {
 
     expect(showAsyncToastMock).toHaveBeenCalled();
     const toastOptions = showAsyncToastMock.mock.calls[showAsyncToastMock.mock.calls.length - 1][1];
+    expect(toastOptions.loading).toEqual(messages.googleDrive.save.loading());
     expect(toastOptions.success).toEqual(messages.googleDrive.save.success());
   });
 });
