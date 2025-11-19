@@ -86,7 +86,7 @@ defineExpose({ headerEl, helpIcon });
   display: flex;
   align-items: center;
   gap: 12px;
-  flex: 1;
+  flex-shrink: 0;
 }
 
 .main-header__section--left {
@@ -104,11 +104,13 @@ defineExpose({ headerEl, helpIcon });
 }
 
 .main-header__title {
-  flex: 2;
   text-align: center;
   font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
   color: var(--color-accent);
-  font-size: min(4vw, 30px);
+  font-size: clamp(2px, 3vw, 28px);
+  flex: 1.5;
+  min-width: 0;
+  padding: 0 10px;
 }
 
 .header-help-icon {
@@ -122,5 +124,11 @@ defineExpose({ headerEl, helpIcon });
 .header-help-icon--fixed,
 .header-help-icon--fixed:hover {
   background-color: var(--color-accent-dark);
+}
+
+@media (max-width: 400px) {
+  .main-header__title {
+    display: none;
+  }
 }
 </style>
