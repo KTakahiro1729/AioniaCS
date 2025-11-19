@@ -6,8 +6,8 @@ function resolveStorage(customStorage) {
   if (typeof customStorage !== 'undefined') {
     return customStorage;
   }
-  if (typeof window !== 'undefined' && window.localStorage) {
-    return window.localStorage;
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    return window.sessionStorage;
   }
   return null;
 }
