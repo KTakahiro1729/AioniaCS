@@ -3,6 +3,19 @@ import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
+import { messages } from '@/locales/ja.js';
+
+const showToastMock = vi.fn();
+const showAsyncToastMock = vi.fn();
+const logAndToastErrorMock = vi.fn();
+
+vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
+  useNotifications: () => ({
+    showToast: showToastMock,
+    showAsyncToast: showAsyncToastMock,
+    logAndToastError: logAndToastErrorMock,
+  }),
+}));
 
 function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
   const showFolderPicker = vi.fn();
@@ -21,6 +34,7 @@ function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC
 describe('useGoogleDrive', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    vi.clearAllMocks();
   });
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
@@ -131,5 +145,46 @@ describe('useGoogleDrive', () => {
 
     expect(renameFile).toHaveBeenCalledWith('existing-id', 'Knight.zip');
     expect(result).toEqual({ id: 'existing-id', name: 'Knight.zip' });
+  });
+
+  test('saveCharacterToDrive uses new success message for brand-new files', async () => {
+    const dataManager = {
+      saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'new-id', name: 'Rookie.zip' }),
+      googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Rookie.zip'),
+    };
+    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
+
+    await saveCharacterToDrive(true);
+
+    expect(showAsyncToastMock).toHaveBeenCalled();
+    const toastOptions = showAsyncToastMock.mock.calls[showAsyncToastMock.mock.calls.length - 1][1];
+    expect(toastOptions.loading).toEqual(messages.googleDrive.save.newLoading());
+    expect(toastOptions.success).toEqual(messages.googleDrive.save.newSuccess());
+  });
+
+  test('saveCharacterToDrive keeps default success message when updating existing files', async () => {
+    const dataManager = {
+      saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Veteran.zip' }),
+      googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Veteran.zip'),
+    };
+    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
+    uiStore.setCurrentDriveFileId('existing-id');
+
+    await saveCharacterToDrive(false);
+
+    expect(showAsyncToastMock).toHaveBeenCalled();
+    const toastOptions = showAsyncToastMock.mock.calls[showAsyncToastMock.mock.calls.length - 1][1];
+    expect(toastOptions.loading).toEqual(messages.googleDrive.save.loading());
+    expect(toastOptions.success).toEqual(messages.googleDrive.save.success());
   });
 });
