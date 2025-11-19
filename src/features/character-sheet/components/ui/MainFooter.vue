@@ -72,6 +72,45 @@ function handleShareClick() {
 </script>
 
 <style scoped>
+.main-footer {
+  display: flex;
+  align-items: center;
+  padding: 15px 25px;
+  border-top: 1px solid var(--color-border-normal);
+  background-color: var(--color-background);
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0 -3px 8px rgb(0 0 0 / 50%);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 15px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-normal) var(--color-background);
+}
+
+.main-footer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.main-footer::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-radius: 4px;
+}
+
+.main-footer::-webkit-scrollbar-thumb {
+  background: var(--color-border-normal);
+  border-radius: 4px;
+}
+
+.main-footer::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
 .footer-button {
   width: 100px;
   flex-shrink: 0;
@@ -111,5 +150,12 @@ function handleShareClick() {
 .button-base:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .main-footer {
+    padding: 10px 15px;
+    gap: 10px;
+  }
 }
 </style>

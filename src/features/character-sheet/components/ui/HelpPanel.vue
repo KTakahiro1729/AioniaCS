@@ -74,4 +74,89 @@ async function toggle(index) {
 defineExpose({ panelEl });
 </script>
 
-<style scoped></style>
+<style scoped>
+.help-panel {
+  position: fixed;
+  top: 92px;
+  right: 20px;
+  background-color: var(--color-panel-body);
+  border: 1px solid var(--color-border-normal);
+  padding: 30px;
+  border-radius: 4px;
+  box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
+  z-index: 200;
+  max-width: 90%;
+  width: 400px;
+  font-size: 0.9em;
+  color: var(--color-text-normal);
+}
+
+.help-panel h4 {
+  font-family: 'Noto Serif JP', serif;
+  color: var(--color-accent);
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.help-panel ul {
+  padding-left: 20px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+.help-panel li {
+  margin-bottom: 5px;
+}
+
+.help-panel p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.accordion__item + .accordion__item {
+  margin-top: 10px;
+}
+
+.accordion__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: var(--color-panel-header);
+  color: var(--color-accent);
+  padding: 8px 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 3px;
+}
+
+.accordion__indicator {
+  margin-left: 10px;
+}
+
+.accordion__body {
+  padding-top: 5px;
+}
+
+.help-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .help-panel {
+    width: calc(100% - 80px);
+    max-width: none;
+    top: 92px;
+    right: 20px;
+  }
+}
+</style>
