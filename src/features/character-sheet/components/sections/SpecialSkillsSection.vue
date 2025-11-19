@@ -223,7 +223,7 @@ textarea.special-skill-note-input {
 
 .special-skill-description {
   margin-top: 3px;
-  min-height: 45px;
+  min-height: 80px;
   resize: vertical;
 }
 
