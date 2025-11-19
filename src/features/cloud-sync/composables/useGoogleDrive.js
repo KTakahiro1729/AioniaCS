@@ -20,7 +20,7 @@ export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
   const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
-  const { showToast, showAsyncToast } = useNotifications();
+  const { showToast, showAsyncToast, logAndToastError } = useNotifications();
   const { showModal } = useModal();
 
   const canSignInToGoogle = computed(() => !uiStore.isSignedIn);
@@ -54,7 +54,7 @@ export function useGoogleDrive(dataManager) {
       // 成功したら状態を更新して設定を再読み込み
       uiStore.isSignedIn = true;
       await refreshDriveFolderPath();
-      showToast({ type: 'success', message: 'Googleドライブに接続しました' });
+      showToast({ type: 'success', ...messages.googleDrive.auth.connected() });
     } else {
       // 必要であればエラー時のToastなどを追加
       // console.error('Sign in failed or cancelled');
@@ -76,17 +76,16 @@ export function useGoogleDrive(dataManager) {
     }
     const gdm = dataManager.googleDriveManager;
     if (!gdm || typeof gdm.showFolderPicker !== 'function') {
-      showToast({ type: 'error', ...messages.googleDrive.folderPicker.error(new Error('Picker unavailable')) });
+      const pickerError = new Error(messages.googleDrive.folderPicker.unavailable().message);
+      logAndToastError(pickerError, () => messages.googleDrive.folderPicker.unavailable(), 'promptForDriveFolder');
       return uiStore.driveFolderPath;
     }
 
     return new Promise((resolve) => {
       gdm.showFolderPicker(async (err, folder) => {
         if (err || !folder) {
-          showToast({
-            type: 'error',
-            ...messages.googleDrive.folderPicker.error(err),
-          });
+          const pickerError = err || new Error(messages.googleDrive.folderPicker.error().message);
+          logAndToastError(pickerError, (caught) => messages.googleDrive.folderPicker.error(caught), 'promptForDriveFolder');
           resolve(uiStore.driveFolderPath);
           return;
         }
@@ -107,8 +106,7 @@ export function useGoogleDrive(dataManager) {
         uiStore.setDriveFolderPath(config.characterFolderPath);
       }
     } catch (error) {
-      console.error('Failed to load Drive folder config:', error);
-      showToast({ type: 'error', ...messages.googleDrive.config.loadError() });
+      logAndToastError(error, messages.googleDrive.config.loadError, 'refreshDriveFolderPath');
     }
   }
 
@@ -139,8 +137,7 @@ export function useGoogleDrive(dataManager) {
       showToast({ type: 'success', ...messages.googleDrive.config.updateSuccess() });
       return normalized;
     } catch (error) {
-      console.error('Failed to update Drive folder config:', error);
-      showToast({ type: 'error', ...messages.googleDrive.config.updateError(error) });
+      logAndToastError(error, messages.googleDrive.config.updateError, 'updateDriveFolderPath');
       return uiStore.driveFolderPath;
     }
   }
@@ -158,14 +155,16 @@ export function useGoogleDrive(dataManager) {
       dataManager.googleDriveManager.showFilePicker(
         (err, file) => {
           if (err || !file) {
-            showToast({ type: 'error', ...messages.googleDrive.load.error(err || new Error('No file selected')) });
+            const pickerError = err || new Error(messages.googleDrive.load.noSelection().message);
+            const toastFactory = err ? (caught) => messages.googleDrive.load.error(caught) : () => messages.googleDrive.load.noSelection();
+            logAndToastError(pickerError, toastFactory, 'loadCharacterFromDrive');
             resolve(null);
             return;
           }
 
           const loadPromise = dataManager.loadDataFromDrive(file.id).then((parsedData) => {
             if (!parsedData) {
-              throw new Error('Failed to load character data.');
+              throw new Error(messages.googleDrive.load.missingData().message);
             }
             Object.assign(characterStore.character, parsedData.character);
             characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
@@ -176,11 +175,15 @@ export function useGoogleDrive(dataManager) {
             return parsedData;
           });
 
-          showAsyncToast(loadPromise, {
-            loading: messages.googleDrive.load.loading(file.name),
-            success: messages.googleDrive.load.success(file.name),
-            error: (loadErr) => messages.googleDrive.load.error(loadErr),
-          });
+          showAsyncToast(
+            loadPromise,
+            {
+              loading: messages.googleDrive.load.loading(file.name),
+              success: messages.googleDrive.load.success(file.name),
+              error: (loadErr) => messages.googleDrive.load.error(loadErr),
+            },
+            'loadCharacterFromDrive',
+          );
 
           loadPromise.then((result) => resolve(result)).catch(() => resolve(null));
         },
@@ -245,11 +248,15 @@ export function useGoogleDrive(dataManager) {
         return result;
       });
 
-    showAsyncToast(savePromise, {
-      loading: messages.googleDrive.save.loading(),
-      success: messages.googleDrive.save.success(),
-      error: (err) => messages.googleDrive.save.error(err),
-    });
+    showAsyncToast(
+      savePromise,
+      {
+        loading: messages.googleDrive.save.loading(),
+        success: messages.googleDrive.save.success(),
+        error: (err) => messages.googleDrive.save.error(err),
+      },
+      'saveCharacterToDrive',
+    );
 
     return savePromise;
   }
@@ -304,10 +311,9 @@ export function useGoogleDrive(dataManager) {
           refreshDriveFolderPath();
         }
       } catch (error) {
-        console.error('Failed to initialize Google API:', error);
         uiStore.isGapiInitialized = false;
         uiStore.isSignedIn = false;
-        showToast({ type: 'error', ...messages.googleDrive.apiInitError() });
+        logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive');
       }
     };
 
@@ -329,7 +335,7 @@ export function useGoogleDrive(dataManager) {
 
     waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
       .then(handleGapiLoaded)
-      .catch(() => showToast({ type: 'error', ...messages.googleDrive.apiInitError() }));
+      .catch((error) => logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive'));
   }
 
   syncGoogleDriveManager();
