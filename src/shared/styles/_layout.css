@@ -17,7 +17,8 @@
   grid-template-columns: 1fr 1fr;
   gap: 30px 10px;
   grid-template-areas:
-    'character-info scar-weakness'
+    'character-info scar'
+    'character-info weakness'
     'skills special-skills'
     'items items'
     'memo memo'
@@ -28,8 +29,12 @@
   grid-area: character-info;
 }
 
-.scar-weakness {
-  grid-area: scar-weakness;
+.scar {
+  grid-area: scar;
+}
+
+.weakness {
+  grid-area: weakness;
 }
 
 .skills {

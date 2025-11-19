@@ -252,19 +252,18 @@ export const messages = {
           faith: '信仰',
         },
       },
-      scarWeakness: {
-        title: '傷痕と弱点',
-        scar: {
-          title: '傷痕',
+      scar: {
+        title: '傷痕',
+        fields: {
           initial: '初期値',
           current: '現在値（初期値+増加分）',
         },
-        weakness: {
-          title: '弱点',
-          columns: {
-            text: '弱点',
-            acquired: '獲得',
-          },
+      },
+      weakness: {
+        title: '弱点',
+        columns: {
+          text: '弱点',
+          acquired: '獲得',
         },
       },
       skills: {

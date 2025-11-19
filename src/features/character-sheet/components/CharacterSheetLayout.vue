@@ -4,7 +4,8 @@ import { useModal } from '@/features/modals/composables/useModal.js';
 import PrivacyPolicyModal from '@/features/modals/components/contents/PrivacyPolicyModal.vue';
 
 import CharacterBasicInfo from '@/features/character-sheet/components/sections/CharacterBasicInfo.vue';
-import ScarWeaknessSection from '@/features/character-sheet/components/sections/ScarWeaknessSection.vue';
+import ScarSection from '@/features/character-sheet/components/sections/ScarSection.vue';
+import WeaknessSection from '@/features/character-sheet/components/sections/WeaknessSection.vue';
 import SkillsSection from '@/features/character-sheet/components/sections/SkillsSection.vue';
 import SpecialSkillsSection from '@/features/character-sheet/components/sections/SpecialSkillsSection.vue';
 import ItemsSection from '@/features/character-sheet/components/sections/ItemsSection.vue';
@@ -31,7 +32,8 @@ async function openPrivacyPolicy() {
 <template>
   <div class="main-grid">
     <CharacterBasicInfo />
-    <ScarWeaknessSection />
+    <ScarSection />
+    <WeaknessSection />
     <SkillsSection />
     <SpecialSkillsSection />
     <ItemsSection />
