@@ -119,10 +119,6 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
     },
   );
 
-  onMounted(() => {
-    hydrateFromStorage();
-  });
-
   const stop = () => {
     if (debounceHandle) {
       clearTimeout(debounceHandle);
