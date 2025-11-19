@@ -11,6 +11,8 @@ import { usePrint } from '@/features/character-sheet/composables/usePrint.js';
 import { messages } from '@/locales/ja.js';
 import { useAppModals } from '@/features/modals/composables/useAppModals.js';
 import { useAppInitialization } from '@/app/providers/useAppInitialization.js';
+import { useModal } from '@/features/modals/composables/useModal.js';
+import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 import { AioniaGameData } from '@/data/gameData.js';
 import CharacterSheetLayout from '@/features/character-sheet/components/CharacterSheetLayout.vue';
@@ -25,11 +27,13 @@ const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
 const { clearLocalDraft } = useLocalCharacterPersistence(characterStore, uiStore);
 useKeyboardHandling();
 
 const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataExport();
 const { printCharacterSheet, openPreviewPage } = usePrint();
+const { showModal } = useModal();
 
 const {
   canSignInToGoogle,
@@ -50,11 +54,32 @@ const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLe
 
 const modalStore = useModalStore();
 
+function hasUnsavedChanges() {
+  const currentSnapshot = buildSnapshotFromStore(characterStore);
+  if (!currentSnapshot) {
+    return false;
+  }
+  return uiStore.lastSavedSnapshot ? currentSnapshot !== uiStore.lastSavedSnapshot : true;
+}
+
+async function confirmDiscardingUnsavedChanges() {
+  if (!hasUnsavedChanges()) {
+    return true;
+  }
+  const result = await showModal(messages.ui.confirmations.unsavedChanges);
+  return result?.value === 'confirm';
+}
+
 const handleCreateNewCharacter = async (payload) => {
+  const confirmed = await confirmDiscardingUnsavedChanges();
+  if (!confirmed) {
+    return;
+  }
   clearLocalDraft();
   characterStore.initializeAll();
   uiStore.clearCurrentDriveFileId();
   uiStore.isViewingShared = false;
+  uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
   const shouldCreateCloudFile = payload?.isSignedIn ?? uiStore.isSignedIn;
   if (!shouldCreateCloudFile) {
     return;

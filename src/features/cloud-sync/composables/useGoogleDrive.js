@@ -8,8 +8,8 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { removeStoredCharacterDraft } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { useModal } from '@/features/modals/composables/useModal.js';
 import { messages } from '@/locales/ja.js';
+import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
 const getDriveManagerInstance = useMock ? getMockGoogleDriveManagerInstance : getGoogleDriveManagerInstance;
@@ -22,7 +22,6 @@ export function useGoogleDrive(dataManager) {
   const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
   const { showToast, showAsyncToast, logAndToastError } = useNotifications();
-  const { showModal } = useModal();
 
   const canSignInToGoogle = computed(() => !uiStore.isSignedIn);
   const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isSignedIn);
@@ -174,6 +173,7 @@ export function useGoogleDrive(dataManager) {
             characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
             uiStore.setCurrentDriveFileId(file.id);
             removeStoredCharacterDraft();
+            uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
             return parsedData;
           });
 
@@ -214,22 +214,10 @@ export function useGoogleDrive(dataManager) {
       isNewFile = true;
     }
 
-    const charName = characterStore.character.name || '名もなき冒険者';
     let targetFileId = explicitFileId;
 
     if (!targetFileId && !isNewFile && uiStore.currentDriveFileId) {
       targetFileId = uiStore.currentDriveFileId;
-    }
-
-    if (!targetFileId) {
-      const existing = await dataManager.findDriveFileByCharacterName(charName);
-      if (existing) {
-        const result = await showModal(messages.googleDrive.overwriteConfirm(existing.name));
-        if (!result || result.value !== 'overwrite') {
-          return null;
-        }
-        targetFileId = existing.id;
-      }
     }
 
     const savePromise = dataManager
@@ -245,6 +233,7 @@ export function useGoogleDrive(dataManager) {
         if (result) {
           uiStore.isCloudSaveSuccess = true;
           uiStore.setCurrentDriveFileId(result.id);
+          uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
           return renameDriveFileIfNeeded(result);
         }
         return result;

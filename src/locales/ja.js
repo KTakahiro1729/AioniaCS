@@ -177,6 +177,16 @@ export const messages = {
       loadLocalTitle: '端末から読込む',
       save: '保存',
     },
+    confirmations: {
+      unsavedChanges: {
+        title: '保存されていない変更があります',
+        message: '現在の内容はまだ保存されていません。新規作成すると変更は失われます。続行しますか？',
+        buttons: [
+          { label: '続行', value: 'confirm', variant: 'primary' },
+          { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
+        ],
+      },
+    },
     prompts: {
       sharedDataPassword: '共有データのパスワードを入力してください',
     },

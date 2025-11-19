@@ -3,6 +3,7 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { deserializeCharacterPayload } from '@/shared/utils/characterSerialization.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/locales/ja.js';
+import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 function getSharedDriveId(location) {
   const params = new URLSearchParams(location.search);
@@ -110,6 +111,7 @@ export function useAppInitialization(dataManager) {
 
       uiStore.clearCurrentDriveFileId();
       uiStore.isViewingShared = true;
+      uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
       return true;
     } catch (error) {
       const key = resolveSharedErrorKey(error);

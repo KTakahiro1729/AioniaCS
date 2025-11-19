@@ -2,12 +2,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-
-vi.mock('@/features/modals/composables/useModal.js', () => ({
-  useModal: vi.fn(),
-}));
-
-import { useModal } from '@/features/modals/composables/useModal.js';
+import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC/第一キャンペーン') {
   const showFolderPicker = vi.fn();
@@ -24,18 +19,13 @@ function createDriveManagerStub(normalizedPath = '慈悲なきアイオニア/PC
 }
 
 describe('useGoogleDrive', () => {
-  let showModalMock;
-
   beforeEach(() => {
     setActivePinia(createPinia());
-    showModalMock = vi.fn().mockResolvedValue({ value: 'overwrite' });
-    useModal.mockReturnValue({ showModal: showModalMock });
   });
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
     const dataManager = {
       saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'existing-id', name: 'Hero.json' }),
-      findDriveFileByCharacterName: vi.fn(),
       googleDriveManager: {},
       getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
     };
@@ -50,7 +40,6 @@ describe('useGoogleDrive', () => {
 
     await saveCharacterToDrive();
 
-    expect(dataManager.findDriveFileByCharacterName).not.toHaveBeenCalled();
     expect(dataManager.saveCharacterToDrive).toHaveBeenCalledWith(
       charStore.character,
       charStore.skills,
@@ -59,59 +48,7 @@ describe('useGoogleDrive', () => {
       charStore.histories,
       'existing-id',
     );
-  });
-
-  test('saveCharacterToDrive prompts for overwrite when duplicate exists', async () => {
-    const dataManager = {
-      saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
-      findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
-      googleDriveManager: {},
-      getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
-    };
-    showModalMock.mockResolvedValue({ value: 'overwrite' });
-    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
-    const charStore = useCharacterStore();
-    const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
-    uiStore.isSignedIn = true;
-    charStore.character.name = 'Hero';
-    uiStore.clearCurrentDriveFileId();
-
-    await saveCharacterToDrive(true);
-
-    expect(dataManager.findDriveFileByCharacterName).toHaveBeenCalledWith('Hero');
-    expect(showModalMock).toHaveBeenCalled();
-    expect(dataManager.saveCharacterToDrive).toHaveBeenCalledWith(
-      charStore.character,
-      charStore.skills,
-      charStore.specialSkills,
-      charStore.equipments,
-      charStore.histories,
-      'dup-id',
-    );
-  });
-
-  test('saveCharacterToDrive cancels when overwrite declined', async () => {
-    const dataManager = {
-      saveCharacterToDrive: vi.fn(),
-      findDriveFileByCharacterName: vi.fn().mockResolvedValue({ id: 'dup-id', name: 'Hero.json' }),
-      googleDriveManager: {},
-      getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
-    };
-    showModalMock.mockResolvedValue({ value: 'cancel' });
-    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
-    const charStore = useCharacterStore();
-    charStore.character.name = 'Hero';
-    const uiStore = useUiStore();
-    uiStore.isGapiInitialized = true;
-    uiStore.isGisInitialized = true;
-    uiStore.isSignedIn = true;
-
-    const result = await saveCharacterToDrive(true);
-
-    expect(result).toBeNull();
-    expect(dataManager.saveCharacterToDrive).not.toHaveBeenCalled();
+    expect(uiStore.lastSavedSnapshot).toBe(buildSnapshotFromStore(charStore));
   });
 
   test('loadCharacterFromDrive loads data and updates store', async () => {
@@ -124,7 +61,6 @@ describe('useGoogleDrive', () => {
     };
     const dataManager = {
       saveCharacterToDrive: vi.fn(),
-      findDriveFileByCharacterName: vi.fn(),
       loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
       googleDriveManager: {
         showFilePicker: (cb) => cb(null, { id: 'file-1', name: 'Explorer.json' }),
@@ -144,6 +80,7 @@ describe('useGoogleDrive', () => {
     expect(result).toEqual(loadData);
     expect(charStore.character.name).toBe('Explorer');
     expect(uiStore.currentDriveFileId).toBe('file-1');
+    expect(uiStore.lastSavedSnapshot).toBe(buildSnapshotFromStore(charStore));
   });
 
   test('promptForDriveFolder applies picker selection to drive path', async () => {
@@ -158,7 +95,6 @@ describe('useGoogleDrive', () => {
         this.googleDriveManager = manager;
       },
       loadDataFromDrive: vi.fn(),
-      findDriveFileByCharacterName: vi.fn(),
       saveCharacterToDrive: vi.fn(),
       getDriveFileName: vi.fn().mockReturnValue('Hero.json'),
     };
