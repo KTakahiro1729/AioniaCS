@@ -64,8 +64,6 @@ export const messages = {
     },
   },
   share: {
-    copied: (link) => ({ title: '共有リンクをコピーしました', message: link }),
-    copyFailed: (err) => ({ title: 'コピー失敗', message: err.message }),
     needSignIn: () => ({
       title: 'Google Drive',
       message: 'サインインしてください',
