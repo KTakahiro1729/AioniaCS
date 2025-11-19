@@ -31,7 +31,7 @@ uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
 const { clearLocalDraft } = useLocalCharacterPersistence(characterStore, uiStore);
 useKeyboardHandling();
 
-const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataExport();
+const { dataManager, saveData, handleFileUpload, outputToCocofolia, getChatPaletteText } = useDataExport();
 const { printCharacterSheet, openPreviewPage } = usePrint();
 const { showModal } = useModal();
 
@@ -112,6 +112,7 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   saveData,
   handleFileUpload,
   outputToCocofolia,
+  getChatPaletteText,
   printCharacterSheet,
   openPreviewPage,
   copyEditCallback: () => {

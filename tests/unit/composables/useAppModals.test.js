@@ -35,6 +35,7 @@ describe('useAppModals', () => {
       saveData: vi.fn(),
       handleFileUpload: vi.fn(),
       outputToCocofolia: vi.fn(),
+      getChatPaletteText: vi.fn().mockResolvedValue('モックされたチャットパレット'),
       printCharacterSheet: vi.fn(),
       openPreviewPage: vi.fn(),
       copyEditCallback: vi.fn(),
@@ -96,12 +97,14 @@ describe('useAppModals', () => {
     expect(args.on.print).toBe(openPreviewPage);
   });
 
-  test('chat palette output copies text', async () => {
-    const { openIoModal } = useAppModals(createOptions());
+  test('chat palette output copies text from provided getter', async () => {
+    const getChatPaletteText = vi.fn().mockResolvedValue('チャットパレット\nダイナミック');
+    const { openIoModal } = useAppModals(createOptions({ getChatPaletteText }));
     await openIoModal();
     const args = showModalMock.mock.calls[0][0];
     await args.on['output-chat-palette']();
-    expect(clipboardWriteMock).toHaveBeenCalledWith('チャットパレット\nチャットパレット2');
+    expect(getChatPaletteText).toHaveBeenCalled();
+    expect(clipboardWriteMock).toHaveBeenCalledWith('チャットパレット\nダイナミック');
     expect(showToastMock).toHaveBeenCalled();
   });
 
