@@ -1,4 +1,5 @@
 import { useNotificationStore } from '../stores/notificationStore.js';
+import { messages } from '@/locales/ja.js';
 
 function normalizeError(error) {
   if (error instanceof Error) {
@@ -10,12 +11,12 @@ function normalizeError(error) {
   }
 
   if (error && typeof error === 'object') {
-    const normalized = new Error(error.message || '予期せぬエラーが発生しました');
+    const normalized = new Error(error.message || messages.errors.unexpected);
     Object.assign(normalized, error);
     return normalized;
   }
 
-  return new Error('予期せぬエラーが発生しました');
+  return new Error(messages.errors.unexpected);
 }
 
 function resolveToastOptions(source, error) {

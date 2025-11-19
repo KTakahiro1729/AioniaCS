@@ -1,4 +1,7 @@
 export const messages = {
+  errors: {
+    unexpected: '予期せぬエラーが発生しました',
+  },
   googleDrive: {
     auth: {
       connected: () => ({ title: 'Google Drive', message: '接続しました' }),
