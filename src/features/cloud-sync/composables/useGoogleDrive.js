@@ -4,6 +4,7 @@ import {
   getMockGoogleDriveManagerInstance,
   initializeMockGoogleDriveManager,
 } from '@/infrastructure/google-drive/mockGoogleDriveManager.js';
+import { loadGoogleDriveScripts } from '@/infrastructure/google-drive/scriptLoader.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { removeStoredCharacterDraft } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
@@ -310,23 +311,7 @@ export function useGoogleDrive(dataManager) {
       }
     };
 
-    function waitForScript(selector, check) {
-      return new Promise((resolve, reject) => {
-        if (check()) {
-          resolve();
-          return;
-        }
-        const script = document.querySelector(selector);
-        if (!script) {
-          reject(new Error('Script not found'));
-          return;
-        }
-        script.addEventListener('load', resolve, { once: true });
-        script.addEventListener('error', () => reject(new Error('Script load failed')), { once: true });
-      });
-    }
-
-    waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
+    loadGoogleDriveScripts()
       .then(handleGapiLoaded)
       .catch((error) => logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive'));
   }

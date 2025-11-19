@@ -37,13 +37,17 @@ export function usePrint() {
 
   async function buildHtml() {
     const { default: printTemplate } = await import('@/features/character-sheet/assets/print/print-template.html?raw');
-    const { default: printStyles } = await import('@/features/character-sheet/assets/print/print-styles.css?raw');
+    const { default: printStylesUrl } = await import('@/features/character-sheet/assets/print/print-styles.css?url');
+    const { default: fontStylesUrl } = await import('@/shared/styles/fonts.css?url');
     const ch = characterStore.character;
     let html = printTemplate;
 
     const replace = (key, val = '') => {
       html = html.replace(new RegExp(`{{${key}}}`, 'g'), val);
     };
+
+    replace('fonts-styles-href', fontStylesUrl);
+    replace('print-styles-href', printStylesUrl);
 
     // --- 基本情報の置換 ---
     replace('character-name', ch.name || '');
@@ -102,9 +106,8 @@ export function usePrint() {
       replace(`adventure-experience-${i}`, h.gotExperiments != null ? String(h.gotExperiments) : '');
     }
 
-    // --- 残りのプレースホルダをクリア & CSSを注入 ---
+    // --- 残りのプレースホルダをクリア ---
     html = html.replace(/{{[^}]+}}/g, '');
-    html = html.replace('</head>', `<style>${printStyles}</style></head>`);
 
     return html;
   }

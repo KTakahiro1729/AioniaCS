@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import { initializeGoogleDriveManager, initializeMockGoogleDriveManager } from '@/infrastructure/google-drive/index.js';
+import '@/shared/styles/fonts.css';
 import '@/shared/styles/style.css';
 
 const useMockDrive = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
