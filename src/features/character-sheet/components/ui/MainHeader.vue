@@ -108,6 +108,7 @@ defineExpose({ headerEl, helpIcon });
   font-family: 'Cinzel Decorative', 'Shippori Mincho', serif;
   color: var(--color-accent);
   font-size: clamp(2px, 3vw, 28px);
+  font-weight: 700;
   flex: 1.5;
   min-width: 0;
   padding: 0 10px;
