@@ -138,10 +138,12 @@ watch(
   { immediate: true },
 );
 
+const baseDocumentTitle = messages.ui.header.defaultTitle;
+
 watch(
   () => characterStore.character.name,
   (name) => {
-    document.title = name || messages.ui.header.defaultTitle;
+    document.title = name ? `${name} | ${baseDocumentTitle}` : baseDocumentTitle;
   },
   { immediate: true },
 );
