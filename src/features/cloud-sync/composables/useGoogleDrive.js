@@ -6,6 +6,7 @@ import {
 } from '@/infrastructure/google-drive/mockGoogleDriveManager.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { removeStoredCharacterDraft } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { useModal } from '@/features/modals/composables/useModal.js';
 import { messages } from '@/locales/ja.js';
@@ -173,6 +174,7 @@ export function useGoogleDrive(dataManager) {
             Object.assign(characterStore.equipments, parsedData.equipments);
             characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
             uiStore.setCurrentDriveFileId(file.id);
+            removeStoredCharacterDraft();
             return parsedData;
           });
 
