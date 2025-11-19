@@ -32,8 +32,10 @@ async function openPrivacyPolicy() {
 <template>
   <div class="main-grid">
     <CharacterBasicInfo />
-    <ScarSection />
-    <WeaknessSection />
+    <div class="scar-weakness-wrapper">
+      <ScarSection />
+      <WeaknessSection />
+    </div>
     <SkillsSection />
     <SpecialSkillsSection />
     <ItemsSection />

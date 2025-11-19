@@ -5,8 +5,12 @@
       <ul class="weakness-list list-reset">
         <li class="base-list-header">
           <div class="flex-weakness-number base-list-header-placeholder"></div>
-          <div class="flex-weakness-text"><label>{{ weaknessTexts.columns.text }}</label></div>
-          <div class="flex-weakness-acquired"><label>{{ weaknessTexts.columns.acquired }}</label></div>
+          <div class="flex-weakness-text">
+            <label>{{ weaknessTexts.columns.text }}</label>
+          </div>
+          <div class="flex-weakness-acquired">
+            <label>{{ weaknessTexts.columns.acquired }}</label>
+          </div>
         </li>
         <li v-for="(weakness, index) in characterStore.character.weaknesses" :key="index" class="base-list-item">
           <div class="flex-weakness-number">{{ index < 9 ? index + 1 : 'X' }}</div>
@@ -39,10 +43,6 @@ const sessionNames = computed(() => characterStore.sessionNamesForWeaknessDropdo
 </script>
 
 <style scoped>
-.box-content {
-  padding-top: 0;
-}
-
 .weakness-list .base-list-item {
   font-size: 0.9em;
   align-items: center;

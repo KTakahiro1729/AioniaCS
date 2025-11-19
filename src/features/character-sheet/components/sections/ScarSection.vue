@@ -42,14 +42,6 @@ const calculatedScar = computed(() => characterStore.calculatedScar);
 </script>
 
 <style scoped>
-.box-content {
-  padding-top: 0;
-}
-
-.scar-section {
-  margin-bottom: 5px;
-}
-
 .link-checkbox-main-label {
   margin-right: 8px;
 }
