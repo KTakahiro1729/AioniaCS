@@ -41,7 +41,6 @@ const {
   handleSignInClick,
   handleSignOutClick,
   saveCharacterToDrive,
-  saveOrUpdateCurrentCharacterInDrive,
   loadCharacterFromDrive,
   promptForDriveFolder,
   updateDriveFolderPath,
@@ -76,7 +75,7 @@ const handleCreateNewCharacter = async (payload) => {
     const choice = result?.value;
 
     if (choice === 'save') {
-      const saved = await saveOrUpdateCurrentCharacterInDrive();
+      const saved = await saveCharacterToDrive();
       if (!saved) {
         return;
       }
@@ -188,7 +187,7 @@ onMounted(initialize);
     :current-experience-points="currentExperiencePoints"
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
-    :save-to-drive="saveOrUpdateCurrentCharacterInDrive"
+    :save-to-drive="saveCharacterToDrive"
     :experience-label="messages.ui.footer.experience"
     :output-label="messages.ui.footer.output"
     :share-label="messages.ui.footer.share"

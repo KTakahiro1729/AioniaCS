@@ -274,14 +274,6 @@ export function useGoogleDrive(dataManager) {
     return renamed || result;
   }
 
-  function handleSaveToDriveClick() {
-    return saveCharacterToDrive(false);
-  }
-
-  function saveOrUpdateCurrentCharacterInDrive() {
-    return saveCharacterToDrive(false);
-  }
-
   function initializeGoogleDrive() {
     syncGoogleDriveManager();
 
@@ -347,7 +339,5 @@ export function useGoogleDrive(dataManager) {
     updateDriveFolderPath,
     loadCharacterFromDrive,
     saveCharacterToDrive,
-    handleSaveToDriveClick,
-    saveOrUpdateCurrentCharacterInDrive,
   };
 }
