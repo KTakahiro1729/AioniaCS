@@ -130,10 +130,14 @@ export function usePrint() {
       iframe.style.border = '0';
       iframe.style.visibility = 'hidden';
 
-      iframe.onload = () => {
+      iframe.onload = async () => {
         try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
+          const win = iframe.contentWindow;
+          if (!win) return;
+
+          await win.document.fonts.ready;
+          win.focus();
+          win.print();
         } catch (e) {
           console.error('印刷実行中にエラーが発生しました:', e);
         } finally {
