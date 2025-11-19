@@ -245,7 +245,7 @@ export function useGoogleDrive(dataManager) {
       savePromise,
       {
         loading: messages.googleDrive.save.loading(),
-        success: messages.googleDrive.save.success(),
+        success: isNewFile ? messages.googleDrive.save.newSuccess() : messages.googleDrive.save.success(),
         error: (err) => messages.googleDrive.save.error(err),
       },
       'saveCharacterToDrive',

@@ -18,6 +18,7 @@ export const messages = {
     },
     save: {
       loading: () => ({ title: 'Google Drive', message: '保存中...' }),
+      newSuccess: () => ({ title: '保存完了', message: '新規キャラクターを保存しました' }),
       success: () => ({ title: '保存完了', message: '' }),
       error: (err) => ({ title: '保存失敗', message: err.message || '' }),
     },
