@@ -60,8 +60,8 @@ export function useDataExport() {
     }
   }
 
-  function outputToCocofolia() {
-    const exportData = {
+  function buildExportData() {
+    return {
       character: characterStore.character,
       skills: characterStore.skills,
       specialSkills: characterStore.specialSkills,
@@ -73,9 +73,18 @@ export function useDataExport() {
       specialSkillsRequiringNote: AioniaGameData.specialSkillsRequiringNote,
       weaponDamage: AioniaGameData.weaponDamage,
     };
+  }
+
+  function outputToCocofolia() {
+    const exportData = buildExportData();
     const cocofoliaCharacter = cocofoliaExporter.generateCocofoliaData(exportData);
     const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
     copyToClipboard(textToCopy);
+  }
+
+  function getChatPaletteText() {
+    const exportData = buildExportData();
+    return cocofoliaExporter.generateCocofoliaData(exportData)?.data?.commands || '';
   }
 
   return {
@@ -83,5 +92,6 @@ export function useDataExport() {
     saveData,
     handleFileUpload,
     outputToCocofolia,
+    getChatPaletteText,
   };
 }

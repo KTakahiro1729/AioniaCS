@@ -20,6 +20,7 @@ export function useAppModals(options) {
     saveData,
     handleFileUpload,
     outputToCocofolia,
+    getChatPaletteText,
     printCharacterSheet,
     openPreviewPage,
     copyEditCallback,
@@ -82,21 +83,24 @@ export function useAppModals(options) {
   }
 
   async function handleOutputChatPalette() {
-    const paletteText = 'チャットパレット\nチャットパレット2';
     if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
       const clipboardError = new Error(messages.ui.modal.io.chatPalette.clipboardUnavailable);
       logAndToastError(clipboardError, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
       return;
     }
+    if (typeof getChatPaletteText !== 'function') {
+      const missingGeneratorError = new Error('チャットパレットのデータを取得できません');
+      logAndToastError(missingGeneratorError, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
+      return;
+    }
 
-    return navigator.clipboard
-      .writeText(paletteText)
-      .then(() => {
-        showToast({ type: 'success', ...messages.ui.modal.io.chatPalette.success() });
-      })
-      .catch((error) => {
-        logAndToastError(error, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
-      });
+    try {
+      const paletteText = (await getChatPaletteText()) ?? '';
+      await navigator.clipboard.writeText(paletteText);
+      showToast({ type: 'success', ...messages.ui.modal.io.chatPalette.success() });
+    } catch (error) {
+      logAndToastError(error, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
+    }
   }
 
   async function openIoModal() {
