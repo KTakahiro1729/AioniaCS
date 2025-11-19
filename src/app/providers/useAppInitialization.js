@@ -3,6 +3,7 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { deserializeCharacterPayload } from '@/shared/utils/characterSerialization.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/locales/ja.js';
+import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 function getSharedDriveId(location) {
   const params = new URLSearchParams(location.search);
@@ -51,17 +52,42 @@ function buildDriveDownloadUrl(fileId, dataManager) {
   return fallbackUrl.toString();
 }
 
+function createSharedDataParser(dataManager) {
+  return async function parseSharedPayload(buffer) {
+    try {
+      const rawJsonData = await deserializeCharacterPayload(buffer);
+      return dataManager.parseLoadedData(rawJsonData);
+    } catch (error) {
+      const normalized = error instanceof Error ? error : new Error('Failed to parse shared character data.');
+      normalized.code = 'parseFailed';
+      throw normalized;
+    }
+  };
+}
+
+function resolveSharedErrorKey(error) {
+  if (error?.code === 'fetchFailed') {
+    return 'fetchFailed';
+  }
+  if (error?.code === 'parseFailed') {
+    return 'parseFailed';
+  }
+  return 'general';
+}
+
 export function useAppInitialization(dataManager) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
-  const { showToast } = useNotifications();
+  const { logAndToastError } = useNotifications();
+
+  const parseSharedPayload = dataManager && typeof dataManager.parseLoadedData === 'function' ? createSharedDataParser(dataManager) : null;
 
   async function loadSharedCharacter(fileId) {
     if (!fileId) {
       return false;
     }
 
-    if (!dataManager || typeof dataManager.parseLoadedData !== 'function') {
+    if (!parseSharedPayload) {
       console.error('DataManager is required to load shared characters.');
       return false;
     }
@@ -75,22 +101,7 @@ export function useAppInitialization(dataManager) {
       }
 
       const buffer = await response.arrayBuffer();
-
-      let rawJsonData;
-      try {
-        rawJsonData = await deserializeCharacterPayload(buffer);
-      } catch (parseError) {
-        parseError.code = 'parseFailed';
-        throw parseError;
-      }
-
-      let parsedData;
-      try {
-        parsedData = dataManager.parseLoadedData(rawJsonData);
-      } catch (parseError) {
-        parseError.code = 'parseFailed';
-        throw parseError;
-      }
+      const parsedData = await parseSharedPayload(buffer);
 
       Object.assign(characterStore.character, parsedData.character);
       characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
@@ -100,11 +111,11 @@ export function useAppInitialization(dataManager) {
 
       uiStore.clearCurrentDriveFileId();
       uiStore.isViewingShared = true;
+      uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
       return true;
     } catch (error) {
-      const key = error?.code === 'fetchFailed' ? 'fetchFailed' : error?.code === 'parseFailed' ? 'parseFailed' : 'general';
-      showToast({ type: 'error', ...messages.share.loadError.toast(key) });
-      console.error('Error loading shared character:', error);
+      const key = resolveSharedErrorKey(error);
+      logAndToastError(error, () => messages.share.loadError.toast(key), 'loadSharedCharacter');
       return false;
     }
   }

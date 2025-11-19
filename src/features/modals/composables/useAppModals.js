@@ -13,7 +13,7 @@ export function useAppModals(options) {
   const uiStore = useUiStore();
   const { showModal } = useModal();
   const modalStore = useModalStore();
-  const { showToast, showAsyncToast } = useNotifications();
+  const { showToast, showAsyncToast, logAndToastError } = useNotifications();
   const { createShareLink } = useShare(options.dataManager);
   const {
     handleSignInClick,
@@ -84,15 +84,19 @@ export function useAppModals(options) {
   async function handleOutputChatPalette() {
     const paletteText = 'チャットパレット\nチャットパレット2';
     if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
-      showToast({ type: 'error', ...messages.ui.modal.io.chatPalette.error(new Error('Clipboard unavailable')) });
+      const clipboardError = new Error(messages.ui.modal.io.chatPalette.clipboardUnavailable);
+      logAndToastError(clipboardError, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
       return;
     }
-    try {
-      await navigator.clipboard.writeText(paletteText);
-      showToast({ type: 'success', ...messages.ui.modal.io.chatPalette.success() });
-    } catch (error) {
-      showToast({ type: 'error', ...messages.ui.modal.io.chatPalette.error(error) });
-    }
+
+    return navigator.clipboard
+      .writeText(paletteText)
+      .then(() => {
+        showToast({ type: 'success', ...messages.ui.modal.io.chatPalette.success() });
+      })
+      .catch((error) => {
+        logAndToastError(error, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
+      });
   }
 
   async function openIoModal() {
@@ -136,17 +140,21 @@ export function useAppModals(options) {
     const sharePromise = (async () => {
       const link = await createShareLink();
       if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
-        throw new Error(messages.share.toast.clipboardUnavailable);
+        throw new Error(messages.share.toast.clipboardUnavailable().message);
       }
       await navigator.clipboard.writeText(link);
       return link;
     })();
 
-    showAsyncToast(sharePromise, {
-      loading: messages.share.toast.creating(),
-      success: messages.share.toast.success(),
-      error: (err) => messages.share.toast.error(err),
-    });
+    showAsyncToast(
+      sharePromise,
+      {
+        loading: messages.share.toast.creating(),
+        success: messages.share.toast.success(),
+        error: (err) => messages.share.toast.error(err),
+      },
+      'openShareModal',
+    );
 
     return sharePromise;
   }

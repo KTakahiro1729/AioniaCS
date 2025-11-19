@@ -3,7 +3,8 @@ import { useCharacterStore } from '@/features/character-sheet/stores/characterSt
 import CopyrightFooter from '@/features/character-sheet/components/ui/CopyrightFooter.vue';
 
 import CharacterBasicInfo from '@/features/character-sheet/components/sections/CharacterBasicInfo.vue';
-import ScarWeaknessSection from '@/features/character-sheet/components/sections/ScarWeaknessSection.vue';
+import ScarSection from '@/features/character-sheet/components/sections/ScarSection.vue';
+import WeaknessSection from '@/features/character-sheet/components/sections/WeaknessSection.vue';
 import SkillsSection from '@/features/character-sheet/components/sections/SkillsSection.vue';
 import SpecialSkillsSection from '@/features/character-sheet/components/sections/SpecialSkillsSection.vue';
 import ItemsSection from '@/features/character-sheet/components/sections/ItemsSection.vue';
@@ -16,7 +17,10 @@ const characterStore = useCharacterStore();
 <template>
   <div class="main-grid">
     <CharacterBasicInfo />
-    <ScarWeaknessSection />
+    <div class="scar-weakness-wrapper">
+      <ScarSection />
+      <WeaknessSection />
+    </div>
     <SkillsSection />
     <SpecialSkillsSection />
     <ItemsSection />

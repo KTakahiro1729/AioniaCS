@@ -17,8 +17,11 @@
   grid-area: character-info;
 }
 
-.scar-weakness {
+.scar-weakness-wrapper {
   grid-area: scar-weakness;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .skills {
@@ -123,6 +126,10 @@
       'items'
       'memo'
       'history';
+    gap: 20px;
+  }
+
+  .scar-weakness-wrapper {
     gap: 20px;
   }
 

@@ -1,20 +1,16 @@
 export const messages = {
+  errors: {
+    unexpected: '予期せぬエラーが発生しました',
+  },
   googleDrive: {
-    signIn: {
-      loading: () => ({
-        title: 'Google Drive',
-        message: 'サインインしています...',
-      }),
-      success: () => ({ title: 'サインイン完了', message: '' }),
-      error: (err) => ({
-        title: 'サインイン失敗',
-        message: err.message || err.details || 'もう一度お試しください。',
-      }),
+    auth: {
+      connected: () => ({ title: 'Google Drive', message: '接続しました' }),
     },
     signOut: {
       success: () => ({ title: 'サインアウトしました', message: '' }),
     },
     folderPicker: {
+      unavailable: () => ({ title: 'Google Drive', message: 'フォルダピッカーを利用できません' }),
       error: (err) => ({
         title: 'Google Drive',
         message: err?.message || 'フォルダ選択をキャンセルしました',
@@ -38,6 +34,8 @@ export const messages = {
         title: '読み込みエラー',
         message: err.message || '不明なエラー',
       }),
+      noSelection: () => ({ title: '読み込みエラー', message: 'ファイルが選択されていません' }),
+      missingData: () => ({ title: '読み込みエラー', message: 'キャラクターデータを取得できませんでした' }),
     },
     overwriteConfirm: (name) => ({
       title: '上書き確認',
@@ -49,10 +47,6 @@ export const messages = {
     }),
     apiInitError: () => ({
       title: 'Google API エラー',
-      message: '初期化に失敗しました',
-    }),
-    signInInitError: () => ({
-      title: 'Google サインインエラー',
       message: '初期化に失敗しました',
     }),
     initPending: () => ({
@@ -83,7 +77,7 @@ export const messages = {
         title: '共有失敗',
         message: err?.message || '共有リンクの生成に失敗しました',
       }),
-      clipboardUnavailable: 'クリップボードにアクセスできません',
+      clipboardUnavailable: () => ({ title: '共有リンク', message: 'クリップボードにアクセスできません' }),
     },
     errors: {
       saveFailed: 'Google Drive への保存に失敗しました',
@@ -102,16 +96,6 @@ export const messages = {
           message: messagesMap[key] || messagesMap.general,
         };
       },
-    },
-    modal: {
-      signInMessage: '共有リンクを作成するには Google Drive にサインインしてください。',
-      signInButton: 'Google Drive にサインイン',
-      instructions: '共有リンクをコピーして相手に送ってください。リンクを開くと閲覧モードでキャラシを表示します。',
-      generating: '共有リンクを作成しています…',
-      ready: '共有リンクが作成されました。',
-      retry: '再試行',
-      copy: 'コピー',
-      errorDefault: '共有リンクの作成に失敗しました。時間をおいて再度お試しください。',
     },
   },
   characterHub: {
@@ -156,7 +140,6 @@ export const messages = {
     },
     viewModeBanner: '閲覧モードで表示中',
     buttons: {
-      saveCloud: 'Drive保存',
       saveCloudNew: '新規保存',
       saveCloudOverwrite: '上書保存',
       saveCloudTitle: 'Google Driveに保存',
@@ -168,13 +151,18 @@ export const messages = {
       loadLocalTitle: '端末から読込む',
       save: '保存',
     },
-    prompts: {
-      sharedDataPassword: '共有データのパスワードを入力してください',
+    confirmations: {
+      unsavedChanges: {
+        title: '保存されていない変更があります',
+        message: '現在の内容はまだ保存されていません。新規作成すると変更は失われます。続行しますか？',
+        buttons: [
+          { label: '保存して続行', value: 'save', variant: 'primary' },
+          { label: '保存せず続行', value: 'discard', variant: 'secondary' },
+          { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
+        ],
+      },
     },
     modal: {
-      hubTitle: 'クラウド連携',
-      shareTitle: '共有リンク',
-      cancel: 'キャンセル',
       load: {
         title: '読込',
         buttons: {
@@ -187,9 +175,7 @@ export const messages = {
         title: '入出力',
         buttons: {
           saveLocal: 'ローカルファイルで出力',
-          output: '駒出力',
           print: '印刷',
-          driveFolder: 'フォルダ変更',
           chatPalette: 'チャットパレットを出力',
         },
         chatPalette: {
@@ -198,6 +184,7 @@ export const messages = {
             title: 'チャットパレット',
             message: err?.message || 'コピーに失敗しました',
           }),
+          clipboardUnavailable: 'クリップボード機能が利用できません',
         },
       },
     },
@@ -252,19 +239,18 @@ export const messages = {
           faith: '信仰',
         },
       },
-      scarWeakness: {
-        title: '傷痕と弱点',
-        scar: {
-          title: '傷痕',
+      scar: {
+        title: '傷痕',
+        fields: {
           initial: '初期値',
           current: '現在値（初期値+増加分）',
         },
-        weakness: {
-          title: '弱点',
-          columns: {
-            text: '弱点',
-            acquired: '獲得',
-          },
+      },
+      weakness: {
+        title: '弱点',
+        columns: {
+          text: '弱点',
+          acquired: '獲得',
         },
       },
       skills: {
@@ -298,7 +284,6 @@ export const messages = {
           scenario: 'シナリオ名',
           experience: '経験点',
           scar: '傷痕増加',
-          memo: 'メモ',
         },
       },
     },
@@ -306,8 +291,6 @@ export const messages = {
   outputButton: {
     default: 'ココフォリア駒出力',
     success: 'コピー完了！',
-    successFallback: 'コピー完了！ (fallback)',
-    failed: 'コピー失敗 (fallback)',
     error: 'コピーエラー (fallback)',
     animating: '冒険が始まる――',
     animationTimings: {

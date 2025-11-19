@@ -24,6 +24,7 @@ describe('useAppModals', () => {
   let showModalMock;
   let showToastMock;
   let showAsyncToastMock;
+  let logAndToastErrorMock;
   let clipboardWriteMock;
   let createShareLinkMock;
 
@@ -53,7 +54,12 @@ describe('useAppModals', () => {
     useModal.mockReturnValue({ showModal: showModalMock });
     showToastMock = vi.fn();
     showAsyncToastMock = vi.fn();
-    useNotifications.mockReturnValue({ showToast: showToastMock, showAsyncToast: showAsyncToastMock });
+    logAndToastErrorMock = vi.fn();
+    useNotifications.mockReturnValue({
+      showToast: showToastMock,
+      showAsyncToast: showAsyncToastMock,
+      logAndToastError: logAndToastErrorMock,
+    });
     createShareLinkMock = vi.fn().mockResolvedValue('https://example.com');
     useShare.mockReturnValue({ createShareLink: createShareLinkMock });
     clipboardWriteMock = vi.fn().mockResolvedValue();
