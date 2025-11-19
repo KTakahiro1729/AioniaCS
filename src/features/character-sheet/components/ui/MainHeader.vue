@@ -4,6 +4,12 @@
       <button class="button-base main-header__button" @click="handleNewCharacterClick">
         {{ newCharacterLabel }}
       </button>
+    </div>
+    <div class="main-header__title">{{ titleText }}</div>
+    <div class="main-header__section main-header__section--right">
+      <button class="button-base main-header__button" @click="handleAuthClick">
+        {{ isSignedIn ? signOutLabel : signInLabel }}
+      </button>
       <button
         class="button-base header-help-icon"
         ref="helpIcon"
@@ -14,12 +20,6 @@
         type="button"
       >
         {{ helpLabel }}
-      </button>
-    </div>
-    <div class="main-header__title">{{ titleText }}</div>
-    <div class="main-header__section main-header__section--right">
-      <button class="button-base main-header__button" @click="handleAuthClick">
-        {{ isSignedIn ? signOutLabel : signInLabel }}
       </button>
     </div>
   </header>

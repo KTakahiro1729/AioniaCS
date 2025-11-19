@@ -24,7 +24,7 @@ export const useUiStore = defineStore('ui', {
         : 'status-display--experience-ok';
     },
     canSignInToGoogle(state) {
-      return state.isGapiInitialized && state.isGisInitialized && !state.isSignedIn;
+      return !state.isSignedIn;
     },
     canOperateDrive(state) {
       return state.isSignedIn;

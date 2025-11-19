@@ -44,6 +44,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
     charStore.character.name = 'Hero';
     uiStore.setCurrentDriveFileId('existing-id');
 
@@ -73,6 +74,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
     charStore.character.name = 'Hero';
     uiStore.clearCurrentDriveFileId();
 
@@ -104,6 +106,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
 
     const result = await saveCharacterToDrive(true);
 
@@ -134,6 +137,7 @@ describe('useGoogleDrive', () => {
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
 
     const result = await loadCharacterFromDrive();
 
@@ -188,6 +192,7 @@ describe('useGoogleDrive', () => {
     charStore.character.name = 'Knight';
     uiStore.isGapiInitialized = true;
     uiStore.isGisInitialized = true;
+    uiStore.isSignedIn = true;
     uiStore.setCurrentDriveFileId('existing-id');
 
     const result = await saveCharacterToDrive();

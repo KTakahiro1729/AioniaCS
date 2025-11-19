@@ -11,6 +11,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
 
   beforeEach(() => {
     resetGoogleDriveManagerForTests();
+    global.fetch = vi.fn();
     global.gapi = {
       client: {
         drive: {
@@ -23,9 +24,12 @@ describe('GoogleDriveManager configuration and folder handling', () => {
           },
         },
         request: vi.fn(),
+        getToken: vi.fn(() => ({ access_token: 'cached-token' })),
+        setToken: vi.fn(),
       },
     };
     gdm = initializeGoogleDriveManager('key', 'client');
+    gdm.currentTokenInfo = { accessToken: 'cached-token', expiresAt: Date.now() + 100000 };
   });
 
   afterEach(() => {

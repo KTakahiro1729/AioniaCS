@@ -4,46 +4,55 @@ import { vi } from 'vitest';
 describe('GoogleDriveManager auth', () => {
   beforeEach(() => {
     resetGoogleDriveManagerForTests();
-    global.google = {
-      accounts: {
-        oauth2: {
-          initTokenClient: vi.fn().mockReturnValue({
-            requestAccessToken: vi.fn(),
-          }),
-          revoke: vi.fn((token, cb) => cb()),
-        },
-      },
-    };
+    global.fetch = vi.fn();
     global.gapi = {
+      load: vi.fn((_, cb) => cb()),
       client: {
+        init: vi.fn().mockResolvedValue(),
         getToken: vi.fn(() => null),
         setToken: vi.fn(),
       },
     };
-  });
-
-  test('onGisLoad initializes token client with minimal scopes', async () => {
-    const gdm = initializeGoogleDriveManager('k', 'c');
-    await gdm.onGisLoad();
-    expect(google.accounts.oauth2.initTokenClient).toHaveBeenCalledWith({
-      client_id: 'c',
-      scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
-      callback: '',
+    Object.defineProperty(window, 'location', {
+      value: { href: 'http://localhost' },
+      writable: true,
     });
   });
 
-  test('handleSignOut revokes token and clears gapi token', () => {
-    const gdm = initializeGoogleDriveManager('k', 'c');
-    gdm.tokenClient = { requestAccessToken: vi.fn() };
-    gapi.client.getToken.mockReturnValue({ access_token: 't' });
-    const cb = vi.fn();
-    gdm.handleSignOut(cb);
-    expect(google.accounts.oauth2.revoke).toHaveBeenCalledWith('t', expect.any(Function));
-    expect(gapi.client.setToken).toHaveBeenCalledWith('');
-    expect(cb).toHaveBeenCalled();
+  afterEach(() => {
+    vi.clearAllMocks();
+    resetGoogleDriveManagerForTests();
   });
 
-  afterEach(() => {
-    resetGoogleDriveManagerForTests();
+  test('ensureAccessToken requests token from backend and applies it to gapi', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ access_token: 'server-access', expires_in: 3600 }),
+    });
+
+    const gdm = initializeGoogleDriveManager('k', 'c');
+    await gdm.onGapiLoad();
+    const token = await gdm.ensureAccessToken();
+
+    expect(token).toBe('server-access');
+    expect(fetch).toHaveBeenCalledWith('/api/auth/status', { credentials: 'include' });
+    expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'server-access', expires_in: 3600 });
+  });
+
+  test('handleSignIn navigates to login endpoint', () => {
+    const gdm = initializeGoogleDriveManager('k', 'c');
+    gdm.handleSignIn();
+    expect(window.location.href).toContain('/api/auth/login');
+  });
+
+  test('handleSignOut clears token and calls logout API', async () => {
+    fetch.mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+    gapi.client.setToken = vi.fn();
+
+    const gdm = initializeGoogleDriveManager('k', 'c');
+    await gdm.handleSignOut();
+
+    expect(fetch).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    expect(gapi.client.setToken).toHaveBeenCalledWith('');
   });
 });
