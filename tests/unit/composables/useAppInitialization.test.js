@@ -1,11 +1,11 @@
-const { mockShowToast, mockDeserialize } = vi.hoisted(() => ({
-  mockShowToast: vi.fn(),
+const { mockLogAndToastError, mockDeserialize } = vi.hoisted(() => ({
+  mockLogAndToastError: vi.fn(),
   mockDeserialize: vi.fn(),
 }));
 
 vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
   useNotifications: () => ({
-    showToast: mockShowToast,
+    logAndToastError: mockLogAndToastError,
   }),
 }));
 
@@ -24,7 +24,7 @@ describe('useAppInitialization', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia());
-    mockShowToast.mockClear();
+    mockLogAndToastError.mockClear();
     mockDeserialize.mockReset();
     window.history.replaceState({}, '', `${window.location.origin}/`);
     import.meta.env.VITE_GOOGLE_API_KEY = originalApiKey;
@@ -51,7 +51,7 @@ describe('useAppInitialization', () => {
     expect(global.fetch).not.toHaveBeenCalled();
     expect(uiStore.isLoading).toBe(false);
     expect(uiStore.isViewingShared).toBe(false);
-    expect(mockShowToast).not.toHaveBeenCalled();
+    expect(mockLogAndToastError).not.toHaveBeenCalled();
   });
 
   test('loads shared character data when shared id is present', async () => {
@@ -100,7 +100,7 @@ describe('useAppInitialization', () => {
     expect(characterStore.equipments.weapon1).toEqual({ group: 'Blade', name: 'Sword' });
     expect(characterStore.histories).toEqual(['history-a']);
     expect(uiStore.isLoading).toBe(false);
-    expect(mockShowToast).not.toHaveBeenCalled();
+    expect(mockLogAndToastError).not.toHaveBeenCalled();
   });
 
   test('shows error toast when fetching shared data fails', async () => {
@@ -120,7 +120,7 @@ describe('useAppInitialization', () => {
 
     expect(uiStore.isViewingShared).toBe(false);
     expect(uiStore.isLoading).toBe(false);
-    expect(mockShowToast).toHaveBeenCalled();
+    expect(mockLogAndToastError).toHaveBeenCalled();
   });
 
   test('falls back to googleusercontent host when no API key is configured', async () => {

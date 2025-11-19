@@ -1,5 +1,8 @@
 export const messages = {
   googleDrive: {
+    auth: {
+      connected: () => ({ title: 'Google Drive', message: '接続しました' }),
+    },
     signIn: {
       loading: () => ({
         title: 'Google Drive',
@@ -15,6 +18,7 @@ export const messages = {
       success: () => ({ title: 'サインアウトしました', message: '' }),
     },
     folderPicker: {
+      unavailable: () => ({ title: 'Google Drive', message: 'フォルダピッカーを利用できません' }),
       error: (err) => ({
         title: 'Google Drive',
         message: err?.message || 'フォルダ選択をキャンセルしました',
@@ -38,6 +42,8 @@ export const messages = {
         title: '読み込みエラー',
         message: err.message || '不明なエラー',
       }),
+      noSelection: () => ({ title: '読み込みエラー', message: 'ファイルが選択されていません' }),
+      missingData: () => ({ title: '読み込みエラー', message: 'キャラクターデータを取得できませんでした' }),
     },
     overwriteConfirm: (name) => ({
       title: '上書き確認',
@@ -83,7 +89,7 @@ export const messages = {
         title: '共有失敗',
         message: err?.message || '共有リンクの生成に失敗しました',
       }),
-      clipboardUnavailable: 'クリップボードにアクセスできません',
+      clipboardUnavailable: () => ({ title: '共有リンク', message: 'クリップボードにアクセスできません' }),
     },
     errors: {
       saveFailed: 'Google Drive への保存に失敗しました',
@@ -198,6 +204,7 @@ export const messages = {
             title: 'チャットパレット',
             message: err?.message || 'コピーに失敗しました',
           }),
+          clipboardUnavailable: 'クリップボード機能が利用できません',
         },
       },
     },
