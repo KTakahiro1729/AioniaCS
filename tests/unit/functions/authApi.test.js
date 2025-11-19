@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
-import app from '../../../functions/api/[[route]].js';
+import { app } from '../../../functions/api/[[route]].js';
 
 function createMockDb() {
   const sessions = new Map();

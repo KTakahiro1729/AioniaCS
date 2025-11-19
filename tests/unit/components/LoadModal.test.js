@@ -39,6 +39,6 @@ describe('LoadModal', () => {
   test('disables drive controls when signed out', async () => {
     const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: false }) });
     expect(wrapper.find('.load-modal__input').attributes('disabled')).toBeDefined();
-    expect(wrapper.find('[data-test="load-modal-drive-button"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-test="load-modal-drive-button"]').exists()).toBe(false);
   });
 });
