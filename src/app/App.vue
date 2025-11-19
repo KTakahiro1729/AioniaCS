@@ -5,6 +5,7 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
 import { useHelp } from '@/shared/composables/useHelp.js';
 import { useDataExport } from '@/features/character-sheet/composables/useDataExport.js';
+import { useLocalCharacterPersistence } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 import { useKeyboardHandling } from '@/shared/composables/useKeyboardHandling.js';
 import { usePrint } from '@/features/character-sheet/composables/usePrint.js';
 import { messages } from '@/locales/ja.js';
@@ -24,6 +25,7 @@ const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const { clearLocalDraft } = useLocalCharacterPersistence(characterStore, uiStore);
 useKeyboardHandling();
 
 const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataExport();
@@ -49,6 +51,7 @@ const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLe
 const modalStore = useModalStore();
 
 const handleCreateNewCharacter = async (payload) => {
+  clearLocalDraft();
   characterStore.initializeAll();
   uiStore.clearCurrentDriveFileId();
   uiStore.isViewingShared = false;
