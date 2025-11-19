@@ -201,8 +201,6 @@ export function useGoogleDrive(dataManager) {
       return null;
     }
     if (!dataManager.googleDriveManager) return;
-    uiStore.isCloudSaveSuccess = false;
-
     let isNewFile = false;
     let explicitFileId = null;
 
@@ -233,7 +231,6 @@ export function useGoogleDrive(dataManager) {
       )
       .then(async (result) => {
         if (result) {
-          uiStore.isCloudSaveSuccess = true;
           uiStore.setCurrentDriveFileId(result.id);
           uiStore.setLastSavedSnapshot(snapshotToSave);
           return renameDriveFileIfNeeded(result);

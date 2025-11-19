@@ -18,14 +18,4 @@ describe('uiStore drive state', () => {
     store.clearCurrentDriveFileId();
     expect(store.currentDriveFileId).toBeNull();
   });
-
-  test('pending drive save lifecycle', () => {
-    const store = useUiStore();
-    const token = store.registerPendingDriveSave('temp-1');
-    expect(store.pendingDriveSaves['temp-1']).toBe(token);
-    store.cancelPendingDriveSave('temp-1');
-    expect(token.canceled).toBe(true);
-    store.completePendingDriveSave('temp-1');
-    expect(store.pendingDriveSaves['temp-1']).toBeUndefined();
-  });
 });

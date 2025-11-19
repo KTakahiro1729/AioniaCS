@@ -3,16 +3,12 @@ import { useCharacterStore } from '@/features/character-sheet/stores/characterSt
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
-    isCloudSaveSuccess: false,
     isSignedIn: false,
     isGapiInitialized: false,
-    isGisInitialized: false,
     isLoading: false,
     driveFolderPath: '慈悲なきアイオニア',
     currentDriveFileId: null,
     isViewingShared: false,
-    pendingDriveSaves: {},
-    showHeader: true,
     showSpecialSkillDescriptions: false,
     showItemDescriptions: false,
     lastSavedSnapshot: null,
@@ -46,18 +42,6 @@ export const useUiStore = defineStore('ui', {
     },
     setLastSavedSnapshot(snapshot) {
       this.lastSavedSnapshot = snapshot || null;
-    },
-    registerPendingDriveSave(id) {
-      this.pendingDriveSaves[id] = { canceled: false };
-      return this.pendingDriveSaves[id];
-    },
-    cancelPendingDriveSave(id) {
-      if (this.pendingDriveSaves[id]) {
-        this.pendingDriveSaves[id].canceled = true;
-      }
-    },
-    completePendingDriveSave(id) {
-      delete this.pendingDriveSaves[id];
     },
   },
 });
