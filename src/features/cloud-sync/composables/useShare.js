@@ -1,12 +1,10 @@
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/locales/ja.js';
 
 export function useShare(dataManager) {
   const characterStore = useCharacterStore();
   const uiStore = useUiStore();
-  const { showToast } = useNotifications();
 
   async function createShareLink() {
     if (!uiStore.isSignedIn) {
@@ -52,14 +50,5 @@ export function useShare(dataManager) {
     return shareUrl.toString();
   }
 
-  async function copyLink(link) {
-    try {
-      await navigator.clipboard.writeText(link);
-      showToast({ type: 'success', ...messages.share.copied(link) });
-    } catch (err) {
-      showToast({ type: 'error', ...messages.share.copyFailed(err) });
-    }
-  }
-
-  return { createShareLink, copyLink };
+  return { createShareLink };
 }
