@@ -151,6 +151,17 @@ export const messages = {
       loadLocalTitle: '端末から読込む',
       save: '保存',
     },
+    confirmations: {
+      unsavedChanges: {
+        title: '保存されていない変更があります',
+        message: '現在の内容はまだ保存されていません。新規作成すると変更は失われます。続行しますか？',
+        buttons: [
+          { label: '保存して続行', value: 'save', variant: 'primary' },
+          { label: '保存せず続行', value: 'discard', variant: 'secondary' },
+          { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
+        ],
+      },
+    },
     modal: {
       load: {
         title: '読込',

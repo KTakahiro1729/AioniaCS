@@ -15,6 +15,7 @@ export const useUiStore = defineStore('ui', {
     showHeader: true,
     showSpecialSkillDescriptions: false,
     showItemDescriptions: false,
+    lastSavedSnapshot: null,
   }),
   getters: {
     experienceStatusClass() {
@@ -42,6 +43,9 @@ export const useUiStore = defineStore('ui', {
     },
     setDriveFolderPath(path) {
       this.driveFolderPath = path;
+    },
+    setLastSavedSnapshot(snapshot) {
+      this.lastSavedSnapshot = snapshot || null;
     },
     registerPendingDriveSave(id) {
       this.pendingDriveSaves[id] = { canceled: false };
