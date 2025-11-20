@@ -25,11 +25,7 @@
                   :disabled="uiStore.isViewingShared"
                   :title="equipmentDescriptions[slot.key]"
                 >
-                  <option
-                    v-for="option in gameData[slot.optionsKey]"
-                    :key="option.value"
-                    :value="option.value"
-                  >
+                  <option v-for="option in gameData[slot.optionsKey]" :key="option.value" :value="option.value">
                     {{ option.label }}
                   </option>
                 </select>
@@ -134,6 +130,11 @@ const equipmentDescriptions = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
+}
+
+.box-title {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .equipment-section {
