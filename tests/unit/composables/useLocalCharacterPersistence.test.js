@@ -34,18 +34,38 @@ describe('useLocalCharacterPersistence', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   function mountComposable(options = {}) {
     const characterStore = useCharacterStore();
     const uiStore = useUiStore();
-    const instance = useLocalCharacterPersistence(characterStore, uiStore, {
-      storage,
-      debounceMs: 0,
-      ...options,
-    });
+    const resolvedOptions = { debounceMs: 0, ...options };
+    if (!Object.prototype.hasOwnProperty.call(resolvedOptions, 'storage')) {
+      resolvedOptions.storage = storage;
+    }
+    const instance = useLocalCharacterPersistence(characterStore, uiStore, resolvedOptions);
     return { instance, characterStore, uiStore };
   }
+
+  test('uses sessionStorage by default when available', async () => {
+    const sessionStorageMock = createMockStorage();
+    const localStorageMock = createMockStorage();
+    vi.stubGlobal('window', {
+      sessionStorage: sessionStorageMock,
+      localStorage: localStorageMock,
+    });
+    const characterStore = useCharacterStore();
+    const uiStore = useUiStore();
+    useLocalCharacterPersistence(characterStore, uiStore, { debounceMs: 0 });
+
+    characterStore.character.name = 'Session Scoped';
+    await nextTick();
+    vi.runAllTimers();
+
+    expect(sessionStorageMock.setItem).toHaveBeenCalled();
+    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+  });
 
   test('hydrates store state from localStorage payload', () => {
     const payload = {
