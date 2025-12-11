@@ -276,6 +276,7 @@ const handleImageUpload = async (event) => {
     inset 0 0 3px var(--color-delete-text),
     0 0 6px var(--color-delete-text);
   text-shadow: 0 0 2px var(--color-delete-text);
+  color: var(--color-delete-text-light);
 }
 
 .imagefile-button--delete:disabled {
