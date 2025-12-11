@@ -27,7 +27,8 @@ const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
-uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
+const initialCharacterSnapshot = ref(buildSnapshotFromStore(characterStore));
+uiStore.setLastSavedSnapshot(initialCharacterSnapshot.value);
 const { clearLocalDraft } = useLocalCharacterPersistence(characterStore, uiStore);
 useKeyboardHandling();
 
@@ -61,6 +62,14 @@ function hasUnsavedChanges() {
   return uiStore.lastSavedSnapshot ? currentSnapshot !== uiStore.lastSavedSnapshot : true;
 }
 
+const isCharacterSheetEmpty = computed(() => {
+  const currentSnapshot = buildSnapshotFromStore(characterStore);
+  if (!currentSnapshot || !initialCharacterSnapshot.value) {
+    return false;
+  }
+  return currentSnapshot === initialCharacterSnapshot.value;
+});
+
 async function confirmDiscardingUnsavedChanges() {
   if (!hasUnsavedChanges()) {
     return true;
@@ -69,7 +78,7 @@ async function confirmDiscardingUnsavedChanges() {
   return result?.value === 'confirm';
 }
 
-const handleCreateNewCharacter = async (payload) => {
+const handleCreateNewCharacter = async () => {
   if (hasUnsavedChanges()) {
     const result = await showModal(messages.ui.confirmations.unsavedChanges);
     const choice = result?.value;
@@ -90,19 +99,7 @@ const handleCreateNewCharacter = async (payload) => {
   characterStore.initializeAll();
   uiStore.clearCurrentDriveFileId();
   uiStore.isViewingShared = false;
-  uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
-  const shouldCreateCloudFile = payload?.isSignedIn ?? uiStore.isSignedIn;
-  if (!shouldCreateCloudFile) {
-    return;
-  }
-  try {
-    const result = await saveCharacterToDrive(true);
-    if (result?.id) {
-      uiStore.setCurrentDriveFileId(result.id);
-    }
-  } catch (error) {
-    console.error('Failed to create Drive file for new character:', error);
-  }
+  uiStore.setLastSavedSnapshot(null);
 };
 
 const { openLoadModal, openIoModal, openShareModal } = useAppModals({
@@ -169,6 +166,7 @@ onMounted(initialize);
     :default-title="messages.ui.header.defaultTitle"
     :help-label="messages.ui.header.helpLabel"
     :new-character-label="messages.ui.header.newCharacter"
+    :is-new-button-disabled="isCharacterSheetEmpty"
     :sign-in-label="messages.ui.header.signIn"
     :sign-out-label="messages.ui.header.signOut"
     @new-character="handleCreateNewCharacter"
