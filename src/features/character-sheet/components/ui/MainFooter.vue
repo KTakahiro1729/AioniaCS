@@ -132,6 +132,7 @@ function handleShareClick() {
   border-color: var(--color-status-experience-over-border);
   color: var(--color-status-experience-over-text);
   background-color: var(--color-status-experience-over-bg);
+  text-shadow: 0 0 5px #000;
 }
 
 .icon-svg--footer {

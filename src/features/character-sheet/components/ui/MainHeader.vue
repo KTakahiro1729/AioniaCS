@@ -50,15 +50,7 @@ const props = defineProps({
   isNewButtonDisabled: Boolean,
 });
 
-const emit = defineEmits([
-  'new-character',
-  'help-mouseover',
-  'help-mouseleave',
-  'help-click',
-  'sign-in',
-  'sign-out',
-  'open-load-modal',
-]);
+const emit = defineEmits(['new-character', 'help-mouseover', 'help-mouseleave', 'help-click', 'sign-in', 'sign-out', 'open-load-modal']);
 
 const headerEl = ref(null);
 const helpIcon = ref(null);
@@ -127,8 +119,8 @@ defineExpose({ headerEl, helpIcon });
 .main-header__button--disabled,
 .main-header__button:disabled {
   background-color: var(--color-border-weak);
-  color: var(--color-text-muted);
-  cursor: not-allowed;
+  border-color: var(--color-border-normal);
+  color: var(--color-border-normal);
 }
 
 .main-header__title {

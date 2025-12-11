@@ -12,7 +12,6 @@
   --color-input-bg: #1d1d1d;
   --color-input-disabled-bg: var(--color-panel-body);
   --color-text-normal: #ddd;
-  --color-text-muted: #bbb;
   --color-text-input-disabled: #888;
   --color-link: #ccc;
   --color-link-hover: var(--color-accent);
@@ -23,7 +22,7 @@
   --color-status-experience-ok-text: #9aeaa4;
   --color-status-experience-ok-bg: #1a201a;
   --color-status-experience-over-border: #f74848;
-  --color-status-experience-over-text: #1f1111;
+  --color-status-experience-over-text: #fff;
   --color-status-experience-over-bg: #f74848;
   --color-status-weight-border: #647687;
   --color-status-weight-text: #b0c4de;

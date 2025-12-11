@@ -137,23 +137,3 @@ a {
 a:hover {
   color: var(--color-link-hover);
 }
-
-/* Keyboard Handling Adjustments (グローバルなベース調整) */
-
-/* body.keyboard-visible {
-  padding-bottom: 0 !important;
-}
-
-body.keyboard-visible .main-footer {
-  position: relative !important;
-  bottom: auto !important;
-  box-shadow: none !important;
-}
-
-body.keyboard-visible .help-panel {
-  bottom: 20px !important;
-}
-
-body.keyboard-visible .top-left-controls {
-  position: fixed !important;
-} */
