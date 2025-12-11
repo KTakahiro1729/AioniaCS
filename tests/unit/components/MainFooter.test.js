@@ -22,7 +22,6 @@ describe('MainFooter', () => {
         outputLabel: 'output',
         shareLabel: 'share',
         copyEditLabel: 'copy',
-        loadLabel: 'load',
         saveLabel: 'save',
         ...overrides,
       },
@@ -38,8 +37,6 @@ describe('MainFooter', () => {
     expect(saveButton.attributes('disabled')).toBeDefined();
     await saveButton.trigger('click');
     expect(wrapper.props('saveToDrive')).not.toHaveBeenCalled();
-    await wrapper.find('.footer-button--load').trigger('click');
-    expect(wrapper.emitted('open-load-modal')).toBeTruthy();
   });
 
   test('drive actions when signed in', async () => {

@@ -1,6 +1,9 @@
 <template>
   <header class="main-header" ref="headerEl">
     <div class="main-header__section main-header__section--left">
+      <button class="button-base main-header__button" @click="emit('open-load-modal')">
+        {{ loadLabel }}
+      </button>
       <button
         class="button-base main-header__button"
         :class="{ 'main-header__button--disabled': isNewButtonDisabled }"
@@ -40,13 +43,22 @@ const props = defineProps({
   helpState: String,
   defaultTitle: String,
   helpLabel: String,
+  loadLabel: String,
   newCharacterLabel: String,
   signInLabel: String,
   signOutLabel: String,
   isNewButtonDisabled: Boolean,
 });
 
-const emit = defineEmits(['new-character', 'help-mouseover', 'help-mouseleave', 'help-click', 'sign-in', 'sign-out']);
+const emit = defineEmits([
+  'new-character',
+  'help-mouseover',
+  'help-mouseleave',
+  'help-click',
+  'sign-in',
+  'sign-out',
+  'open-load-modal',
+]);
 
 const headerEl = ref(null);
 const helpIcon = ref(null);

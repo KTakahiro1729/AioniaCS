@@ -17,6 +17,7 @@ describe('MainHeader', () => {
         defaultTitle: 'Default',
         helpLabel: '?',
         helpState: 'closed',
+        loadLabel: 'load',
         newCharacterLabel: 'new',
         signInLabel: 'sign in',
         signOutLabel: 'sign out',
@@ -34,15 +35,19 @@ describe('MainHeader', () => {
         defaultTitle: 'Default',
         helpLabel: '?',
         helpState: 'closed',
+        loadLabel: 'load',
         newCharacterLabel: 'new',
         signInLabel: 'sign in',
         signOutLabel: 'sign out',
       },
     });
-    await wrapper.find('.main-header__section--left .main-header__button').trigger('click');
+    const buttons = wrapper.findAll('.main-header__section--left .main-header__button');
+    await buttons[1].trigger('click');
     const newCharacterEmits = wrapper.emitted('new-character');
     expect(newCharacterEmits).toHaveLength(1);
     expect(newCharacterEmits[0][0]).toEqual({ isSignedIn: false });
+    await buttons[0].trigger('click');
+    expect(wrapper.emitted('open-load-modal')).toHaveLength(1);
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     await wrapper.vm.$nextTick();

@@ -4,10 +4,6 @@
       {{ experienceLabel }} {{ currentExperiencePoints }} /
       {{ maxExperiencePoints }}
     </div>
-    <button class="button-base footer-button footer-button--load" @click="$emit('open-load-modal')" :title="loadLabel">
-      <span class="icon-svg icon-svg--footer" :class="loadIconClass"></span>
-      {{ loadLabel }}
-    </button>
     <button class="button-base footer-button footer-button--output" @click="$emit('open-output-modal')">
       <span class="icon-svg icon-svg--footer icon-svg-io"></span>
       {{ outputLabel }}
@@ -43,17 +39,15 @@ const props = defineProps({
   outputLabel: String,
   shareLabel: String,
   copyEditLabel: String,
-  loadLabel: String,
   saveLabel: String,
 });
 
-const emit = defineEmits(['open-load-modal', 'open-output-modal', 'share']);
+const emit = defineEmits(['open-output-modal', 'share']);
 
 const uiStore = useUiStore();
 
 const isShareDisabled = computed(() => !uiStore.isSignedIn && !props.isViewingShared);
 const isSaveDisabled = computed(() => !uiStore.isSignedIn);
-const loadIconClass = computed(() => (uiStore.isSignedIn ? 'icon-svg-cloud-download' : 'icon-svg-local-upload'));
 const saveIconClass = computed(() => 'icon-svg-cloud-upload');
 
 function handleSave() {
