@@ -27,6 +27,7 @@ const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const emptyCharacterSnapshot = buildSnapshotFromStore(characterStore);
 uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
 const { clearLocalDraft } = useLocalCharacterPersistence(characterStore, uiStore);
 useKeyboardHandling();
@@ -69,7 +70,9 @@ async function confirmDiscardingUnsavedChanges() {
   return result?.value === 'confirm';
 }
 
-const handleCreateNewCharacter = async (payload) => {
+const isCharacterSheetEmpty = computed(() => buildSnapshotFromStore(characterStore) === emptyCharacterSnapshot);
+
+const handleCreateNewCharacter = async () => {
   if (hasUnsavedChanges()) {
     const result = await showModal(messages.ui.confirmations.unsavedChanges);
     const choice = result?.value;
@@ -90,19 +93,7 @@ const handleCreateNewCharacter = async (payload) => {
   characterStore.initializeAll();
   uiStore.clearCurrentDriveFileId();
   uiStore.isViewingShared = false;
-  uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
-  const shouldCreateCloudFile = payload?.isSignedIn ?? uiStore.isSignedIn;
-  if (!shouldCreateCloudFile) {
-    return;
-  }
-  try {
-    const result = await saveCharacterToDrive(true);
-    if (result?.id) {
-      uiStore.setCurrentDriveFileId(result.id);
-    }
-  } catch (error) {
-    console.error('Failed to create Drive file for new character:', error);
-  }
+  uiStore.setLastSavedSnapshot(null);
 };
 
 const { openLoadModal, openIoModal, openShareModal } = useAppModals({
@@ -171,6 +162,7 @@ onMounted(initialize);
     :new-character-label="messages.ui.header.newCharacter"
     :sign-in-label="messages.ui.header.signIn"
     :sign-out-label="messages.ui.header.signOut"
+    :is-new-button-disabled="isCharacterSheetEmpty"
     @new-character="handleCreateNewCharacter"
     @sign-in="handleSignInClick"
     @sign-out="handleSignOutClick"

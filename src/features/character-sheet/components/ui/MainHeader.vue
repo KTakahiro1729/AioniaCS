@@ -1,7 +1,12 @@
 <template>
   <header class="main-header" ref="headerEl">
     <div class="main-header__section main-header__section--left">
-      <button class="button-base main-header__button" @click="handleNewCharacterClick">
+      <button
+        class="button-base main-header__button"
+        :class="{ 'main-header__button--disabled': isNewButtonDisabled }"
+        :disabled="isNewButtonDisabled"
+        @click="handleNewCharacterClick"
+      >
         {{ newCharacterLabel }}
       </button>
     </div>
@@ -38,6 +43,10 @@ const props = defineProps({
   newCharacterLabel: String,
   signInLabel: String,
   signOutLabel: String,
+  isNewButtonDisabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['new-character', 'help-mouseover', 'help-mouseleave', 'help-click', 'sign-in', 'sign-out']);
@@ -54,6 +63,9 @@ const titleText = computed(() => characterStore.character.name || props.defaultT
 const isSignedIn = computed(() => uiStore.isSignedIn);
 
 function handleNewCharacterClick() {
+  if (props.isNewButtonDisabled) {
+    return;
+  }
   emit('new-character', { isSignedIn: isSignedIn.value });
 }
 
@@ -101,6 +113,12 @@ defineExpose({ headerEl, helpIcon });
   min-width: 50px;
   height: 50px;
   justify-content: center;
+}
+
+.main-header__button:disabled,
+.main-header__button--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .main-header__title {
