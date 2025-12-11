@@ -99,7 +99,7 @@ const handleCreateNewCharacter = async () => {
   characterStore.initializeAll();
   uiStore.clearCurrentDriveFileId();
   uiStore.isViewingShared = false;
-  uiStore.setLastSavedSnapshot(null);
+  uiStore.setLastSavedSnapshot(initialCharacterSnapshot.value);
 };
 
 const { openLoadModal, openIoModal, openShareModal } = useAppModals({
