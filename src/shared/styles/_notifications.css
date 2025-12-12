@@ -1,23 +1,6 @@
 /* stylelint-disable */
 
-:root {
-  /* --- 通知カラーパレット --- */
-  --color-success: #2d5a3d;
-  --color-success-light: #4a7c5a;
-  --color-success-glow: #6bb77b;
-  --color-warning: #8b5a2b;
-  --color-warning-light: #b8783d;
-  --color-warning-glow: #d4955a;
-  --color-error: #5a2d2d;
-  --color-error-light: #7a3d3d;
-  --color-error-glow: #a85555;
-  --color-info: #2d3d5a;
-  --color-info-light: #3d4f7a;
-  --color-info-glow: #5577a8;
-  --color-critical: #4a1a1a;
-  --color-critical-light: #6b2d2d;
-  --color-critical-glow: #8b4444;
-}
+@import url('_variables.css');
 
 /* Toast通知 */
 .toast-container {
