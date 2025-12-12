@@ -1,5 +1,4 @@
 import commandsBaseRaw from '@/contents/cocofolia/commands_base.txt?raw';
-import memoLayoutRaw from '@/contents/cocofolia/memo_layout.txt?raw';
 import patternsCsv from '@/contents/cocofolia/patterns.csv?raw';
 import { interpolate, parseCsv } from '@/i18n/loader.js';
 
@@ -27,10 +26,6 @@ export class CocofoliaExporter {
 
   format(key, variables) {
     return interpolate(this.getTemplate(key), variables);
-  }
-
-  applyMemoLayout(sections) {
-    return Object.entries(sections).reduce((layout, [key, value]) => layout.replaceAll(`{{${key}}}`, value ?? ''), memoLayoutRaw);
   }
 
   /**
@@ -219,7 +214,6 @@ export class CocofoliaExporter {
 
     skills.forEach((skill) => {
       const dice = skill.checked ? '2d10' : '1d10';
-      commandLines.push(this.format('command.skill', { dice, name: skill.name }));
 
       if (skill.name === '防御') {
         commandLines.push(this.format('command.skill_defense_no_armor', { dice, name: skill.name }));
@@ -302,17 +296,46 @@ export class CocofoliaExporter {
       weaponDamage,
     } = data;
 
-    const memoSections = {
-      basicInfo: this.buildCharacterBasicInfo(character, speciesLabelMap).join('\n'),
-      weaknesses: this.buildWeaknessesInfo(character.weaknesses),
-      skills: this.buildSkillsInfo(skills),
-      specialSkills: this.buildSpecialSkillsInfo(specialSkills, specialSkillData, specialSkillsRequiringNote),
-      equipment: this.buildEquipmentInfo(equipments, equipmentGroupLabelMap),
-      otherItems: this.buildOtherItemsInfo(character.otherItems),
-      memo: this.buildCharacterMemoInfo(character.memo),
-    };
+    // 各セクションの定義
+    const sections = [
+      {
+        headerKey: null, // 基本情報はヘッダーなし
+        content: this.buildCharacterBasicInfo(character, speciesLabelMap).join('\n'),
+      },
+      {
+        headerKey: 'heading.weakness',
+        content: this.buildWeaknessesInfo(character.weaknesses),
+      },
+      {
+        headerKey: 'heading.skills',
+        content: this.buildSkillsInfo(skills),
+      },
+      {
+        headerKey: 'heading.special_skills',
+        content: this.buildSpecialSkillsInfo(specialSkills, specialSkillData, specialSkillsRequiringNote),
+      },
+      {
+        headerKey: 'heading.equipment',
+        content: this.buildEquipmentInfo(equipments, equipmentGroupLabelMap),
+      },
+      {
+        headerKey: 'heading.other_items',
+        content: this.buildOtherItemsInfo(character.otherItems),
+      },
+      {
+        headerKey: 'heading.memo',
+        content: this.buildCharacterMemoInfo(character.memo),
+      },
+    ];
 
-    const finalMemo = this.applyMemoLayout(memoSections).trim();
+    const finalMemo = sections
+      .filter((section) => section.content && section.content.trim() !== '')
+      .map((section) => {
+        const header = section.headerKey ? this.getTemplate(section.headerKey) : '';
+        return header ? `${header}\n${section.content}` : section.content;
+      })
+      .join('\n\n')
+      .trim();
 
     const commands = this.buildCocofoliaCommands(character, skills, equipments, weaponDamage);
 
