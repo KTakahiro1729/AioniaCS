@@ -159,7 +159,7 @@ function handleLocalChange(event) {
 
 .load-modal__signin-message {
   margin: 0;
-  color: var(--color-text-muted, #ccc);
+  color: var(--color-text-muted);
 }
 
 .button-base:disabled {
