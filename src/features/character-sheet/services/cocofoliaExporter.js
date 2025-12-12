@@ -8,7 +8,6 @@ import { interpolate, parseCsv } from '@/i18n/loader.js';
 export class CocofoliaExporter {
   constructor() {
     this.templates = parseCsv(patternsCsv).records;
-    this.MAX_MEMO_LENGTH = 200;
     this.BREAK_CHARS = ['\n', '。', '．'];
     this.MIN_BREAK_POSITION_RATIO = 0.5;
     this.defaults = {
@@ -37,15 +36,15 @@ export class CocofoliaExporter {
     const playerSuffix = character.playerName ? this.format('line.player_suffix', { player: character.playerName }) : '';
     lines.push(this.format('line.name', { name: displayName, player_suffix: playerSuffix }));
 
-    const speciesText = speciesLabelMap[character.species] || character.species;
-    const speciesDisplay = character.species === 'other' ? `${speciesText}（${character.rareSpecies || '未設定'}）` : speciesText;
-    lines.push(this.format('line.species', { species: speciesDisplay }));
+    if (character.species) {
+      const speciesText = speciesLabelMap[character.species] || character.species;
+      const speciesDisplay = character.species === 'other' ? `${speciesText}（${character.rareSpecies || '未設定'}）` : speciesText;
+      lines.push(this.format('line.species', { species: speciesDisplay }));
+    }
+    if (character.occupation) lines.push(this.format('line.occupation', { occupation: character.occupation }));
 
     if (character.gender) lines.push(this.format('line.gender', { gender: character.gender }));
     if (character.age !== null) lines.push(this.format('line.age', { age: character.age }));
-    if (character.origin) lines.push(this.format('line.origin', { origin: character.origin }));
-    if (character.occupation) lines.push(this.format('line.occupation', { occupation: character.occupation }));
-    if (character.faith) lines.push(this.format('line.faith', { faith: character.faith }));
     if (character.height) lines.push(this.format('line.height', { height: character.height }));
     if (character.weight) lines.push(this.format('line.weight', { weight: character.weight }));
 
@@ -164,25 +163,6 @@ export class CocofoliaExporter {
       return otherItems;
     }
     return '';
-  }
-
-  /**
-   * キャラクターメモを構築（長すぎる場合は切り詰め）
-   */
-  buildCharacterMemoInfo(memo) {
-    if (!memo) {
-      return '';
-    }
-
-    let truncatedMemo = '';
-
-    if (memo.length <= this.MAX_MEMO_LENGTH) {
-      truncatedMemo = memo;
-    } else {
-      truncatedMemo = this.truncateCharacterMemo(memo, this.MAX_MEMO_LENGTH);
-    }
-
-    return truncatedMemo.trim();
   }
 
   /**
@@ -321,10 +301,6 @@ export class CocofoliaExporter {
       {
         headerKey: 'heading.other_items',
         content: this.buildOtherItemsInfo(character.otherItems),
-      },
-      {
-        headerKey: 'heading.memo',
-        content: this.buildCharacterMemoInfo(character.memo),
       },
     ];
 
