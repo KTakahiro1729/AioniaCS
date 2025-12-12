@@ -196,7 +196,7 @@ export class CocofoliaExporter {
     lines.push(`種族：${speciesDisplay}`);
 
     if (character.gender) lines.push(`性別：${character.gender}`);
-    if (character.age !== null && character.age !== undefined) lines.push(`年齢：${character.age}`);
+    if (character.age != null) lines.push(`年齢：${character.age}`);
     if (character.origin) lines.push(`出身地：${character.origin}`);
     if (character.occupation) lines.push(`職業：${character.occupation}`);
     if (character.faith) lines.push(`信仰：${character.faith}`);
