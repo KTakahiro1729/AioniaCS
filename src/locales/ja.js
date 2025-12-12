@@ -229,7 +229,7 @@ export const messages = {
           name: 'キャラクター名',
           playerName: 'プレイヤー名',
           species: '種族',
-          rareSpecies: '種族名（希少人種）',
+          rareSpecies: '種族名',
           gender: '性別',
           age: '年齢',
           height: '身長',
