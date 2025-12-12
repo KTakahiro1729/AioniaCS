@@ -33,7 +33,7 @@
 import { computed } from 'vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();

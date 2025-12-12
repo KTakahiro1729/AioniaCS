@@ -1,7 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { useDynamicButtons } from '@/features/cloud-sync/composables/useDynamicButtons.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 describe('useDynamicButtons', () => {
   beforeEach(() => {

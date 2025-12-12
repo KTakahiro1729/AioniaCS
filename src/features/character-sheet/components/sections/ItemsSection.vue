@@ -67,7 +67,7 @@ import { AioniaGameData as gameData } from '@/data/gameData.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import LoadIndicator from '@/features/character-sheet/components/ui/LoadIndicator.vue';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();

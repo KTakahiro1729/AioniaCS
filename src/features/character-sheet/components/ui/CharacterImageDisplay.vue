@@ -45,7 +45,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 const props = defineProps({
   images: {

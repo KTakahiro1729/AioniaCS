@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 export function useDynamicButtons() {
   const uiStore = useUiStore();

@@ -8,7 +8,7 @@ import { useDataExport } from '@/features/character-sheet/composables/useDataExp
 import { useLocalCharacterPersistence } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 import { useKeyboardHandling } from '@/shared/composables/useKeyboardHandling.js';
 import { usePrint } from '@/features/character-sheet/composables/usePrint.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { useAppModals } from '@/features/modals/composables/useAppModals.js';
 import { useAppInitialization } from '@/app/providers/useAppInitialization.js';
 import { useModal } from '@/features/modals/composables/useModal.js';

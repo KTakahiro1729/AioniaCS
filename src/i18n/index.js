@@ -1,8 +1,8 @@
-import messagesCsv from './messages.csv?raw';
-import { createI18nLoader } from '../utils/i18nLoader.js';
+import messagesCsv from '../contents/ui_messages.csv?raw';
+import { createI18nLoader } from './loader.js';
 
 const i18n = createI18nLoader(messagesCsv, 'ja');
-const t = (key, variables) => i18n.t(key, variables);
+export const t = (key, variables) => i18n.t(key, variables);
 
 const driveLoadErrorMap = {
   general: 'share.loadError.message.general',

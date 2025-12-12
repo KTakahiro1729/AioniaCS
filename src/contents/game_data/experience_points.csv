@@ -1,0 +1,7 @@
+key,value,comment
+skillBase,10,基本技能1つあたり
+expertSkill,5,専門技能1つあたり
+specialSkill,5,特技1つあたり
+weakness,10,弱点1つあたり（作成時のみ）
+basePoints,100,基本経験点
+maxInitialBonus,20,初期ボーナスの上限

@@ -5,7 +5,7 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 const LoadModal = defineAsyncComponent(() => import('@/features/modals/components/contents/LoadModal.vue'));
 const IoModal = defineAsyncComponent(() => import('@/features/modals/components/contents/IoModal.vue'));
 import { isDesktopDevice } from '@/shared/utils/device.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 

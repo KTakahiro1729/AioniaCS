@@ -1,0 +1,10 @@
+key,label,disabled
+,選択してください,true
+human,人間,false
+elf,エルフ,false
+dwarf,ドワーフ,false
+halfling,ディグリング,false
+therianthropy,獣人,false
+dragonfolk,竜人,false
+treefolk,ツリーフォーク,false
+other,希少人種,false

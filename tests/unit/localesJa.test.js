@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import messagesCsv from '../../src/locales/messages.csv?raw';
-import { createI18nLoader } from '../../src/utils/i18nLoader.js';
-import { messages } from '../../src/locales/ja.js';
+import messagesCsv from '../../src/contents/ui_messages.csv?raw';
+import { createI18nLoader } from '../../src/i18n/loader.js';
+import { messages } from '../../src/i18n/index.js';
 
 describe('i18n CSV loader', () => {
   const loader = createI18nLoader(messagesCsv);

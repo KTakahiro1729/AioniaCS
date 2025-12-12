@@ -1,4 +1,4 @@
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 export const ImageManager = {
   /**
