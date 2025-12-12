@@ -87,6 +87,8 @@ export class CocofoliaExporter {
         const top = stack[stack.length - 1];
         if (top.type === 'loop' && top.key === key) {
           stack.pop();
+        } else {
+          throw new Error(`Mismatched closing tag. Expected '${top.key}' but got '${key}'.`);
         }
         index = end + 1;
         continue;
