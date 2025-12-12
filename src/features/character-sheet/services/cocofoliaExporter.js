@@ -219,6 +219,8 @@ export class CocofoliaExporter {
 
     skills.forEach((skill) => {
       const dice = skill.checked ? '2d10' : '1d10';
+      commandLines.push(this.format('command.skill', { dice, name: skill.name }));
+
       if (skill.name === '防御') {
         commandLines.push(this.format('command.skill_defense_no_armor', { dice, name: skill.name }));
         commandLines.push(this.format('command.skill_defense_with_armor', { dice, name: skill.name }));
