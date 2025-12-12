@@ -3,7 +3,7 @@ import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 const showToastMock = vi.fn();
 const showAsyncToastMock = vi.fn();

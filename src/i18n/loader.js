@@ -4,14 +4,15 @@ const interpolate = (template, variables = {}) =>
     return value === undefined || value === null ? match : value;
   });
 
-const splitCsvLine = (line) => {
-  const result = [];
+const parseCsvRows = (rawCsv) => {
+  const rows = [];
   let current = '';
+  let row = [];
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
-    const nextChar = line[i + 1];
+  for (let i = 0; i < rawCsv.length; i += 1) {
+    const char = rawCsv[i];
+    const nextChar = rawCsv[i + 1];
 
     if (char === '"') {
       if (inQuotes && nextChar === '"') {
@@ -21,45 +22,63 @@ const splitCsvLine = (line) => {
         inQuotes = !inQuotes;
       }
     } else if (char === ',' && !inQuotes) {
-      result.push(current);
+      row.push(current.trim());
+      current = '';
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i += 1;
+      }
+      row.push(current.trim());
+      if (row.some((cell) => cell !== '')) {
+        rows.push(row);
+      }
+      row = [];
       current = '';
     } else {
       current += char;
     }
   }
 
-  result.push(current);
-  return result.map((value) => value.trim());
+  if (current.length > 0 || row.length > 0) {
+    row.push(current.trim());
+    if (row.some((cell) => cell !== '')) {
+      rows.push(row);
+    }
+  }
+
+  return rows;
 };
 
 const parseCsv = (rawCsv) => {
-  const lines = rawCsv.split(/\r?\n/).filter((line) => line.trim().length > 0);
-  if (lines.length === 0) {
-    return { headers: [], records: {} };
+  const rows = parseCsvRows(rawCsv);
+  if (!rows.length) {
+    return { headers: [], records: {}, rows: [] };
   }
 
-  const headers = splitCsvLine(lines[0]);
-  const records = lines.slice(1).reduce((acc, line) => {
-    const cells = splitCsvLine(line);
-    if (!cells.length) return acc;
+  const headers = rows[0];
+  const bodyRows = rows.slice(1).map((cells) =>
+    headers.reduce(
+      (record, header, index) => ({
+        ...record,
+        [header]: cells[index] ?? '',
+      }),
+      {},
+    ),
+  );
 
-    const record = headers.reduce((row, header, index) => {
-      const cell = cells[index] ?? '';
-      return { ...row, [header]: cell };
-    }, {});
-
+  const records = bodyRows.reduce((acc, record) => {
     if (record.key) {
       acc[record.key] = record;
     }
-
     return acc;
   }, {});
 
-  return { headers, records };
+  return { headers, records, rows: bodyRows };
 };
 
-export const createI18nLoader = (rawCsv, locale = 'ja', fallbackLocale = 'ja') => {
-  const { records } = parseCsv(rawCsv);
+const createI18nLoader = (rawCsv, locale = 'ja', fallbackLocale = 'ja') => {
+  const parsed = parseCsv(rawCsv);
+  const { records } = parsed;
 
   const getText = (key, variables) => {
     const entry = records[key];
@@ -70,7 +89,7 @@ export const createI18nLoader = (rawCsv, locale = 'ja', fallbackLocale = 'ja') =
   const hasKey = (key) => Boolean(records[key]);
 
   const exportToCsv = () => {
-    const headers = ['key', fallbackLocale, 'comment'];
+    const headers = parsed.headers.length ? parsed.headers : ['key', fallbackLocale, 'comment'];
     const escape = (val) => {
       const str = String(val ?? '');
       if (str.includes(',') || str.includes('"') || str.includes('\n')) {
@@ -85,4 +104,4 @@ export const createI18nLoader = (rawCsv, locale = 'ja', fallbackLocale = 'ja') =
   return { t: getText, hasKey, exportToCsv };
 };
 
-export { interpolate, parseCsv };
+export { interpolate, parseCsv, createI18nLoader };

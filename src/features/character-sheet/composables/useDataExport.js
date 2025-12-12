@@ -3,7 +3,7 @@ import { CocofoliaExporter } from '@/features/character-sheet/services/cocofolia
 import { AioniaGameData } from '@/data/gameData.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { copyText } from '@/shared/utils/clipboard.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';

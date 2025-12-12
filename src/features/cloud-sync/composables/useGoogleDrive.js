@@ -8,7 +8,7 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { removeStoredCharacterDraft } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';

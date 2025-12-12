@@ -1,0 +1,11 @@
+key,label,can_have_experts,default_experts_count
+motion,運動,true,1
+avoidance,回避,false,0
+sense,感覚,true,1
+observation,観察,true,1
+technique,技巧,true,1
+shooting,射撃,true,1
+sociality,社交,true,1
+knowledge,知識,true,1
+combat,白兵,true,1
+defense,防御,false,0

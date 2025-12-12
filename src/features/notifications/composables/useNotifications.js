@@ -1,5 +1,5 @@
 import { useNotificationStore } from '../stores/notificationStore.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 function normalizeError(error) {
   if (error instanceof Error) {

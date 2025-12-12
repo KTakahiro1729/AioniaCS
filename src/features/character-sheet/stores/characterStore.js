@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { AioniaGameData } from '@/data/gameData.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { deepClone, createWeaknessArray } from '@/shared/utils/utils.js';
 
 function createCharacter() {

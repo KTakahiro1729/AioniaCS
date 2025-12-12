@@ -2,7 +2,7 @@ import { useCharacterStore } from '@/features/character-sheet/stores/characterSt
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { deserializeCharacterPayload } from '@/shared/utils/characterSerialization.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 function getSharedDriveId(location) {
