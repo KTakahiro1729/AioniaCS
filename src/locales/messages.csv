@@ -60,7 +60,7 @@ share.errors.managerMissing,Google Drive マネージャーが設定されてい
 share.loadError.title,共有データエラー,Share load error title
 share.loadError.message.general,共有データの読み込みに失敗しました,Share load error general message
 share.loadError.message.fetchFailed,共有データの取得に失敗しました,Share load error fetch failed message
-share.loadError.message.parseFailed,共有データの解析に失敗しした,Share load error parse failed message
+share.loadError.message.parseFailed,共有データの解析に失敗しました,Share load error parse failed message
 characterHub.driveFolder.changeButton,選択,Character hub folder change button
 characterHub.driveFolder.label,保存先フォルダ,Character hub folder label
 characterHub.driveFolder.placeholder,慈悲なきアイオニア,Character hub folder placeholder

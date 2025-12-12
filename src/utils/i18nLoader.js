@@ -71,8 +71,15 @@ export const createI18nLoader = (rawCsv, locale = 'ja', fallbackLocale = 'ja') =
 
   const exportToCsv = () => {
     const headers = ['key', fallbackLocale, 'comment'];
-    const rows = Object.values(records).map((record) => headers.map((header) => record[header] ?? '').join(','));
-    return [headers.join(','), ...rows].join('\n');
+    const escape = (val) => {
+      const str = String(val ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+    const rows = Object.values(records).map((record) => headers.map((header) => escape(record[header])).join(','));
+    return [headers.map(escape).join(','), ...rows].join('\n');
   };
 
   return { t: getText, hasKey, exportToCsv };
