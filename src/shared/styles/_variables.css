@@ -12,6 +12,7 @@
   --color-input-bg: var(--color-background);
   --color-input-disabled-bg: var(--color-panel-body);
   --color-text-normal: #d7d7d7;
+  --color-text-muted: #ccc;
   --color-text-input-disabled: #bbb;
   --color-link: #ccc;
   --color-link-hover: var(--color-accent);
