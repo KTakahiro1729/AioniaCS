@@ -10,15 +10,20 @@
         </div>
         <div class="info-item info-item--double">
           <label for="player_name">{{ basicInfoTexts.fields.playerName }}</label>
-          <input type="text" id="player_name" v-model="characterStore.character.playerName" :disabled="uiStore.isViewingShared" />
+          <input
+            type="text"
+            id="player_name"
+            v-model="characterStore.character.playerName"
+            :disabled="uiStore.isViewingShared"
+          />
         </div>
       </div>
       <div class="info-row">
         <div
           class="info-item"
           :class="{
-            'info-item--full': characterStore.character.species !== 'other',
-            'info-item--double': characterStore.character.species === 'other',
+            'info-item--double': characterStore.character.species !== 'other',
+            'info-item--quadruple': characterStore.character.species === 'other',
           }"
         >
           <label for="species">{{ basicInfoTexts.fields.species }}</label>
@@ -28,9 +33,13 @@
             </option>
           </select>
         </div>
-        <div class="info-item info-item--double" v-if="characterStore.character.species === 'other'">
+        <div class="info-item info-item--quadruple" v-if="characterStore.character.species === 'other'">
           <label for="rare_species">{{ basicInfoTexts.fields.rareSpecies }}</label>
           <input type="text" id="rare_species" v-model="characterStore.character.rareSpecies" :disabled="uiStore.isViewingShared" />
+        </div>
+        <div class="info-item info-item--double">
+          <label for="occupation">{{ basicInfoTexts.fields.occupation }}</label>
+          <input type="text" id="occupation" v-model="characterStore.character.occupation" :disabled="uiStore.isViewingShared" />
         </div>
       </div>
       <div class="info-row">
@@ -49,20 +58,6 @@
         <div class="info-item info-item--quadruple">
           <label for="weight_char">{{ basicInfoTexts.fields.weight }}</label>
           <input type="text" id="weight_char" v-model="characterStore.character.weight" :disabled="uiStore.isViewingShared" />
-        </div>
-      </div>
-      <div class="info-row">
-        <div class="info-item info-item--triple">
-          <label for="origin">{{ basicInfoTexts.fields.origin }}</label>
-          <input type="text" id="origin" v-model="characterStore.character.origin" :disabled="uiStore.isViewingShared" />
-        </div>
-        <div class="info-item info-item--triple">
-          <label for="occupation">{{ basicInfoTexts.fields.occupation }}</label>
-          <input type="text" id="occupation" v-model="characterStore.character.occupation" :disabled="uiStore.isViewingShared" />
-        </div>
-        <div class="info-item info-item--triple">
-          <label for="faith">{{ basicInfoTexts.fields.faith }}</label>
-          <input type="text" id="faith" v-model="characterStore.character.faith" :disabled="uiStore.isViewingShared" />
         </div>
       </div>
     </div>

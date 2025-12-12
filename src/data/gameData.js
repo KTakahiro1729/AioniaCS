@@ -666,8 +666,6 @@ export const AioniaGameData = {
     gender: '',
     height: '',
     weight: '',
-    origin: '',
-    faith: '',
     otherItems: '',
     currentScar: 0,
     initialScar: 0,
