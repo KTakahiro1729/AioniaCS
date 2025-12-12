@@ -1,198 +1,161 @@
-import commandsBaseRaw from '@/contents/cocofolia/commands_base.txt?raw';
-import memoLayoutRaw from '@/contents/cocofolia/memo_layout.txt?raw';
-import patternsCsv from '@/contents/cocofolia/patterns.csv?raw';
-import { interpolate, parseCsv } from '@/i18n/loader.js';
+import commandTemplateRaw from '@/contents/cocofolia/command_template.txt?raw';
+import memoTemplateRaw from '@/contents/cocofolia/memo_template.txt?raw';
 
 /**
  * ココフォリア出力機能を管理するクラス
  */
 export class CocofoliaExporter {
   constructor() {
-    this.templates = parseCsv(patternsCsv).records;
+    this.memoTemplate = memoTemplateRaw;
+    this.commandTemplate = commandTemplateRaw;
     this.MAX_MEMO_LENGTH = 200;
     this.BREAK_CHARS = ['\n', '。', '．'];
     this.MIN_BREAK_POSITION_RATIO = 0.5;
     this.defaults = {
-      characterName: this.getTemplate('default.character_name') || '名もなき冒険者',
-      weapon1: this.getTemplate('default.weapon1') || '武器1',
-      weapon2: this.getTemplate('default.weapon2') || '武器2',
-      armor: this.getTemplate('default.armor') || '防具',
-      groupLabel: this.getTemplate('default.group_label') || '種別なし',
+      characterName: '名もなき冒険者',
+      weapon1: '武器1',
+      weapon2: '武器2',
+      armor: '防具',
+      groupLabel: '種別なし',
+      statusDamage: 'ダメージ',
+      statusScar: '傷痕',
+      statusStress: 'ストレス',
     };
   }
 
-  getTemplate(key) {
-    return this.templates[key]?.template ?? '';
+  isEmptyValue(value) {
+    if (value === null || value === undefined) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    return false;
   }
 
-  format(key, variables) {
-    return interpolate(this.getTemplate(key), variables);
+  normalizeValue(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
+    if (typeof value === 'boolean') return value ? 'true' : '';
+    return String(value ?? '').trim();
   }
 
-  applyMemoLayout(sections) {
-    return Object.entries(sections).reduce((layout, [key, value]) => layout.replaceAll(`{{${key}}}`, value ?? ''), memoLayoutRaw);
+  mergeContext(parent, child) {
+    const parentConditions = parent?.__conditions || {};
+
+    if (child && typeof child === 'object' && !Array.isArray(child)) {
+      const mergedConditions = { ...parentConditions, ...(child.__conditions || {}) };
+      return { ...parent, ...child, __conditions: mergedConditions };
+    }
+
+    return { ...parent, value: child, __conditions: { ...parentConditions } };
   }
 
-  /**
-   * 基本キャラクター情報を構築
-   */
-  buildCharacterBasicInfo(character, speciesLabelMap) {
-    const lines = [];
-    const displayName = character.name || this.defaults.characterName;
-    const playerSuffix = character.playerName ? this.format('line.player_suffix', { player: character.playerName }) : '';
-    lines.push(this.format('line.name', { name: displayName, player_suffix: playerSuffix }));
-
-    const speciesText = speciesLabelMap[character.species] || character.species;
-    const speciesDisplay = character.species === 'other' ? `${speciesText}（${character.rareSpecies || '未設定'}）` : speciesText;
-    lines.push(this.format('line.species', { species: speciesDisplay }));
-
-    if (character.gender) lines.push(this.format('line.gender', { gender: character.gender }));
-    if (character.age !== null) lines.push(this.format('line.age', { age: character.age }));
-    if (character.origin) lines.push(this.format('line.origin', { origin: character.origin }));
-    if (character.occupation) lines.push(this.format('line.occupation', { occupation: character.occupation }));
-    if (character.faith) lines.push(this.format('line.faith', { faith: character.faith }));
-    if (character.height) lines.push(this.format('line.height', { height: character.height }));
-    if (character.weight) lines.push(this.format('line.weight', { weight: character.weight }));
-
-    return lines;
-  }
-
-  /**
-   * 弱点情報を構築
-   */
-  buildWeaknessesInfo(weaknesses) {
-    const weaknessList = [];
-
-    weaknesses.forEach((w) => {
-      if (w.text && w.text.trim() !== '') {
-        weaknessList.push(w.text);
-      }
-    });
-
-    if (weaknessList.length > 0) {
-      return weaknessList.join('\n');
+  getValue(key, context) {
+    if (context && Object.prototype.hasOwnProperty.call(context, key)) {
+      return this.normalizeValue(context[key]);
     }
     return '';
   }
 
-  /**
-   * 技能情報を構築
-   */
-  buildSkillsInfo(skills) {
-    const skillTexts = [];
+  getConditionValue(key, context) {
+    if (context?.__conditions && Object.prototype.hasOwnProperty.call(context.__conditions, key)) {
+      return this.normalizeValue(context.__conditions[key]);
+    }
+    return this.getValue(key, context);
+  }
 
-    skills.forEach((skill) => {
-      if (skill.checked) {
-        let skillText = this.format('memo.skill_entry', { name: skill.name });
+  render(template, context) {
+    const rendered = this.renderInternal(template, context || {});
+    return this.compactWhitespace(rendered);
+  }
 
-        if (skill.canHaveExperts && skill.experts.some((e) => e.value && e.value.trim() !== '')) {
-          const expertTexts = skill.experts.filter((e) => e.value && e.value.trim() !== '').map((e) => e.value);
+  renderInternal(template, context) {
+    if (!template) return '';
 
-          if (expertTexts.length > 0) {
-            skillText = this.format('memo.skill_expert_entry', {
-              name: skill.name,
-              expert: expertTexts.join('/'),
-            });
-          }
+    const loopPattern = /\[#([^\]]+)]([\s\S]*?)\[\/\1]/g;
+    let output = template.replace(loopPattern, (match, key, inner) => {
+      const list = Array.isArray(context?.[key]) ? context[key] : [];
+      if (!list.length) return '';
+
+      return list
+        .map((item) => {
+          const mergedContext = this.mergeContext(context, item);
+          return this.renderInternal(inner, mergedContext);
+        })
+        .join('');
+    });
+
+    output = this.processConditionalBlocks(output, context);
+
+    const variablePattern = /\[([^\]\[#\/\?]+)]/g;
+    output = output.replace(variablePattern, (match, key) => this.getValue(key, context));
+
+    return output;
+  }
+
+  processConditionalBlocks(text, context) {
+    let cursor = 0;
+    let renderedText = '';
+
+    while (cursor < text.length) {
+      const start = text.indexOf('[?', cursor);
+      if (start === -1) {
+        renderedText += text.slice(cursor);
+        break;
+      }
+
+      renderedText += text.slice(cursor, start);
+      const end = this.findConditionalEnd(text, start + 2);
+
+      if (end === -1) {
+        renderedText += text.slice(start);
+        break;
+      }
+
+      const inner = text.slice(start + 2, end);
+      const variables = [...inner.matchAll(/\[([^\]\[#\/]+)]/g)].map(([, name]) => name);
+      const hasValue = variables.some((name) => !this.isEmptyValue(this.getConditionValue(name, context)));
+
+      if (hasValue) {
+        renderedText += this.renderInternal(inner, context);
+      }
+
+      cursor = end + 1;
+    }
+
+    return renderedText;
+  }
+
+  findConditionalEnd(text, startIndex) {
+    let depth = 0;
+    for (let i = startIndex; i < text.length; i += 1) {
+      if (text[i] === '[') {
+        depth += 1;
+      } else if (text[i] === ']') {
+        if (depth === 0) {
+          return i;
         }
-        skillTexts.push(skillText);
+        depth -= 1;
       }
+    }
+    return -1;
+  }
+
+  compactWhitespace(text) {
+    const lines = text.split('\n').map((line) => line.trimEnd());
+    const compacted = [];
+
+    lines.forEach((line) => {
+      const isEmpty = line.trim() === '';
+      const previousEmpty = compacted.length > 0 && compacted[compacted.length - 1].trim() === '';
+
+      if (isEmpty && previousEmpty) {
+        return;
+      }
+
+      compacted.push(isEmpty ? '' : line);
     });
 
-    if (skillTexts.length > 0) {
-      return skillTexts.join(' ');
-    }
-    return '';
+    return compacted.join('\n').trim();
   }
 
-  /**
-   * 特技情報を構築
-   */
-  buildSpecialSkillsInfo(specialSkills, specialSkillData, specialSkillsRequiringNote) {
-    let specialSkillText = '';
-
-    specialSkills.forEach((ss) => {
-      if (ss.group && ss.name) {
-        const groupOptions = specialSkillData[ss.group] || [];
-        const skillOption = groupOptions.find((opt) => opt.value === ss.name);
-        const skillLabel = skillOption ? skillOption.label : ss.name;
-
-        if (specialSkillsRequiringNote.includes(ss.name) && ss.note) {
-          specialSkillText += this.format('special_skill.with_note', { name: skillLabel, note: ss.note });
-        } else {
-          specialSkillText += this.format('special_skill.basic', { name: skillLabel });
-        }
-      }
-    });
-
-    if (specialSkillText) {
-      return specialSkillText;
-    }
-    return '';
-  }
-
-  /**
-   * 装備情報を構築
-   */
-  buildEquipmentInfo(equipments, equipmentGroupLabelMap) {
-    const equipmentLines = [];
-
-    if (equipments.weapon1.group || equipments.weapon1.name) {
-      const groupLabel = equipmentGroupLabelMap[equipments.weapon1.group] || equipments.weapon1.group || this.defaults.groupLabel;
-      const name = equipments.weapon1.name || this.defaults.weapon1;
-      equipmentLines.push(this.format('line.equipment_item', { name, group: groupLabel }));
-    }
-
-    if (equipments.weapon2.group || equipments.weapon2.name) {
-      const groupLabel = equipmentGroupLabelMap[equipments.weapon2.group] || equipments.weapon2.group || this.defaults.groupLabel;
-      const name = equipments.weapon2.name || this.defaults.weapon2;
-      equipmentLines.push(this.format('line.equipment_item', { name, group: groupLabel }));
-    }
-
-    if (equipments.armor.group || equipments.armor.name) {
-      const groupLabel = equipmentGroupLabelMap[equipments.armor.group] || equipments.armor.group || this.defaults.groupLabel;
-      const name = equipments.armor.name || this.defaults.armor;
-      equipmentLines.push(this.format('line.equipment_item', { name, group: groupLabel }));
-    }
-
-    if (equipmentLines.length > 0) {
-      return equipmentLines.join('\n');
-    }
-    return '';
-  }
-
-  /**
-   * その他所持品情報を構築
-   */
-  buildOtherItemsInfo(otherItems) {
-    if (otherItems) {
-      return otherItems;
-    }
-    return '';
-  }
-
-  /**
-   * キャラクターメモを構築（長すぎる場合は切り詰め）
-   */
-  buildCharacterMemoInfo(memo) {
-    if (!memo) {
-      return '';
-    }
-
-    let truncatedMemo = '';
-
-    if (memo.length <= this.MAX_MEMO_LENGTH) {
-      truncatedMemo = memo;
-    } else {
-      truncatedMemo = this.truncateCharacterMemo(memo, this.MAX_MEMO_LENGTH);
-    }
-
-    return truncatedMemo.trim();
-  }
-
-  /**
-   * キャラクターメモを適切な位置で切り詰める
-   */
   truncateCharacterMemo(memo, maxLength) {
     const sub = memo.substring(0, maxLength);
     let lastBreak = -1;
@@ -211,58 +174,117 @@ export class CocofoliaExporter {
     }
   }
 
-  /**
-   * ココフォリア用のコマンドを構築
-   */
-  buildCocofoliaCommands(character, skills, equipments, weaponDamage) {
-    const commandLines = commandsBaseRaw.trim().split('\n');
-
-    skills.forEach((skill) => {
-      const dice = skill.checked ? '2d10' : '1d10';
-      commandLines.push(this.format('command.skill', { dice, name: skill.name }));
-
-      if (skill.name === '防御') {
-        commandLines.push(this.format('command.skill_defense_no_armor', { dice, name: skill.name }));
-        commandLines.push(this.format('command.skill_defense_with_armor', { dice, name: skill.name }));
-      } else {
-        commandLines.push(this.format('command.skill', { dice, name: skill.name }));
-      }
-
-      if (skill.checked && skill.canHaveExperts) {
-        skill.experts.forEach((expert) => {
-          if (expert.value && expert.value.trim() !== '') {
-            commandLines.push(this.format('command.skill_expert', { name: skill.name, expert: expert.value }));
-          }
-        });
-      }
-    });
-
-    if (equipments.weapon1.group && weaponDamage[equipments.weapon1.group]) {
-      const weaponName = equipments.weapon1.name || this.defaults.weapon1;
-      commandLines.push(
-        this.format('command.weapon_damage', {
-          formula: weaponDamage[equipments.weapon1.group],
-          weapon_name: weaponName,
-        }),
-      );
+  buildCharacterMemoInfo(memo) {
+    if (!memo) {
+      return '';
     }
 
-    if (equipments.weapon2.group && weaponDamage[equipments.weapon2.group]) {
-      const weaponName = equipments.weapon2.name || this.defaults.weapon2;
-      commandLines.push(
-        this.format('command.weapon_damage', {
-          formula: weaponDamage[equipments.weapon2.group],
-          weapon_name: weaponName,
-        }),
-      );
+    if (memo.length <= this.MAX_MEMO_LENGTH) {
+      return memo.trim();
     }
 
-    return commandLines.join('\n').trim();
+    return this.truncateCharacterMemo(memo, this.MAX_MEMO_LENGTH).trim();
   }
 
-  /**
-   * ココフォリア用キャラクターオブジェクトを構築
-   */
+  prepareViewData(data) {
+    const {
+      character,
+      skills,
+      specialSkills,
+      equipments,
+      speciesLabelMap,
+      equipmentGroupLabelMap,
+      specialSkillData,
+      specialSkillsRequiringNote,
+      weaponDamage,
+    } = data;
+
+    const displayName = character.name || this.defaults.characterName;
+    const speciesText = speciesLabelMap[character.species] || character.species || '';
+    const speciesDetail = character.rareSpecies || character.speciesDetail || '';
+
+    const weaknessList = (character.weaknesses || [])
+      .map((item) => ({ text: item?.text?.trim() || '' }))
+      .filter((item) => !this.isEmptyValue(item.text));
+
+    const skillList = (skills || []).map((skill) => {
+      const dice = skill?.checked ? '2d10' : '1d10';
+      const expertTexts = skill?.canHaveExperts
+        ? (skill.experts || []).map((expert) => expert?.value?.trim() || '').filter((value) => !this.isEmptyValue(value))
+        : [];
+      const expert = expertTexts.join('/');
+      const isDefense = skill?.name === '防御' ? '防御' : '';
+
+      return {
+        name: skill?.name || '',
+        dice,
+        expert,
+        isDefense,
+        __conditions: isDefense ? { isDefense, dice, name: skill?.name || '', expert } : { isDefense: '', dice: '', name: '', expert: '' },
+      };
+    });
+
+    const specialSkillList = (specialSkills || []).map((ss) => {
+      const groupOptions = specialSkillData?.[ss.group] || [];
+      const skillOption = groupOptions.find((opt) => opt.value === ss.name);
+      const label = skillOption ? skillOption.label : ss.name;
+      const requireNote = specialSkillsRequiringNote?.includes(ss.name);
+      const note = requireNote && ss.note ? ss.note : '';
+
+      return { name: label || '', note: note || '' };
+    });
+
+    const equipmentsList = [];
+    const appendEquipment = (item, fallbackName) => {
+      if (!item) return;
+      const hasValue = item.group || item.name;
+      if (!hasValue) return;
+
+      const groupLabel = equipmentGroupLabelMap?.[item.group] || item.group || this.defaults.groupLabel;
+      const name = item.name || fallbackName;
+      equipmentsList.push({ name, group: groupLabel });
+    };
+
+    appendEquipment(equipments?.weapon1, this.defaults.weapon1);
+    appendEquipment(equipments?.weapon2, this.defaults.weapon2);
+    appendEquipment(equipments?.armor, this.defaults.armor);
+
+    const otherItems = character.otherItems || '';
+    const memoText = this.buildCharacterMemoInfo(character.memo);
+
+    const weaponList = [];
+    const appendWeapon = (item, fallbackName) => {
+      if (item?.group && weaponDamage?.[item.group]) {
+        const name = item.name || fallbackName;
+        weaponList.push({ formula: weaponDamage[item.group], name });
+      }
+    };
+
+    appendWeapon(equipments?.weapon1, this.defaults.weapon1);
+    appendWeapon(equipments?.weapon2, this.defaults.weapon2);
+
+    return {
+      name: displayName,
+      playerName: character.playerName || '',
+      species: speciesText,
+      speciesDetail,
+      gender: character.gender || '',
+      age: character.age === 0 ? '0' : character.age || '',
+      origin: character.origin || '',
+      occupation: character.occupation || '',
+      faith: character.faith || '',
+      height: character.height || '',
+      weight: character.weight || '',
+      weaknesses: weaknessList,
+      skills: skillList,
+      specialSkills: specialSkillList,
+      equipments: equipmentsList,
+      otherItems,
+      memo: memoText,
+      weapons: weaponList,
+    };
+  }
+
   buildCocofoliaCharacterObject(character, memo, commands, currentWeight) {
     const scar = Number(character.currentScar) || 0;
     const stress = 0;
@@ -272,53 +294,25 @@ export class CocofoliaExporter {
       data: {
         params: [],
         status: [
-          { label: this.getTemplate('status.damage') || 'ダメージ', value: 0 },
-          { label: this.getTemplate('status.scar') || '傷痕', value: scar },
-          { label: this.getTemplate('status.stress') || 'ストレス', value: stress },
+          { label: this.defaults.statusDamage, value: 0 },
+          { label: this.defaults.statusScar, value: scar },
+          { label: this.defaults.statusStress, value: stress },
         ],
         name: character.name || this.defaults.characterName,
         initiative: currentWeight * -1,
-        memo: memo,
+        memo,
         externalUrl: '',
-        commands: commands,
+        commands,
       },
     };
   }
 
-  /**
-   * メイン処理：ココフォリア形式のデータを生成
-   */
   generateCocofoliaData(data) {
-    const {
-      character,
-      skills,
-      specialSkills,
-      equipments,
-      currentWeight,
-      speciesLabelMap,
-      equipmentGroupLabelMap,
-      specialSkillData,
-      specialSkillsRequiringNote,
-      weaponDamage,
-    } = data;
+    const viewData = this.prepareViewData(data);
+    const memo = this.render(this.memoTemplate, viewData);
+    const commands = this.render(this.commandTemplate, viewData);
 
-    const memoSections = {
-      basicInfo: this.buildCharacterBasicInfo(character, speciesLabelMap).join('\n'),
-      weaknesses: this.buildWeaknessesInfo(character.weaknesses),
-      skills: this.buildSkillsInfo(skills),
-      specialSkills: this.buildSpecialSkillsInfo(specialSkills, specialSkillData, specialSkillsRequiringNote),
-      equipment: this.buildEquipmentInfo(equipments, equipmentGroupLabelMap),
-      otherItems: this.buildOtherItemsInfo(character.otherItems),
-      memo: this.buildCharacterMemoInfo(character.memo),
-    };
-
-    const finalMemo = this.applyMemoLayout(memoSections).trim();
-
-    const commands = this.buildCocofoliaCommands(character, skills, equipments, weaponDamage);
-
-    const cocofoliaCharacter = this.buildCocofoliaCharacterObject(character, finalMemo, commands, currentWeight);
-
-    return cocofoliaCharacter;
+    return this.buildCocofoliaCharacterObject(data.character, memo, commands, data.currentWeight);
   }
 }
 

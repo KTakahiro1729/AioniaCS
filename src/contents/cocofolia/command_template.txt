@@ -1,0 +1,15 @@
+1d100>={ダメージ}+{傷痕} 〈ダメージチェック〉
+1d100>={ストレス} 〈ストレスチェック〉
+:傷痕={ダメージ}+{傷痕}/2 〈治癒①〉
+:ダメージ=0                 〈治癒②〉
+
+[#skills]
+[dice] 〈[name][?：[expert]]〉
+[?[isDefense]
+[dice] 〈[name]（防具なし）〉
+[dice]+2 〈[name]（防具あり）〉]
+[/skills]
+
+[#weapons]
+[formula] 〈ダメージ判定（[name]）〉
+[/weapons]
