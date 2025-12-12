@@ -6,6 +6,34 @@ describe('CocofoliaExporter', () => {
     exporter = new CocofoliaExporter();
   });
 
+  describe('render', () => {
+    test('removes conditional blocks with only empty variables', () => {
+      const template = `Header\n[? Section: [value]\n]\nFooter`;
+      const result = exporter.render(template, { value: '' });
+      expect(result).toBe('Header\n\nFooter');
+      expect(result).not.toMatch(/\n{3,}/);
+    });
+
+    test('keeps nested conditional content when any variable has value and collapses blank lines', () => {
+      const template = `Start\n[?Outer [outer]\n[?Inner [inner]\n[value]\n]\n]\nEnd`;
+      const result = exporter.render(template, { outer: '', inner: 'x', value: 'kept' });
+      expect(result).toContain('kept');
+      expect(result).toContain('Outer');
+      expect(result).not.toMatch(/\n{3,}/);
+    });
+
+    test('loops render with item context and conditional parts removed per iteration', () => {
+      const template = `[#items]-[name][? ([note])]\n[/items]`;
+      const result = exporter.render(template, {
+        items: [
+          { name: 'Alpha', note: '' },
+          { name: 'Beta', note: 'ready' },
+        ],
+      });
+      expect(result).toBe('-Alpha\n-Beta (ready)');
+    });
+  });
+
   test('buildCharacterBasicInfo returns expected lines', () => {
     const character = {
       name: 'ミーアナック',
@@ -34,7 +62,6 @@ describe('CocofoliaExporter', () => {
   });
 
   test('buildCocofoliaCommands assembles commands', () => {
-    const character = { currentScar: 1 };
     const skills = [
       { name: '運動', checked: true, canHaveExperts: false, experts: [] },
       { name: '防御', checked: true, canHaveExperts: false, experts: [] },
@@ -49,12 +76,12 @@ describe('CocofoliaExporter', () => {
       weapon1: { group: 'sword', name: '剣' },
       weapon2: { group: '', name: '' },
     };
-    const commands = exporter.buildCocofoliaCommands(character, skills, equipments, { sword: '2d6' });
-    expect(commands).toContain('2d10 〈運動〉');
-    expect(commands).toContain('2d10 〈防御〉');
-    expect(commands).toContain('2d10+2 〈防御（防具あり）〉');
-    expect(commands).toContain('3d10 〈白兵：剣〉');
-    expect(commands).toContain('2d6 〈ダメージ判定（剣）〉');
+    const commands = exporter.buildCocofoliaCommands(skills, equipments, { sword: '2d6' });
+    expect(commands.skillCommands).toContain('2d10 〈運動〉');
+    expect(commands.skillCommands).toContain('2d10 〈防御〉');
+    expect(commands.skillCommands).toContain('2d10+2 〈防御（防具あり）〉');
+    expect(commands.skillCommands).toContain('3d10 〈白兵：剣〉');
+    expect(commands.weaponCommands).toContain('2d6 〈ダメージ判定（剣）〉');
   });
 
   test('generateCocofoliaData returns object with memo and commands', () => {

@@ -1,0 +1,8 @@
+[#baseCommands][line]
+[/baseCommands]
+
+[#skillCommands][line]
+[/skillCommands]
+
+[#weaponCommands][line]
+[/weaponCommands]

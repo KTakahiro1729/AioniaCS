@@ -1,65 +1,209 @@
-import commandsBaseRaw from '@/contents/cocofolia/commands_base.txt?raw';
-import memoLayoutRaw from '@/contents/cocofolia/memo_layout.txt?raw';
-import patternsCsv from '@/contents/cocofolia/patterns.csv?raw';
-import { interpolate, parseCsv } from '@/i18n/loader.js';
+import commandTemplateRaw from '@/contents/cocofolia/command_template.txt?raw';
+import memoTemplateRaw from '@/contents/cocofolia/memo_template.txt?raw';
 
 /**
  * ココフォリア出力機能を管理するクラス
  */
 export class CocofoliaExporter {
   constructor() {
-    this.templates = parseCsv(patternsCsv).records;
     this.MAX_MEMO_LENGTH = 200;
     this.BREAK_CHARS = ['\n', '。', '．'];
     this.MIN_BREAK_POSITION_RATIO = 0.5;
     this.defaults = {
-      characterName: this.getTemplate('default.character_name') || '名もなき冒険者',
-      weapon1: this.getTemplate('default.weapon1') || '武器1',
-      weapon2: this.getTemplate('default.weapon2') || '武器2',
-      armor: this.getTemplate('default.armor') || '防具',
-      groupLabel: this.getTemplate('default.group_label') || '種別なし',
+      characterName: '名もなき冒険者',
+      weapon1: '武器1',
+      weapon2: '武器2',
+      armor: '防具',
+      groupLabel: '種別なし',
+    };
+    this.statusLabels = {
+      damage: 'ダメージ',
+      scar: '傷痕',
+      stress: 'ストレス',
     };
   }
 
-  getTemplate(key) {
-    return this.templates[key]?.template ?? '';
+  normalizeWhitespace(text) {
+    const lines = text.split('\n').map((line) => line.replace(/\s+$/u, ''));
+    const compacted = [];
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      if (trimmed === '' && compacted[compacted.length - 1]?.trim() === '') {
+        return;
+      }
+      compacted.push(line);
+    });
+    while (compacted.length && compacted[0].trim() === '') compacted.shift();
+    while (compacted.length && compacted[compacted.length - 1].trim() === '') compacted.pop();
+    return compacted.join('\n');
   }
 
-  format(key, variables) {
-    return interpolate(this.getTemplate(key), variables);
+  parseTemplate(template) {
+    const root = { type: 'fragment', children: [] };
+    const stack = [root];
+
+    const pushText = (text) => {
+      if (text) {
+        stack[stack.length - 1].children.push({ type: 'text', value: text });
+      }
+    };
+
+    let index = 0;
+    while (index < template.length) {
+      const nextOpen = template.indexOf('[', index);
+      const nextClose = template.indexOf(']', index);
+
+      if (nextClose !== -1 && (nextOpen === -1 || nextClose < nextOpen)) {
+        pushText(template.slice(index, nextClose));
+        const top = stack[stack.length - 1];
+        if (top.type === 'conditional') {
+          stack.pop();
+        } else {
+          stack[stack.length - 1].children.push({ type: 'text', value: ']' });
+        }
+        index = nextClose + 1;
+        continue;
+      }
+
+      if (nextOpen === -1) {
+        pushText(template.slice(index));
+        break;
+      }
+
+      pushText(template.slice(index, nextOpen));
+      if (template.startsWith('[#', nextOpen)) {
+        const end = template.indexOf(']', nextOpen);
+        const key = template.slice(nextOpen + 2, end).trim();
+        const node = { type: 'loop', key, children: [] };
+        stack[stack.length - 1].children.push(node);
+        stack.push(node);
+        index = end + 1;
+        continue;
+      }
+
+      if (template.startsWith('[/', nextOpen)) {
+        const end = template.indexOf(']', nextOpen);
+        const key = template.slice(nextOpen + 2, end).trim();
+        const top = stack[stack.length - 1];
+        if (top.type === 'loop' && top.key === key) {
+          stack.pop();
+        }
+        index = end + 1;
+        continue;
+      }
+
+      if (template.startsWith('[?', nextOpen)) {
+        const node = { type: 'conditional', children: [] };
+        stack[stack.length - 1].children.push(node);
+        stack.push(node);
+        index = nextOpen + 2;
+        continue;
+      }
+
+      const end = template.indexOf(']', nextOpen);
+      const key = template.slice(nextOpen + 1, end).trim();
+      stack[stack.length - 1].children.push({ type: 'variable', key });
+      index = end + 1;
+    }
+
+    return root;
   }
 
-  applyMemoLayout(sections) {
-    return Object.entries(sections).reduce((layout, [key, value]) => layout.replaceAll(`{{${key}}}`, value ?? ''), memoLayoutRaw);
+  resolveRawValue(context, key) {
+    return context?.[key];
   }
 
-  /**
-   * 基本キャラクター情報を構築
-   */
+  stringifyValue(value) {
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'string') return value;
+    return String(value);
+  }
+
+  mergeContext(context, item) {
+    if (item && typeof item === 'object') {
+      return { ...context, ...item };
+    }
+    return { ...context, value: item };
+  }
+
+  collectValues(nodes, context) {
+    const values = [];
+    nodes.forEach((node) => {
+      if (node.type === 'variable') {
+        values.push(this.resolveRawValue(context, node.key));
+      } else if (node.type === 'loop') {
+        const items = this.resolveRawValue(context, node.key);
+        if (Array.isArray(items)) {
+          items.forEach((item) => {
+            values.push(...this.collectValues(node.children, this.mergeContext(context, item)));
+          });
+        }
+      } else if (node.type === 'conditional' || node.type === 'fragment') {
+        values.push(...this.collectValues(node.children, context));
+      }
+    });
+    return values;
+  }
+
+  renderNodes(nodes, context) {
+    return nodes.map((node) => this.renderNode(node, context)).join('');
+  }
+
+  isEmptyValue(value) {
+    if (Array.isArray(value)) return value.length === 0;
+    return value === null || value === undefined || String(value).trim() === '';
+  }
+
+  renderNode(node, context) {
+    switch (node.type) {
+      case 'text':
+        return node.value;
+      case 'variable':
+        return this.stringifyValue(this.resolveRawValue(context, node.key));
+      case 'loop': {
+        const items = this.resolveRawValue(context, node.key);
+        if (!Array.isArray(items) || items.length === 0) return '';
+        return items.map((item) => this.renderNodes(node.children, this.mergeContext(context, item))).join('');
+      }
+      case 'conditional': {
+        const values = this.collectValues(node.children, context);
+        if (values.every((val) => this.isEmptyValue(val))) {
+          return '';
+        }
+        return this.renderNodes(node.children, context);
+      }
+      default:
+        return '';
+    }
+  }
+
+  render(template, data) {
+    const ast = this.parseTemplate(template);
+    const rendered = this.renderNodes(ast.children, data || {});
+    return this.normalizeWhitespace(rendered);
+  }
+
   buildCharacterBasicInfo(character, speciesLabelMap) {
     const lines = [];
     const displayName = character.name || this.defaults.characterName;
-    const playerSuffix = character.playerName ? this.format('line.player_suffix', { player: character.playerName }) : '';
-    lines.push(this.format('line.name', { name: displayName, player_suffix: playerSuffix }));
+    const playerSuffix = character.playerName ? `（${character.playerName}）` : '';
+    lines.push(`名前：${displayName}${playerSuffix}`);
 
     const speciesText = speciesLabelMap[character.species] || character.species;
     const speciesDisplay = character.species === 'other' ? `${speciesText}（${character.rareSpecies || '未設定'}）` : speciesText;
-    lines.push(this.format('line.species', { species: speciesDisplay }));
+    lines.push(`種族：${speciesDisplay}`);
 
-    if (character.gender) lines.push(this.format('line.gender', { gender: character.gender }));
-    if (character.age !== null) lines.push(this.format('line.age', { age: character.age }));
-    if (character.origin) lines.push(this.format('line.origin', { origin: character.origin }));
-    if (character.occupation) lines.push(this.format('line.occupation', { occupation: character.occupation }));
-    if (character.faith) lines.push(this.format('line.faith', { faith: character.faith }));
-    if (character.height) lines.push(this.format('line.height', { height: character.height }));
-    if (character.weight) lines.push(this.format('line.weight', { weight: character.weight }));
+    if (character.gender) lines.push(`性別：${character.gender}`);
+    if (character.age !== null && character.age !== undefined) lines.push(`年齢：${character.age}`);
+    if (character.origin) lines.push(`出身地：${character.origin}`);
+    if (character.occupation) lines.push(`職業：${character.occupation}`);
+    if (character.faith) lines.push(`信仰：${character.faith}`);
+    if (character.height) lines.push(`身長：${character.height}`);
+    if (character.weight) lines.push(`体重：${character.weight}`);
 
     return lines;
   }
 
-  /**
-   * 弱点情報を構築
-   */
   buildWeaknessesInfo(weaknesses) {
     const weaknessList = [];
 
@@ -75,24 +219,18 @@ export class CocofoliaExporter {
     return '';
   }
 
-  /**
-   * 技能情報を構築
-   */
   buildSkillsInfo(skills) {
     const skillTexts = [];
 
     skills.forEach((skill) => {
       if (skill.checked) {
-        let skillText = this.format('memo.skill_entry', { name: skill.name });
+        let skillText = `〈${skill.name}〉`;
 
         if (skill.canHaveExperts && skill.experts.some((e) => e.value && e.value.trim() !== '')) {
           const expertTexts = skill.experts.filter((e) => e.value && e.value.trim() !== '').map((e) => e.value);
 
           if (expertTexts.length > 0) {
-            skillText = this.format('memo.skill_expert_entry', {
-              name: skill.name,
-              expert: expertTexts.join('/'),
-            });
+            skillText = `〈${skill.name}：${expertTexts.join('/')}〉`;
           }
         }
         skillTexts.push(skillText);
@@ -105,9 +243,6 @@ export class CocofoliaExporter {
     return '';
   }
 
-  /**
-   * 特技情報を構築
-   */
   buildSpecialSkillsInfo(specialSkills, specialSkillData, specialSkillsRequiringNote) {
     let specialSkillText = '';
 
@@ -118,9 +253,9 @@ export class CocofoliaExporter {
         const skillLabel = skillOption ? skillOption.label : ss.name;
 
         if (specialSkillsRequiringNote.includes(ss.name) && ss.note) {
-          specialSkillText += this.format('special_skill.with_note', { name: skillLabel, note: ss.note });
+          specialSkillText += `《${skillLabel}：${ss.note}》`;
         } else {
-          specialSkillText += this.format('special_skill.basic', { name: skillLabel });
+          specialSkillText += `《${skillLabel}》`;
         }
       }
     });
@@ -131,28 +266,25 @@ export class CocofoliaExporter {
     return '';
   }
 
-  /**
-   * 装備情報を構築
-   */
   buildEquipmentInfo(equipments, equipmentGroupLabelMap) {
     const equipmentLines = [];
 
     if (equipments.weapon1.group || equipments.weapon1.name) {
       const groupLabel = equipmentGroupLabelMap[equipments.weapon1.group] || equipments.weapon1.group || this.defaults.groupLabel;
       const name = equipments.weapon1.name || this.defaults.weapon1;
-      equipmentLines.push(this.format('line.equipment_item', { name, group: groupLabel }));
+      equipmentLines.push(`${name}（${groupLabel}）`);
     }
 
     if (equipments.weapon2.group || equipments.weapon2.name) {
       const groupLabel = equipmentGroupLabelMap[equipments.weapon2.group] || equipments.weapon2.group || this.defaults.groupLabel;
       const name = equipments.weapon2.name || this.defaults.weapon2;
-      equipmentLines.push(this.format('line.equipment_item', { name, group: groupLabel }));
+      equipmentLines.push(`${name}（${groupLabel}）`);
     }
 
     if (equipments.armor.group || equipments.armor.name) {
       const groupLabel = equipmentGroupLabelMap[equipments.armor.group] || equipments.armor.group || this.defaults.groupLabel;
       const name = equipments.armor.name || this.defaults.armor;
-      equipmentLines.push(this.format('line.equipment_item', { name, group: groupLabel }));
+      equipmentLines.push(`${name}（${groupLabel}）`);
     }
 
     if (equipmentLines.length > 0) {
@@ -161,9 +293,6 @@ export class CocofoliaExporter {
     return '';
   }
 
-  /**
-   * その他所持品情報を構築
-   */
   buildOtherItemsInfo(otherItems) {
     if (otherItems) {
       return otherItems;
@@ -171,9 +300,6 @@ export class CocofoliaExporter {
     return '';
   }
 
-  /**
-   * キャラクターメモを構築（長すぎる場合は切り詰め）
-   */
   buildCharacterMemoInfo(memo) {
     if (!memo) {
       return '';
@@ -190,9 +316,6 @@ export class CocofoliaExporter {
     return truncatedMemo.trim();
   }
 
-  /**
-   * キャラクターメモを適切な位置で切り詰める
-   */
   truncateCharacterMemo(memo, maxLength) {
     const sub = memo.substring(0, maxLength);
     let lastBreak = -1;
@@ -211,84 +334,50 @@ export class CocofoliaExporter {
     }
   }
 
-  /**
-   * ココフォリア用のコマンドを構築
-   */
-  buildCocofoliaCommands(character, skills, equipments, weaponDamage) {
-    const commandLines = commandsBaseRaw.trim().split('\n');
+  buildCocofoliaCommands(skills, equipments, weaponDamage) {
+    const baseCommands = [
+      '1d100>={damage}+{scar} 〈ダメージチェック〉',
+      '1d100>={stress} 〈ストレスチェック〉',
+      ':傷痕={scar}+{damage}/2 〈治癒①〉',
+      ':ダメージ=0                 〈治癒②〉',
+    ];
+
+    const skillCommands = [];
 
     skills.forEach((skill) => {
       const dice = skill.checked ? '2d10' : '1d10';
-      commandLines.push(this.format('command.skill', { dice, name: skill.name }));
+      skillCommands.push(`${dice} 〈${skill.name}〉`);
 
       if (skill.name === '防御') {
-        commandLines.push(this.format('command.skill_defense_no_armor', { dice, name: skill.name }));
-        commandLines.push(this.format('command.skill_defense_with_armor', { dice, name: skill.name }));
-      } else {
-        commandLines.push(this.format('command.skill', { dice, name: skill.name }));
+        skillCommands.push(`${dice} 〈${skill.name}（防具なし）〉`);
+        skillCommands.push(`${dice}+2 〈${skill.name}（防具あり）〉`);
       }
 
       if (skill.checked && skill.canHaveExperts) {
         skill.experts.forEach((expert) => {
           if (expert.value && expert.value.trim() !== '') {
-            commandLines.push(this.format('command.skill_expert', { name: skill.name, expert: expert.value }));
+            skillCommands.push(`3d10 〈${skill.name}：${expert.value}〉`);
           }
         });
       }
     });
 
+    const weaponCommands = [];
+
     if (equipments.weapon1.group && weaponDamage[equipments.weapon1.group]) {
       const weaponName = equipments.weapon1.name || this.defaults.weapon1;
-      commandLines.push(
-        this.format('command.weapon_damage', {
-          formula: weaponDamage[equipments.weapon1.group],
-          weapon_name: weaponName,
-        }),
-      );
+      weaponCommands.push(`${weaponDamage[equipments.weapon1.group]} 〈ダメージ判定（${weaponName}）〉`);
     }
 
     if (equipments.weapon2.group && weaponDamage[equipments.weapon2.group]) {
       const weaponName = equipments.weapon2.name || this.defaults.weapon2;
-      commandLines.push(
-        this.format('command.weapon_damage', {
-          formula: weaponDamage[equipments.weapon2.group],
-          weapon_name: weaponName,
-        }),
-      );
+      weaponCommands.push(`${weaponDamage[equipments.weapon2.group]} 〈ダメージ判定（${weaponName}）〉`);
     }
 
-    return commandLines.join('\n').trim();
+    return { baseCommands, skillCommands, weaponCommands };
   }
 
-  /**
-   * ココフォリア用キャラクターオブジェクトを構築
-   */
-  buildCocofoliaCharacterObject(character, memo, commands, currentWeight) {
-    const scar = Number(character.currentScar) || 0;
-    const stress = 0;
-
-    return {
-      kind: 'character',
-      data: {
-        params: [],
-        status: [
-          { label: this.getTemplate('status.damage') || 'ダメージ', value: 0 },
-          { label: this.getTemplate('status.scar') || '傷痕', value: scar },
-          { label: this.getTemplate('status.stress') || 'ストレス', value: stress },
-        ],
-        name: character.name || this.defaults.characterName,
-        initiative: currentWeight * -1,
-        memo: memo,
-        externalUrl: '',
-        commands: commands,
-      },
-    };
-  }
-
-  /**
-   * メイン処理：ココフォリア形式のデータを生成
-   */
-  generateCocofoliaData(data) {
+  prepareViewData(data) {
     const {
       character,
       skills,
@@ -312,13 +401,50 @@ export class CocofoliaExporter {
       memo: this.buildCharacterMemoInfo(character.memo),
     };
 
-    const finalMemo = this.applyMemoLayout(memoSections).trim();
+    const { baseCommands, skillCommands, weaponCommands } = this.buildCocofoliaCommands(skills, equipments, weaponDamage);
 
-    const commands = this.buildCocofoliaCommands(character, skills, equipments, weaponDamage);
+    return {
+      memoData: memoSections,
+      commandData: {
+        baseCommands: baseCommands.map((line) => ({ line })),
+        skillCommands: skillCommands.map((line) => ({ line })),
+        weaponCommands: weaponCommands.map((line) => ({ line })),
+      },
+      displayName: character.name || this.defaults.characterName,
+      statusValues: {
+        damage: 0,
+        scar: Number(character.currentScar) || 0,
+        stress: 0,
+      },
+      initiative: currentWeight * -1,
+    };
+  }
 
-    const cocofoliaCharacter = this.buildCocofoliaCharacterObject(character, finalMemo, commands, currentWeight);
+  buildCocofoliaCharacterObject(displayName, memo, commands, statusValues, initiative) {
+    return {
+      kind: 'character',
+      data: {
+        params: [],
+        status: [
+          { label: this.statusLabels.damage, value: statusValues.damage },
+          { label: this.statusLabels.scar, value: statusValues.scar },
+          { label: this.statusLabels.stress, value: statusValues.stress },
+        ],
+        name: displayName,
+        initiative,
+        memo,
+        externalUrl: '',
+        commands,
+      },
+    };
+  }
 
-    return cocofoliaCharacter;
+  generateCocofoliaData(data) {
+    const viewData = this.prepareViewData(data);
+    const memo = this.render(memoTemplateRaw, viewData.memoData);
+    const commands = this.render(commandTemplateRaw, viewData.commandData);
+
+    return this.buildCocofoliaCharacterObject(viewData.displayName, memo, commands, viewData.statusValues, viewData.initiative);
   }
 }
 
