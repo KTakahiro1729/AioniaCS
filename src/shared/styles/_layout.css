@@ -97,17 +97,17 @@
 }
 
 .info-item--double {
-  flex: 1 1 calc(50% - 7.5px);
+  flex: 1 1 calc(50% - 2.5px);
   min-width: 80px;
 }
 
 .info-item--triple {
-  flex: 1 1 calc(33.333% - 10px);
+  flex: 1 1 calc(33.333% - 3.33px);
   min-width: 90px;
 }
 
 .info-item--quadruple {
-  flex: 1 1 calc(25% - 12.5px);
+  flex: 1 1 calc(25% - 3.75px);
   min-width: 65px;
 }
 
