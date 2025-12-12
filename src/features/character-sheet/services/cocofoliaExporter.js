@@ -251,7 +251,7 @@ export class CocofoliaExporter {
           { label: this.getTemplate('status.stress') || 'ストレス', value: stress },
         ],
         name: character.name || this.defaults.characterName,
-        initiative: currentWeight * -1,
+        initiative: currentWeight,
         memo: memo,
         externalUrl: '',
         commands: commands,
