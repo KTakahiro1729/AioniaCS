@@ -1,0 +1,30 @@
+【基本情報】
+[#basicInfo][line]
+[/basicInfo]
+[? [weaknesses]
+【弱点】
+[weaknesses]
+]
+[? [skills]
+【技能】
+[#skills][entry]
+[/skills]
+]
+[? [specialSkills]
+【特技】
+[#specialSkills][entry]
+[/specialSkills]
+]
+[? [equipment]
+【武器・防具】
+[#equipment][item]
+[/equipment]
+]
+[? [otherItems]
+【その他所持品】
+[otherItems]
+]
+[? [memo]
+【キャラクターメモ】
+[memo]
+]

@@ -1,72 +1,102 @@
 import { CocofoliaExporter } from '@/features/character-sheet/services/cocofoliaExporter.js';
 
-describe('CocofoliaExporter', () => {
-  let exporter;
-  beforeEach(() => {
-    exporter = new CocofoliaExporter();
+const createExporter = () => new CocofoliaExporter();
+
+describe('CocofoliaExporter render system', () => {
+  test('render substitutes variables and strips missing values', () => {
+    const exporter = createExporter();
+    const template = 'Name: [name]\n[? Title: [title]\n]\nNote: [note]';
+    const result = exporter.render(template, { name: 'Alice', title: '', note: null });
+    expect(result).toBe('Name: Alice\nNote: ');
+
+    const withTitle = exporter.render(template, { name: 'Alice', title: 'Captain', note: 'Hello' });
+    expect(withTitle).toBe('Name: Alice\nTitle: Captain\nNote: Hello');
   });
 
-  test('buildCharacterBasicInfo returns expected lines', () => {
-    const character = {
-      name: 'ミーアナック',
-      playerName: 'あろすてりっく',
-      species: 'therianthropy',
-      rareSpecies: '',
-      gender: '男性',
-      age: 30,
-      origin: 'ラウステン王国',
-      occupation: '商人',
-      faith: '',
-      height: '120cm',
-      weight: '50kg',
-    };
-    const lines = exporter.buildCharacterBasicInfo(character, {
-      therianthropy: '獣人',
+  test('render repeats loop blocks for arrays', () => {
+    const exporter = createExporter();
+    const template = 'Items:\n[#items]- [label]\n[/items]\nEnd';
+    const result = exporter.render(template, {
+      items: [{ label: 'One' }, { label: 'Two' }],
     });
-    expect(lines[0]).toBe('名前：ミーアナック（あろすてりっく）');
-    expect(lines[1]).toBe('種族：獣人');
-  });
 
-  test('truncateCharacterMemo cuts string at punctuation', () => {
-    const memo = 'これはとても長い文章です。途中で切れます';
-    const truncated = exporter.truncateCharacterMemo(memo, 15);
-    expect(truncated).toBe('これはとても長い文章です。…');
+    expect(result).toBe('Items:\n- One\n- Two\nEnd');
   });
+});
 
-  test('buildCocofoliaCommands assembles commands', () => {
-    const character = { currentScar: 1 };
-    const skills = [
-      { name: '運動', checked: true, canHaveExperts: false, experts: [] },
-      { name: '防御', checked: true, canHaveExperts: false, experts: [] },
-      {
-        name: '白兵',
-        checked: true,
-        canHaveExperts: true,
-        experts: [{ value: '剣' }],
-      },
-    ];
-    const equipments = {
-      weapon1: { group: 'sword', name: '剣' },
-      weapon2: { group: '', name: '' },
-    };
-    const commands = exporter.buildCocofoliaCommands(character, skills, equipments, { sword: '2d6' });
-    expect(commands).toContain('2d10 〈運動〉');
-    expect(commands).toContain('2d10 〈防御〉');
-    expect(commands).toContain('2d10+2 〈防御（防具あり）〉');
-    expect(commands).toContain('3d10 〈白兵：剣〉');
-    expect(commands).toContain('2d6 〈ダメージ判定（剣）〉');
-  });
-
-  test('generateCocofoliaData returns object with memo and commands', () => {
+describe('CocofoliaExporter data preparation', () => {
+  test('prepareData flattens character information', () => {
+    const exporter = createExporter();
     const data = {
       character: {
         name: 'ミーアナック',
-        currentScar: 0,
-        memo: '',
-        weaknesses: [],
-        otherItems: '',
+        playerName: 'あろすてりっく',
+        species: 'therianthropy',
+        rareSpecies: '',
+        gender: '男性',
+        age: 30,
+        origin: 'ラウステン王国',
+        occupation: '商人',
+        faith: '',
+        height: '120cm',
+        weight: '50kg',
+        weaknesses: [{ text: '火に弱い' }],
+        memo: 'これはメモです',
+        otherItems: 'ロープ',
+        currentScar: 1,
       },
-      skills: [],
+      skills: [
+        { name: '運動', checked: true, canHaveExperts: false, experts: [] },
+        { name: '防御', checked: true, canHaveExperts: false, experts: [] },
+        {
+          name: '白兵',
+          checked: true,
+          canHaveExperts: true,
+          experts: [{ value: '剣' }],
+        },
+      ],
+      specialSkills: [{ group: 'general', name: '強運' }],
+      equipments: {
+        weapon1: { group: 'sword', name: '剣' },
+        weapon2: { group: '', name: '' },
+        armor: { group: 'light', name: '革鎧' },
+      },
+      currentWeight: 0,
+      speciesLabelMap: { therianthropy: '獣人' },
+      equipmentGroupLabelMap: { sword: '剣', light: '軽鎧' },
+      specialSkillData: { general: [{ value: '強運', label: '強運' }] },
+      specialSkillsRequiringNote: [],
+      weaponDamage: { sword: '2d6' },
+    };
+
+    const viewModel = exporter.prepareData(data);
+    expect(viewModel.basicInfo[0].line).toBe('名前：ミーアナック（あろすてりっく）');
+    expect(viewModel.basicInfo[1].line).toBe('種族：獣人');
+    expect(viewModel.skills).toEqual([{ entry: '〈運動〉' }, { entry: '〈防御〉' }, { entry: '〈白兵：剣〉' }]);
+    expect(viewModel.weaponCommands[0].command).toContain('ダメージ判定（剣）');
+  });
+
+  test('generateCocofoliaData builds memo and commands from templates', () => {
+    const exporter = createExporter();
+    const data = {
+      character: {
+        name: 'ミーアナック',
+        playerName: 'あろすてりっく',
+        species: 'therianthropy',
+        rareSpecies: '',
+        gender: '男性',
+        age: 30,
+        origin: 'ラウステン王国',
+        occupation: '商人',
+        faith: '',
+        height: '120cm',
+        weight: '50kg',
+        weaknesses: [{ text: '火に弱い' }],
+        memo: 'これはメモです',
+        otherItems: 'ロープ',
+        currentScar: 0,
+      },
+      skills: [{ name: '運動', checked: true, canHaveExperts: false, experts: [] }],
       specialSkills: [],
       equipments: {
         weapon1: { group: '', name: '' },
@@ -80,9 +110,12 @@ describe('CocofoliaExporter', () => {
       specialSkillsRequiringNote: [],
       weaponDamage: {},
     };
+
     const result = exporter.generateCocofoliaData(data);
-    expect(result.kind).toBe('character');
-    expect(result.data.memo).toContain('名前：ミーアナック');
-    expect(result.data.commands).toContain('ダメージチェック');
+    expect(result.data.memo).toContain('【基本情報】');
+    expect(result.data.memo).toContain('名前：ミーアナック（あろすてりっく）');
+    expect(result.data.memo).toContain('【技能】');
+    expect(result.data.commands).toContain('1d100>=0+0 〈ダメージチェック〉');
+    expect(result.data.commands).toContain('2d10 〈運動〉');
   });
 });

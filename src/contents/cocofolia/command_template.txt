@@ -1,0 +1,6 @@
+[#baseCommands][command]
+[/baseCommands]
+[#skillCommands][command]
+[/skillCommands]
+[#weaponCommands][command]
+[/weaponCommands]
