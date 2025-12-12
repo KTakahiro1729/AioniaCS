@@ -156,7 +156,8 @@ const handleImageUpload = async (event) => {
   justify-content: center;
   margin-bottom: 0;
   width: 100%;
-  height: 350px;
+  min-height: 300px;
+  flex: 1;
   background-color: var(--color-background);
   border: 1px solid var(--color-border-normal);
   border-radius: 2px;
@@ -286,5 +287,13 @@ const handleImageUpload = async (event) => {
   border-color: var(--color-border-normal);
   box-shadow: none;
   text-shadow: none;
+}
+
+@media (min-width: 769px) {
+  .character-image-container {
+    flex: 1;
+    height: 100%;
+    width: 100%;
+  }
 }
 </style>
