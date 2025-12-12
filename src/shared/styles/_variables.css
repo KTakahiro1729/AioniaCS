@@ -49,6 +49,7 @@ Token categories for shared CSS variables:
   --color-load-ghost-normal: #5e5e5e;
   --color-load-ghost-light: #665c36;
   --color-load-ghost-heavy: #663f3f;
+  /* Notification palette */
   --color-success: #2d5a3d;
   --color-success-light: #4a7c5a;
   --color-success-glow: #6bb77b;
