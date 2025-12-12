@@ -80,4 +80,18 @@ const handleSpeciesChange = () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+@media (min-width: 769px) {
+  .character-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .character-info .box-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+  }
+}
+</style>
