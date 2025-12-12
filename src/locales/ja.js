@@ -1,298 +1,359 @@
+import messagesCsv from './messages.csv?raw';
+import { createI18nLoader } from '../utils/i18nLoader.js';
+
+const i18n = createI18nLoader(messagesCsv, 'ja');
+const t = (key, variables) => i18n.t(key, variables);
+
+const driveLoadErrorMap = {
+  general: 'share.loadError.message.general',
+  fetchFailed: 'share.loadError.message.fetchFailed',
+  parseFailed: 'share.loadError.message.parseFailed',
+};
+
 export const messages = {
   errors: {
-    unexpected: '予期せぬエラーが発生しました',
+    unexpected: t('errors.unexpected'),
   },
   googleDrive: {
     auth: {
-      connected: () => ({ title: 'Google Drive', message: '接続しました' }),
+      connected: () => ({
+        title: t('googleDrive.auth.connected.title'),
+        message: t('googleDrive.auth.connected.message'),
+      }),
     },
     signOut: {
-      success: () => ({ title: 'サインアウトしました', message: '' }),
+      success: () => ({
+        title: t('googleDrive.signOut.success.title'),
+        message: t('googleDrive.signOut.success.message'),
+      }),
     },
     folderPicker: {
-      unavailable: () => ({ title: 'Google Drive', message: 'フォルダピッカーを利用できません' }),
+      unavailable: () => ({
+        title: t('googleDrive.folderPicker.unavailable.title'),
+        message: t('googleDrive.folderPicker.unavailable.message'),
+      }),
       error: (err) => ({
-        title: 'Google Drive',
-        message: err?.message || 'フォルダ選択をキャンセルしました',
+        title: t('googleDrive.folderPicker.error.title'),
+        message: err?.message || t('googleDrive.folderPicker.error.message'),
       }),
     },
     save: {
-      loading: () => ({ title: 'Google Drive', message: '保存中...' }),
-      newLoading: () => ({ title: '新規キャラクター', message: '新規キャラクターを保存中' }),
-      newSuccess: () => ({ title: '新規キャラクター', message: '新規キャラクターを保存しました' }),
-      success: () => ({ title: '保存完了', message: '' }),
-      error: (err) => ({ title: '保存失敗', message: err.message || '' }),
+      loading: () => ({
+        title: t('googleDrive.save.loading.title'),
+        message: t('googleDrive.save.loading.message'),
+      }),
+      newLoading: () => ({
+        title: t('googleDrive.save.newLoading.title'),
+        message: t('googleDrive.save.newLoading.message'),
+      }),
+      newSuccess: () => ({
+        title: t('googleDrive.save.newSuccess.title'),
+        message: t('googleDrive.save.newSuccess.message'),
+      }),
+      success: () => ({
+        title: t('googleDrive.save.success.title'),
+        message: t('googleDrive.save.success.message'),
+      }),
+      error: (err) => ({
+        title: t('googleDrive.save.error.title'),
+        message: err?.message || t('googleDrive.save.error.message'),
+      }),
     },
     load: {
       loading: (name) => ({
-        title: 'Google Drive',
-        message: `${name} を読み込み中...`,
+        title: t('googleDrive.load.loading.title'),
+        message: t('googleDrive.load.loading.message', { name }),
       }),
       success: (name) => ({
-        title: '読込完了',
-        message: `${name} を読み込みました`,
+        title: t('googleDrive.load.success.title'),
+        message: t('googleDrive.load.success.message', { name }),
       }),
       error: (err) => ({
-        title: '読み込みエラー',
-        message: err.message || '不明なエラー',
+        title: t('googleDrive.load.error.title'),
+        message: err?.message || t('googleDrive.load.error.message'),
       }),
-      noSelection: () => ({ title: '読み込みエラー', message: 'ファイルが選択されていません' }),
-      missingData: () => ({ title: '読み込みエラー', message: 'キャラクターデータを取得できませんでした' }),
+      noSelection: () => ({
+        title: t('googleDrive.load.noSelection.title'),
+        message: t('googleDrive.load.noSelection.message'),
+      }),
+      missingData: () => ({
+        title: t('googleDrive.load.missingData.title'),
+        message: t('googleDrive.load.missingData.message'),
+      }),
     },
     overwriteConfirm: (name) => ({
-      title: '上書き確認',
-      message: `${name} は既に存在します。上書きしますか？`,
+      title: t('googleDrive.overwriteConfirm.title'),
+      message: t('googleDrive.overwriteConfirm.message', { name }),
       buttons: [
-        { label: '上書き', value: 'overwrite', variant: 'primary' },
-        { label: 'キャンセル', value: 'cancel', variant: 'secondary', duration: 1 },
+        { label: t('googleDrive.overwriteConfirm.buttons.overwrite'), value: 'overwrite', variant: 'primary' },
+        {
+          label: t('googleDrive.overwriteConfirm.buttons.cancel'),
+          value: 'cancel',
+          variant: 'secondary',
+          duration: 1,
+        },
       ],
     }),
     apiInitError: () => ({
-      title: 'Google API エラー',
-      message: '初期化に失敗しました',
+      title: t('googleDrive.apiInitError.title'),
+      message: t('googleDrive.apiInitError.message'),
     }),
     initPending: () => ({
-      title: 'Google Drive',
-      message: '初期化が完了するまでお待ちください',
+      title: t('googleDrive.initPending.title'),
+      message: t('googleDrive.initPending.message'),
     }),
     config: {
-      loadError: () => ({ title: '設定読み込み失敗', message: '保存先フォルダの取得に失敗しました' }),
-      requiresSignIn: () => ({ title: 'Google Drive', message: 'Googleにサインインしてください' }),
-      updateSuccess: () => ({ title: '設定更新', message: '保存先フォルダを更新しました' }),
+      loadError: () => ({
+        title: t('googleDrive.config.loadError.title'),
+        message: t('googleDrive.config.loadError.message'),
+      }),
+      requiresSignIn: () => ({
+        title: t('googleDrive.config.requiresSignIn.title'),
+        message: t('googleDrive.config.requiresSignIn.message'),
+      }),
+      updateSuccess: () => ({
+        title: t('googleDrive.config.updateSuccess.title'),
+        message: t('googleDrive.config.updateSuccess.message'),
+      }),
       updateError: (err) => ({
-        title: '設定更新失敗',
-        message: err?.message || '保存先フォルダの更新に失敗しました',
+        title: t('googleDrive.config.updateError.title'),
+        message: err?.message || t('googleDrive.config.updateError.message'),
       }),
     },
   },
   share: {
     needSignIn: () => ({
-      title: 'Google Drive',
-      message: 'サインインしてください',
+      title: t('share.needSignIn.title'),
+      message: t('share.needSignIn.message'),
     }),
     toast: {
-      creating: () => ({ title: '共有リンク', message: '作成中...' }),
-      success: () => ({ title: '共有リンク', message: 'URLをコピーしました' }),
+      creating: () => ({ title: t('share.toast.creating.title'), message: t('share.toast.creating.message') }),
+      success: () => ({ title: t('share.toast.success.title'), message: t('share.toast.success.message') }),
       error: (err) => ({
-        title: '共有失敗',
-        message: err?.message || '共有リンクの生成に失敗しました',
+        title: t('share.toast.error.title'),
+        message: err?.message || t('share.toast.error.message'),
       }),
-      clipboardUnavailable: () => ({ title: '共有リンク', message: 'クリップボードにアクセスできません' }),
+      clipboardUnavailable: () => ({
+        title: t('share.toast.clipboardUnavailable.title'),
+        message: t('share.toast.clipboardUnavailable.message'),
+      }),
     },
     errors: {
-      saveFailed: 'Google Drive への保存に失敗しました',
-      shareFailed: '共有リンクの取得に失敗しました',
-      managerMissing: 'Google Drive マネージャーが設定されていません',
+      saveFailed: t('share.errors.saveFailed'),
+      shareFailed: t('share.errors.shareFailed'),
+      managerMissing: t('share.errors.managerMissing'),
     },
     loadError: {
-      toast: (key = 'general') => {
-        const messagesMap = {
-          general: '共有データの読み込みに失敗しました',
-          fetchFailed: '共有データの取得に失敗しました',
-          parseFailed: '共有データの解析に失敗しました',
-        };
-        return {
-          title: '共有データエラー',
-          message: messagesMap[key] || messagesMap.general,
-        };
-      },
+      toast: (key = 'general') => ({
+        title: t('share.loadError.title'),
+        message: t(driveLoadErrorMap[key] || driveLoadErrorMap.general),
+      }),
     },
   },
   characterHub: {
     driveFolder: {
-      changeButton: '選択',
-      label: '保存先フォルダ',
-      placeholder: '慈悲なきアイオニア',
+      changeButton: t('characterHub.driveFolder.changeButton'),
+      label: t('characterHub.driveFolder.label'),
+      placeholder: t('characterHub.driveFolder.placeholder'),
     },
     buttons: {
-      signIn: 'ログイン／Driveから読み込む',
+      signIn: t('characterHub.buttons.signIn'),
     },
   },
   image: {
-    loadError: (err) => ({ title: '画像読み込み失敗', message: err.message }),
+    loadError: (err) => ({
+      title: t('image.loadError.title'),
+      message: err?.message ?? t('image.loadError.message', { message: '' }),
+    }),
     uploadErrors: {
-      noFile: '画像ファイルが選択されていません。',
-      unsupportedType: '対応していない画像形式です。JPEG、PNG、GIF、WebP、SVG を指定してください。',
-      tooLarge: 'ファイルサイズが大きすぎます（最大10MB）。',
-      readError: '画像の読み込み中にエラーが発生しました。',
+      noFile: t('image.uploadErrors.noFile'),
+      unsupportedType: t('image.uploadErrors.unsupportedType'),
+      tooLarge: t('image.uploadErrors.tooLarge'),
+      readError: t('image.uploadErrors.readError'),
     },
   },
   dataExport: {
-    loadError: (msg) => ({ title: '読み込み失敗', message: msg }),
+    loadError: (msg) => ({
+      title: t('dataExport.loadError.title'),
+      message: msg ?? t('dataExport.loadError.message', { message: '' }),
+    }),
   },
   file: {
-    loadError: 'ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。',
-    unsupportedFormat: '対応していないファイル形式です。AioniaCSで保存したデータをご利用ください。',
+    loadError: t('file.loadError'),
+    unsupportedFormat: t('file.unsupportedFormat'),
   },
   ui: {
     header: {
-      defaultTitle: 'Aionia TRPG Character Sheet',
-      helpLabel: '?',
-      newCharacter: '新規',
-      signIn: 'ログイン',
-      signOut: 'ログアウト',
+      defaultTitle: t('ui.header.defaultTitle'),
+      helpLabel: t('ui.header.helpLabel'),
+      newCharacter: t('ui.header.newCharacter'),
+      signIn: t('ui.header.signIn'),
+      signOut: t('ui.header.signOut'),
     },
     footer: {
-      experience: '経験点',
-      output: '出力',
-      share: '共有',
-      copyEdit: '自分用にコピーして編集',
+      experience: t('ui.footer.experience'),
+      output: t('ui.footer.output'),
+      share: t('ui.footer.share'),
+      copyEdit: t('ui.footer.copyEdit'),
     },
-    viewModeBanner: '閲覧モードで表示中',
+    viewModeBanner: t('ui.viewModeBanner'),
     buttons: {
-      saveCloudNew: '新規保存',
-      saveCloudOverwrite: '上書保存',
-      saveCloudTitle: 'Google Driveに保存',
-      loadCloud: 'Drive読込',
-      loadCloudTitle: 'Google Driveから読込む',
-      saveLocal: '端末保存',
-      saveLocalTitle: '端末に保存',
-      loadLocal: '読込',
-      loadLocalTitle: '端末から読込む',
-      save: '保存',
+      saveCloudNew: t('ui.buttons.saveCloudNew'),
+      saveCloudOverwrite: t('ui.buttons.saveCloudOverwrite'),
+      saveCloudTitle: t('ui.buttons.saveCloudTitle'),
+      loadCloud: t('ui.buttons.loadCloud'),
+      loadCloudTitle: t('ui.buttons.loadCloudTitle'),
+      saveLocal: t('ui.buttons.saveLocal'),
+      saveLocalTitle: t('ui.buttons.saveLocalTitle'),
+      loadLocal: t('ui.buttons.loadLocal'),
+      loadLocalTitle: t('ui.buttons.loadLocalTitle'),
+      save: t('ui.buttons.save'),
     },
     confirmations: {
       unsavedChanges: {
-        title: '保存されていない変更があります',
-        message: '現在の内容はまだ保存されていません。新規作成すると変更は失われます。続行しますか？',
+        title: t('ui.confirmations.unsavedChanges.title'),
+        message: t('ui.confirmations.unsavedChanges.message'),
         buttons: [
-          { label: '保存して続行', value: 'save', variant: 'primary' },
-          { label: '保存せず続行', value: 'discard', variant: 'secondary' },
-          { label: 'キャンセル', value: 'cancel', variant: 'secondary' },
+          { label: t('ui.confirmations.unsavedChanges.buttons.save'), value: 'save', variant: 'primary' },
+          { label: t('ui.confirmations.unsavedChanges.buttons.discard'), value: 'discard', variant: 'secondary' },
+          { label: t('ui.confirmations.unsavedChanges.buttons.cancel'), value: 'cancel', variant: 'secondary' },
         ],
       },
     },
     modal: {
       load: {
-        title: '読込',
+        title: t('ui.modal.load.title'),
         buttons: {
-          loadLocal: 'ローカルから読み込む',
-          loadDrive: 'Driveから読み込む',
+          loadLocal: t('ui.modal.load.buttons.loadLocal'),
+          loadDrive: t('ui.modal.load.buttons.loadDrive'),
         },
-        signInMessage: 'Drive機能を使うにはGoogleにサインインしてください。',
+        signInMessage: t('ui.modal.load.signInMessage'),
       },
       io: {
-        title: '入出力',
+        title: t('ui.modal.io.title'),
         buttons: {
-          saveLocal: 'ローカルファイルで出力',
-          print: '印刷',
-          chatPalette: 'チャットパレットを出力',
+          saveLocal: t('ui.modal.io.buttons.saveLocal'),
+          print: t('ui.modal.io.buttons.print'),
+          chatPalette: t('ui.modal.io.buttons.chatPalette'),
         },
         chatPalette: {
-          success: () => ({ title: 'チャットパレット', message: 'クリップボードにコピーしました' }),
-          error: (err) => ({
-            title: 'チャットパレット',
-            message: err?.message || 'コピーに失敗しました',
+          success: () => ({
+            title: t('ui.modal.io.chatPalette.success.title'),
+            message: t('ui.modal.io.chatPalette.success.message'),
           }),
-          clipboardUnavailable: 'クリップボード機能が利用できません',
+          error: (err) => ({
+            title: t('ui.modal.io.chatPalette.error.title'),
+            message: err?.message || t('ui.modal.io.chatPalette.error.message'),
+          }),
+          clipboardUnavailable: t('ui.modal.io.chatPalette.clipboardUnavailable'),
         },
       },
     },
   },
   sheet: {
     loadIndicator: {
-      label: '荷重',
+      label: t('sheet.loadIndicator.label'),
     },
     toggles: {
-      showDescription: '説明を表示',
+      showDescription: t('sheet.toggles.showDescription'),
     },
     images: {
-      alt: 'キャラクター画像',
-      previous: '前の画像',
-      next: '次の画像',
-      add: '画像を追加',
-      delete: '削除',
-      deleteAria: '現在の画像を削除',
-      empty: '画像はありません',
+      alt: t('sheet.images.alt'),
+      previous: t('sheet.images.previous'),
+      next: t('sheet.images.next'),
+      add: t('sheet.images.add'),
+      delete: t('sheet.images.delete'),
+      deleteAria: t('sheet.images.deleteAria'),
+      empty: t('sheet.images.empty'),
     },
     placeholders: {
-      expertSkill: '専門技能',
-      expertSkillDisabled: '専門技能 (技能選択で有効)',
-      specialSkillNote: '詳細',
-      characterMemo: 'キャラクター背景、設定、その他メモを記入',
-      weaponName: '装備名',
-      armorName: '装備名',
-      adventureMemo: 'メモ',
+      expertSkill: t('sheet.placeholders.expertSkill'),
+      expertSkillDisabled: t('sheet.placeholders.expertSkillDisabled'),
+      specialSkillNote: t('sheet.placeholders.specialSkillNote'),
+      characterMemo: t('sheet.placeholders.characterMemo'),
+      weaponName: t('sheet.placeholders.weaponName'),
+      armorName: t('sheet.placeholders.armorName'),
+      adventureMemo: t('sheet.placeholders.adventureMemo'),
     },
     aria: {
-      deleteItem: '項目を削除',
-      removeExpert: '専門技能を削除',
-      addExpert: '専門技能を追加',
-      removeSpecialSkill: '特技を削除',
-      addSpecialSkill: '特技を追加',
-      addAdventureLog: '冒険記録を追加',
+      deleteItem: t('sheet.aria.deleteItem'),
+      removeExpert: t('sheet.aria.removeExpert'),
+      addExpert: t('sheet.aria.addExpert'),
+      removeSpecialSkill: t('sheet.aria.removeSpecialSkill'),
+      addSpecialSkill: t('sheet.aria.addSpecialSkill'),
+      addAdventureLog: t('sheet.aria.addAdventureLog'),
     },
     sections: {
       basicInfo: {
-        title: '基本情報',
+        title: t('sheet.sections.basicInfo.title'),
         fields: {
-          name: 'キャラクター名',
-          playerName: 'プレイヤー名',
-          species: '種族',
-          rareSpecies: '種族名',
-          gender: '性別',
-          age: '年齢',
-          height: '身長',
-          weight: '体重',
-          origin: '出身地',
-          occupation: '職業',
-          faith: '信仰',
+          name: t('sheet.sections.basicInfo.fields.name'),
+          playerName: t('sheet.sections.basicInfo.fields.playerName'),
+          species: t('sheet.sections.basicInfo.fields.species'),
+          rareSpecies: t('sheet.sections.basicInfo.fields.rareSpecies'),
+          gender: t('sheet.sections.basicInfo.fields.gender'),
+          age: t('sheet.sections.basicInfo.fields.age'),
+          height: t('sheet.sections.basicInfo.fields.height'),
+          weight: t('sheet.sections.basicInfo.fields.weight'),
+          origin: t('sheet.sections.basicInfo.fields.origin'),
+          occupation: t('sheet.sections.basicInfo.fields.occupation'),
+          faith: t('sheet.sections.basicInfo.fields.faith'),
         },
       },
       scar: {
-        title: '傷痕',
+        title: t('sheet.sections.scar.title'),
         fields: {
-          initial: '初期値',
-          current: '現在値（初期値+増加分）',
+          initial: t('sheet.sections.scar.fields.initial'),
+          current: t('sheet.sections.scar.fields.current'),
         },
       },
       weakness: {
-        title: '弱点',
+        title: t('sheet.sections.weakness.title'),
         columns: {
-          text: '弱点',
-          acquired: '獲得',
+          text: t('sheet.sections.weakness.columns.text'),
+          acquired: t('sheet.sections.weakness.columns.acquired'),
         },
       },
       skills: {
-        title: '技能',
+        title: t('sheet.sections.skills.title'),
       },
       memo: {
-        title: 'キャラクターメモ',
+        title: t('sheet.sections.memo.title'),
       },
       specialSkills: {
-        title: '特技',
+        title: t('sheet.sections.specialSkills.title'),
         columns: {
-          group: '種類',
-          name: '名称',
-          acquired: '獲得',
+          group: t('sheet.sections.specialSkills.columns.group'),
+          name: t('sheet.sections.specialSkills.columns.name'),
+          acquired: t('sheet.sections.specialSkills.columns.acquired'),
         },
       },
       items: {
-        title: '所持品',
+        title: t('sheet.sections.items.title'),
         labels: {
-          otherItems: 'その他所持品',
+          otherItems: t('sheet.sections.items.labels.otherItems'),
           slots: {
-            weapon1: '武器1',
-            weapon2: '武器2',
-            armor: '防具',
+            weapon1: t('sheet.sections.items.labels.slots.weapon1'),
+            weapon2: t('sheet.sections.items.labels.slots.weapon2'),
+            armor: t('sheet.sections.items.labels.slots.armor'),
           },
         },
       },
       adventureLog: {
-        title: '冒険の記録',
+        title: t('sheet.sections.adventureLog.title'),
         columns: {
-          scenario: 'シナリオ名',
-          experience: '経験点',
-          scar: '傷痕増加',
+          scenario: t('sheet.sections.adventureLog.columns.scenario'),
+          experience: t('sheet.sections.adventureLog.columns.experience'),
+          scar: t('sheet.sections.adventureLog.columns.scar'),
         },
       },
     },
   },
   outputButton: {
-    default: 'ココフォリア駒出力',
-    success: 'コピー完了！',
-    error: 'コピーエラー (fallback)',
-    animating: '冒険が始まる――',
+    default: t('outputButton.default'),
+    success: t('outputButton.success'),
+    error: t('outputButton.error'),
+    animating: t('outputButton.animating'),
     animationTimings: {
       state1_bgFill: 500,
       state2_textHold: 1000,
@@ -301,6 +362,6 @@ export const messages = {
       state5_successHold: 300,
     },
   },
-  weaknessDropdownHelp: '（冒険の記録を追加すると選択肢が増えます）',
-  specialSkillDropdownHelp: '（シナリオ報酬の場合はシナリオ名を選択）',
+  weaknessDropdownHelp: t('weaknessDropdownHelp'),
+  specialSkillDropdownHelp: t('specialSkillDropdownHelp'),
 };
