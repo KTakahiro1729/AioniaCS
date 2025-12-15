@@ -206,7 +206,6 @@ app.get('/api/auth/callback', async (c) => {
   try {
     const redirectUri = getRedirectUri(c.req.raw);
     const tokenResult = await exchangeCodeForTokens(c.env, code, redirectUri);
-    const user = await fetchUserInfo(tokenResult.access_token);
 
 const grantedScopes = tokenResult.scope ? tokenResult.scope.split(' ') : [];
     const hasRequiredScopes = REQUIRED_SCOPES.every((scope) => grantedScopes.includes(scope));
