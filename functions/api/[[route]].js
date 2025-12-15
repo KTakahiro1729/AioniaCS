@@ -5,6 +5,10 @@ import { handle } from 'hono/cloudflare-pages';
 const SESSION_COOKIE_NAME = 'aioniacs_session';
 const STATE_COOKIE_NAME = 'aioniacs_oauth_state';
 const AUTH_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file openid email profile';
+const REQUIRED_SCOPES = [
+  'https://www.googleapis.com/auth/drive.appdata',
+  'https://www.googleapis.com/auth/drive.file',
+];
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const STATE_TTL_SECONDS = 10 * 60; // 10 minutes
 
@@ -202,6 +206,26 @@ app.get('/api/auth/callback', async (c) => {
   try {
     const redirectUri = getRedirectUri(c.req.raw);
     const tokenResult = await exchangeCodeForTokens(c.env, code, redirectUri);
+
+    const grantedScopes = tokenResult.scope ? tokenResult.scope.split(' ') : [];
+    const hasRequiredScopes = REQUIRED_SCOPES.every((scope) => grantedScopes.includes(scope));
+
+    if (!hasRequiredScopes) {
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 20px;">
+          <h3>権限が不足しています</h3>
+          <p>アプリを使用するには、Googleドライブへのアクセス権限（ファイルの作成・管理）を許可する必要があります。</p>
+          <p>再度ログインし、すべてのチェックボックスをオンにしてください。</p>
+          <button onclick="window.close()" style="padding: 10px 20px; cursor: pointer;">閉じる</button>
+        </body>
+        </html>
+      `;
+      return c.html(html, 403);
+    }
+
     const user = await fetchUserInfo(tokenResult.access_token);
 
     if (!tokenResult.refresh_token) {
