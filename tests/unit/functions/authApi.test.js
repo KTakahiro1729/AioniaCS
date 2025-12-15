@@ -104,7 +104,12 @@ describe('Cloudflare auth functions', () => {
     fetch
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ access_token: 'access', refresh_token: 'refresh', expires_in: 3600 }),
+        json: async () => ({
+          access_token: 'access',
+          refresh_token: 'refresh',
+          expires_in: 3600, 
+          scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
+        }),
       })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'user-1', email: 'user@example.com' }) });
 
