@@ -49,11 +49,19 @@ share.needSignIn.message,サインインしてください,,Share sign-in needed
 share.toast.creating.title,共有リンク,,Share creating toast title
 share.toast.creating.message,作成中...,,Share creating toast body
 share.toast.success.title,共有リンク,,Share success toast title
-share.toast.success.message,URLをコピーしました,,Share success toast body
+share.toast.success.message,共有リンクを生成しました,,Share success toast body
 share.toast.error.title,共有リンク,,Share error toast title
 share.toast.error.message,共有リンクの生成に失敗しました,,Share error toast default body
 share.toast.clipboardUnavailable.title,共有リンク,,Share clipboard unavailable toast title
 share.toast.clipboardUnavailable.message,クリップボードにアクセスできません,,Share clipboard unavailable toast body
+share.resultModal.title,共有リンク,,Share result modal title
+share.resultModal.description,共有リンクが生成されました。下のURLをコピーして共有してください。,,Share result modal description
+share.resultModal.urlLabel,共有URL,,Share result modal url label
+share.resultModal.copyLabel,コピー,,Share result modal copy button
+share.resultModal.copySuccess.title,コピー,,Share result modal copy success title
+share.resultModal.copySuccess.message,URLをクリップボードにコピーしました,,Share result modal copy success message
+share.resultModal.copyError.title,コピー失敗,,Share result modal copy error title
+share.resultModal.copyError.message,コピーに失敗しました。もう一度お試しください,,Share result modal copy error message
 share.errors.saveFailed,Google Drive への保存に失敗しました,,Share save failed error
 share.errors.shareFailed,共有リンクの取得に失敗しました,,Share retrieval failed error
 share.errors.managerMissing,Google Drive マネージャーが設定されていません,,Share manager missing error

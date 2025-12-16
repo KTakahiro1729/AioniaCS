@@ -143,6 +143,20 @@ export const messages = {
       shareFailed: t('share.errors.shareFailed'),
       managerMissing: t('share.errors.managerMissing'),
     },
+    resultModal: {
+      title: t('share.resultModal.title'),
+      description: t('share.resultModal.description'),
+      urlLabel: t('share.resultModal.urlLabel'),
+      copyLabel: t('share.resultModal.copyLabel'),
+      copySuccess: () => ({
+        title: t('share.resultModal.copySuccess.title'),
+        message: t('share.resultModal.copySuccess.message'),
+      }),
+      copyError: () => ({
+        title: t('share.resultModal.copyError.title'),
+        message: t('share.resultModal.copyError.message'),
+      }),
+    },
     loadError: {
       toast: (key = 'general') => ({
         title: t('share.loadError.title'),
