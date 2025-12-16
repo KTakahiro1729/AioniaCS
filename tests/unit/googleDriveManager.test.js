@@ -35,6 +35,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   afterEach(() => {
     vi.clearAllMocks();
     resetGoogleDriveManagerForTests();
+    delete global.google;
   });
 
   test('loadConfig creates default config when missing', async () => {
@@ -210,6 +211,35 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     gapi.client.drive.files.delete.mockResolvedValue({});
     await gdm.deleteCharacterFile('del-1');
     expect(gapi.client.drive.files.delete).toHaveBeenCalledWith({ fileId: 'del-1' });
+  });
+
+  test('showFilePicker uses cached token without fetching', async () => {
+    const pickerSetVisible = vi.fn();
+    const pickerBuilder = {
+      setOrigin: vi.fn().mockReturnThis(),
+      addView: vi.fn().mockReturnThis(),
+      enableFeature: vi.fn().mockReturnThis(),
+      setOAuthToken: vi.fn().mockReturnThis(),
+      setCallback: vi.fn().mockReturnThis(),
+      build: vi.fn(() => ({ setVisible: pickerSetVisible })),
+    };
+    global.google = {
+      picker: {
+        Response: { ACTION: 'action', DOCUMENTS: 'docs' },
+        Action: { PICKED: 'picked', CANCEL: 'cancel' },
+        ViewId: { DOCS: 'docs' },
+        Feature: { NAV_HIDDEN: 'nav' },
+        View: vi.fn(() => ({ setParent: vi.fn(), setMimeTypes: vi.fn() })),
+        PickerBuilder: vi.fn(() => pickerBuilder),
+      },
+    };
+    gdm.pickerApiLoaded = true;
+
+    await gdm.showFilePicker(() => {});
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(pickerBuilder.setOAuthToken).toHaveBeenCalledWith('cached-token');
+    expect(pickerSetVisible).toHaveBeenCalledWith(true);
   });
 
   test('onGapiLoad rejects when gapi.load missing', async () => {

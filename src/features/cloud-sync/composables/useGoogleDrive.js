@@ -25,6 +25,7 @@ export function useGoogleDrive(dataManager) {
 
   const canSignInToGoogle = computed(() => !uiStore.isSignedIn);
   const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isSignedIn);
+  const isDriveTokenWarm = ref(false);
 
   function syncGoogleDriveManager() {
     try {
@@ -66,6 +67,7 @@ export function useGoogleDrive(dataManager) {
     await googleDriveManager.value.handleSignOut();
     uiStore.isSignedIn = false;
     uiStore.clearCurrentDriveFileId();
+    isDriveTokenWarm.value = false;
     showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
   }
 
@@ -195,6 +197,29 @@ export function useGoogleDrive(dataManager) {
     });
   }
 
+  async function prefetchDriveAccessToken() {
+    if (!googleDriveManager.value || !uiStore.isSignedIn || !uiStore.isGapiInitialized) {
+      return;
+    }
+    if (typeof googleDriveManager.value.ensureAccessToken !== 'function') {
+      return;
+    }
+    const cachedToken =
+      typeof googleDriveManager.value.getCachedAccessToken === 'function' ? googleDriveManager.value.getCachedAccessToken() : null;
+    if (cachedToken) {
+      isDriveTokenWarm.value = true;
+      return;
+    }
+
+    try {
+      await googleDriveManager.value.ensureAccessToken();
+      isDriveTokenWarm.value = true;
+    } catch (error) {
+      console.error('Failed to prefetch Google Drive token:', error);
+      isDriveTokenWarm.value = false;
+    }
+  }
+
   async function saveCharacterToDrive(option = false) {
     if (!isDriveReady.value) {
       showToast({ type: 'error', ...messages.googleDrive.initPending() });
@@ -291,6 +316,7 @@ export function useGoogleDrive(dataManager) {
         uiStore.isSignedIn = restored;
         if (restored) {
           refreshDriveFolderPath();
+          isDriveTokenWarm.value = true;
         }
       } catch (error) {
         uiStore.isGapiInitialized = false;
@@ -336,5 +362,6 @@ export function useGoogleDrive(dataManager) {
     updateDriveFolderPath,
     loadCharacterFromDrive,
     saveCharacterToDrive,
+    prefetchDriveAccessToken,
   };
 }

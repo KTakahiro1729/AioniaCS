@@ -29,9 +29,19 @@ export function useAppModals(options) {
     updateDriveFolderPath,
     canSignInToGoogle,
     isDriveReady,
+    prefetchDriveAccessToken,
   } = options;
 
   async function openLoadModal() {
+    let hasPrefetchedDriveToken = false;
+    const triggerPrefetch = (values) => {
+      if (hasPrefetchedDriveToken || typeof prefetchDriveAccessToken !== 'function' || !values.isSignedIn || !values.isDriveReady) {
+        return;
+      }
+      hasPrefetchedDriveToken = true;
+      prefetchDriveAccessToken();
+    };
+
     const initialProps = {
       isSignedIn: uiStore.isSignedIn,
       canSignIn: canSignInToGoogle?.value ?? false,
@@ -71,9 +81,12 @@ export function useAppModals(options) {
         if (modalStore.component === LoadModal) {
           Object.assign(modalStore.props, values);
         }
+        triggerPrefetch(values);
       },
       { immediate: true },
     );
+
+    triggerPrefetch(initialProps);
 
     try {
       await modalPromise;
