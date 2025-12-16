@@ -163,19 +163,6 @@ sheet.sections.weakness.columns.text,弱点,,Sheet weakness column text
 sheet.sections.weakness.columns.acquired,獲得,,Sheet weakness column acquired
 sheet.sections.skills.title,技能,,Sheet skills section title
 sheet.sections.memo.title,キャラクターメモ,,Sheet memo section title
-sheet.sections.memo.subMemo.titlePlaceholder,サブメモタイトル,,Sub memo title placeholder
-sheet.sections.memo.subMemo.contentPlaceholder,サブメモ内容,,Sub memo content placeholder
-sheet.sections.memo.subMemo.spoilerLabel,ネタバレ,,Sub memo spoiler toggle label
-sheet.sections.memo.subMemo.spoilerNotice,※ネタバレを含む内容です,,Sub memo spoiler guard notice
-sheet.sections.memo.subMemo.readButton,読む,,Sub memo reveal button label
-sheet.sections.memo.subMemo.addButton,サブメモを追加,,Sub memo add button label
-sheet.sections.memo.subMemo.deleteLabel,削除,,Sub memo delete button label
-sheet.sections.memo.subMemo.toggle.expand,表示,,Sub memo expand label
-sheet.sections.memo.subMemo.toggle.collapse,折りたたむ,,Sub memo collapse label
-sheet.sections.memo.subMemo.deleteConfirm.title,サブメモの削除,,Sub memo delete confirm title
-sheet.sections.memo.subMemo.deleteConfirm.message,このサブメモを削除しますか？,,Sub memo delete confirm message
-sheet.sections.memo.subMemo.deleteConfirm.delete,削除,,Sub memo delete confirm delete
-sheet.sections.memo.subMemo.deleteConfirm.cancel,キャンセル,,Sub memo delete confirm cancel
 sheet.sections.specialSkills.title,特技,,Sheet special skills section title
 sheet.sections.specialSkills.columns.group,種類,,Sheet special skills column group
 sheet.sections.specialSkills.columns.name,名称,,Sheet special skills column name
