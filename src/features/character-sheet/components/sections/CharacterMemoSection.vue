@@ -122,29 +122,11 @@ onMounted(() => {
 });
 
 watch(
-  () => subMemos.value.map((memo) => memo.id),
+  () => subMemos.value.map((memo) => `${memo.id}:${memo.isSpoiler}`),
   () => {
     syncUiStateWithSubMemos(subMemos.value);
   },
   { immediate: true },
-);
-
-watch(
-  () => subMemos.value.map((memo) => `${memo.id}:${memo.isSpoiler}`),
-  () => {
-    const updatedRevealed = new Set(revealedIds.value);
-    let changed = false;
-    subMemos.value.forEach((memo) => {
-      if (!memo.isSpoiler && updatedRevealed.has(memo.id)) {
-        updatedRevealed.delete(memo.id);
-        changed = true;
-      }
-    });
-    if (changed) {
-      revealedIds.value = updatedRevealed;
-      persistUiState();
-    }
-  },
 );
 
 function isCollapsed(id) {
@@ -175,10 +157,7 @@ function revealSubMemo(id) {
 }
 
 function handleAddSubMemo() {
-  const newMemo = characterStore.addSubMemo();
-  collapsedIds.value = new Set([...collapsedIds.value, newMemo.id]);
-  revealedIds.value = new Set([...revealedIds.value].filter((id) => id !== newMemo.id));
-  persistUiState();
+  characterStore.addSubMemo();
 }
 
 function handleUpdateTitle(id, value) {
@@ -191,12 +170,6 @@ function handleUpdateContent(id, value) {
 
 function handleUpdateSpoiler(id, value) {
   characterStore.updateSubMemo(id, { isSpoiler: value });
-  if (!value && revealedIds.value.has(id)) {
-    const next = new Set(revealedIds.value);
-    next.delete(id);
-    revealedIds.value = next;
-    persistUiState();
-  }
 }
 
 async function confirmRemoval(id) {
@@ -210,13 +183,6 @@ async function confirmRemoval(id) {
   });
   if (result?.value === 'delete') {
     characterStore.removeSubMemo(id);
-    const nextCollapsed = new Set(collapsedIds.value);
-    const nextRevealed = new Set(revealedIds.value);
-    nextCollapsed.delete(id);
-    nextRevealed.delete(id);
-    collapsedIds.value = nextCollapsed;
-    revealedIds.value = nextRevealed;
-    persistUiState();
   }
 }
 </script>
