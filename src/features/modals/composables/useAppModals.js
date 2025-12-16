@@ -4,6 +4,7 @@ import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 const LoadModal = defineAsyncComponent(() => import('@/features/modals/components/contents/LoadModal.vue'));
 const IoModal = defineAsyncComponent(() => import('@/features/modals/components/contents/IoModal.vue'));
+const ShareResultModal = defineAsyncComponent(() => import('@/features/modals/components/contents/ShareResultModal.vue'));
 import { isDesktopDevice } from '@/shared/utils/device.js';
 import { messages } from '@/i18n/index.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
@@ -154,14 +155,7 @@ export function useAppModals(options) {
       showToast({ type: 'error', ...messages.share.needSignIn() });
       return;
     }
-    const sharePromise = (async () => {
-      const link = await createShareLink();
-      if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
-        throw new Error(messages.share.toast.clipboardUnavailable().message);
-      }
-      await navigator.clipboard.writeText(link);
-      return link;
-    })();
+    const sharePromise = createShareLink();
 
     showAsyncToast(
       sharePromise,
@@ -172,6 +166,22 @@ export function useAppModals(options) {
       },
       'openShareModal',
     );
+
+    sharePromise
+      .then((link) =>
+        showModal({
+          component: ShareResultModal,
+          title: messages.share.resultModal.title,
+          props: {
+            shareUrl: link,
+            description: messages.share.resultModal.description,
+            urlLabel: messages.share.resultModal.urlLabel,
+            copyLabel: messages.share.resultModal.copyLabel,
+          },
+          buttons: [],
+        }),
+      )
+      .catch((error) => console.error('Failed to show share result modal:', error));
 
     return sharePromise;
   }

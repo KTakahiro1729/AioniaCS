@@ -113,9 +113,15 @@ describe('useAppModals', () => {
     uiStore.isSignedIn = true;
     const { openShareModal } = useAppModals(createOptions());
     await openShareModal();
+    await Promise.resolve();
     expect(createShareLinkMock).toHaveBeenCalled();
     expect(showAsyncToastMock).toHaveBeenCalled();
-    expect(clipboardWriteMock).toHaveBeenCalledWith('https://example.com');
+    expect(showModalMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        props: expect.objectContaining({ shareUrl: 'https://example.com' }),
+      }),
+    );
+    expect(clipboardWriteMock).not.toHaveBeenCalled();
   });
 
   test('openShareModal warns when signed out', async () => {
