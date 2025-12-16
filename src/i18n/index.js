@@ -333,6 +333,25 @@ export const messages = {
       },
       memo: {
         title: t('sheet.sections.memo.title'),
+        subMemo: {
+          titlePlaceholder: t('sheet.sections.memo.subMemo.titlePlaceholder'),
+          contentPlaceholder: t('sheet.sections.memo.subMemo.contentPlaceholder'),
+          spoilerLabel: t('sheet.sections.memo.subMemo.spoilerLabel'),
+          spoilerNotice: t('sheet.sections.memo.subMemo.spoilerNotice'),
+          readButton: t('sheet.sections.memo.subMemo.readButton'),
+          addButton: t('sheet.sections.memo.subMemo.addButton'),
+          deleteLabel: t('sheet.sections.memo.subMemo.deleteLabel'),
+          toggle: {
+            expand: t('sheet.sections.memo.subMemo.toggle.expand'),
+            collapse: t('sheet.sections.memo.subMemo.toggle.collapse'),
+          },
+          deleteConfirm: {
+            title: t('sheet.sections.memo.subMemo.deleteConfirm.title'),
+            message: t('sheet.sections.memo.subMemo.deleteConfirm.message'),
+            delete: t('sheet.sections.memo.subMemo.deleteConfirm.delete'),
+            cancel: t('sheet.sections.memo.subMemo.deleteConfirm.cancel'),
+          },
+        },
       },
       specialSkills: {
         title: t('sheet.sections.specialSkills.title'),

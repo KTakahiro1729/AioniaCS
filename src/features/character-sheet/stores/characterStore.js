@@ -3,9 +3,37 @@ import { AioniaGameData } from '@/data/gameData.js';
 import { messages } from '@/i18n/index.js';
 import { deepClone, createWeaknessArray } from '@/shared/utils/utils.js';
 
+function generateUniqueId(existingIds = new Set()) {
+  let id = '';
+  do {
+    const cryptoApi = globalThis.crypto;
+    id = typeof cryptoApi?.randomUUID === 'function' ? cryptoApi.randomUUID() : Math.random().toString(36).slice(2, 10);
+  } while (existingIds.has(id));
+  return id;
+}
+
+function normalizeSubMemo(subMemo, existingIds) {
+  const sanitizedMemo = subMemo && typeof subMemo === 'object' ? subMemo : {};
+  const memoId = sanitizedMemo.id && !existingIds.has(sanitizedMemo.id) ? sanitizedMemo.id : generateUniqueId(existingIds);
+  existingIds.add(memoId);
+  return {
+    id: memoId,
+    title: sanitizedMemo.title ?? '',
+    content: sanitizedMemo.content ?? '',
+    isSpoiler: Boolean(sanitizedMemo.isSpoiler),
+  };
+}
+
+function normalizeSubMemos(list = []) {
+  const existingIds = new Set();
+  const source = Array.isArray(list) ? list : [];
+  return source.map((memo) => normalizeSubMemo(memo, existingIds));
+}
+
 function createCharacter() {
   const base = deepClone(AioniaGameData.defaultCharacterData);
   base.weaknesses = createWeaknessArray(AioniaGameData.config.maxWeaknesses);
+  base.subMemos = normalizeSubMemos(base.subMemos);
   return base;
 }
 
@@ -144,6 +172,36 @@ export const useCharacterStore = defineStore('character', {
           const emptyItem = typeof newItemFactory === 'function' ? newItemFactory() : newItemFactory;
           list[index] = typeof emptyItem === 'object' && emptyItem !== null ? deepClone(emptyItem) : emptyItem;
         }
+      }
+    },
+    addSubMemo(payload = {}) {
+      const list = Array.isArray(this.character.subMemos) ? this.character.subMemos : [];
+      this.character.subMemos = list;
+      const existingIds = new Set(list.map((memo) => memo.id).filter(Boolean));
+      const newMemo = normalizeSubMemo({ ...payload, isSpoiler: payload.isSpoiler ?? false }, existingIds);
+      list.push(newMemo);
+      return newMemo;
+    },
+    updateSubMemo(id, updates = {}) {
+      if (!Array.isArray(this.character.subMemos)) return null;
+      const target = this.character.subMemos.find((memo) => memo.id === id);
+      if (!target) return null;
+      if ('title' in updates) {
+        target.title = updates.title ?? '';
+      }
+      if ('content' in updates) {
+        target.content = updates.content ?? '';
+      }
+      if ('isSpoiler' in updates) {
+        target.isSpoiler = Boolean(updates.isSpoiler);
+      }
+      return target;
+    },
+    removeSubMemo(id) {
+      if (!Array.isArray(this.character.subMemos)) return;
+      const index = this.character.subMemos.findIndex((memo) => memo.id === id);
+      if (index !== -1) {
+        this.character.subMemos.splice(index, 1);
       }
     },
     addSpecialSkillItem() {

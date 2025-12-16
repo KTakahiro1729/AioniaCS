@@ -113,4 +113,30 @@ describe('characterStore', () => {
       expect(store.calculatedScar).toBe(11);
     });
   });
+
+  describe('subMemos', () => {
+    test('addSubMemo creates entries with unique ids', () => {
+      const store = useCharacterStore();
+      const first = store.addSubMemo();
+      const second = store.addSubMemo();
+      expect(first.id).toBeDefined();
+      expect(second.id).toBeDefined();
+      expect(first.id).not.toBe(second.id);
+      expect(store.character.subMemos).toHaveLength(2);
+    });
+
+    test('updateSubMemo updates fields', () => {
+      const store = useCharacterStore();
+      const memo = store.addSubMemo();
+      store.updateSubMemo(memo.id, { title: 'Title', content: 'Body', isSpoiler: true });
+      expect(store.character.subMemos[0]).toMatchObject({ title: 'Title', content: 'Body', isSpoiler: true });
+    });
+
+    test('removeSubMemo deletes by id', () => {
+      const store = useCharacterStore();
+      const memo = store.addSubMemo();
+      store.removeSubMemo(memo.id);
+      expect(store.character.subMemos).toHaveLength(0);
+    });
+  });
 });
