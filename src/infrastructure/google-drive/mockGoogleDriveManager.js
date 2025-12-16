@@ -126,14 +126,14 @@ export class MockGoogleDriveManager {
     return Promise.resolve();
   }
 
-  async onGisLoad() {
-    return Promise.resolve();
+  async restoreSession() {
+    return this.state.signedIn;
   }
 
   handleSignIn(callback) {
     this.state.signedIn = true;
     this._saveState();
-    if (callback) callback(null, { signedIn: true });
+    if (callback) callback(null, { redirected: true });
   }
 
   handleSignOut(callback) {
@@ -315,6 +315,19 @@ export class MockGoogleDriveManager {
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
+  }
+
+  async renameFile(id, newName) {
+    if (!id || !newName) {
+      throw new Error('File ID and new name are required to rename a file.');
+    }
+    const file = this.state.files[id];
+    if (!file) {
+      throw new Error('File not found');
+    }
+    file.name = newName;
+    this._saveState();
+    return { id, name: newName };
   }
 
   async loadCharacterFile(id) {

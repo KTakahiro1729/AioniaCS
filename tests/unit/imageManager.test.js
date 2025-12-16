@@ -1,7 +1,7 @@
 import { describe, it, beforeAll, beforeEach, expect, vi } from 'vitest';
 
 import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 let fileReaderBehavior;
 

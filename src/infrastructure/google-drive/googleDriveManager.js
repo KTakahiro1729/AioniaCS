@@ -45,12 +45,13 @@ export class GoogleDriveManager {
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
     this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
     this.gapiLoadedCallback = null;
-    this.gisLoadedCallback = null;
-    this.tokenClient = null;
     this.pickerApiLoaded = false;
     this.aioniaFolderId = null;
     this.gapiLoadPromise = null;
-    this.gisLoadPromise = null;
+    this.currentTokenInfo = null;
+    this.authStatusEndpoint = '/api/auth/status';
+    this.loginEndpoint = '/api/auth/login';
+    this.logoutEndpoint = '/api/auth/logout';
     this.configFileName = 'aioniacs.cfg';
     this.configFileId = null;
     this.config = null;
@@ -95,6 +96,8 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded for buildFolderPathFromId.');
       return null;
     }
+
+    await this.ensureAccessToken();
 
     const segments = [];
     let currentId = folderId;
@@ -152,6 +155,8 @@ export class GoogleDriveManager {
       return this.config;
     }
 
+    await this.ensureAccessToken();
+
     const escapedName = this.configFileName.replace(/'/g, "\\'");
 
     try {
@@ -191,6 +196,7 @@ export class GoogleDriveManager {
     if (!this.config) {
       this.config = this.getDefaultConfig();
     }
+    await this.ensureAccessToken();
     const payload = JSON.stringify(this.config, null, 2);
     try {
       const result = await this.saveFile('root', this.configFileName, payload, this.configFileId);
@@ -258,90 +264,107 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Called when the Google Identity Services (GIS) script is loaded.
-   * Initializes the token client.
-   * @returns {Promise<void>}
+   * Fetches an access token from the server and applies it to gapi.
+   * @returns {Promise<string>}
    */
-  onGisLoad() {
-    if (this.gisLoadPromise) {
-      return this.gisLoadPromise;
+  async ensureAccessToken() {
+    if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.setToken) {
+      throw new Error('GAPI client is not initialized for token application.');
     }
 
-    this.gisLoadPromise = new Promise((resolve, reject) => {
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2 || !google.accounts.oauth2.initTokenClient) {
-        const err = new Error(
-          'GIS library not fully available to initialize token client (google.accounts.oauth2.initTokenClient is undefined).',
-        );
-        console.error('GDM: ' + err.message);
-        return reject(err);
-      }
-      try {
-        this.tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: this.clientId,
-          scope: this.scope,
-          callback: '', // Callback will be set dynamically per request for actual token requests
-        });
-        console.log('GDM: GIS Token Client initialized.');
-        resolve();
-      } catch (error) {
-        console.error('GDM: Error initializing GIS Token Client:', error);
-        reject(error);
-      }
-    });
+    const now = Date.now();
+    const existingToken = typeof gapi.client.getToken === 'function' ? gapi.client.getToken() : null;
+    if (
+      this.currentTokenInfo &&
+      this.currentTokenInfo.expiresAt > now &&
+      existingToken &&
+      existingToken.access_token === this.currentTokenInfo.accessToken
+    ) {
+      return this.currentTokenInfo.accessToken;
+    }
 
-    return this.gisLoadPromise;
+    const response = await fetch(this.authStatusEndpoint, { credentials: 'include' });
+    if (!response.ok) {
+      throw new Error('Authentication required.');
+    }
+
+    const data = await response.json();
+    if (!data.access_token) {
+      throw new Error('Access token not available from server.');
+    }
+
+    const expiresAt = now + ((data.expires_in || 3600) * 1000 - 5000);
+    this.currentTokenInfo = { accessToken: data.access_token, expiresAt };
+    gapi.client.setToken({ access_token: data.access_token, expires_in: data.expires_in });
+    return data.access_token;
   }
 
-  /**
-   * Initiates the Google Sign-In flow.
-   * @param {function} callback - Called with the sign-in status/user profile or error.
-   */
-  handleSignIn(callback) {
-    if (!this.tokenClient) {
-      console.error('GIS Token Client not initialized.');
-      if (callback) callback(new Error('GIS Token Client not initialized.'));
-      return;
+  async restoreSession() {
+    try {
+      await this.ensureAccessToken();
+      return true;
+    } catch (error) {
+      console.error('Failed to restore session:', error);
+      if (gapi.client && typeof gapi.client.setToken === 'function') {
+        gapi.client.setToken('');
+      }
+      this.currentTokenInfo = null;
+      return false;
     }
+  }
 
-    // Set a dynamic callback for this specific sign-in attempt
-    this.tokenClient.callback = (resp) => {
-      if (resp.error) {
-        console.error('Google Sign-In error:', resp.error);
-        if (callback) callback(new Error(resp.error));
+  async handleSignIn() {
+    if (typeof window === 'undefined') return false;
+
+    return new Promise((resolve) => {
+      // ポップアップを画面中央に配置するための計算
+      const width = 500;
+      const height = 600;
+      const left = (window.screen.width - width) / 2;
+      const top = (window.screen.height - height) / 2;
+
+      // 認証エンドポイントをポップアップで開く
+      const popup = window.open(this.loginEndpoint, 'google_auth_popup', `width=${width},height=${height},top=${top},left=${left}`);
+
+      if (!popup) {
+        console.error('Popup blocked');
+        alert('ポップアップがブロックされました。許可してください。');
+        resolve(false);
         return;
       }
-      // GIS automatically manages token refresh.
-      // No need to manually get user profile here, gapi.client will use the token.
-      // The app can check gapi.auth.getToken() to see if it's signed in.
-      console.log('Sign-in successful, token obtained.');
-      if (callback) callback(null, { signedIn: true }); // Indicate success
-    };
 
-    // Prompt the user to select an account and grant access
-    // Check if already has an access token
-    if (gapi.client.getToken() === null) {
-      this.tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      // Already has a token, consider as signed in
-      this.tokenClient.requestAccessToken({ prompt: '' }); // Try to get token without prompt
-    }
+      // バックエンドからのメッセージ受信リスナー
+      const receiveMessage = async (event) => {
+        // セキュリティチェック: オリジンが一致しない場合は無視
+        if (event.origin !== window.location.origin) return;
+
+        // バックエンドから送信されるメッセージタイプを確認
+        if (event.data && event.data.type === 'AIONIACS_AUTH_SUCCESS') {
+          window.removeEventListener('message', receiveMessage);
+
+          // ポップアップ認証成功後、セッションを復元してトークンを取得する
+          const success = await this.restoreSession();
+          resolve(success);
+        }
+      };
+
+      window.addEventListener('message', receiveMessage);
+    });
   }
 
-  /**
-   * Handles Google Sign-Out.
-   * @param {function} callback - Called after sign-out.
-   */
-  handleSignOut(callback) {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-      google.accounts.oauth2.revoke(token.access_token, () => {
-        gapi.client.setToken(''); // Clear GAPI's token
-        console.log('User signed out and token revoked.');
-        if (callback) callback();
-      });
-    } else {
-      if (callback) callback();
+  async handleSignOut(callback) {
+    try {
+      await fetch(this.logoutEndpoint, { method: 'POST', credentials: 'include' });
+    } catch (error) {
+      console.error('Failed to logout:', error);
     }
+
+    if (typeof gapi !== 'undefined' && gapi.client && typeof gapi.client.setToken === 'function') {
+      gapi.client.setToken('');
+    }
+
+    this.currentTokenInfo = null;
+    if (callback) callback();
   }
 
   // --- Placeholder methods for Drive functionality ---
@@ -356,6 +379,7 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded.');
       return null;
     }
+    await this.ensureAccessToken();
     try {
       const response = await gapi.client.drive.files.create({
         resource: {
@@ -383,6 +407,7 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded.');
       return null;
     }
+    await this.ensureAccessToken();
     try {
       const escapedName = folderName.replace(/'/g, "\\'");
       const response = await gapi.client.drive.files.list({
@@ -438,6 +463,7 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded for listFiles.');
       return [];
     }
+    await this.ensureAccessToken();
     try {
       const response = await gapi.client.drive.files.list({
         q: `'${folderId}' in parents and mimeType='${mimeType}' and trashed=false`,
@@ -464,6 +490,8 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
     }
+
+    await this.ensureAccessToken();
 
     const boundary = '-------314159265358979323846';
     const delimiter = `\r\n--${boundary}\r\n`;
@@ -561,6 +589,7 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded for loadFileContent.');
       return null;
     }
+    await this.ensureAccessToken();
     try {
       const response = await gapi.client.drive.files.get({
         fileId: fileId,
@@ -650,6 +679,8 @@ export class GoogleDriveManager {
       return null;
     }
 
+    await this.ensureAccessToken();
+
     const escapedName = fileName.replace(/'/g, "\\'");
 
     try {
@@ -717,6 +748,7 @@ export class GoogleDriveManager {
       console.error('GAPI client or Drive API not loaded for uploadAndShareFile.');
       return null;
     }
+    await this.ensureAccessToken();
     try {
       const boundary = '-------314159265358979323846';
       const delimiter = `\r\n--${boundary}\r\n`;
@@ -767,6 +799,8 @@ export class GoogleDriveManager {
       return null;
     }
 
+    await this.ensureAccessToken();
+
     try {
       await gapi.client.drive.permissions.create({
         fileId,
@@ -805,10 +839,18 @@ export class GoogleDriveManager {
    * @param {string|null} parentFolderId - Optional ID of the folder to start in.
    * @param {Array<string>} mimeTypes - Array of MIME types to filter by.
    */
-  showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
+  async showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
     if (!this.pickerApiLoaded) {
       console.error('Picker API not loaded yet.');
       if (callback) callback(new Error('Picker API not loaded.'));
+      return;
+    }
+
+    try {
+      await this.ensureAccessToken();
+    } catch (error) {
+      console.error('Failed to prepare Picker token:', error);
+      if (callback) callback(new Error('Authentication required.'));
       return;
     }
 
@@ -856,10 +898,18 @@ export class GoogleDriveManager {
    * Shows the Google Folder Picker to select a folder.
    * @param {function} callback - Function to call with the result (error, {id, name}).
    */
-  showFolderPicker(callback) {
+  async showFolderPicker(callback) {
     if (!this.pickerApiLoaded) {
       console.error('Picker API not loaded yet for folder picker.');
       if (callback) callback(new Error('Picker API not loaded.'));
+      return;
+    }
+
+    try {
+      await this.ensureAccessToken();
+    } catch (error) {
+      console.error('Failed to prepare Folder Picker token:', error);
+      if (callback) callback(new Error('Authentication required.'));
       return;
     }
 
@@ -915,6 +965,8 @@ export class GoogleDriveManager {
       return false;
     }
 
+    await this.ensureAccessToken();
+
     try {
       const response = await gapi.client.drive.files.get({
         fileId,
@@ -958,6 +1010,29 @@ export class GoogleDriveManager {
     return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
   }
 
+  async renameFile(fileId, newName) {
+    if (!fileId || !newName) {
+      throw new Error('File ID and new name are required to rename a file.');
+    }
+    if (!gapi.client || !gapi.client.drive) {
+      throw new Error('GAPI client or Drive API not loaded for renameFile.');
+    }
+
+    await this.ensureAccessToken();
+
+    try {
+      const response = await gapi.client.drive.files.update({
+        fileId,
+        fields: 'id, name',
+        resource: { name: newName },
+      });
+      return { id: response.result.id, name: response.result.name };
+    } catch (error) {
+      console.error('Error renaming Drive file:', error);
+      throw error;
+    }
+  }
+
   async loadCharacterFile(id) {
     const content = await this.loadFileContent(id);
     return content ? await deserializeCharacterPayload(content) : null;
@@ -965,6 +1040,7 @@ export class GoogleDriveManager {
 
   async deleteCharacterFile(id) {
     if (!gapi.client || !gapi.client.drive) return null;
+    await this.ensureAccessToken();
     await gapi.client.drive.files.delete({ fileId: id });
   }
 }

@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 defineProps({
   showDeleteButton: Boolean,

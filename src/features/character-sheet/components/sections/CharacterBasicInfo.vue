@@ -10,15 +10,20 @@
         </div>
         <div class="info-item info-item--double">
           <label for="player_name">{{ basicInfoTexts.fields.playerName }}</label>
-          <input type="text" id="player_name" v-model="characterStore.character.playerName" :disabled="uiStore.isViewingShared" />
+          <input
+            type="text"
+            id="player_name"
+            v-model="characterStore.character.playerName"
+            :disabled="uiStore.isViewingShared"
+          />
         </div>
       </div>
       <div class="info-row">
         <div
           class="info-item"
           :class="{
-            'info-item--full': characterStore.character.species !== 'other',
-            'info-item--double': characterStore.character.species === 'other',
+            'info-item--double': characterStore.character.species !== 'other',
+            'info-item--quadruple': characterStore.character.species === 'other',
           }"
         >
           <label for="species">{{ basicInfoTexts.fields.species }}</label>
@@ -28,9 +33,13 @@
             </option>
           </select>
         </div>
-        <div class="info-item info-item--double" v-if="characterStore.character.species === 'other'">
+        <div class="info-item info-item--quadruple" v-if="characterStore.character.species === 'other'">
           <label for="rare_species">{{ basicInfoTexts.fields.rareSpecies }}</label>
           <input type="text" id="rare_species" v-model="characterStore.character.rareSpecies" :disabled="uiStore.isViewingShared" />
+        </div>
+        <div class="info-item info-item--double">
+          <label for="occupation">{{ basicInfoTexts.fields.occupation }}</label>
+          <input type="text" id="occupation" v-model="characterStore.character.occupation" :disabled="uiStore.isViewingShared" />
         </div>
       </div>
       <div class="info-row">
@@ -51,20 +60,6 @@
           <input type="text" id="weight_char" v-model="characterStore.character.weight" :disabled="uiStore.isViewingShared" />
         </div>
       </div>
-      <div class="info-row">
-        <div class="info-item info-item--triple">
-          <label for="origin">{{ basicInfoTexts.fields.origin }}</label>
-          <input type="text" id="origin" v-model="characterStore.character.origin" :disabled="uiStore.isViewingShared" />
-        </div>
-        <div class="info-item info-item--triple">
-          <label for="occupation">{{ basicInfoTexts.fields.occupation }}</label>
-          <input type="text" id="occupation" v-model="characterStore.character.occupation" :disabled="uiStore.isViewingShared" />
-        </div>
-        <div class="info-item info-item--triple">
-          <label for="faith">{{ basicInfoTexts.fields.faith }}</label>
-          <input type="text" id="faith" v-model="characterStore.character.faith" :disabled="uiStore.isViewingShared" />
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -74,7 +69,7 @@ import CharacterImageDisplay from '@/features/character-sheet/components/ui/Char
 import { AioniaGameData } from '@/data/gameData.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
@@ -85,4 +80,18 @@ const handleSpeciesChange = () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+@media (min-width: 769px) {
+  .character-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .character-info .box-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+  }
+}
+</style>

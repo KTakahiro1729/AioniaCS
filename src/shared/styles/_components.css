@@ -136,6 +136,13 @@
   color: var(--color-link-hover);
 }
 
+.description-toggle {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8em;
+}
+
 .delete-button-wrapper {
   width: 30px;
   height: 30px;

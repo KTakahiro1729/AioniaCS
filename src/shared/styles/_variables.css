@@ -1,29 +1,45 @@
+/*
+Token categories for shared CSS variables:
+- Base surface: backgrounds and neutral surfaces
+- Text: text and link colors
+- Border: outlines and dividers
+- Feedback/Status: accents, statuses, and notification palettes
+*/
+
 :root {
-  --color-accent-light: #e4caa8;
-  --color-accent: #c09a69;
-  --color-accent-middle: #726452;
-  --color-accent-dark: #3b332a;
-  --color-background: #222;
+  /* Base surface */
+  --color-background: #171717;
   --color-panel-header: #333;
   --color-panel-sub-header: #2e2e2e;
-  --color-panel-body: #252525;
-  --color-panel-specialskill: #222;
-  --color-border-normal: #444;
-  --color-input-bg: #1d1d1d;
+  --color-panel-body: #222;
+  --color-panel-specialskill: #1d1d1d;
+  --color-input-bg: var(--color-background);
   --color-input-disabled-bg: var(--color-panel-body);
-  --color-text-normal: #ddd;
-  --color-text-muted: #bbb;
-  --color-text-input-disabled: #888;
-  --color-link: #ccc;
+
+  /* Text */
+  --color-text-normal: #d7d7d7;
+  --color-text-muted: var(--color-grey-light);
+  --color-text-input-disabled: #bbb;
+  --color-link: var(--color-grey-light);
   --color-link-hover: var(--color-accent);
+
+  /* Border */
+  --color-border-normal: #444;
+
+  /* Feedback/Status */
+  --color-accent-light: #dbc19d;
+  --color-accent: #d3a76e;
+  --color-accent-middle: #726452;
+  --color-accent-dark: #3b332a;
   --color-delete-text: #c05a5a;
+  --color-delete-text-light: #eb8787;
   --color-delete-border: #7f5454;
   --color-delete-hover-text: #a86f6f;
   --color-status-experience-ok-border: #5a8b5a;
   --color-status-experience-ok-text: #9aeaa4;
   --color-status-experience-ok-bg: #1a201a;
   --color-status-experience-over-border: #f74848;
-  --color-status-experience-over-text: #1f1111;
+  --color-status-experience-over-text: #fff;
   --color-status-experience-over-bg: #f74848;
   --color-status-weight-border: #647687;
   --color-status-weight-text: #b0c4de;
@@ -34,4 +50,21 @@
   --color-load-ghost-normal: #5e5e5e;
   --color-load-ghost-light: #665c36;
   --color-load-ghost-heavy: #663f3f;
+
+  /* Notification palette */
+  --color-success: #2d5a3d;
+  --color-success-light: #4a7c5a;
+  --color-success-glow: #6bb77b;
+  --color-warning: #8b5a2b;
+  --color-warning-light: #b8783d;
+  --color-warning-glow: #d4955a;
+  --color-error: #5a2d2d;
+  --color-error-light: #7a3d3d;
+  --color-error-glow: #a85555;
+  --color-info: #2d3d5a;
+  --color-info-light: #3d4f7a;
+  --color-info-glow: #5577a8;
+  --color-critical: #4a1a1a;
+  --color-critical-light: #6b2d2d;
+  --color-critical-glow: #8b4444;
 }

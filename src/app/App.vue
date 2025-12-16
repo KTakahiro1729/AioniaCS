@@ -5,11 +5,14 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useGoogleDrive } from '@/features/cloud-sync/composables/useGoogleDrive.js';
 import { useHelp } from '@/shared/composables/useHelp.js';
 import { useDataExport } from '@/features/character-sheet/composables/useDataExport.js';
+import { useLocalCharacterPersistence } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 import { useKeyboardHandling } from '@/shared/composables/useKeyboardHandling.js';
 import { usePrint } from '@/features/character-sheet/composables/usePrint.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { useAppModals } from '@/features/modals/composables/useAppModals.js';
 import { useAppInitialization } from '@/app/providers/useAppInitialization.js';
+import { useModal } from '@/features/modals/composables/useModal.js';
+import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 import { AioniaGameData } from '@/data/gameData.js';
 import CharacterSheetLayout from '@/features/character-sheet/components/CharacterSheetLayout.vue';
@@ -24,17 +27,24 @@ const helpPanelRef = ref(null);
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const initialCharacterSnapshot = ref(buildSnapshotFromStore(characterStore));
+uiStore.setLastSavedSnapshot(initialCharacterSnapshot.value);
+const { clearLocalDraft } = useLocalCharacterPersistence(characterStore, uiStore);
 useKeyboardHandling();
 
-const { dataManager, saveData, handleFileUpload, outputToCocofolia } = useDataExport();
+const { dataManager, saveData, handleFileUpload, outputToCocofolia, getChatPaletteText } = useDataExport();
 const { printCharacterSheet, openPreviewPage } = usePrint();
+const { showModal } = useModal();
 
 const {
   canSignInToGoogle,
+  isDriveReady,
   handleSignInClick,
   handleSignOutClick,
   saveCharacterToDrive,
-  saveOrUpdateCurrentCharacterInDrive,
+  loadCharacterFromDrive,
+  promptForDriveFolder,
+  updateDriveFolderPath,
 } = useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
@@ -44,19 +54,71 @@ const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLe
 
 const modalStore = useModalStore();
 
-const { openHub, openIoModal, openShareModal } = useAppModals({
+function hasUnsavedChanges() {
+  const currentSnapshot = buildSnapshotFromStore(characterStore);
+  if (!currentSnapshot) {
+    return false;
+  }
+  return uiStore.lastSavedSnapshot ? currentSnapshot !== uiStore.lastSavedSnapshot : true;
+}
+
+const isCharacterSheetEmpty = computed(() => {
+  const currentSnapshot = buildSnapshotFromStore(characterStore);
+  if (!currentSnapshot || !initialCharacterSnapshot.value) {
+    return false;
+  }
+  return currentSnapshot === initialCharacterSnapshot.value;
+});
+
+async function confirmDiscardingUnsavedChanges() {
+  if (!hasUnsavedChanges()) {
+    return true;
+  }
+  const result = await showModal(messages.ui.confirmations.unsavedChanges);
+  return result?.value === 'confirm';
+}
+
+const handleCreateNewCharacter = async () => {
+  if (hasUnsavedChanges()) {
+    const result = await showModal(messages.ui.confirmations.unsavedChanges);
+    const choice = result?.value;
+
+    if (choice === 'save') {
+      const saved = await saveCharacterToDrive();
+      if (!saved) {
+        return;
+      }
+    } else if (choice === 'discard') {
+      // 「保存せず続行」: 何もしない
+    } else {
+      // 「キャンセル」またはモーダルを閉じた場合: 中断
+      return;
+    }
+  }
+  clearLocalDraft();
+  characterStore.initializeAll();
+  uiStore.clearCurrentDriveFileId();
+  uiStore.isViewingShared = false;
+  uiStore.setLastSavedSnapshot(initialCharacterSnapshot.value);
+};
+
+const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   dataManager,
-  saveCharacterToDrive,
   handleSignInClick,
-  handleSignOutClick,
   saveData,
   handleFileUpload,
   outputToCocofolia,
+  getChatPaletteText,
   printCharacterSheet,
   openPreviewPage,
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
+  loadCharacterFromDrive,
+  promptForDriveFolder,
+  updateDriveFolderPath,
+  canSignInToGoogle,
+  isDriveReady,
 });
 
 const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
@@ -72,10 +134,12 @@ watch(
   { immediate: true },
 );
 
+const baseDocumentTitle = messages.ui.header.defaultTitle;
+
 watch(
   () => characterStore.character.name,
   (name) => {
-    document.title = name || messages.ui.header.defaultTitle;
+    document.title = name ? `${name} | ${baseDocumentTitle}` : baseDocumentTitle;
   },
   { immediate: true },
 );
@@ -100,9 +164,16 @@ onMounted(initialize);
     ref="mainHeader"
     :help-state="helpState"
     :default-title="messages.ui.header.defaultTitle"
-    :cloud-hub-label="messages.ui.header.cloudHub"
     :help-label="messages.ui.header.helpLabel"
-    @open-hub="openHub"
+    :load-label="messages.ui.buttons.loadLocal"
+    :new-character-label="messages.ui.header.newCharacter"
+    :is-new-button-disabled="isCharacterSheetEmpty"
+    :sign-in-label="messages.ui.header.signIn"
+    :sign-out-label="messages.ui.header.signOut"
+    @new-character="handleCreateNewCharacter"
+    @open-load-modal="openLoadModal"
+    @sign-in="handleSignInClick"
+    @sign-out="handleSignOutClick"
     @help-mouseover="handleHelpIconMouseOver"
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
@@ -116,16 +187,14 @@ onMounted(initialize);
     :current-experience-points="currentExperiencePoints"
     :max-experience-points="maxExperiencePoints"
     :current-weight="currentWeight"
-    :save-local="saveData"
-    :handle-file-upload="handleFileUpload"
-    :open-hub="openHub"
-    :save-to-drive="saveOrUpdateCurrentCharacterInDrive"
+    :save-to-drive="saveCharacterToDrive"
     :experience-label="messages.ui.footer.experience"
-    :io-label="messages.ui.footer.io"
+    :output-label="messages.ui.footer.output"
     :share-label="messages.ui.footer.share"
     :copy-edit-label="messages.ui.footer.copyEdit"
+    :save-label="messages.ui.buttons.save"
     :is-viewing-shared="uiStore.isViewingShared"
-    @io="openIoModal"
+    @open-output-modal="openIoModal"
     @share="openShareModal"
   />
   <HelpPanel ref="helpPanelRef" :is-visible="isHelpVisible" :help-text="AioniaGameData.helpText" @close="closeHelpPanel" />

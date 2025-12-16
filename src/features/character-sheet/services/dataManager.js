@@ -1,5 +1,5 @@
 import { createWeaknessArray, deepClone } from '@/shared/utils/utils.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import {
   buildCharacterArchive,
   deserializeCharacterPayload,

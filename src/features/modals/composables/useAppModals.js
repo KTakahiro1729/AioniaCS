@@ -1,40 +1,106 @@
-import { defineAsyncComponent } from 'vue';
+import { defineAsyncComponent, watch } from 'vue';
 import { useModal } from './useModal.js';
+import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-const CharacterHub = defineAsyncComponent(() => import('@/features/character-sheet/components/ui/CharacterHub.vue'));
+const LoadModal = defineAsyncComponent(() => import('@/features/modals/components/contents/LoadModal.vue'));
 const IoModal = defineAsyncComponent(() => import('@/features/modals/components/contents/IoModal.vue'));
-const ShareOptions = defineAsyncComponent(() => import('@/features/modals/components/contents/ShareOptions.vue'));
 import { isDesktopDevice } from '@/shared/utils/device.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
+import { useShare } from '@/features/cloud-sync/composables/useShare.js';
+import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 
 export function useAppModals(options) {
   const uiStore = useUiStore();
   const { showModal } = useModal();
+  const modalStore = useModalStore();
+  const { showToast, showAsyncToast, logAndToastError } = useNotifications();
+  const { createShareLink } = useShare(options.dataManager);
   const {
-    dataManager,
     handleSignInClick,
-    handleSignOutClick,
     saveData,
     handleFileUpload,
     outputToCocofolia,
+    getChatPaletteText,
     printCharacterSheet,
     openPreviewPage,
     copyEditCallback,
+    loadCharacterFromDrive,
+    promptForDriveFolder,
+    updateDriveFolderPath,
+    canSignInToGoogle,
+    isDriveReady,
   } = options;
 
-  async function openHub() {
-    await showModal({
-      component: CharacterHub,
-      title: messages.ui.modal.hubTitle,
-      props: {
-        dataManager,
-      },
+  async function openLoadModal() {
+    const initialProps = {
+      isSignedIn: uiStore.isSignedIn,
+      canSignIn: canSignInToGoogle?.value ?? false,
+      isDriveReady: isDriveReady?.value ?? false,
+      driveFolderPath: uiStore.driveFolderPath,
+      driveFolderLabel: messages.characterHub.driveFolder.label,
+      driveFolderPlaceholder: messages.characterHub.driveFolder.placeholder,
+      changeFolderLabel: messages.characterHub.driveFolder.changeButton,
+      loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
+      loadDriveLabel: messages.ui.modal.load.buttons.loadDrive,
+      signInLabel: messages.characterHub.buttons.signIn,
+      signInMessage: messages.ui.modal.load.signInMessage,
+    };
+
+    const modalPromise = showModal({
+      component: LoadModal,
+      title: messages.ui.modal.load.title,
+      props: initialProps,
       buttons: [],
       on: {
+        'load-local': handleFileUpload,
+        'load-drive': loadCharacterFromDrive,
         'sign-in': handleSignInClick,
-        'sign-out': handleSignOutClick,
+        'update-drive-folder-path': updateDriveFolderPath,
+        'choose-drive-folder': promptForDriveFolder,
       },
     });
+
+    const stopSync = watch(
+      () => ({
+        isSignedIn: uiStore.isSignedIn,
+        canSignIn: canSignInToGoogle?.value ?? false,
+        isDriveReady: isDriveReady?.value ?? false,
+        driveFolderPath: uiStore.driveFolderPath,
+      }),
+      (values) => {
+        if (modalStore.component === LoadModal) {
+          Object.assign(modalStore.props, values);
+        }
+      },
+      { immediate: true },
+    );
+
+    try {
+      await modalPromise;
+    } finally {
+      stopSync();
+    }
+  }
+
+  async function handleOutputChatPalette() {
+    if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+      const clipboardError = new Error(messages.ui.modal.io.chatPalette.clipboardUnavailable);
+      logAndToastError(clipboardError, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
+      return;
+    }
+    if (typeof getChatPaletteText !== 'function') {
+      const missingGeneratorError = new Error('チャットパレットのデータを取得できません');
+      logAndToastError(missingGeneratorError, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
+      return;
+    }
+
+    try {
+      const paletteText = (await getChatPaletteText()) ?? '';
+      await navigator.clipboard.writeText(paletteText);
+      showToast({ type: 'success', ...messages.ui.modal.io.chatPalette.success() });
+    } catch (error) {
+      logAndToastError(error, messages.ui.modal.io.chatPalette.error, 'handleOutputChatPalette');
+    }
   }
 
   async function openIoModal() {
@@ -44,8 +110,7 @@ export function useAppModals(options) {
       title: messages.ui.modal.io.title,
       props: {
         signedIn: uiStore.isSignedIn,
-        saveLocalLabel: messages.ui.modal.io.buttons.saveLocal,
-        loadLocalLabel: messages.ui.modal.io.buttons.loadLocal,
+        localOutputLabel: messages.ui.modal.io.buttons.saveLocal,
         outputLabels: {
           default: messages.outputButton.default,
           animating: messages.outputButton.animating,
@@ -53,12 +118,13 @@ export function useAppModals(options) {
         },
         outputTimings: messages.outputButton.animationTimings,
         printLabel: messages.ui.modal.io.buttons.print,
+        chatPaletteLabel: messages.ui.modal.io.buttons.chatPalette,
       },
       buttons: [],
       on: {
         'save-local': saveData,
-        'load-local': handleFileUpload,
         'output-cocofolia': outputToCocofolia,
+        'output-chat-palette': handleOutputChatPalette,
         print: handlePrint,
       },
     });
@@ -71,20 +137,31 @@ export function useAppModals(options) {
       }
       return;
     }
-    await showModal({
-      component: ShareOptions,
-      props: { dataManager },
-      title: messages.ui.modal.shareTitle,
-      buttons: [
-        {
-          label: messages.ui.modal.cancel,
-          value: 'cancel',
-          variant: 'secondary',
-        },
-      ],
-      on: { signin: handleSignInClick },
-    });
+    if (!uiStore.isSignedIn) {
+      showToast({ type: 'error', ...messages.share.needSignIn() });
+      return;
+    }
+    const sharePromise = (async () => {
+      const link = await createShareLink();
+      if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+        throw new Error(messages.share.toast.clipboardUnavailable().message);
+      }
+      await navigator.clipboard.writeText(link);
+      return link;
+    })();
+
+    showAsyncToast(
+      sharePromise,
+      {
+        loading: messages.share.toast.creating(),
+        success: messages.share.toast.success(),
+        error: (err) => messages.share.toast.error(err),
+      },
+      'openShareModal',
+    );
+
+    return sharePromise;
   }
 
-  return { openHub, openIoModal, openShareModal };
+  return { openLoadModal, openIoModal, openShareModal };
 }

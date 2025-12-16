@@ -45,7 +45,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 const props = defineProps({
   images: {
@@ -156,7 +156,8 @@ const handleImageUpload = async (event) => {
   justify-content: center;
   margin-bottom: 0;
   width: 100%;
-  height: 350px;
+  min-height: 300px;
+  flex: 1;
   background-color: var(--color-background);
   border: 1px solid var(--color-border-normal);
   border-radius: 2px;
@@ -276,6 +277,7 @@ const handleImageUpload = async (event) => {
     inset 0 0 3px var(--color-delete-text),
     0 0 6px var(--color-delete-text);
   text-shadow: 0 0 2px var(--color-delete-text);
+  color: var(--color-delete-text-light);
 }
 
 .imagefile-button--delete:disabled {
@@ -285,5 +287,13 @@ const handleImageUpload = async (event) => {
   border-color: var(--color-border-normal);
   box-shadow: none;
   text-shadow: none;
+}
+
+@media (min-width: 769px) {
+  .character-image-container {
+    flex: 1;
+    height: 100%;
+    width: 100%;
+  }
 }
 </style>

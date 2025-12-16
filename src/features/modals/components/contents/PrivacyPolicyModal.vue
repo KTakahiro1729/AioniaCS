@@ -6,7 +6,7 @@
 import { computed } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import policyText from '../../../../../PRIVACY_POLICY.md?raw';
+import policyText from '@/contents/documents/privacy_policy.md?raw';
 
 const sanitized = computed(() => DOMPurify.sanitize(marked.parse(policyText)));
 </script>

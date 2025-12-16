@@ -3,23 +3,28 @@ import { CocofoliaExporter } from '@/features/character-sheet/services/cocofolia
 import { AioniaGameData } from '@/data/gameData.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 import { copyText } from '@/shared/utils/clipboard.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
+import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
 
 export function useDataExport() {
   const characterStore = useCharacterStore();
   const dataManager = new DataManager(AioniaGameData);
   const cocofoliaExporter = new CocofoliaExporter();
   const { showToast } = useNotifications();
+  const uiStore = useUiStore();
 
-  function saveData() {
-    dataManager.saveData(
+  async function saveData() {
+    const snapshot = buildSnapshotFromStore(characterStore);
+    await dataManager.saveData(
       characterStore.character,
       characterStore.skills,
       characterStore.specialSkills,
       characterStore.equipments,
       characterStore.histories,
     );
+    uiStore.setLastSavedSnapshot(snapshot);
   }
 
   function handleFileUpload(event) {
@@ -31,6 +36,7 @@ export function useDataExport() {
         characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
         Object.assign(characterStore.equipments, parsedData.equipments);
         characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+        uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
       },
       (errorMessage) =>
         showToast({
@@ -54,8 +60,8 @@ export function useDataExport() {
     }
   }
 
-  function outputToCocofolia() {
-    const exportData = {
+  function buildExportData() {
+    return {
       character: characterStore.character,
       skills: characterStore.skills,
       specialSkills: characterStore.specialSkills,
@@ -67,9 +73,18 @@ export function useDataExport() {
       specialSkillsRequiringNote: AioniaGameData.specialSkillsRequiringNote,
       weaponDamage: AioniaGameData.weaponDamage,
     };
+  }
+
+  function outputToCocofolia() {
+    const exportData = buildExportData();
     const cocofoliaCharacter = cocofoliaExporter.generateCocofoliaData(exportData);
     const textToCopy = JSON.stringify(cocofoliaCharacter, null, 2);
     copyToClipboard(textToCopy);
+  }
+
+  function getChatPaletteText() {
+    const exportData = buildExportData();
+    return cocofoliaExporter.generateCocofoliaData(exportData)?.data?.commands || '';
   }
 
   return {
@@ -77,5 +92,6 @@ export function useDataExport() {
     saveData,
     handleFileUpload,
     outputToCocofolia,
+    getChatPaletteText,
   };
 }

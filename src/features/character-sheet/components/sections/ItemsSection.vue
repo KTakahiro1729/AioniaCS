@@ -25,11 +25,7 @@
                   :disabled="uiStore.isViewingShared"
                   :title="equipmentDescriptions[slot.key]"
                 >
-                  <option
-                    v-for="option in gameData[slot.optionsKey]"
-                    :key="option.value"
-                    :value="option.value"
-                  >
+                  <option v-for="option in gameData[slot.optionsKey]" :key="option.value" :value="option.value">
                     {{ option.label }}
                   </option>
                 </select>
@@ -71,7 +67,7 @@ import { AioniaGameData as gameData } from '@/data/gameData.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import LoadIndicator from '@/features/character-sheet/components/ui/LoadIndicator.vue';
-import { messages } from '@/locales/ja.js';
+import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
@@ -136,6 +132,11 @@ const equipmentDescriptions = computed(() => {
   gap: 15px;
 }
 
+.box-title {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .equipment-section {
   flex: 1 1 300px;
   min-width: 280px;
@@ -159,12 +160,5 @@ const equipmentDescriptions = computed(() => {
   margin-top: 6px;
   min-height: 45px;
   resize: vertical;
-}
-
-.description-toggle {
-  display: inline-flex;
-  align-items: center;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.8em;
 }
 </style>

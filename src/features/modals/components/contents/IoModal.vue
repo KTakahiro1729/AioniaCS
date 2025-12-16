@@ -1,12 +1,8 @@
 <template>
   <div class="io-modal">
     <button class="button-base" @click="$emit('save-local')">
-      {{ saveLocalLabel }}
+      {{ localOutputLabel }}
     </button>
-    <label class="button-base">
-      {{ loadLocalLabel }}
-      <input type="file" class="hidden" @change="(e) => $emit('load-local', e)" accept=".json,.txt,.zip" />
-    </label>
     <AnimatedButton
       class="button-base"
       :trigger="triggerKey"
@@ -16,6 +12,9 @@
       :timings="outputTimings"
       @click="$emit('output-cocofolia')"
     />
+    <button class="button-base" @click="$emit('output-chat-palette')">
+      {{ chatPaletteLabel }}
+    </button>
     <button class="button-base" @click="$emit('print')">
       {{ printLabel }}
     </button>
@@ -28,14 +27,14 @@ import AnimatedButton from '@/shared/ui/base/AnimatedButton.vue';
 
 defineProps({
   signedIn: Boolean,
-  saveLocalLabel: String,
-  loadLocalLabel: String,
+  localOutputLabel: String,
   outputLabels: Object,
   outputTimings: Object,
   printLabel: String,
+  chatPaletteLabel: String,
 });
 
-defineEmits(['save-local', 'load-local', 'output-cocofolia', 'print']);
+defineEmits(['save-local', 'output-cocofolia', 'output-chat-palette', 'print']);
 
 const triggerKey = ref(0);
 function triggerAnimation() {

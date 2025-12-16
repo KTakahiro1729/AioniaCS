@@ -16,16 +16,15 @@ reviews:
   # レビュー対象から除外するパスを指定します。
   path_filters:
     # .gitignoreの内容に基づき、ビルド成果物や依存関係、設定ファイルなどを除外します。
-    - exclude:
-        - 'node_modules/**' #
-        - 'dist/**' #
-        - 'logs/**' #
-        - '*.log' #
-        - '.vscode/**' #
-        - '!/.vscode/extensions.json' # VSCodeの推奨拡張機能はレビュー対象に含めます
-        - 'package-lock.json' #
-        - '.github/workflows/**' # CI/CD設定はレビュー対象外とします
-        - 'tests/unit/__mocks__/**' # テストのモックはレビュー対象外とします
+    - 'node_modules/**' #
+    - 'dist/**' #
+    - 'logs/**' #
+    - '*.log' #
+    - '.vscode/**' #
+    - '!/.vscode/extensions.json' # VSCodeの推奨拡張機能はレビュー対象に含めます
+    - 'package-lock.json' #
+    - '.github/workflows/**' # CI/CD設定はレビュー対象外とします
+    - 'tests/unit/__mocks__/**' # テストのモックはレビュー対象外とします
 
   # 特定のパスに対するレビューの指示です。
   path_instructions:
