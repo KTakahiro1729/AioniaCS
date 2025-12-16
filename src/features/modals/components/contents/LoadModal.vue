@@ -7,8 +7,16 @@
       </button>
     </section>
     <section class="load-modal__section load-modal__section--drive">
-      <button class="button-base load-modal__button" v-if="canUseDrive" data-test="load-modal-drive-button" @click="$emit('load-drive')">
-        {{ loadDriveLabel }}
+      <button
+        class="button-base load-modal__button"
+        v-if="canUseDrive"
+        :disabled="isDriveButtonDisabled"
+        :aria-busy="showDriveLoading"
+        data-test="load-modal-drive-button"
+        @click="$emit('load-drive')"
+      >
+        <span v-if="showDriveLoading" class="load-modal__spinner" aria-hidden="true"></span>
+        <span>{{ loadDriveLabel }}</span>
       </button>
       <div class="load-modal__config">
         <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
@@ -50,6 +58,8 @@ const props = defineProps({
   isSignedIn: Boolean,
   canSignIn: Boolean,
   isDriveReady: Boolean,
+  isDriveTokenWarm: Boolean,
+  isDriveActionLoading: Boolean,
   driveFolderPath: String,
   driveFolderLabel: String,
   driveFolderPlaceholder: String,
@@ -82,8 +92,11 @@ watch(
 );
 
 const canUseDrive = computed(() => props.isSignedIn && props.isDriveReady);
-const isDriveControlsDisabled = computed(() => !props.isSignedIn);
-const isFolderPickerDisabled = computed(() => !canUseDrive.value);
+const isDriveWarming = computed(() => canUseDrive.value && !props.isDriveTokenWarm);
+const showDriveLoading = computed(() => isDriveWarming.value || props.isDriveActionLoading);
+const isDriveButtonDisabled = computed(() => !canUseDrive.value || props.isDriveActionLoading);
+const isDriveControlsDisabled = computed(() => !props.isSignedIn || props.isDriveActionLoading);
+const isFolderPickerDisabled = computed(() => !canUseDrive.value || props.isDriveActionLoading);
 
 function commitFolderPath() {
   if (!props.isSignedIn) {
@@ -115,6 +128,8 @@ function handleLocalChange(event) {
 .load-modal__button {
   width: 100%;
   justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .load-modal__config {
@@ -165,5 +180,23 @@ function handleLocalChange(event) {
 .button-base:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.load-modal__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border-normal);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: load-modal-spin 1s linear infinite;
+}
+
+@keyframes load-modal-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -26,6 +26,7 @@ export function useGoogleDrive(dataManager) {
   const canSignInToGoogle = computed(() => !uiStore.isSignedIn);
   const isDriveReady = computed(() => uiStore.isGapiInitialized && uiStore.isSignedIn);
   const isDriveTokenWarm = ref(false);
+  const isDriveActionInFlight = ref(false);
 
   function syncGoogleDriveManager() {
     try {
@@ -82,20 +83,29 @@ export function useGoogleDrive(dataManager) {
       logAndToastError(pickerError, () => messages.googleDrive.folderPicker.unavailable(), 'promptForDriveFolder');
       return uiStore.driveFolderPath;
     }
-
-    return new Promise((resolve) => {
-      gdm.showFolderPicker(async (err, folder) => {
-        if (err || !folder) {
-          const pickerError = err || new Error(messages.googleDrive.folderPicker.error().message);
-          logAndToastError(pickerError, (caught) => messages.googleDrive.folderPicker.error(caught), 'promptForDriveFolder');
-          resolve(uiStore.driveFolderPath);
-          return;
-        }
-        const targetPath = folder.path || folder.name;
-        const normalized = await updateDriveFolderPath(targetPath);
-        resolve(normalized);
+    isDriveActionInFlight.value = true;
+    try {
+      const folder = await new Promise((resolve) => {
+        gdm.showFolderPicker((err, pickedFolder) => {
+          if (err || !pickedFolder) {
+            const pickerError = err || new Error(messages.googleDrive.folderPicker.error().message);
+            logAndToastError(pickerError, (caught) => messages.googleDrive.folderPicker.error(caught), 'promptForDriveFolder');
+            resolve(null);
+            return;
+          }
+          resolve(pickedFolder);
+        });
       });
-    });
+
+      if (!folder) {
+        return uiStore.driveFolderPath;
+      }
+
+      const targetPath = folder.path || folder.name;
+      return await updateDriveFolderPath(targetPath);
+    } finally {
+      isDriveActionInFlight.value = false;
+    }
   }
 
   async function refreshDriveFolderPath() {
@@ -150,51 +160,69 @@ export function useGoogleDrive(dataManager) {
       return null;
     }
     if (!dataManager.googleDriveManager) return null;
+    isDriveActionInFlight.value = true;
 
-    const folderId = await dataManager.googleDriveManager.findOrCreateConfiguredCharacterFolder();
-
-    return new Promise((resolve) => {
-      dataManager.googleDriveManager.showFilePicker(
-        (err, file) => {
-          if (err || !file) {
-            const pickerError = err || new Error(messages.googleDrive.load.noSelection().message);
-            const toastFactory = err ? (caught) => messages.googleDrive.load.error(caught) : () => messages.googleDrive.load.noSelection();
-            logAndToastError(pickerError, toastFactory, 'loadCharacterFromDrive');
-            resolve(null);
-            return;
-          }
-
-          const loadPromise = dataManager.loadDataFromDrive(file.id).then((parsedData) => {
-            if (!parsedData) {
-              throw new Error(messages.googleDrive.load.missingData().message);
-            }
-            Object.assign(characterStore.character, parsedData.character);
-            characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
-            characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
-            Object.assign(characterStore.equipments, parsedData.equipments);
-            characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
-            uiStore.setCurrentDriveFileId(file.id);
-            removeStoredCharacterDraft();
-            uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
-            return parsedData;
-          });
-
-          showAsyncToast(
-            loadPromise,
-            {
-              loading: messages.googleDrive.load.loading(file.name),
-              success: messages.googleDrive.load.success(file.name),
-              error: (loadErr) => messages.googleDrive.load.error(loadErr),
+    try {
+      const folderId = await dataManager.googleDriveManager.findOrCreateConfiguredCharacterFolder();
+      const file = await new Promise((resolve, reject) => {
+        try {
+          dataManager.googleDriveManager.showFilePicker(
+            (err, pickedFile) => {
+              if (err || !pickedFile) {
+                const pickerError = err || new Error(messages.googleDrive.load.noSelection().message);
+                const toastFactory = err
+                  ? (caught) => messages.googleDrive.load.error(caught)
+                  : () => messages.googleDrive.load.noSelection();
+                logAndToastError(pickerError, toastFactory, 'loadCharacterFromDrive');
+                resolve(null);
+                return;
+              }
+              resolve(pickedFile);
             },
-            'loadCharacterFromDrive',
+            folderId,
+            ['application/json', 'application/zip'],
           );
+        } catch (error) {
+          reject(error);
+        }
+      });
 
-          loadPromise.then((result) => resolve(result)).catch(() => resolve(null));
+      if (!file) {
+        return null;
+      }
+
+      const loadPromise = dataManager.loadDataFromDrive(file.id).then((parsedData) => {
+        if (!parsedData) {
+          throw new Error(messages.googleDrive.load.missingData().message);
+        }
+        Object.assign(characterStore.character, parsedData.character);
+        characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
+        characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
+        Object.assign(characterStore.equipments, parsedData.equipments);
+        characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+        uiStore.setCurrentDriveFileId(file.id);
+        removeStoredCharacterDraft();
+        uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
+        return parsedData;
+      });
+
+      showAsyncToast(
+        loadPromise,
+        {
+          loading: messages.googleDrive.load.loading(file.name),
+          success: messages.googleDrive.load.success(file.name),
+          error: (loadErr) => messages.googleDrive.load.error(loadErr),
         },
-        folderId,
-        ['application/json', 'application/zip'],
+        'loadCharacterFromDrive',
       );
-    });
+
+      return await loadPromise.catch(() => null);
+    } catch (error) {
+      logAndToastError(error, messages.googleDrive.load.error, 'loadCharacterFromDrive');
+      return null;
+    } finally {
+      isDriveActionInFlight.value = false;
+    }
   }
 
   async function prefetchDriveAccessToken() {
@@ -363,5 +391,7 @@ export function useGoogleDrive(dataManager) {
     loadCharacterFromDrive,
     saveCharacterToDrive,
     prefetchDriveAccessToken,
+    isDriveTokenWarm,
+    isDriveActionInFlight,
   };
 }

@@ -49,6 +49,7 @@ export class GoogleDriveManager {
     this.aioniaFolderId = null;
     this.gapiLoadPromise = null;
     this.currentTokenInfo = null;
+    this.tokenRefreshPromise = null;
     this.authStatusEndpoint = '/api/auth/status';
     this.loginEndpoint = '/api/auth/login';
     this.logoutEndpoint = '/api/auth/logout';
@@ -296,20 +297,32 @@ export class GoogleDriveManager {
       return this.currentTokenInfo.accessToken;
     }
 
-    const response = await fetch(this.authStatusEndpoint, { credentials: 'include' });
-    if (!response.ok) {
-      throw new Error('Authentication required.');
+    if (this.tokenRefreshPromise) {
+      return this.tokenRefreshPromise;
     }
 
-    const data = await response.json();
-    if (!data.access_token) {
-      throw new Error('Access token not available from server.');
-    }
+    this.tokenRefreshPromise = (async () => {
+      const response = await fetch(this.authStatusEndpoint, { credentials: 'include' });
+      if (!response.ok) {
+        throw new Error('Authentication required.');
+      }
 
-    const expiresAt = now + ((data.expires_in || 3600) * 1000 - 5000);
-    this.currentTokenInfo = { accessToken: data.access_token, expiresAt };
-    gapi.client.setToken({ access_token: data.access_token, expires_in: data.expires_in });
-    return data.access_token;
+      const data = await response.json();
+      if (!data.access_token) {
+        throw new Error('Access token not available from server.');
+      }
+
+      const expiresAt = now + ((data.expires_in || 3600) * 1000 - 5000);
+      this.currentTokenInfo = { accessToken: data.access_token, expiresAt };
+      gapi.client.setToken({ access_token: data.access_token, expires_in: data.expires_in });
+      return data.access_token;
+    })();
+
+    try {
+      return await this.tokenRefreshPromise;
+    } finally {
+      this.tokenRefreshPromise = null;
+    }
   }
 
   async restoreSession() {
