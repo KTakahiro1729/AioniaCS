@@ -1,5 +1,7 @@
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { AioniaGameData } from '@/data/gameData.js';
+import printTemplate from '@/features/character-sheet/assets/print/print-template.html?raw';
+import printStyles from '@/features/character-sheet/assets/print/print-styles.css?raw';
 
 export function formatSkills(skills) {
   return skills
@@ -35,9 +37,7 @@ export function formatAbilities(specialSkills, specialSkillData, specialSkillsRe
 export function usePrint() {
   const characterStore = useCharacterStore();
 
-  async function buildHtml() {
-    const { default: printTemplate } = await import('@/features/character-sheet/assets/print/print-template.html?raw');
-    const { default: printStyles } = await import('@/features/character-sheet/assets/print/print-styles.css?raw');
+  function buildHtml() {
     const ch = characterStore.character;
     let html = printTemplate;
 
@@ -109,11 +109,11 @@ export function usePrint() {
     return html;
   }
 
-  async function printCharacterSheet() {
+  function printCharacterSheet() {
     console.log('印刷プロセスを開始します。');
 
     try {
-      const html = await buildHtml();
+      const html = buildHtml();
 
       if (!html) {
         console.error('HTMLの構築に失敗しました。処理を中断します。');
@@ -154,20 +154,26 @@ export function usePrint() {
 
   async function openPreviewPage() {
     console.log('プレビューページを生成します。');
+    const newWindow = window.open('', '_blank');
+    if (!newWindow) {
+      console.error('ポップアップがブロックされたため、プレビューページを開けませんでした。');
+      alert('ポップアップがブロックされました。プレビュー機能を使用するには、このサイトのポップアップを許可してください。');
+      return;
+    }
+
     try {
-      const html = await buildHtml();
-      const newWindow = window.open();
-      if (newWindow) {
-        newWindow.document.open();
-        newWindow.document.write(html);
-        newWindow.document.close();
-        console.log('プレビューページを新しいタブで開きました。');
-      } else {
-        console.error('ポップアップがブロックされたため、プレビューページを開けませんでした。');
-        alert('ポップアップがブロックされました。プレビュー機能を使用するには、このサイトのポップアップを許可してください。');
-      }
+      const html = buildHtml();
+      newWindow.document.open();
+      newWindow.document.write(html);
+      newWindow.document.close();
+      console.log('プレビューページを新しいタブで開きました。');
     } catch (e) {
       console.error('プレビューページの生成中にエラーが発生しました:', e);
+      try {
+        newWindow.close();
+      } catch (closeError) {
+        console.error('生成に失敗したプレビューウィンドウのクローズに失敗しました:', closeError);
+      }
     }
   }
 
