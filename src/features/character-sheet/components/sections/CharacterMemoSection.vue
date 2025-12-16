@@ -6,7 +6,7 @@
         id="character_text"
         class="character-memo-textarea"
         :placeholder="sheetMessages.placeholders.characterMemo"
-        v-model="localValue"
+        v-model.lazy="localValue"
         :readonly="uiStore.isViewingShared"
       ></textarea>
     </div>

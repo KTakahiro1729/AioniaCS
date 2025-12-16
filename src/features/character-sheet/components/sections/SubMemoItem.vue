@@ -10,7 +10,7 @@
         :value="subMemo.title"
         :placeholder="messages.titlePlaceholder"
         :readonly="readonly"
-        @input="$emit('update-title', $event.target.value)"
+        @change="$emit('update-title', $event.target.value)"
       />
       <label class="submemo-spoiler">
         <input
@@ -37,7 +37,7 @@
           :placeholder="messages.contentPlaceholder"
           :value="subMemo.content"
           :readonly="readonly"
-          @input="$emit('update-content', $event.target.value)"
+          @change="$emit('update-content', $event.target.value)"
         ></textarea>
       </div>
     </Transition>
@@ -75,7 +75,7 @@ const showGuard = computed(() => props.subMemo.isSpoiler && !props.revealed);
 
 <style scoped>
 .submemo-item {
-  border: 1px solid var(--color-border, #444);
+  border: 1px solid var(--color-border-normal);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -96,7 +96,7 @@ const showGuard = computed(() => props.subMemo.isSpoiler && !props.revealed);
   min-width: 0;
   padding: 6px 8px;
   border-radius: 4px;
-  border: 1px solid var(--color-border, #444);
+  border: 1px solid var(--color-border-normal);
   background: transparent;
   color: inherit;
 }
