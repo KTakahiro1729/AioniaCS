@@ -136,4 +136,15 @@ describe('useAppModals', () => {
     expect(copyEditCallback).toHaveBeenCalled();
     expect(showAsyncToastMock).not.toHaveBeenCalled();
   });
+
+  test('openLoadModal prefetches drive token when ready', async () => {
+    const prefetchDriveAccessToken = vi.fn();
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    const { openLoadModal } = useAppModals(createOptions({ prefetchDriveAccessToken }));
+
+    await openLoadModal();
+
+    expect(prefetchDriveAccessToken).toHaveBeenCalled();
+  });
 });

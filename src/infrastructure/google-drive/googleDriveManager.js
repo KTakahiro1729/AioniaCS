@@ -267,6 +267,24 @@ export class GoogleDriveManager {
    * Fetches an access token from the server and applies it to gapi.
    * @returns {Promise<string>}
    */
+  getCachedAccessToken() {
+    if (typeof gapi === 'undefined' || !gapi.client || typeof gapi.client.getToken !== 'function') {
+      return null;
+    }
+
+    const now = Date.now();
+    const existingToken = gapi.client.getToken();
+    if (
+      existingToken?.access_token &&
+      this.currentTokenInfo?.accessToken === existingToken.access_token &&
+      this.currentTokenInfo.expiresAt > now
+    ) {
+      return existingToken.access_token;
+    }
+
+    return null;
+  }
+
   async ensureAccessToken() {
     if (typeof gapi === 'undefined' || !gapi.client || !gapi.client.setToken) {
       throw new Error('GAPI client is not initialized for token application.');
@@ -274,12 +292,7 @@ export class GoogleDriveManager {
 
     const now = Date.now();
     const existingToken = typeof gapi.client.getToken === 'function' ? gapi.client.getToken() : null;
-    if (
-      this.currentTokenInfo &&
-      this.currentTokenInfo.expiresAt > now &&
-      existingToken &&
-      existingToken.access_token === this.currentTokenInfo.accessToken
-    ) {
+    if (this.currentTokenInfo?.expiresAt > now && existingToken?.access_token === this.currentTokenInfo.accessToken) {
       return this.currentTokenInfo.accessToken;
     }
 
@@ -846,12 +859,15 @@ export class GoogleDriveManager {
       return;
     }
 
-    try {
-      await this.ensureAccessToken();
-    } catch (error) {
-      console.error('Failed to prepare Picker token:', error);
-      if (callback) callback(new Error('Authentication required.'));
-      return;
+    const cachedToken = this.getCachedAccessToken();
+    if (!cachedToken) {
+      try {
+        await this.ensureAccessToken();
+      } catch (error) {
+        console.error('Failed to prepare Picker token:', error);
+        if (callback) callback(new Error('Authentication required.'));
+        return;
+      }
     }
 
     const token = gapi.client.getToken();
@@ -905,12 +921,15 @@ export class GoogleDriveManager {
       return;
     }
 
-    try {
-      await this.ensureAccessToken();
-    } catch (error) {
-      console.error('Failed to prepare Folder Picker token:', error);
-      if (callback) callback(new Error('Authentication required.'));
-      return;
+    const cachedToken = this.getCachedAccessToken();
+    if (!cachedToken) {
+      try {
+        await this.ensureAccessToken();
+      } catch (error) {
+        console.error('Failed to prepare Folder Picker token:', error);
+        if (callback) callback(new Error('Authentication required.'));
+        return;
+      }
     }
 
     const token = gapi.client.getToken();

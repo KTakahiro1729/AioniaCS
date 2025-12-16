@@ -45,6 +45,7 @@ const {
   loadCharacterFromDrive,
   promptForDriveFolder,
   updateDriveFolderPath,
+  prefetchDriveAccessToken,
 } = useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
@@ -119,6 +120,7 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   updateDriveFolderPath,
   canSignInToGoogle,
   isDriveReady,
+  prefetchDriveAccessToken,
 });
 
 const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);
