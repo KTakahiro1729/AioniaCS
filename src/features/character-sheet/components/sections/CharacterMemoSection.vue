@@ -10,24 +10,215 @@
         :readonly="uiStore.isViewingShared"
       ></textarea>
     </div>
+    <div class="submemo-list" v-if="subMemos.length">
+      <SubMemoItem
+        v-for="subMemo in subMemos"
+        :key="subMemo.id"
+        :sub-memo="subMemo"
+        :messages="subMemoMessages"
+        :collapsed="isCollapsed(subMemo.id)"
+        :revealed="isRevealed(subMemo)"
+        :readonly="uiStore.isViewingShared"
+        @toggle-collapse="() => toggleCollapse(subMemo.id)"
+        @update-title="(value) => handleUpdateTitle(subMemo.id, value)"
+        @update-content="(value) => handleUpdateContent(subMemo.id, value)"
+        @update-spoiler="(value) => handleUpdateSpoiler(subMemo.id, value)"
+        @reveal="() => revealSubMemo(subMemo.id)"
+        @request-remove="() => confirmRemoval(subMemo.id)"
+      />
+    </div>
+    <div class="submemo-actions">
+      <button class="button-base" type="button" :disabled="uiStore.isViewingShared" @click="handleAddSubMemo">
+        {{ subMemoMessages.addButton }}
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { messages } from '@/i18n/index.js';
+import { useModal } from '@/features/modals/composables/useModal.js';
+import SubMemoItem from './SubMemoItem.vue';
 
 const characterStore = useCharacterStore();
 const uiStore = useUiStore();
+const { showModal } = useModal();
 const sheetMessages = messages.sheet;
+const subMemoMessages = sheetMessages.sections.memo.subMemo;
+const LOCAL_STORAGE_KEY = 'aioniacs_ui_submemos_state';
 const localValue = computed({
   get: () => characterStore.character.memo,
   set: (val) => {
     characterStore.character.memo = val;
   },
 });
+const subMemos = computed(() => characterStore.character.subMemos || []);
+const collapsedIds = ref(new Set());
+const revealedIds = ref(new Set());
+
+function loadUiState() {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!raw) return { collapsed: new Set(), revealed: new Set() };
+    const parsed = JSON.parse(raw);
+    return {
+      collapsed: new Set(parsed?.collapsedIds || []),
+      revealed: new Set(parsed?.revealedIds || []),
+    };
+  } catch (e) {
+    return { collapsed: new Set(), revealed: new Set() };
+  }
+}
+
+function persistUiState() {
+  try {
+    localStorage.setItem(
+      LOCAL_STORAGE_KEY,
+      JSON.stringify({ collapsedIds: [...collapsedIds.value], revealedIds: [...revealedIds.value] }),
+    );
+  } catch (e) {
+    // do nothing when storage is unavailable
+  }
+}
+
+function syncUiStateWithSubMemos(list) {
+  const ids = new Set(list.map((memo) => memo.id));
+  const nextCollapsed = new Set([...collapsedIds.value].filter((id) => ids.has(id)));
+  const nextRevealed = new Set([...revealedIds.value].filter((id) => ids.has(id)));
+
+  list.forEach((memo) => {
+    if (!nextCollapsed.has(memo.id)) {
+      nextCollapsed.add(memo.id);
+    }
+    if (!memo.isSpoiler && nextRevealed.has(memo.id)) {
+      nextRevealed.delete(memo.id);
+    }
+  });
+
+  const collapsedChanged =
+    nextCollapsed.size !== collapsedIds.value.size || [...nextCollapsed].some((id) => !collapsedIds.value.has(id));
+  const revealedChanged =
+    nextRevealed.size !== revealedIds.value.size || [...nextRevealed].some((id) => !revealedIds.value.has(id));
+
+  if (collapsedChanged) {
+    collapsedIds.value = nextCollapsed;
+  }
+  if (revealedChanged) {
+    revealedIds.value = nextRevealed;
+  }
+  if (collapsedChanged || revealedChanged) {
+    persistUiState();
+  }
+}
+
+onMounted(() => {
+  const stored = loadUiState();
+  collapsedIds.value = stored.collapsed;
+  revealedIds.value = stored.revealed;
+  syncUiStateWithSubMemos(subMemos.value);
+});
+
+watch(
+  () => subMemos.value.map((memo) => memo.id),
+  () => {
+    syncUiStateWithSubMemos(subMemos.value);
+  },
+  { immediate: true },
+);
+
+watch(
+  () => subMemos.value.map((memo) => `${memo.id}:${memo.isSpoiler}`),
+  () => {
+    const updatedRevealed = new Set(revealedIds.value);
+    let changed = false;
+    subMemos.value.forEach((memo) => {
+      if (!memo.isSpoiler && updatedRevealed.has(memo.id)) {
+        updatedRevealed.delete(memo.id);
+        changed = true;
+      }
+    });
+    if (changed) {
+      revealedIds.value = updatedRevealed;
+      persistUiState();
+    }
+  },
+);
+
+function isCollapsed(id) {
+  return collapsedIds.value.has(id);
+}
+
+function toggleCollapse(id) {
+  const next = new Set(collapsedIds.value);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  collapsedIds.value = next;
+  persistUiState();
+}
+
+function isRevealed(subMemo) {
+  return revealedIds.value.has(subMemo.id) || !subMemo.isSpoiler;
+}
+
+function revealSubMemo(id) {
+  if (revealedIds.value.has(id)) return;
+  const next = new Set(revealedIds.value);
+  next.add(id);
+  revealedIds.value = next;
+  persistUiState();
+}
+
+function handleAddSubMemo() {
+  const newMemo = characterStore.addSubMemo();
+  collapsedIds.value = new Set([...collapsedIds.value, newMemo.id]);
+  revealedIds.value = new Set([...revealedIds.value].filter((id) => id !== newMemo.id));
+  persistUiState();
+}
+
+function handleUpdateTitle(id, value) {
+  characterStore.updateSubMemo(id, { title: value });
+}
+
+function handleUpdateContent(id, value) {
+  characterStore.updateSubMemo(id, { content: value });
+}
+
+function handleUpdateSpoiler(id, value) {
+  characterStore.updateSubMemo(id, { isSpoiler: value });
+  if (!value && revealedIds.value.has(id)) {
+    const next = new Set(revealedIds.value);
+    next.delete(id);
+    revealedIds.value = next;
+    persistUiState();
+  }
+}
+
+async function confirmRemoval(id) {
+  const result = await showModal({
+    title: subMemoMessages.deleteConfirm.title,
+    message: subMemoMessages.deleteConfirm.message,
+    buttons: [
+      { label: subMemoMessages.deleteConfirm.delete, value: 'delete', variant: 'primary' },
+      { label: subMemoMessages.deleteConfirm.cancel, value: 'cancel', variant: 'secondary' },
+    ],
+  });
+  if (result?.value === 'delete') {
+    characterStore.removeSubMemo(id);
+    const nextCollapsed = new Set(collapsedIds.value);
+    const nextRevealed = new Set(revealedIds.value);
+    nextCollapsed.delete(id);
+    nextRevealed.delete(id);
+    collapsedIds.value = nextCollapsed;
+    revealedIds.value = nextRevealed;
+    persistUiState();
+  }
+}
 </script>
 
 <style scoped>
@@ -39,5 +230,23 @@ const localValue = computed({
   width: 100%;
   min-height: 180px;
   resize: vertical;
+}
+
+.submemo-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.submemo-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.button-base:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
