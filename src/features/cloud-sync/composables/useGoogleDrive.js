@@ -21,6 +21,7 @@ export function useGoogleDrive(dataManager) {
   const uiStore = useUiStore();
   const characterStore = useCharacterStore();
   const googleDriveManager = ref(null);
+  const cachedFolderId = ref(null);
   const { showToast, showAsyncToast, logAndToastError } = useNotifications();
 
   const canSignInToGoogle = computed(() => !uiStore.isSignedIn);
@@ -68,6 +69,7 @@ export function useGoogleDrive(dataManager) {
     await googleDriveManager.value.handleSignOut();
     uiStore.isSignedIn = false;
     uiStore.clearCurrentDriveFileId();
+    cachedFolderId.value = null;
     isDriveTokenWarm.value = false;
     showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
   }
@@ -117,6 +119,10 @@ export function useGoogleDrive(dataManager) {
       if (config?.characterFolderPath) {
         uiStore.setDriveFolderPath(config.characterFolderPath);
       }
+      if (typeof googleDriveManager.value.findOrCreateConfiguredCharacterFolder === 'function') {
+        const folderId = await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
+        cachedFolderId.value = folderId ?? null;
+      }
     } catch (error) {
       logAndToastError(error, messages.googleDrive.config.loadError, 'refreshDriveFolderPath');
     }
@@ -135,7 +141,8 @@ export function useGoogleDrive(dataManager) {
 
     if (normalizer === uiStore.driveFolderPath) {
       if (typeof googleDriveManager.value.findOrCreateConfiguredCharacterFolder === 'function') {
-        await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
+        const folderId = await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
+        cachedFolderId.value = folderId ?? null;
       }
       return normalizer;
     }
@@ -144,7 +151,8 @@ export function useGoogleDrive(dataManager) {
       const normalized = await googleDriveManager.value.setCharacterFolderPath(path);
       uiStore.setDriveFolderPath(normalized);
       if (typeof googleDriveManager.value.findOrCreateConfiguredCharacterFolder === 'function') {
-        await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
+        const folderId = await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
+        cachedFolderId.value = folderId ?? null;
       }
       showToast({ type: 'success', ...messages.googleDrive.config.updateSuccess() });
       return normalized;
@@ -163,7 +171,7 @@ export function useGoogleDrive(dataManager) {
     isDriveActionInFlight.value = true;
 
     try {
-      const folderId = await dataManager.googleDriveManager.findOrCreateConfiguredCharacterFolder();
+      const folderId = cachedFolderId.value;
       const file = await new Promise((resolve, reject) => {
         try {
           dataManager.googleDriveManager.showFilePicker(
