@@ -1,5 +1,5 @@
-vi.mock('@/features/character-sheet/assets/print/print-template.html?raw', () => '');
-vi.mock('@/features/character-sheet/assets/print/print-styles.css?raw', () => '');
+vi.mock('@/features/character-sheet/assets/print/print-template.html?raw', () => ({ default: '' }));
+vi.mock('@/features/character-sheet/assets/print/print-styles.css?raw', () => ({ default: '' }));
 
 import { formatSkills, formatAbilities } from '@/features/character-sheet/composables/usePrint.js';
 
