@@ -31,6 +31,8 @@ export function useAppModals(options) {
     canSignInToGoogle,
     isDriveReady,
     prefetchDriveAccessToken,
+    isDriveTokenWarm,
+    isDriveActionInFlight,
   } = options;
 
   async function openLoadModal() {
@@ -55,6 +57,8 @@ export function useAppModals(options) {
       loadDriveLabel: messages.ui.modal.load.buttons.loadDrive,
       signInLabel: messages.characterHub.buttons.signIn,
       signInMessage: messages.ui.modal.load.signInMessage,
+      isDriveTokenWarm: isDriveTokenWarm?.value ?? false,
+      isDriveActionLoading: isDriveActionInFlight?.value ?? false,
     };
 
     const modalPromise = showModal({
@@ -77,6 +81,8 @@ export function useAppModals(options) {
         canSignIn: canSignInToGoogle?.value ?? false,
         isDriveReady: isDriveReady?.value ?? false,
         driveFolderPath: uiStore.driveFolderPath,
+        isDriveTokenWarm: isDriveTokenWarm?.value ?? false,
+        isDriveActionLoading: isDriveActionInFlight?.value ?? false,
       }),
       (values) => {
         if (modalStore.component === LoadModal) {
