@@ -1,7 +1,7 @@
 <template>
   <div id="character_memo" class="character-memo">
     <div class="box-title">{{ sheetMessages.sections.memo.title }}</div>
-    <div class="box-content">
+    <div class="box-content memo-layout-container">
       <textarea
         id="character_text"
         class="character-memo-textarea"
@@ -9,34 +9,32 @@
         v-model.lazy="localValue"
         :readonly="uiStore.isViewingShared"
       ></textarea>
-      <div class="submemo-section">
-        <div class="submemo-list" v-if="subMemos.length">
-          <SubMemoItem
-            v-for="subMemo in subMemos"
-            :key="subMemo.id"
-            :sub-memo="subMemo"
-            :messages="subMemoMessages"
-            :collapsed="isCollapsed(subMemo.id)"
-            :revealed="isRevealed(subMemo)"
-            :readonly="uiStore.isViewingShared"
-            @toggle-collapse="() => toggleCollapse(subMemo.id)"
-            @update-title="(value) => handleUpdateTitle(subMemo.id, value)"
-            @update-content="(value) => handleUpdateContent(subMemo.id, value)"
-            @update-spoiler="(value) => handleUpdateSpoiler(subMemo.id, value)"
-            @reveal="() => revealSubMemo(subMemo.id)"
-            @request-remove="() => confirmRemoval(subMemo.id)"
-          />
-        </div>
-        <div class="add-button-container-left" v-if="!uiStore.isViewingShared">
-          <button
-            class="button-base list-button list-button--add"
-            type="button"
-            :aria-label="subMemoMessages.addButton"
-            @click="handleAddSubMemo"
-          >
-            ＋
-          </button>
-        </div>
+      <div class="submemo-list" v-if="subMemos.length">
+        <SubMemoItem
+          v-for="subMemo in subMemos"
+          :key="subMemo.id"
+          :sub-memo="subMemo"
+          :messages="subMemoMessages"
+          :collapsed="isCollapsed(subMemo.id)"
+          :revealed="isRevealed(subMemo)"
+          :readonly="uiStore.isViewingShared"
+          @toggle-collapse="() => toggleCollapse(subMemo.id)"
+          @update-title="(value) => handleUpdateTitle(subMemo.id, value)"
+          @update-content="(value) => handleUpdateContent(subMemo.id, value)"
+          @update-spoiler="(value) => handleUpdateSpoiler(subMemo.id, value)"
+          @reveal="() => revealSubMemo(subMemo.id)"
+          @request-remove="() => confirmRemoval(subMemo.id)"
+        />
+      </div>
+      <div class="add-button-row" v-if="!uiStore.isViewingShared">
+        <button
+          class="button-base list-button list-button--add"
+          type="button"
+          :aria-label="subMemoMessages.addButton"
+          @click="handleAddSubMemo"
+        >
+          ＋
+        </button>
       </div>
     </div>
   </div>
@@ -200,13 +198,19 @@ async function confirmRemoval(id) {
   resize: vertical;
 }
 
-.submemo-section {
-  margin-top: 16px;
+.memo-layout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .submemo-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.add-button-row {
+  display: flex;
 }
 </style>

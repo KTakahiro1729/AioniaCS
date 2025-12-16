@@ -38,7 +38,7 @@
       </button>
     </div>
     <Transition name="fade">
-      <div v-show="!collapsed" class="submemo-body box-content">
+      <div v-show="!collapsed" class="submemo-body">
         <div v-if="showGuard" class="submemo-guard">
           <p>{{ messages.spoilerNotice }}</p>
           <button class="button-base" type="button" @click="$emit('reveal')">{{ messages.readButton }}</button>
