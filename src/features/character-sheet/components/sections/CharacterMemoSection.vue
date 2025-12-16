@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { messages } from '@/i18n/index.js';
@@ -114,12 +114,10 @@ function syncUiStateWithSubMemos(list) {
   }
 }
 
-onMounted(() => {
-  const stored = loadUiState();
-  collapsedIds.value = stored.collapsed;
-  revealedIds.value = stored.revealed;
-  syncUiStateWithSubMemos(subMemos.value);
-});
+const storedUiState = loadUiState();
+collapsedIds.value = storedUiState.collapsed;
+revealedIds.value = storedUiState.revealed;
+syncUiStateWithSubMemos(subMemos.value);
 
 watch(
   () => subMemos.value.map((memo) => `${memo.id}:${memo.isSpoiler}`),
