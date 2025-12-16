@@ -1,8 +1,14 @@
 <template>
   <div class="submemo-item">
     <div class="submemo-header sub-box-title">
-      <button class="button-base submemo-toggle" type="button" @click="$emit('toggle-collapse')">
-        <span>{{ collapsed ? messages.toggle.expand : messages.toggle.collapse }}</span>
+      <button
+        class="submemo-toggle"
+        type="button"
+        :aria-label="collapsed ? messages.toggle.expand : messages.toggle.collapse"
+        @click="$emit('toggle-collapse')"
+      >
+        <span aria-hidden="true">{{ collapsed ? '▶' : '▼' }}</span>
+        <span class="sr-only">{{ collapsed ? messages.toggle.expand : messages.toggle.collapse }}</span>
       </button>
       <input
         class="submemo-title"
@@ -21,8 +27,14 @@
         />
         <span>{{ messages.spoilerLabel }}</span>
       </label>
-      <button class="button-base submemo-delete" type="button" :disabled="readonly" @click="$emit('request-remove')">
-        {{ messages.deleteLabel }}
+      <button
+        class="button-base list-button list-button--remove submemo-delete"
+        type="button"
+        :disabled="readonly"
+        :aria-label="messages.deleteLabel"
+        @click="$emit('request-remove')"
+      >
+        －
       </button>
     </div>
     <Transition name="fade">
@@ -88,7 +100,16 @@ const showGuard = computed(() => props.subMemo.isSpoiler && !props.revealed);
 }
 
 .submemo-toggle {
-  min-width: 90px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-main);
+  font-size: 1rem;
+  cursor: pointer;
 }
 
 .submemo-title {
@@ -130,6 +151,18 @@ const showGuard = computed(() => props.subMemo.isSpoiler && !props.revealed);
   flex-direction: column;
   gap: 12px;
   align-items: flex-start;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .fade-enter-active,

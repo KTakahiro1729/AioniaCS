@@ -19,7 +19,7 @@ describe('CharacterMemoSection', () => {
 
   test('adds sub memos and toggles visibility', async () => {
     const wrapper = mount(CharacterMemoSection);
-    await wrapper.find('.submemo-actions .button-base').trigger('click');
+    await wrapper.find('.add-button-container-left .list-button--add').trigger('click');
     await wrapper.vm.$nextTick();
     const toggle = wrapper.find('.submemo-toggle');
     expect(wrapper.findAllComponents({ name: 'SubMemoItem' }).length || wrapper.findAll('.submemo-item').length).toBe(1);
