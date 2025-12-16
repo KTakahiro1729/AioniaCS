@@ -28,7 +28,7 @@
         <span>{{ messages.spoilerLabel }}</span>
       </label>
       <button
-        class="button-base list-button list-button--remove submemo-delete"
+        class="button-base list-button list-button--delete"
         type="button"
         :disabled="readonly"
         :aria-label="messages.deleteLabel"
@@ -82,7 +82,7 @@ const props = defineProps({
   },
 });
 
-const showGuard = computed(() => props.subMemo.isSpoiler && !props.revealed);
+const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !props.revealed);
 </script>
 
 <style scoped>
@@ -129,11 +129,7 @@ const showGuard = computed(() => props.subMemo.isSpoiler && !props.revealed);
 .submemo-spoiler {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.submemo-delete {
-  min-width: 80px;
+  gap: 4px;
 }
 
 .submemo-body {

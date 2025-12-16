@@ -4,6 +4,7 @@ import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import CharacterMemoSection from '@/features/character-sheet/components/sections/CharacterMemoSection.vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 const mockShowModal = vi.fn();
 vi.mock('@/features/modals/composables/useModal.js', () => ({
@@ -31,6 +32,8 @@ describe('CharacterMemoSection', () => {
 
   test('shows spoiler guard until revealed', async () => {
     const store = useCharacterStore();
+    const uiStore = useUiStore();
+    uiStore.isViewingShared = true;
     const memo = store.addSubMemo({ isSpoiler: true, content: 'Secret' });
     const wrapper = mount(CharacterMemoSection);
     const toggle = wrapper.find('.submemo-toggle');
@@ -49,7 +52,7 @@ describe('CharacterMemoSection', () => {
     store.addSubMemo({ title: 'Temp' });
     mockShowModal.mockResolvedValue({ value: 'delete' });
     const wrapper = mount(CharacterMemoSection);
-    await wrapper.find('.submemo-delete').trigger('click');
+    await wrapper.find('.list-button--delete').trigger('click');
     await wrapper.vm.$nextTick();
     expect(store.character.subMemos).toHaveLength(0);
   });
