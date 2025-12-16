@@ -56,20 +56,20 @@ const localValue = computed({
   },
 });
 const subMemos = computed(() => characterStore.character.subMemos || []);
-const collapsedIds = ref(new Set());
+const expandedIds = ref(new Set());
 const revealedIds = ref(new Set());
 
 function loadUiState() {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!raw) return { collapsed: new Set(), revealed: new Set() };
+    if (!raw) return { expanded: new Set(), revealed: new Set() };
     const parsed = JSON.parse(raw);
     return {
-      collapsed: new Set(parsed?.collapsedIds || []),
+      expanded: new Set(parsed?.expandedIds || []),
       revealed: new Set(parsed?.revealedIds || []),
     };
   } catch (e) {
-    return { collapsed: new Set(), revealed: new Set() };
+    return { expanded: new Set(), revealed: new Set() };
   }
 }
 
@@ -77,7 +77,7 @@ function persistUiState() {
   try {
     localStorage.setItem(
       LOCAL_STORAGE_KEY,
-      JSON.stringify({ collapsedIds: [...collapsedIds.value], revealedIds: [...revealedIds.value] }),
+      JSON.stringify({ expandedIds: [...expandedIds.value], revealedIds: [...revealedIds.value] }),
     );
   } catch (e) {
     // do nothing when storage is unavailable
@@ -86,36 +86,33 @@ function persistUiState() {
 
 function syncUiStateWithSubMemos(list) {
   const ids = new Set(list.map((memo) => memo.id));
-  const nextCollapsed = new Set([...collapsedIds.value].filter((id) => ids.has(id)));
+  const nextExpanded = new Set([...expandedIds.value].filter((id) => ids.has(id)));
   const nextRevealed = new Set([...revealedIds.value].filter((id) => ids.has(id)));
 
   list.forEach((memo) => {
-    if (!nextCollapsed.has(memo.id)) {
-      nextCollapsed.add(memo.id);
-    }
     if (!memo.isSpoiler && nextRevealed.has(memo.id)) {
       nextRevealed.delete(memo.id);
     }
   });
 
-  const collapsedChanged =
-    nextCollapsed.size !== collapsedIds.value.size || [...nextCollapsed].some((id) => !collapsedIds.value.has(id));
+  const expandedChanged =
+    nextExpanded.size !== expandedIds.value.size || [...nextExpanded].some((id) => !expandedIds.value.has(id));
   const revealedChanged =
     nextRevealed.size !== revealedIds.value.size || [...nextRevealed].some((id) => !revealedIds.value.has(id));
 
-  if (collapsedChanged) {
-    collapsedIds.value = nextCollapsed;
+  if (expandedChanged) {
+    expandedIds.value = nextExpanded;
   }
   if (revealedChanged) {
     revealedIds.value = nextRevealed;
   }
-  if (collapsedChanged || revealedChanged) {
+  if (expandedChanged || revealedChanged) {
     persistUiState();
   }
 }
 
 const storedUiState = loadUiState();
-collapsedIds.value = storedUiState.collapsed;
+expandedIds.value = storedUiState.expanded;
 revealedIds.value = storedUiState.revealed;
 syncUiStateWithSubMemos(subMemos.value);
 
@@ -128,17 +125,17 @@ watch(
 );
 
 function isCollapsed(id) {
-  return collapsedIds.value.has(id);
+  return !expandedIds.value.has(id);
 }
 
 function toggleCollapse(id) {
-  const next = new Set(collapsedIds.value);
+  const next = new Set(expandedIds.value);
   if (next.has(id)) {
     next.delete(id);
   } else {
     next.add(id);
   }
-  collapsedIds.value = next;
+  expandedIds.value = next;
   persistUiState();
 }
 
