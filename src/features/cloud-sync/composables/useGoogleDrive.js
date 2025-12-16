@@ -210,9 +210,6 @@ export function useGoogleDrive(dataManager) {
       isDriveTokenWarm.value = true;
       return;
     }
-    if (isDriveTokenWarm.value) {
-      return;
-    }
 
     try {
       await googleDriveManager.value.ensureAccessToken();

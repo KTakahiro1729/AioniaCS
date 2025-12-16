@@ -277,7 +277,7 @@ export class GoogleDriveManager {
     if (
       existingToken?.access_token &&
       this.currentTokenInfo?.accessToken === existingToken.access_token &&
-      this.currentTokenInfo.expiresAt > now
+      this.currentTokenInfo?.expiresAt > now
     ) {
       return existingToken.access_token;
     }
