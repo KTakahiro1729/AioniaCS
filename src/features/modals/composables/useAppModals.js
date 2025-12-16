@@ -168,7 +168,7 @@ export function useAppModals(options) {
           buttons: [],
         }),
       )
-      .catch(() => {});
+      .catch((error) => console.error('Failed to show share result modal:', error));
 
     return sharePromise;
   }
