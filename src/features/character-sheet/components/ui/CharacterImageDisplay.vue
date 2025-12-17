@@ -173,24 +173,23 @@ const handleImageUpload = async (event) => {
 }
 
 .image-display-area {
-  position: relative; 
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0;
   width: 100%;
-  min-height: 300px; 
-  flex: 1;
+  height: 300px;
   background-color: var(--color-background);
   border: 1px solid var(--color-border-normal);
   border-radius: 2px;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 .character-image-display {
   display: block;
   max-width: 100%;
   max-height: 100%;
+  width: auto;
   height: auto;
   object-fit: contain;
 }
@@ -304,8 +303,13 @@ const handleImageUpload = async (event) => {
 @media (min-width: 769px) {
   .character-image-container {
     flex: 1;
-    height: 100%;
-    width: 100%;
+    min-height: 200px;
+  }
+
+  .image-display-area {
+    height: auto;
+    flex: 1;
+    min-height: 0;
   }
 }
 </style>
