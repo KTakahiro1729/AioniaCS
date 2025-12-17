@@ -29,7 +29,7 @@ const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 const initialCharacterSnapshot = ref(buildSnapshotFromStore(characterStore));
 uiStore.setLastSavedSnapshot(initialCharacterSnapshot.value);
-const { clearLocalDraft } = useLocalCharacterPersistence(characterStore, uiStore);
+const { clearLocalDraft, getHistoryList, restoreFromHistory } = useLocalCharacterPersistence(characterStore, uiStore);
 useKeyboardHandling();
 
 const { dataManager, saveData, handleFileUpload, outputToCocofolia, getChatPaletteText } = useDataExport();
@@ -119,6 +119,12 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   updateDriveFolderPath,
   canSignInToGoogle,
   isDriveReady,
+  getLocalHistoryList: getHistoryList,
+  restoreCharacterFromHistory: (item) => {
+    restoreFromHistory(item);
+    uiStore.isViewingShared = false;
+    uiStore.clearCurrentDriveFileId();
+  },
 });
 
 const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);

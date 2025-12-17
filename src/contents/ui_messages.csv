@@ -111,7 +111,13 @@ ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes 
 ui.modal.load.title,読込,,Load modal title
 ui.modal.load.buttons.loadLocal,ローカルから読み込む,,Load modal local button
 ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button
+ui.modal.load.buttons.restoreHistory,未保存のキャラクターを復元,,Load modal history recovery button
 ui.modal.load.signInMessage,Drive機能を使うにはGoogleにサインインしてください。,,Load modal sign-in message
+ui.modal.historyRecovery.title,未保存キャラクターの復元,,History recovery modal title
+ui.modal.historyRecovery.description,未保存のキャラクターを復元します。,,History recovery modal description
+ui.modal.historyRecovery.empty,保存された履歴はありません。,,History recovery modal empty state
+ui.modal.historyRecovery.confirm,現在の編集内容は破棄されます。よろしいですか？,,History recovery modal confirmation
+ui.modal.historyRecovery.cancel,キャンセル,,History recovery modal cancel
 ui.modal.io.title,入出力,,IO modal title
 ui.modal.io.buttons.saveLocal,ローカルファイルで出力,,IO modal save local button
 ui.modal.io.buttons.print,印刷,,IO modal print button

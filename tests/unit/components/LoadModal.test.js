@@ -14,6 +14,8 @@ function baseProps(overrides = {}) {
     changeFolderLabel: 'change',
     loadLocalLabel: 'local',
     loadDriveLabel: 'drive',
+    restoreHistoryLabel: 'history',
+    hasHistory: false,
     signInLabel: 'signin',
     signInMessage: 'message',
     ...overrides,
@@ -40,5 +42,13 @@ describe('LoadModal', () => {
     const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: false }) });
     expect(wrapper.find('.load-modal__input').attributes('disabled')).toBeDefined();
     expect(wrapper.find('[data-test="load-modal-drive-button"]').exists()).toBe(false);
+  });
+
+  test('shows history button when history exists', async () => {
+    const wrapper = mount(LoadModal, { props: baseProps({ hasHistory: true }) });
+    const historyButton = wrapper.find('[data-test="load-modal-history-button"]');
+    expect(historyButton.exists()).toBe(true);
+    await historyButton.trigger('click');
+    expect(wrapper.emitted('open-history')).toHaveLength(1);
   });
 });

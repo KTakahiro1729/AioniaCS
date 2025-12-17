@@ -40,6 +40,11 @@
         <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
       </label>
     </section>
+    <section v-if="hasHistory" class="load-modal__section load-modal__section--history">
+      <button class="button-base load-modal__button" data-test="load-modal-history-button" @click="$emit('open-history')">
+        {{ restoreHistoryLabel }}
+      </button>
+    </section>
   </div>
 </template>
 
@@ -56,11 +61,13 @@ const props = defineProps({
   changeFolderLabel: String,
   loadLocalLabel: String,
   loadDriveLabel: String,
+  restoreHistoryLabel: String,
+  hasHistory: Boolean,
   signInLabel: String,
   signInMessage: String,
 });
 
-const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder']);
+const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'open-history']);
 
 const folderInputId = 'load_modal_drive_folder';
 const folderPathInput = ref(props.driveFolderPath || '');
@@ -153,6 +160,11 @@ function handleLocalChange(event) {
 }
 
 .load-modal__section--local {
+  border-top: 1px solid var(--color-border-normal);
+  padding-top: 12px;
+}
+
+.load-modal__section--history {
   border-top: 1px solid var(--color-border-normal);
   padding-top: 12px;
 }
