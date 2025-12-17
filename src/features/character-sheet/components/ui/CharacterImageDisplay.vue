@@ -156,7 +156,8 @@ const handleImageUpload = async (event) => {
   justify-content: center;
   margin-bottom: 0;
   width: 100%;
-  min-height: 300px;
+  height: clamp(260px, 60vw, 420px);
+  max-height: 100%;
   flex: 1;
   background-color: var(--color-background);
   border: 1px solid var(--color-border-normal);
@@ -166,7 +167,8 @@ const handleImageUpload = async (event) => {
 .character-image-container img.character-image-display {
   max-width: 100%;
   max-height: 100%;
-  height: auto;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -186,6 +188,8 @@ const handleImageUpload = async (event) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .image-display-wrapper .character-image-display {
@@ -294,6 +298,10 @@ const handleImageUpload = async (event) => {
     flex: 1;
     height: 100%;
     width: 100%;
+  }
+
+  .image-display-area {
+    height: 100%;
   }
 }
 </style>
