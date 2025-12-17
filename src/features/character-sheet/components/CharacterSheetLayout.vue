@@ -29,3 +29,67 @@ const characterStore = useCharacterStore();
   </div>
   <CopyrightFooter />
 </template>
+
+<style scoped>
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px 10px;
+  grid-template-areas:
+    'character-info scar-weakness'
+    'skills special-skills'
+    'items items'
+    'memo memo'
+    'history history';
+}
+
+.character-info {
+  grid-area: character-info;
+}
+
+.scar-weakness-wrapper {
+  grid-area: scar-weakness;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skills {
+  grid-area: skills;
+}
+
+.special-skills {
+  grid-area: special-skills;
+}
+
+.items {
+  grid-area: items;
+}
+
+.character-memo {
+  grid-area: memo;
+}
+
+.adventure-log-section {
+  grid-area: history;
+}
+
+@media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'character-info'
+      'scar-weakness'
+      'skills'
+      'special-skills'
+      'items'
+      'memo'
+      'history';
+    gap: 20px;
+  }
+
+  .scar-weakness-wrapper {
+    gap: 20px;
+  }
+}
+</style>

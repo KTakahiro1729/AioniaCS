@@ -13,4 +13,34 @@ import ToastNotification from './ToastNotification.vue';
 const store = useNotificationStore();
 </script>
 
-<style scoped></style>
+<style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.4s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-container {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  z-index: 501;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+}
+
+@media (max-width: 768px) {
+  .toast-container {
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+}
+</style>
