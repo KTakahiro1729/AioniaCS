@@ -38,6 +38,9 @@ describe('useGoogleDrive', () => {
     global.fetch = vi.fn(() =>
       Promise.resolve({ ok: true, json: async () => ({ folder_path: '慈悲なきアイオニア', folder_id: null, folder_name: null }) }),
     );
+    if (typeof document !== 'undefined') {
+      document.requestStorageAccess = undefined;
+    }
   });
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
@@ -68,6 +71,8 @@ describe('useGoogleDrive', () => {
   });
 
   test('loadCharacterFromDrive loads data and updates store', async () => {
+    document.requestStorageAccess = vi.fn().mockResolvedValue();
+
     const loadData = {
       character: { name: 'Explorer' },
       skills: [],
@@ -79,17 +84,19 @@ describe('useGoogleDrive', () => {
       saveCharacterToDrive: vi.fn(),
       loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
       googleDriveManager: {
-        showFilePicker: vi.fn((cb, parentId) => cb(null, { id: 'file-1', name: 'Explorer.json', parentId })),
+        getCachedAccessToken: vi.fn().mockReturnValue('picker-token'),
+        showFilePickerSync: vi.fn((cb, token, parentId) => cb(null, { id: 'file-1', name: 'Explorer.json', parentId, token })),
         findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
         loadConfig: vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア', folderId: 'folder-id' }),
       },
       getDriveFileName: vi.fn().mockReturnValue('Explorer.json'),
     };
-    const { loadCharacterFromDrive, refreshDriveFolderPath } = useGoogleDrive(dataManager);
+    const { loadCharacterFromDrive, refreshDriveFolderPath, isDriveTokenWarm } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isSignedIn = true;
+    isDriveTokenWarm.value = true;
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -102,14 +109,69 @@ describe('useGoogleDrive', () => {
     await refreshDriveFolderPath();
     const result = await loadCharacterFromDrive();
 
+    expect(document.requestStorageAccess).toHaveBeenCalledTimes(1);
     expect(result).toEqual(loadData);
     expect(charStore.character.name).toBe('Explorer');
     expect(uiStore.currentDriveFileId).toBe('file-1');
     expect(uiStore.lastSavedSnapshot).toBe(buildSnapshotFromStore(charStore));
-    expect(dataManager.googleDriveManager.showFilePicker).toHaveBeenCalledWith(expect.any(Function), 'folder-id', [
+    expect(dataManager.googleDriveManager.showFilePickerSync).toHaveBeenCalledWith(expect.any(Function), 'picker-token', 'folder-id', [
       'application/json',
       'application/zip',
     ]);
+  });
+
+  test('loadCharacterFromDrive triggers picker synchronously when token is warm', async () => {
+    const showFilePickerSync = vi.fn((cb) => cb(null, { id: 'file-sync', name: 'Sync.json' }));
+    const dataManager = {
+      saveCharacterToDrive: vi.fn(),
+      loadDataFromDrive: vi.fn().mockResolvedValue({
+        character: { name: 'Sync' },
+        skills: [],
+        specialSkills: [],
+        equipments: {},
+        histories: [],
+      }),
+      googleDriveManager: {
+        getCachedAccessToken: vi.fn().mockReturnValue('sync-token'),
+        showFilePickerSync,
+      },
+      getDriveFileName: vi.fn().mockReturnValue('Sync.json'),
+    };
+    const { loadCharacterFromDrive, isDriveTokenWarm } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isSignedIn = true;
+    isDriveTokenWarm.value = true;
+
+    const promise = loadCharacterFromDrive();
+    expect(showFilePickerSync).toHaveBeenCalledTimes(1);
+    await promise;
+  });
+
+  test('loadCharacterFromDrive shows toast when storage access request fails', async () => {
+    const accessError = new Error('denied');
+    document.requestStorageAccess = vi.fn(() => Promise.reject(accessError));
+
+    const dataManager = {
+      saveCharacterToDrive: vi.fn(),
+      loadDataFromDrive: vi.fn(),
+      googleDriveManager: {
+        getCachedAccessToken: vi.fn().mockReturnValue('picker-token'),
+        showFilePickerSync: vi.fn(),
+      },
+      getDriveFileName: vi.fn(),
+    };
+    const { loadCharacterFromDrive, isDriveTokenWarm } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isSignedIn = true;
+    isDriveTokenWarm.value = true;
+
+    const result = await loadCharacterFromDrive();
+
+    expect(result).toBeNull();
+    expect(logAndToastErrorMock).toHaveBeenCalledWith(accessError, expect.anything(), 'loadCharacterFromDrive');
+    expect(dataManager.googleDriveManager.showFilePickerSync).not.toHaveBeenCalled();
   });
 
   test('promptForDriveFolder applies picker selection to drive path', async () => {

@@ -244,7 +244,15 @@ export class MockGoogleDriveManager {
     return `https://drive.mock/${fileId}`;
   }
 
-  showFilePicker(callback, parentFolderId = null) {
+  getCachedAccessToken() {
+    return 'mock-access-token';
+  }
+
+  showFilePickerSync(callback, accessToken, parentFolderId = null) {
+    if (!accessToken) {
+      callback?.(new Error('No access token provided.'));
+      return;
+    }
     const files = Object.values(this.state.files).filter((file) => (parentFolderId ? file.parentId === parentFolderId : true));
     const first = files[0];
     if (first) {
@@ -252,6 +260,11 @@ export class MockGoogleDriveManager {
     } else {
       callback?.(new Error('No files available.'));
     }
+  }
+
+  showFilePicker(callback, parentFolderId = null) {
+    const token = this.getCachedAccessToken();
+    this.showFilePickerSync(callback, token, parentFolderId);
   }
 
   showFolderPicker(callback) {
