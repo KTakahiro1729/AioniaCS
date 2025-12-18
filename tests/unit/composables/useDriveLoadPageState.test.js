@@ -1,5 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { effectScope, nextTick } from 'vue';
+import { createPinia, setActivePinia } from 'pinia';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
 
 vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
@@ -16,6 +18,10 @@ function createResponse(body) {
 }
 
 describe('useDriveLoadPageState', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
   it('loads cached metadata immediately and starts drive sync', async () => {
     const fetchMock = vi
       .fn()
@@ -86,6 +92,55 @@ describe('useDriveLoadPageState', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     await state.revealMore();
     expect(requestDrivePage).toHaveBeenCalledTimes(2);
+
+    scope.stop();
+  });
+
+  it('cleans up missing files on 404 errors', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createResponse({ items: [{ file_id: '1', file_name: 'Cached', last_modified_at_drive: 1000 }] }))
+      .mockResolvedValue(createResponse({ items: [] }));
+
+    const requestDrivePage = vi.fn().mockRejectedValue({ status: 404, fileId: '1' });
+
+    const driveManager = {
+      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
+      ensureAccessToken: vi.fn(),
+    };
+
+    const scope = effectScope();
+    scope.run(() => {
+      const state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+      state.initialize();
+    });
+
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const body = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(body.files).toEqual([]);
+
+    scope.stop();
+  });
+
+  it('stores the selected file id in the ui store', () => {
+    const fetchMock = vi.fn().mockResolvedValue(createResponse({ items: [] }));
+    const requestDrivePage = vi.fn().mockResolvedValue({ files: [], nextPageToken: null });
+    const driveManager = {
+      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
+      ensureAccessToken: vi.fn(),
+    };
+
+    const scope = effectScope();
+    let state;
+    scope.run(() => {
+      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+    });
+
+    const uiStore = useUiStore();
+    state.selectCharacter('abc');
+    expect(uiStore.currentDriveFileId).toBe('abc');
 
     scope.stop();
   });

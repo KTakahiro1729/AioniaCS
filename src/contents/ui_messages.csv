@@ -114,6 +114,7 @@ driveLoadPage.status.syncing,Google Driveと同期中…,,Drive load page syncin
 driveLoadPage.status.refreshed,最新の一覧を表示しています,,Drive load page refreshed status
 driveLoadPage.status.loadMore,さらに読み込み中…,,Drive load page load more status
 driveLoadPage.status.error,一覧の取得に失敗しました,,Drive load page error status
+driveLoadPage.status.retryHint,再試行してください。ネットワークや認証状態をご確認ください,,Drive load page retry hint
 driveLoadPage.labels.untitled,無題のファイル,,Drive load page untitled label
 driveLoadPage.labels.unknownCharacter,キャラクター名未設定,,Drive load page unknown character label
 driveLoadPage.labels.modified,更新日時,,Drive load page modified label
@@ -121,6 +122,7 @@ driveLoadPage.labels.hash,ハッシュ,,Drive load page hash label
 driveLoadPage.labels.notAvailable,なし,,Drive load page not available label
 driveLoadPage.labels.unknownDate,日時不明,,Drive load page unknown date label
 driveLoadPage.labels.outOfSync,要同期,,Drive load page out-of-sync badge
+driveLoadPage.labels.selectAction,このキャラクターを開く,,Drive load page select card aria label
 driveLoadPage.errors.missingDriveManager,Driveの初期化が完了していません,,Drive load page missing manager error
 driveLoadPage.errors.folderUnavailable,キャラクターフォルダにアクセスできません,,Drive load page folder unavailable error
 driveLoadPage.errors.apiUnavailable,Google Drive APIが利用できません,,Drive load page api unavailable error

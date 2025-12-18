@@ -19,14 +19,28 @@ const {
   revealMore,
   refresh,
   cleanup,
+  selectCharacter,
 } = useDriveLoadPageState();
 
 const isEmpty = computed(() => !isLoadingCache.value && displayedItems.value.length === 0);
 const isBusy = computed(() => isSyncing.value || isFetchingMore.value);
 const statusLabel = computed(() => statusMessage.value);
+const statusDetail = computed(() => (errorMessage.value ? messages.driveLoadPage.status.retryHint : ''));
 
 function goBackToSheet() {
   router.push({ name: 'character-sheet' });
+}
+
+function onSelectCharacter(fileId) {
+  if (!fileId) return;
+  selectCharacter(fileId);
+  router.push({ name: 'character-sheet' });
+}
+
+function formatHash(hash) {
+  if (!hash) return messages.driveLoadPage.labels.notAvailable;
+  const shortHash = hash.slice(0, 8);
+  return hash.length > 8 ? `${shortHash}...` : shortHash;
 }
 
 function formatTimestamp(seconds) {
@@ -95,11 +109,21 @@ onBeforeUnmount(() => {
           {{ messages.driveLoadPage.buttons.refresh }}
         </button>
       </div>
+      <p v-if="statusDetail" class="drive-load-page__status-detail">{{ statusDetail }}</p>
 
       <p v-if="isEmpty" class="drive-load-page__placeholder">{{ messages.driveLoadPage.placeholder }}</p>
 
       <div v-else class="drive-load-page__list" role="list">
-        <article v-for="item in displayedItems" :key="item.id" class="drive-load-page__card" role="listitem">
+        <button
+          v-for="item in displayedItems"
+          :key="item.id"
+          class="drive-load-page__card"
+          type="button"
+          role="listitem"
+          :aria-label="`${messages.driveLoadPage.labels.selectAction}: ${item.fileName || messages.driveLoadPage.labels.untitled}`"
+          data-test="drive-card"
+          @click="onSelectCharacter(item.id)"
+        >
           <header class="drive-load-page__card-header">
             <div>
               <p class="drive-load-page__file-name">{{ item.fileName || messages.driveLoadPage.labels.untitled }}</p>
@@ -114,10 +138,12 @@ onBeforeUnmount(() => {
             </div>
             <div class="drive-load-page__row">
               <dt>{{ messages.driveLoadPage.labels.hash }}</dt>
-              <dd>{{ item.contentHash || messages.driveLoadPage.labels.notAvailable }}</dd>
+              <dd :title="item.contentHash || messages.driveLoadPage.labels.notAvailable">
+                {{ formatHash(item.contentHash) }}
+              </dd>
             </div>
           </dl>
-        </article>
+        </button>
       </div>
 
       <div ref="sentinelRef" class="drive-load-page__sentinel" aria-hidden="true">
@@ -161,6 +187,12 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.drive-load-page__status-detail {
+  margin: 0 0 4px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }
 
 .drive-load-page__status {
@@ -214,6 +246,10 @@ onBeforeUnmount(() => {
 }
 
 .drive-load-page__card {
+  appearance: none;
+  border: none;
+  text-align: left;
+  width: 100%;
   border: 1px solid var(--color-border-muted, #3a3a4a);
   border-radius: 6px;
   padding: 12px;
@@ -221,6 +257,19 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.drive-load-page__card:hover {
+  border-color: var(--color-border-normal);
+  transform: translateY(-1px);
+}
+
+.drive-load-page__card:focus-visible {
+  outline: 2px solid #4da3ff;
+  outline-offset: 2px;
 }
 
 .drive-load-page__card-header {

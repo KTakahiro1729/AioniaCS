@@ -264,6 +264,7 @@ export const messages = {
       refreshed: t('driveLoadPage.status.refreshed'),
       loadMore: t('driveLoadPage.status.loadMore'),
       error: t('driveLoadPage.status.error'),
+      retryHint: t('driveLoadPage.status.retryHint'),
     },
     labels: {
       untitled: t('driveLoadPage.labels.untitled'),
@@ -273,6 +274,7 @@ export const messages = {
       notAvailable: t('driveLoadPage.labels.notAvailable'),
       unknownDate: t('driveLoadPage.labels.unknownDate'),
       outOfSync: t('driveLoadPage.labels.outOfSync'),
+      selectAction: t('driveLoadPage.labels.selectAction'),
     },
     errors: {
       missingDriveManager: t('driveLoadPage.errors.missingDriveManager'),

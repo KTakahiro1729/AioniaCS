@@ -2,6 +2,7 @@ import { computed, ref } from 'vue';
 import { getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/i18n/index.js';
+import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 const DISPLAY_BATCH = 10;
 const PREFETCH_BUFFER = 10;
@@ -101,6 +102,7 @@ export function useDriveLoadPageState(options = {}) {
   const requestDrivePage = options.requestDrivePage || ((params) => defaultRequestDrivePage(driveManager, params));
   const metadataEndpoint = options.metadataEndpoint || '/api/drive/metadata';
   const syncEndpoint = options.syncEndpoint || '/api/drive/sync';
+  const uiStore = useUiStore();
   const { logAndToastError } = useNotifications();
 
   const items = ref([]);
@@ -195,9 +197,9 @@ export function useDriveLoadPageState(options = {}) {
     storeItems(mapped, { cachedOnly: false });
   }
 
-  async function postSync(payload) {
+  async function postSync(payload, { allowEmpty = false } = {}) {
     if (!payload || payload.length === 0) {
-      return [];
+      if (!allowEmpty) return [];
     }
     const controller = registerAborter(new AbortController());
     try {
@@ -205,7 +207,7 @@ export function useDriveLoadPageState(options = {}) {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: payload }),
+        body: JSON.stringify({ files: payload || [] }),
         signal: controller.signal,
       });
       if (!response.ok) {
@@ -258,6 +260,14 @@ export function useDriveLoadPageState(options = {}) {
         removeCachedOnly();
       }
     } catch (error) {
+      if (error?.status === 404 || error?.response?.status === 404) {
+        const missingId = error?.fileId || error?.id;
+        if (missingId) {
+          cacheMap.delete(missingId);
+          updateItemsFromCacheMap();
+          await postSync(getSyncPayload(true), { allowEmpty: true });
+        }
+      }
       handleError(error, 'syncFromDrive');
     } finally {
       isSyncing.value = false;
@@ -290,6 +300,11 @@ export function useDriveLoadPageState(options = {}) {
     syncFromDrive();
   }
 
+  function selectCharacter(id) {
+    if (!id) return;
+    uiStore.setCurrentDriveFileId(id);
+  }
+
   return {
     displayedItems,
     isLoadingCache,
@@ -302,5 +317,6 @@ export function useDriveLoadPageState(options = {}) {
     revealMore,
     cleanup,
     refresh: () => syncFromDrive(),
+    selectCharacter,
   };
 }
