@@ -5,10 +5,7 @@ import { handle } from 'hono/cloudflare-pages';
 const SESSION_COOKIE_NAME = 'aioniacs_session';
 const STATE_COOKIE_NAME = 'aioniacs_oauth_state';
 const AUTH_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file openid email profile';
-const REQUIRED_SCOPES = [
-  'https://www.googleapis.com/auth/drive.appdata',
-  'https://www.googleapis.com/auth/drive.file',
-];
+const REQUIRED_SCOPES = ['https://www.googleapis.com/auth/drive.appdata', 'https://www.googleapis.com/auth/drive.file'];
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const STATE_TTL_SECONDS = 10 * 60; // 10 minutes
 
@@ -165,6 +162,29 @@ function createSessionId() {
     .join('');
 }
 
+async function getAuthenticatedSession(c) {
+  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  if (!sessionId) {
+    return { ok: false, response: c.json({ error: 'Not authenticated.' }, 401) };
+  }
+
+  try {
+    const session = await c.env.DB.prepare('SELECT * FROM sessions WHERE id = ?').bind(sessionId).first();
+    const nowSeconds = Math.floor(Date.now() / 1000);
+
+    if (!session || session.expires_at <= nowSeconds) {
+      await c.env.DB.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run();
+      deleteCookie(c, SESSION_COOKIE_NAME, { path: '/' });
+      return { ok: false, response: c.json({ error: 'Session expired.' }, 401) };
+    }
+
+    return { ok: true, session, sessionId };
+  } catch (error) {
+    console.error('Session lookup error:', error);
+    return { ok: false, response: c.json({ error: 'Failed to verify session.' }, 500) };
+  }
+}
+
 const app = new Hono();
 
 app.get('/api/auth/login', async (c) => {
@@ -307,6 +327,102 @@ app.post('/api/auth/logout', async (c) => {
   }
   deleteCookie(c, SESSION_COOKIE_NAME, { path: '/' });
   return c.json({ success: true });
+});
+
+app.get('/api/drive/metadata', async (c) => {
+  const auth = await getAuthenticatedSession(c);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  try {
+    const result = await c.env.DB.prepare(
+      'SELECT file_id, user_id, character_name, file_name, content_hash, last_modified_at_drive, synced_at FROM character_metadata WHERE user_id = ? ORDER BY synced_at DESC',
+    )
+      .bind(auth.session.user_id)
+      .all();
+
+    return c.json({ items: result?.results || [] });
+  } catch (error) {
+    console.error('Failed to fetch cached metadata:', error);
+    return c.json({ error: 'Failed to fetch cached metadata.' }, 500);
+  }
+});
+
+app.post('/api/drive/sync', async (c) => {
+  const auth = await getAuthenticatedSession(c);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  let payload;
+  try {
+    payload = await c.req.json();
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload.' }, 400);
+  }
+
+  const files = Array.isArray(payload?.files) ? payload.files : Array.isArray(payload?.items) ? payload.items : null;
+
+  if (!files) {
+    return c.json({ error: 'files array is required.' }, 400);
+  }
+
+  try {
+    const existing = await c.env.DB.prepare('SELECT * FROM character_metadata WHERE user_id = ?').bind(auth.session.user_id).all();
+    const existingMap = new Map((existing?.results || []).map((row) => [row.file_id, row]));
+
+    const items = [];
+    const nowSeconds = Math.floor(Date.now() / 1000);
+
+    for (const file of files) {
+      const fileId = file?.id || file?.fileId;
+      if (!fileId) {
+        return c.json({ error: 'Each file entry must include an id.' }, 400);
+      }
+
+      const fileName = file.name || file.fileName || '';
+      const appProps = file.appProperties || file.app_properties || {};
+      const contentHash = appProps?.last_app_hash || file.contentHash || null;
+      const characterName = appProps?.character_name || file.characterName || null;
+      const modifiedTime = file.modifiedTime || file.lastModifiedAtDrive || null;
+      const lastModifiedAtDrive = modifiedTime ? Number(new Date(modifiedTime).getTime()) : null;
+
+      const previous = existingMap.get(fileId);
+      const hashMismatch = Boolean(previous && previous.content_hash && contentHash && previous.content_hash !== contentHash);
+      const modifiedMismatch = Boolean(
+        previous && previous.last_modified_at_drive && lastModifiedAtDrive && previous.last_modified_at_drive !== lastModifiedAtDrive,
+      );
+
+      await c.env.DB.prepare(
+        `INSERT INTO character_metadata (file_id, user_id, character_name, file_name, content_hash, last_modified_at_drive, synced_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(file_id) DO UPDATE SET
+           user_id=excluded.user_id,
+           character_name=excluded.character_name,
+           file_name=excluded.file_name,
+           content_hash=excluded.content_hash,
+           last_modified_at_drive=excluded.last_modified_at_drive,
+           synced_at=excluded.synced_at`,
+      )
+        .bind(fileId, auth.session.user_id, characterName, fileName, contentHash, lastModifiedAtDrive, nowSeconds)
+        .run();
+
+      items.push({
+        fileId,
+        fileName,
+        characterName,
+        contentHash,
+        lastModifiedAtDrive,
+        outOfSync: hashMismatch || modifiedMismatch,
+      });
+    }
+
+    return c.json({ items });
+  } catch (error) {
+    console.error('Drive metadata sync failed:', error);
+    return c.json({ error: 'Failed to sync metadata.' }, 500);
+  }
 });
 
 export { app };

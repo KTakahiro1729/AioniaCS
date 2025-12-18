@@ -5,6 +5,67 @@ import { deserializeCharacterPayload } from '@/shared/utils/characterSerializati
  */
 let singletonInstance = null;
 
+function bufferToHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function stripImageData(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  const sanitized = JSON.parse(JSON.stringify(payload));
+  if (sanitized.character && typeof sanitized.character === 'object') {
+    delete sanitized.character.images;
+  }
+  if (Array.isArray(sanitized.images)) {
+    delete sanitized.images;
+  }
+  return sanitized;
+}
+
+function parseHashPayload(payload) {
+  if (payload == null) {
+    return null;
+  }
+  if (typeof payload === 'string') {
+    try {
+      return JSON.parse(payload);
+    } catch (error) {
+      console.error('Failed to parse hash payload string:', error);
+      return null;
+    }
+  }
+  if (payload instanceof ArrayBuffer) {
+    try {
+      const decoder = new TextDecoder();
+      return JSON.parse(decoder.decode(new Uint8Array(payload)));
+    } catch (error) {
+      console.error('Failed to parse hash payload buffer:', error);
+      return null;
+    }
+  }
+  if (ArrayBuffer.isView(payload)) {
+    return parseHashPayload(payload.buffer);
+  }
+  if (typeof payload === 'object') {
+    return JSON.parse(JSON.stringify(payload));
+  }
+  return null;
+}
+
+export async function calculateMetadataHash(payload) {
+  const parsed = parseHashPayload(payload);
+  if (!parsed) {
+    return null;
+  }
+  const sanitized = stripImageData(parsed);
+  const jsonString = JSON.stringify(sanitized);
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(jsonString));
+  return bufferToHex(digest);
+}
+
 function uint8ArrayToBase64(bytes) {
   const chunkSize = 0x8000;
   let binary = '';
@@ -467,7 +528,7 @@ export class GoogleDriveManager {
     try {
       const response = await gapi.client.drive.files.list({
         q: `'${folderId}' in parents and mimeType='${mimeType}' and trashed=false`,
-        fields: 'files(id, name)',
+        fields: 'files(id, name, modifiedTime, appProperties, shared)',
         spaces: 'drive',
       });
       return response.result.files || [];
@@ -485,7 +546,7 @@ export class GoogleDriveManager {
    * @param {string|null} fileId - The ID of the file to update, or null to create a new file.
    * @returns {Promise<{id: string, name: string}|null>} File ID and name, or null on error.
    */
-  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
+  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json', appProperties = null) {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
@@ -500,6 +561,9 @@ export class GoogleDriveManager {
       name: fileName,
       mimeType,
     };
+    if (appProperties) {
+      metadata.appProperties = appProperties;
+    }
     let payload;
     try {
       payload = prepareMultipartPayload(fileContent);
@@ -983,6 +1047,16 @@ export class GoogleDriveManager {
     }
   }
 
+  async buildAppPropertiesFromPayload(hashPayload) {
+    try {
+      const hash = await calculateMetadataHash(hashPayload);
+      return hash ? { last_app_hash: hash } : undefined;
+    } catch (error) {
+      console.error('Failed to build appProperties from payload:', error);
+      return undefined;
+    }
+  }
+
   /**
    * Creates a character data file inside the configured Drive folder.
    * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
@@ -993,7 +1067,8 @@ export class GoogleDriveManager {
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
+    const appProperties = payload?.hashData ? await this.buildAppPropertiesFromPayload(payload.hashData) : undefined;
+    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType, appProperties);
   }
 
   /**
@@ -1007,7 +1082,8 @@ export class GoogleDriveManager {
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
-    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
+    const appProperties = payload?.hashData ? await this.buildAppPropertiesFromPayload(payload.hashData) : undefined;
+    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType, appProperties);
   }
 
   async renameFile(fileId, newName) {
