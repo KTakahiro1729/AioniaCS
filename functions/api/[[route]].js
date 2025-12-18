@@ -370,7 +370,9 @@ app.post('/api/drive/sync', async (c) => {
 
   try {
     const existing = await c.env.DB.prepare('SELECT * FROM character_metadata WHERE user_id = ?').bind(auth.session.user_id).all();
-    const existingMap = new Map((existing?.results || []).map((row) => [row.file_id, row]));
+    const existingRows = existing?.results || [];
+    const existingMap = new Map(existingRows.map((row) => [row.file_id, row]));
+    const incomingIds = new Set();
 
     const items = [];
     const statements = [];
@@ -381,6 +383,8 @@ app.post('/api/drive/sync', async (c) => {
       if (!fileId) {
         return c.json({ error: 'Each file entry must include an id.' }, 400);
       }
+
+      incomingIds.add(fileId);
 
       const fileName = file.name || file.fileName || '';
       const appProps = file.appProperties || file.app_properties || {};
@@ -418,6 +422,14 @@ app.post('/api/drive/sync', async (c) => {
         lastModifiedAtDrive,
         outOfSync: hashMismatch || modifiedMismatch,
       });
+    }
+
+    for (const row of existingRows) {
+      if (!incomingIds.has(row.file_id)) {
+        statements.push(
+          c.env.DB.prepare('DELETE FROM character_metadata WHERE file_id = ? AND user_id = ?').bind(row.file_id, auth.session.user_id),
+        );
+      }
     }
 
     if (statements.length > 0) {
