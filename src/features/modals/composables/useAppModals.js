@@ -61,6 +61,8 @@ export function useAppModals(options) {
       isDriveActionLoading: isDriveActionInFlight?.value ?? false,
     };
 
+    triggerPrefetch(initialProps);
+
     const modalPromise = showModal({
       component: LoadModal,
       title: messages.ui.modal.load.title,
@@ -72,7 +74,6 @@ export function useAppModals(options) {
         'sign-in': handleSignInClick,
         'update-drive-folder-path': updateDriveFolderPath,
         'choose-drive-folder': promptForDriveFolder,
-        'prefetch-drive': prefetchDriveAccessToken,
       },
     });
 
@@ -93,8 +94,6 @@ export function useAppModals(options) {
       },
       { immediate: true },
     );
-
-    triggerPrefetch(initialProps);
 
     try {
       await modalPromise;
