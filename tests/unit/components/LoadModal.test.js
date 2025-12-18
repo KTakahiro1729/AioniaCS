@@ -44,10 +44,18 @@ describe('LoadModal', () => {
     expect(wrapper.find('[data-test="load-modal-drive-button"]').exists()).toBe(false);
   });
 
-  test('shows history button when history exists', async () => {
+  test('shows disabled history button when no history exists', async () => {
+    const wrapper = mount(LoadModal, { props: baseProps({ hasHistory: false }) });
+    const historyButton = wrapper.find('[data-test="load-modal-history-button"]');
+    expect(historyButton.exists()).toBe(true);
+    expect(historyButton.attributes('disabled')).toBeDefined();
+  });
+
+  test('shows enabled history button when history exists', async () => {
     const wrapper = mount(LoadModal, { props: baseProps({ hasHistory: true }) });
     const historyButton = wrapper.find('[data-test="load-modal-history-button"]');
     expect(historyButton.exists()).toBe(true);
+    expect(historyButton.attributes('disabled')).toBeUndefined();
     await historyButton.trigger('click');
     expect(wrapper.emitted('open-history')).toHaveLength(1);
   });

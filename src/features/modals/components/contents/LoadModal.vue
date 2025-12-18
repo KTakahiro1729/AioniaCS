@@ -40,8 +40,13 @@
         <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
       </label>
     </section>
-    <section v-if="hasHistory" class="load-modal__section load-modal__section--history">
-      <button class="button-base load-modal__button" data-test="load-modal-history-button" @click="$emit('open-history')">
+    <section class="load-modal__section load-modal__section--history">
+      <button
+        class="button-base load-modal__button"
+        :disabled="!hasHistory"
+        data-test="load-modal-history-button"
+        @click="$emit('open-history')"
+      >
         {{ restoreHistoryLabel }}
       </button>
     </section>
