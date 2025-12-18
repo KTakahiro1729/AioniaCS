@@ -123,6 +123,13 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
     },
   );
 
+  const stopDriveFileWatch = watch(
+    () => uiStore.currentDriveFileId,
+    () => {
+      schedulePersist();
+    },
+  );
+
   const stop = () => {
     if (debounceHandle) {
       clearTimeout(debounceHandle);
@@ -130,6 +137,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
     }
     stopPersistenceWatch?.();
     stopSharedWatch?.();
+    stopDriveFileWatch?.();
   };
 
   return {

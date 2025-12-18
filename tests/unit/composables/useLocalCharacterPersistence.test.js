@@ -111,6 +111,17 @@ describe('useLocalCharacterPersistence', () => {
     expect(saved.currentDriveFileId).toBe('drive-file-2');
   });
 
+  test('persists currentDriveFileId when it changes independently', async () => {
+    const { uiStore } = mountComposable();
+
+    uiStore.setCurrentDriveFileId('drive-file-only-change');
+    await nextTick();
+    vi.runAllTimers();
+
+    const saved = JSON.parse(storage.getItem(LOCAL_CHARACTER_STORAGE_KEY));
+    expect(saved.currentDriveFileId).toBe('drive-file-only-change');
+  });
+
   test('skips persistence when viewing shared sheet', async () => {
     const { characterStore, uiStore } = mountComposable();
     uiStore.isViewingShared = true;
