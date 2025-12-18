@@ -52,7 +52,10 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
+import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
+import { useModalStore } from '@/features/modals/stores/modalStore.js';
+
 
 const props = defineProps({
   isSignedIn: Boolean,
@@ -70,9 +73,14 @@ const props = defineProps({
   signInMessage: String,
 });
 
-const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder']);
+const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'prefetch-drive']);
 
 const folderInputId = 'load_modal_drive_folder';
+const AUTO_CLOSE_MS = 40 * 60 * 1000;
+const { showToast } = useNotifications();
+const modalStore = useModalStore();
+let autoCloseTimer = null;
+
 const folderPathInput = ref(props.driveFolderPath || '');
 
 watch(
@@ -110,6 +118,29 @@ function handleLocalChange(event) {
   emit('load-local', event);
   event.target.value = '';
 }
+
+function closeForInactivity() {
+  if (typeof modalStore.resolveModal === 'function') {
+    modalStore.resolveModal({ reason: 'timeout' });
+  } else {
+    modalStore.hideModal();
+  }
+  showToast({ type: 'warning', message: '長時間読込ウィンドウが開かれていたため、自動で閉じました' });
+}
+
+onMounted(() => {
+  emit('prefetch-drive');
+  autoCloseTimer = window.setTimeout(() => {
+    closeForInactivity();
+  }, AUTO_CLOSE_MS);
+});
+
+onUnmounted(() => {
+  if (autoCloseTimer) {
+    clearTimeout(autoCloseTimer);
+    autoCloseTimer = null;
+  }
+});
 </script>
 
 <style scoped>

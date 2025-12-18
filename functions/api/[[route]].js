@@ -5,12 +5,10 @@ import { handle } from 'hono/cloudflare-pages';
 const SESSION_COOKIE_NAME = 'aioniacs_session';
 const STATE_COOKIE_NAME = 'aioniacs_oauth_state';
 const AUTH_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file openid email profile';
-const REQUIRED_SCOPES = [
-  'https://www.googleapis.com/auth/drive.appdata',
-  'https://www.googleapis.com/auth/drive.file',
-];
+const REQUIRED_SCOPES = ['https://www.googleapis.com/auth/drive.appdata', 'https://www.googleapis.com/auth/drive.file'];
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const STATE_TTL_SECONDS = 10 * 60; // 10 minutes
+const DEFAULT_DRIVE_FOLDER_PATH = '慈悲なきアイオニア';
 
 const encoder = new TextEncoder();
 
@@ -88,6 +86,24 @@ function buildAuthUrl(clientId, redirectUri, state) {
 function getRedirectUri(request) {
   const url = new URL(request.url);
   return `${url.origin}/api/auth/callback`;
+}
+
+async function getSessionFromCookie(c) {
+  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+  if (!sessionId) {
+    return null;
+  }
+
+  const session = await c.env.DB.prepare('SELECT * FROM sessions WHERE id = ?').bind(sessionId).first();
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
+  if (!session || session.expires_at <= nowSeconds) {
+    await c.env.DB.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run();
+    deleteCookie(c, SESSION_COOKIE_NAME, { path: '/' });
+    return null;
+  }
+
+  return { session, sessionId, nowSeconds };
 }
 
 async function exchangeCodeForTokens(env, code, redirectUri) {
@@ -266,21 +282,14 @@ app.get('/api/auth/callback', async (c) => {
 });
 
 app.get('/api/auth/status', async (c) => {
-  const sessionId = getCookie(c, SESSION_COOKIE_NAME);
-  if (!sessionId) {
+  const sessionInfo = await getSessionFromCookie(c);
+  if (!sessionInfo) {
     return c.json({ error: 'Not authenticated.' }, 401);
   }
 
+  const { session, sessionId, nowSeconds } = sessionInfo;
+
   try {
-    const session = await c.env.DB.prepare('SELECT * FROM sessions WHERE id = ?').bind(sessionId).first();
-    const nowSeconds = Math.floor(Date.now() / 1000);
-
-    if (!session || session.expires_at <= nowSeconds) {
-      await c.env.DB.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run();
-      deleteCookie(c, SESSION_COOKIE_NAME, { path: '/' });
-      return c.json({ error: 'Session expired.' }, 401);
-    }
-
     const refreshed = await refreshAccessToken(c.env, session.refresh_token);
 
     if (refreshed.refresh_token) {
@@ -298,6 +307,65 @@ app.get('/api/auth/status', async (c) => {
     console.error('Auth status error:', error);
     return c.json({ error: 'Failed to refresh access token.' }, 500);
   }
+});
+
+app.get('/api/user/config', async (c) => {
+  const sessionInfo = await getSessionFromCookie(c);
+  if (!sessionInfo) {
+    return c.json({ error: 'Not authenticated.' }, 401);
+  }
+
+  const { session, sessionId, nowSeconds } = sessionInfo;
+  const existing = await c.env.DB.prepare('SELECT folder_id, folder_name, folder_path FROM folder_configs WHERE user_id = ?')
+    .bind(session.user_id)
+    .first();
+
+  await c.env.DB.prepare('UPDATE sessions SET expires_at = ? WHERE id = ?')
+    .bind(nowSeconds + SESSION_TTL_SECONDS, sessionId)
+    .run();
+
+  if (existing) {
+    return c.json({
+      folder_id: existing.folder_id,
+      folder_name: existing.folder_name,
+      folder_path: existing.folder_path || DEFAULT_DRIVE_FOLDER_PATH,
+    });
+  }
+
+  return c.json({ folder_id: null, folder_name: null, folder_path: DEFAULT_DRIVE_FOLDER_PATH });
+});
+
+app.put('/api/user/config', async (c) => {
+  const sessionInfo = await getSessionFromCookie(c);
+  if (!sessionInfo) {
+    return c.json({ error: 'Not authenticated.' }, 401);
+  }
+
+  const { session, sessionId, nowSeconds } = sessionInfo;
+  let payload;
+  try {
+    payload = await c.req.json();
+  } catch (error) {
+    console.error('Failed to parse config payload:', error);
+    return c.json({ error: 'Invalid request body. Failed to parse JSON.' }, 400);
+  }
+
+  const folderId = typeof payload.folder_id === 'string' && payload.folder_id.trim() ? payload.folder_id : null;
+  const folderName = typeof payload.folder_name === 'string' && payload.folder_name.trim() ? payload.folder_name : null;
+  const folderPath =
+    typeof payload.folder_path === 'string' && payload.folder_path.trim().length > 0 ? payload.folder_path : DEFAULT_DRIVE_FOLDER_PATH;
+
+  await c.env.DB.prepare(
+    'INSERT INTO folder_configs (user_id, folder_id, folder_name, folder_path, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET folder_id = excluded.folder_id, folder_name = excluded.folder_name, folder_path = excluded.folder_path, updated_at = excluded.updated_at',
+  )
+    .bind(session.user_id, folderId, folderName, folderPath, nowSeconds)
+    .run();
+
+  await c.env.DB.prepare('UPDATE sessions SET expires_at = ? WHERE id = ?')
+    .bind(nowSeconds + SESSION_TTL_SECONDS, sessionId)
+    .run();
+
+  return c.json({ folder_id: folderId, folder_name: folderName, folder_path: folderPath });
 });
 
 app.post('/api/auth/logout', async (c) => {

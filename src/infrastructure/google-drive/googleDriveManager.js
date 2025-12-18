@@ -53,8 +53,7 @@ export class GoogleDriveManager {
     this.authStatusEndpoint = '/api/auth/status';
     this.loginEndpoint = '/api/auth/login';
     this.logoutEndpoint = '/api/auth/logout';
-    this.configFileName = 'aioniacs.cfg';
-    this.configFileId = null;
+    this.configEndpoint = '/api/user/config';
     this.config = null;
     this.cachedFolderPath = null;
 
@@ -66,7 +65,7 @@ export class GoogleDriveManager {
   }
 
   getDefaultConfig() {
-    return { characterFolderPath: '慈悲なきアイオニア' };
+    return { characterFolderPath: '慈悲なきアイオニア', folderId: null, folderName: null };
   }
 
   normalizeFolderPath(rawPath) {
@@ -150,46 +149,31 @@ export class GoogleDriveManager {
     if (this.config) {
       return this.config;
     }
-    if (!gapi.client || !gapi.client.drive) {
-      console.error('GAPI client or Drive API not loaded for loadConfig.');
-      this.config = this.getDefaultConfig();
-      return this.config;
-    }
-
-    await this.ensureAccessToken();
-
-    const escapedName = this.configFileName.replace(/'/g, "\\'");
 
     try {
-      const response = await gapi.client.drive.files.list({
-        q: `name='${escapedName}' and 'root' in parents and trashed=false`,
-        fields: 'files(id, name)',
-        spaces: 'drive',
-      });
-      const file = response.result.files?.[0];
-      if (file) {
-        this.configFileId = file.id;
-        const content = await this.loadFileContent(file.id);
-        if (content) {
-          try {
-            const parsed = typeof content === 'string' ? JSON.parse(content) : content;
-            this.config = {
-              ...this.getDefaultConfig(),
-              ...parsed,
-              characterFolderPath: this.normalizeFolderPath(parsed.characterFolderPath),
-            };
-            return this.config;
-          } catch (error) {
-            console.error('Failed to parse config file. Using default config.', error);
-          }
+      const response = await fetch(this.configEndpoint, { credentials: 'include' });
+      if (response.ok) {
+        const data = (await response.json()) || {};
+        const normalizedPath = this.normalizeFolderPath(
+          data.folder_path || data.characterFolderPath || this.getDefaultConfig().characterFolderPath,
+        );
+        this.config = {
+          ...this.getDefaultConfig(),
+          characterFolderPath: normalizedPath,
+          folderId: data.folder_id ?? null,
+          folderName: data.folder_name ?? null,
+        };
+        if (this.config.folderId) {
+          this.aioniaFolderId = this.config.folderId;
+          this.cachedFolderPath = normalizedPath;
         }
+        return this.config;
       }
     } catch (error) {
-      console.error('Error loading config file:', error);
+      console.error('Error loading config from D1:', error);
     }
 
     this.config = this.getDefaultConfig();
-    await this.saveConfig();
     return this.config;
   }
 
@@ -197,17 +181,27 @@ export class GoogleDriveManager {
     if (!this.config) {
       this.config = this.getDefaultConfig();
     }
-    await this.ensureAccessToken();
-    const payload = JSON.stringify(this.config, null, 2);
+
+    const payload = {
+      folder_id: this.config.folderId || null,
+      folder_name: this.config.folderName || null,
+      folder_path: this.config.characterFolderPath || this.getDefaultConfig().characterFolderPath,
+    };
+
     try {
-      const result = await this.saveFile('root', this.configFileName, payload, this.configFileId);
-      if (result) {
-        this.configFileId = result.id;
+      const response = await fetch(this.configEndpoint, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to persist Drive config.');
       }
-      return result;
+      return true;
     } catch (error) {
-      console.error('Error saving config file:', error);
-      return null;
+      console.error('Error saving config to D1:', error);
+      return false;
     }
   }
 
@@ -215,9 +209,11 @@ export class GoogleDriveManager {
     const config = await this.loadConfig();
     const normalized = this.normalizeFolderPath(path);
     config.characterFolderPath = normalized;
-    await this.saveConfig();
+    config.folderId = null;
+    config.folderName = null;
     this.aioniaFolderId = null;
     this.cachedFolderPath = null;
+    await this.saveConfig();
     return normalized;
   }
 
@@ -294,6 +290,11 @@ export class GoogleDriveManager {
     const now = Date.now();
     const existingToken = typeof gapi.client.getToken === 'function' ? gapi.client.getToken() : null;
     if (this.currentTokenInfo?.expiresAt > now && existingToken?.access_token === this.currentTokenInfo.accessToken) {
+      return this.currentTokenInfo.accessToken;
+    }
+
+    if (this.currentTokenInfo?.expiresAt > now && this.currentTokenInfo.accessToken && !existingToken?.access_token) {
+      gapi.client.setToken({ access_token: this.currentTokenInfo.accessToken });
       return this.currentTokenInfo.accessToken;
     }
 
@@ -655,18 +656,30 @@ export class GoogleDriveManager {
     }
 
     const normalizedPath = this.normalizeFolderPath(config.characterFolderPath);
+    if (config.folderId) {
+      this.aioniaFolderId = config.folderId;
+      this.cachedFolderPath = normalizedPath;
+      return config.folderId;
+    }
+
     if (this.aioniaFolderId && this.cachedFolderPath === normalizedPath) {
       return this.aioniaFolderId;
     }
 
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for findOrCreateConfiguredCharacterFolder.');
-      return null;
+      return config.folderId || null;
     }
 
     const segments = this.getFolderSegments(normalizedPath);
     let parentId = 'root';
-    let currentId = null;
+    let currentId = config.folderId || null;
+
+    if (currentId) {
+      this.aioniaFolderId = currentId;
+      this.cachedFolderPath = normalizedPath;
+      return currentId;
+    }
 
     for (const segment of segments) {
       const existing = await this.findFolder(segment, parentId);
@@ -686,7 +699,39 @@ export class GoogleDriveManager {
 
     this.aioniaFolderId = currentId;
     this.cachedFolderPath = normalizedPath;
+    config.folderId = currentId;
+    config.folderName = segments.at(-1) || config.folderName;
+    await this.saveConfig();
     return currentId;
+  }
+
+  async syncFolderMetadataFromFile(fileId) {
+    if (!fileId || !gapi.client?.drive) {
+      return;
+    }
+
+    try {
+      await this.ensureAccessToken();
+      const file = await gapi.client.drive.files.get({ fileId, fields: 'id, parents' });
+      const parentId = file.result?.parents?.[0];
+      if (!parentId) {
+        return;
+      }
+      const folder = await gapi.client.drive.files.get({ fileId: parentId, fields: 'id, name' });
+      const folderName = folder.result?.name || null;
+      const normalizedPath = folderName
+        ? this.normalizeFolderPath(folderName)
+        : this.config?.characterFolderPath || this.getDefaultConfig().characterFolderPath;
+      this.config = this.config || this.getDefaultConfig();
+      this.config.folderId = parentId;
+      this.config.folderName = folderName;
+      this.config.characterFolderPath = normalizedPath;
+      this.aioniaFolderId = parentId;
+      this.cachedFolderPath = normalizedPath;
+      await this.saveConfig();
+    } catch (error) {
+      console.error('Failed to sync folder metadata from file selection:', error);
+    }
   }
 
   /**
@@ -894,6 +939,7 @@ export class GoogleDriveManager {
       if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
         const doc = data[google.picker.Response.DOCUMENTS][0];
         if (callback) callback(null, { id: doc.id, name: doc.name });
+        this.syncFolderMetadataFromFile(doc.id);
       } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
         console.log('Picker cancelled by user.');
         if (callback) callback(new Error('Picker cancelled by user.'));
