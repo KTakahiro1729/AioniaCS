@@ -81,7 +81,11 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
 
   await driveManager.ensureAccessToken();
 
-  const response = await gapiClient.client.drive.files.list({
+  if (abortSignal?.aborted) {
+    return { files: [], nextPageToken: null };
+  }
+
+  const response = await gapi.client.drive.files.list({
     q: `'${folderId}' in parents and mimeType='application/json' and trashed=false`,
     fields: 'nextPageToken, files(id, name, modifiedTime, appProperties)',
     spaces: 'drive',
@@ -89,12 +93,7 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
     pageToken,
   });
 
-  if (abortSignal?.aborted) {
-    return { files: [], nextPageToken: null };
-  }
-
   return { files: response.result.files || [], nextPageToken: response.result.nextPageToken || null };
-}
 
 export function useDriveLoadPageState(options = {}) {
   const fetchImpl = options.fetchImpl || fetch;
