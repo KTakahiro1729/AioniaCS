@@ -94,6 +94,7 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
   });
 
   return { files: response.result.files || [], nextPageToken: response.result.nextPageToken || null };
+}
 
 export function useDriveLoadPageState(options = {}) {
   const fetchImpl = options.fetchImpl || fetch;
