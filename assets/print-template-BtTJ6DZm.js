@@ -1,0 +1,395 @@
+const e=`<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A4印刷用レイアウト - Aionia TRPG Character Sheet</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400&family=Shippori+Mincho:wght@400;500;700&family=UnifrakturMaguntia&family=Zen+Kurenaido&display=swap"
+      rel="stylesheet"
+    />
+    <link href="./css/print-styles.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <!-- =================================================
+         1ページ目
+    ================================================= -->
+    <div class="page page-1">
+      <!-- ヘッダーのガイドライン -->
+      <div class="header-guideline cap-line"></div>
+      <div class="header-guideline base-line"></div>
+
+      <!-- ページタイトル -->
+      <header class="page-header">
+        <h1 class="page-header-title">Aionia TRPG Character Sheet</h1>
+      </header>
+
+      <!-- メインコンテンツ部分（1ページ目） -->
+      <main class="main-container">
+        <!-- 立ち絵エリア -->
+        <div class="portrait-area">
+          <!-- 立ち絵コンテンツ（空白） -->
+        </div>
+
+        <!-- キャラクター情報エリア -->
+        <div class="character-info-area">
+          <div class="info-row large">
+            <header class="subcontainer-header">キャラクター</header>
+            <div class="subcontainer-content writein-area">{{character-name}}</div>
+            <footer class="subcontainer-footer">character</footer>
+          </div>
+          <div class="info-row small">
+            <header class="subcontainer-header">プレイヤー</header>
+            <div class="subcontainer-content writein-area">{{player-name}}</div>
+            <footer class="subcontainer-footer">player</footer>
+          </div>
+          <div class="info-row small">
+            <header class="subcontainer-header">種族</header>
+            <div class="subcontainer-content writein-area">{{race}}</div>
+            <footer class="subcontainer-footer">race</footer>
+          </div>
+          <div class="info-row large info-row-split">
+            <div class="info-item" style="flex: 2">
+              <header class="info-item-header">性別</header>
+              <div class="info-item-content writein-area">{{gender}}</div>
+            </div>
+            <div class="info-item" style="flex: 3">
+              <header class="info-item-header">年齢</header>
+              <div class="info-item-content writein-area">{{age}}</div>
+            </div>
+            <div class="info-item" style="flex: 3">
+              <header class="info-item-header">身長</header>
+              <div class="info-item-content writein-area">{{height}}</div>
+            </div>
+            <div class="info-item" style="flex: 3">
+              <header class="info-item-header">体重</header>
+              <div class="info-item-content writein-area">{{weight}}</div>
+            </div>
+          </div>
+          <div class="info-row large info-row-split">
+            <div class="info-item" style="flex: 5">
+              <header class="info-item-header">出身地</header>
+              <div class="info-item-content writein-area">{{origin}}</div>
+            </div>
+            <div class="info-item" style="flex: 3">
+              <header class="info-item-header">職業</header>
+              <div class="info-item-content writein-area">{{occupation}}</div>
+            </div>
+            <div class="info-item" style="flex: 3">
+              <header class="info-item-header">信仰</header>
+              <div class="info-item-content writein-area">{{faith}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ダメージ・傷痕・ストレス・経験点エリア -->
+        <div class="status-area">
+          <div class="status-item">
+            <header class="subcontainer-header">ダメージ</header>
+            <div class="subcontainer-content writein-area"></div>
+            <footer class="subcontainer-footer">damage</footer>
+          </div>
+          <div class="status-item">
+            <div class="scar-header">
+              <header class="subcontainer-header">傷痕</header>
+              <div class="scar-printed">印刷時:</div>
+              <div class="scar-printed-value writein-area">{{current-scar-value}}</div>
+            </div>
+            <div class="subcontainer-content writein-area"></div>
+            <footer class="subcontainer-footer">scar</footer>
+          </div>
+          <div class="status-item">
+            <header class="subcontainer-header">ストレス</header>
+            <div class="subcontainer-content writein-area"></div>
+            <footer class="subcontainer-footer">stress</footer>
+          </div>
+          <div class="status-item">
+            <div class="scar-header">
+              <header class="subcontainer-header">経験点</header>
+              <div class="scar-printed">印刷時:</div>
+              <div class="scar-printed-value writein-area">{{current-experience-value}}</div>
+            </div>
+            <div class="subcontainer-content writein-area"></div>
+            <footer class="subcontainer-footer">experience</footer>
+          </div>
+        </div>
+
+        <!-- 弱点・技能・特技エリア -->
+        <div class="skills-area">
+          <div class="weakness-area">
+            <header class="subcontainer-header">弱点</header>
+            <div class="subcontainer-content">
+              <table class="weakness-table">
+                <thead>
+                  <tr>
+                    <th class="col-weakness-number"></th>
+                    <th class="col-weakness-content"></th>
+                    <th class="col-weakness-acquired">獲得</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="col-weakness-number number-cell">1</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-0}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-0}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">2</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-1}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-1}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">3</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-2}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-2}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">4</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-3}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-3}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">5</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-4}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-4}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">6</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-5}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-5}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">7</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-6}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-6}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">8</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-7}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-7}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">9</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-8}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-8}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-weakness-number number-cell">X</td>
+                    <td class="col-weakness-content writein-area">{{weakness-content-9}}</td>
+                    <td class="col-weakness-acquired writein-area">{{weakness-acquired-9}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <footer class="subcontainer-footer">weakness</footer>
+          </div>
+          <div class="skill-ability-area">
+            <div class="skill-area">
+              <header class="subcontainer-header">技能</header>
+              <div class="subcontainer-content writein-area long-note">{{skills-content}}</div>
+              <footer class="subcontainer-footer">skill</footer>
+            </div>
+            <div class="ability-area">
+              <header class="subcontainer-header">特技</header>
+              <div class="subcontainer-content writein-area long-note">{{abilities-content}}</div>
+              <footer class="subcontainer-footer">ability</footer>
+            </div>
+          </div>
+        </div>
+
+        <!-- 装備品エリア -->
+        <div class="equipment-area">
+          <header class="subcontainer-header">装備品</header>
+          <div class="equipment-content">
+            <div class="equipment-list">
+              <table class="equipment-table">
+                <thead>
+                  <tr>
+                    <th class="col-equipment-category"></th>
+                    <th class="col-equipment-type">種類</th>
+                    <th class="col-equipment-detail">詳細</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="col-equipment-category equipment-category">武器1</td>
+                    <td class="col-equipment-type writein-area">{{weapon1-type}}</td>
+                    <td class="col-equipment-detail writein-area">{{weapon1-detail}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-equipment-category equipment-category">武器2</td>
+                    <td class="col-equipment-type writein-area">{{weapon2-type}}</td>
+                    <td class="col-equipment-detail writein-area">{{weapon2-detail}}</td>
+                  </tr>
+                  <tr>
+                    <td class="col-equipment-category equipment-category">防具</td>
+                    <td class="col-equipment-type writein-area">{{armor-type}}</td>
+                    <td class="col-equipment-detail writein-area">{{armor-detail}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="equipment-weight">
+              <header class="equipment-weight-header">荷重</header>
+              <div class="equipment-weight-content writein-area">{{equipment-weight-value}}</div>
+            </div>
+          </div>
+          <footer class="subcontainer-footer">equipment</footer>
+        </div>
+      </main>
+
+      <!-- フッターのガイドライン -->
+      <div class="footer-guideline footer-baseline-1"></div>
+      <div class="footer-guideline footer-baseline-2"></div>
+
+      <!-- フッターテキスト -->
+      <footer class="page-footer">
+        <div class="page-footer-text">本キャラクターシートはAioniaCSで作成されました。</div>
+        <div class="page-footer-text">AioniaCSは「イチ（フシギ製作所）」が権利を有する『慈悲なきアイオニア』の二次創作物です。</div>
+      </footer>
+
+      <!-- はみ出し線（SVG） -->
+      <svg class="extension-lines" viewBox="0 0 794 1123" preserveAspectRatio="none">
+        <!-- 外枠の延長線 -->
+        <line x1="34.5" y1="0" x2="34.5" y2="76" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="0" x2="759.5" y2="76" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="34.5" y1="1047" x2="34.5" y2="1123" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="1047" x2="759.5" y2="1123" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="0" y1="76.5" x2="34.5" y2="76.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="0" y1="1046.5" x2="34.5" y2="1046.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="76.5" x2="794" y2="76.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="1046.5" x2="794" y2="1046.5" stroke="#A6A6A6" stroke-width="0.5" />
+
+        <!-- 内側区切り線の延長線 -->
+        <line x1="0" y1="348.5" x2="34" y2="348.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="348.5" x2="794" y2="348.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="0" y1="895" x2="34" y2="895" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="895" x2="794" y2="895" stroke="#A6A6A6" stroke-width="0.5" />
+      </svg>
+    </div>
+
+    <!-- =================================================
+         2ページ目
+    ================================================= -->
+    <div class="page page-2">
+      <!-- ヘッダーのガイドライン -->
+      <div class="header-guideline cap-line"></div>
+      <div class="header-guideline base-line"></div>
+
+      <!-- ページタイトル -->
+      <header class="page-header">
+        <h1 class="page-header-title">Aionia TRPG Character Sheet</h1>
+      </header>
+
+      <!-- メインコンテンツ部分（2ページ目） -->
+      <main class="main-container">
+        <!-- 第1サブコンテナ: その他の所持品 (5.5cm) -->
+        <section class="subcontainer inventory-container">
+          <header class="subcontainer-header">その他の所持品</header>
+          <div class="subcontainer-content writein-area long-note">{{inventory-content}}</div>
+          <footer class="subcontainer-footer">inventory</footer>
+        </section>
+
+        <!-- 第2サブコンテナ: キャラクターメモ (残りの高さ) -->
+        <section class="subcontainer background-container">
+          <header class="subcontainer-header">キャラクターメモ</header>
+          <div class="subcontainer-content writein-area long-note">{{background-content}}</div>
+          <footer class="subcontainer-footer">background</footer>
+        </section>
+
+        <!-- 第3サブコンテナ: 冒険の記録 (9cm) -->
+        <section class="subcontainer adventure-container">
+          <header class="subcontainer-header">冒険の記録</header>
+          <div class="adventure-content">
+            <table class="adventure-table">
+              <thead>
+                <tr>
+                  <th class="col-scenario">シナリオ名</th>
+                  <th class="col-memo">メモ</th>
+                  <th class="col-spacer"></th>
+                  <th class="col-experience">経験点</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="col-scenario writein-area">{{adventure-scenario-0}}</td>
+                  <td class="col-memo writein-area">{{adventure-memo-0}}</td>
+                  <td class="col-spacer spacer writein-area"></td>
+                  <td class="col-experience writein-area">{{adventure-experience-0}}</td>
+                </tr>
+                <tr>
+                  <td class="col-scenario writein-area">{{adventure-scenario-1}}</td>
+                  <td class="col-memo writein-area">{{adventure-memo-1}}</td>
+                  <td class="col-spacer spacer writein-area"></td>
+                  <td class="col-experience writein-area">{{adventure-experience-1}}</td>
+                </tr>
+                <tr>
+                  <td class="col-scenario writein-area">{{adventure-scenario-2}}</td>
+                  <td class="col-memo writein-area">{{adventure-memo-2}}</td>
+                  <td class="col-spacer spacer writein-area"></td>
+                  <td class="col-experience writein-area">{{adventure-experience-2}}</td>
+                </tr>
+                <tr>
+                  <td class="col-scenario writein-area">{{adventure-scenario-3}}</td>
+                  <td class="col-memo writein-area">{{adventure-memo-3}}</td>
+                  <td class="col-spacer spacer writein-area"></td>
+                  <td class="col-experience writein-area">{{adventure-experience-3}}</td>
+                </tr>
+                <tr>
+                  <td class="col-scenario writein-area">{{adventure-scenario-4}}</td>
+                  <td class="col-memo writein-area">{{adventure-memo-4}}</td>
+                  <td class="col-spacer spacer writein-area"></td>
+                  <td class="col-experience writein-area">{{adventure-experience-4}}</td>
+                </tr>
+                <tr>
+                  <td class="col-scenario writein-area">{{adventure-scenario-5}}</td>
+                  <td class="col-memo writein-area">{{adventure-memo-5}}</td>
+                  <td class="col-spacer spacer writein-area"></td>
+                  <td class="col-experience writein-area">{{adventure-experience-5}}</td>
+                </tr>
+                <tr>
+                  <td class="col-scenario writein-area">{{adventure-scenario-6}}</td>
+                  <td class="col-memo writein-area">{{adventure-memo-6}}</td>
+                  <td class="col-spacer spacer writein-area"></td>
+                  <td class="col-experience writein-area">{{adventure-experience-6}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="subcontainer-footer">adventure</footer>
+        </section>
+      </main>
+
+      <!-- フッターのガイドライン -->
+      <div class="footer-guideline footer-baseline-1"></div>
+      <div class="footer-guideline footer-baseline-2"></div>
+
+      <!-- フッターテキスト -->
+      <footer class="page-footer">
+        <div class="page-footer-text">本キャラクターシートはAioniaCSで作成されました。</div>
+        <div class="page-footer-text">AioniaCSは「イチ（フシギ製作所）」が権利を有する『慈悲なきアイオニア』の二次創作物です。</div>
+      </footer>
+
+      <!-- はみ出し線（SVG） -->
+      <svg class="extension-lines" viewBox="0 0 794 1123" preserveAspectRatio="none">
+        <!-- 外枠の延長線 -->
+        <line x1="34.5" y1="0" x2="34.5" y2="76" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="0" x2="759.5" y2="76" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="34.5" y1="1047" x2="34.5" y2="1123" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="1047" x2="759.5" y2="1123" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="0" y1="76.5" x2="34.5" y2="76.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="0" y1="1046.5" x2="34.5" y2="1046.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="76.5" x2="794" y2="76.5" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="1046.5" x2="794" y2="1046.5" stroke="#A6A6A6" stroke-width="0.5" />
+
+        <!-- 2ページ目の内側区切り線の延長線 -->
+        <line x1="0" y1="284" x2="34" y2="284" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="284" x2="794" y2="284" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="0" y1="707" x2="34" y2="707" stroke="#A6A6A6" stroke-width="0.5" />
+        <line x1="759.5" y1="707" x2="794" y2="707" stroke="#A6A6A6" stroke-width="0.5" />
+      </svg>
+    </div>
+  </body>
+</html>
+`;export{e as default};
