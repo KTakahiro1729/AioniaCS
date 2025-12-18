@@ -143,14 +143,22 @@ describe('useAppModals', () => {
     expect(showAsyncToastMock).not.toHaveBeenCalled();
   });
 
-  test('openLoadModal prefetches drive token when ready', async () => {
-    const prefetchDriveAccessToken = vi.fn();
+  test('openLoadModal prefetches drive token before showing modal when ready', async () => {
+    const callOrder = [];
+    const prefetchDriveAccessToken = vi.fn(() => {
+      callOrder.push('prefetch');
+    });
+    showModalMock.mockImplementation((args) => {
+      callOrder.push('showModal');
+      return Promise.resolve(args);
+    });
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
     const { openLoadModal } = useAppModals(createOptions({ prefetchDriveAccessToken }));
 
-    await openLoadModal();
+    const modalPromise = openLoadModal();
 
-    expect(prefetchDriveAccessToken).toHaveBeenCalled();
+    expect(callOrder).toEqual(['prefetch', 'showModal']);
+    await modalPromise;
   });
 });

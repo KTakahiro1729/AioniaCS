@@ -56,7 +56,6 @@ import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { useModalStore } from '@/features/modals/stores/modalStore.js';
 
-
 const props = defineProps({
   isSignedIn: Boolean,
   canSignIn: Boolean,
@@ -73,7 +72,7 @@ const props = defineProps({
   signInMessage: String,
 });
 
-const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'prefetch-drive']);
+const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder']);
 
 const folderInputId = 'load_modal_drive_folder';
 const AUTO_CLOSE_MS = 40 * 60 * 1000;
@@ -129,7 +128,6 @@ function closeForInactivity() {
 }
 
 onMounted(() => {
-  emit('prefetch-drive');
   autoCloseTimer = window.setTimeout(() => {
     closeForInactivity();
   }, AUTO_CLOSE_MS);
