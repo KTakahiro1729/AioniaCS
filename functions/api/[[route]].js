@@ -342,11 +342,12 @@ app.put('/api/user/config', async (c) => {
   }
 
   const { session, sessionId, nowSeconds } = sessionInfo;
-  let payload = {};
+  let payload;
   try {
     payload = await c.req.json();
   } catch (error) {
     console.error('Failed to parse config payload:', error);
+    return c.json({ error: 'Invalid request body. Failed to parse JSON.' }, 400);
   }
 
   const folderId = typeof payload.folder_id === 'string' && payload.folder_id.trim() ? payload.folder_id : null;
