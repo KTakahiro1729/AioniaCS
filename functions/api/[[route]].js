@@ -373,6 +373,7 @@ app.post('/api/drive/sync', async (c) => {
     const existingMap = new Map((existing?.results || []).map((row) => [row.file_id, row]));
 
     const items = [];
+    const statements = [];
     const nowSeconds = Math.floor(Date.now() / 1000);
 
     for (const file of files) {
@@ -386,7 +387,8 @@ app.post('/api/drive/sync', async (c) => {
       const contentHash = appProps?.last_app_hash || file.contentHash || null;
       const characterName = appProps?.character_name || file.characterName || null;
       const modifiedTime = file.modifiedTime || file.lastModifiedAtDrive || null;
-      const lastModifiedAtDrive = modifiedTime ? Number(new Date(modifiedTime).getTime()) : null;
+      const lastModifiedMs = modifiedTime ? new Date(modifiedTime).getTime() : NaN;
+      const lastModifiedAtDrive = Number.isFinite(lastModifiedMs) ? Math.floor(lastModifiedMs / 1000) : null;
 
       const previous = existingMap.get(fileId);
       const hashMismatch = Boolean(previous && previous.content_hash && contentHash && previous.content_hash !== contentHash);
@@ -394,19 +396,19 @@ app.post('/api/drive/sync', async (c) => {
         previous && previous.last_modified_at_drive && lastModifiedAtDrive && previous.last_modified_at_drive !== lastModifiedAtDrive,
       );
 
-      await c.env.DB.prepare(
-        `INSERT INTO character_metadata (file_id, user_id, character_name, file_name, content_hash, last_modified_at_drive, synced_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(file_id) DO UPDATE SET
-           user_id=excluded.user_id,
-           character_name=excluded.character_name,
-           file_name=excluded.file_name,
-           content_hash=excluded.content_hash,
-           last_modified_at_drive=excluded.last_modified_at_drive,
-           synced_at=excluded.synced_at`,
-      )
-        .bind(fileId, auth.session.user_id, characterName, fileName, contentHash, lastModifiedAtDrive, nowSeconds)
-        .run();
+      statements.push(
+        c.env.DB.prepare(
+          `INSERT INTO character_metadata (file_id, user_id, character_name, file_name, content_hash, last_modified_at_drive, synced_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(file_id) DO UPDATE SET
+             user_id=excluded.user_id,
+             character_name=excluded.character_name,
+             file_name=excluded.file_name,
+             content_hash=excluded.content_hash,
+             last_modified_at_drive=excluded.last_modified_at_drive,
+             synced_at=excluded.synced_at`,
+        ).bind(fileId, auth.session.user_id, characterName, fileName, contentHash, lastModifiedAtDrive, nowSeconds),
+      );
 
       items.push({
         fileId,
@@ -416,6 +418,10 @@ app.post('/api/drive/sync', async (c) => {
         lastModifiedAtDrive,
         outOfSync: hashMismatch || modifiedMismatch,
       });
+    }
+
+    if (statements.length > 0) {
+      await c.env.DB.batch(statements);
     }
 
     return c.json({ items });
