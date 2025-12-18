@@ -8,6 +8,7 @@ import { isDesktopDevice } from '@/shared/utils/device.js';
 import { messages } from '@/i18n/index.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
+import { router } from '@/app/router/index.js';
 
 export function useAppModals(options) {
   const uiStore = useUiStore();
@@ -42,6 +43,7 @@ export function useAppModals(options) {
       changeFolderLabel: messages.characterHub.driveFolder.changeButton,
       loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
       loadDriveLabel: messages.ui.modal.load.buttons.loadDrive,
+      selectCharacterLabel: messages.ui.modal.load.buttons.selectCharacter,
       signInLabel: messages.characterHub.buttons.signIn,
       signInMessage: messages.ui.modal.load.signInMessage,
     };
@@ -57,6 +59,10 @@ export function useAppModals(options) {
         'sign-in': handleSignInClick,
         'update-drive-folder-path': updateDriveFolderPath,
         'choose-drive-folder': promptForDriveFolder,
+        'select-character': () => {
+          modalStore.resolveModal({ value: 'drive-load' });
+          router.push({ name: 'drive-load' });
+        },
       },
     });
 

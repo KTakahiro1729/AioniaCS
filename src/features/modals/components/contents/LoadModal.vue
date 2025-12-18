@@ -10,6 +10,14 @@
       <button class="button-base load-modal__button" v-if="canUseDrive" data-test="load-modal-drive-button" @click="$emit('load-drive')">
         {{ loadDriveLabel }}
       </button>
+      <button
+        class="button-base load-modal__button load-modal__button--secondary"
+        type="button"
+        data-test="load-modal-select-character"
+        @click="$emit('select-character')"
+      >
+        {{ selectCharacterLabel }}
+      </button>
       <div class="load-modal__config">
         <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
         <div class="load-modal__input-group">
@@ -56,11 +64,19 @@ const props = defineProps({
   changeFolderLabel: String,
   loadLocalLabel: String,
   loadDriveLabel: String,
+  selectCharacterLabel: String,
   signInLabel: String,
   signInMessage: String,
 });
 
-const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder']);
+const emit = defineEmits([
+  'load-local',
+  'load-drive',
+  'sign-in',
+  'update-drive-folder-path',
+  'choose-drive-folder',
+  'select-character',
+]);
 
 const folderInputId = 'load_modal_drive_folder';
 const folderPathInput = ref(props.driveFolderPath || '');
@@ -121,6 +137,12 @@ function handleLocalChange(event) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.load-modal__button--secondary {
+  background-color: var(--color-panel);
+  color: var(--color-text-primary, #fff);
+  border: 1px solid var(--color-border-normal);
 }
 
 .load-modal__label {
