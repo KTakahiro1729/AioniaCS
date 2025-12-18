@@ -199,8 +199,8 @@ export function useGoogleDrive(dataManager) {
       }
 
       if (typeof dataManager.googleDriveManager.showFilePickerSync !== 'function') {
-        const pickerError = new Error(messages.googleDrive.load.error().message);
-        logAndToastError(pickerError, (err) => messages.googleDrive.load.error(err), 'loadCharacterFromDrive');
+        const pickerError = new Error('showFilePickerSync is not available on the Google Drive manager.');
+        logAndToastError(pickerError, () => messages.googleDrive.load.error(), 'loadCharacterFromDrive');
         return null;
       }
 
