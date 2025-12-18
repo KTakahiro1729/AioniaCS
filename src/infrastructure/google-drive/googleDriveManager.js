@@ -905,30 +905,20 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Shows the Google File Picker to select a file.
+   * Shows the Google File Picker to select a file without awaiting token refresh.
    * @param {function} callback - Function to call with the result (error, {id, name}).
+   * @param {string} accessToken - Access token prepared by the caller.
    * @param {string|null} parentFolderId - Optional ID of the folder to start in.
    * @param {Array<string>} mimeTypes - Array of MIME types to filter by.
    */
-  async showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
+  showFilePickerSync(callback, accessToken, parentFolderId = null, mimeTypes = ['application/json']) {
     if (!this.pickerApiLoaded) {
       console.error('Picker API not loaded yet.');
       if (callback) callback(new Error('Picker API not loaded.'));
       return;
     }
 
-    const cachedToken = this.getCachedAccessToken();
-    if (!cachedToken) {
-      try {
-        await this.ensureAccessToken();
-      } catch (error) {
-        console.error('Failed to prepare Picker token:', error);
-        if (callback) callback(new Error('Authentication required.'));
-        return;
-      }
-    }
-
-    const token = gapi.client.getToken();
+    const token = accessToken || this.getCachedAccessToken();
     if (!token) {
       console.error('User not signed in or token not available for Picker.');
       if (callback) callback(new Error('Not signed in or token unavailable.'));
@@ -958,7 +948,7 @@ export class GoogleDriveManager {
       .setOrigin(window.location.origin)
       .addView(view)
       .enableFeature(google.picker.Feature.NAV_HIDDEN)
-      .setOAuthToken(token.access_token)
+      .setOAuthToken(token)
       .setCallback(pickerCallback);
 
     const picker = pickerBuilder.build();
@@ -966,9 +956,16 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Shows the Google Folder Picker to select a folder.
+   * Backward-compatible wrapper that uses any cached token.
    * @param {function} callback - Function to call with the result (error, {id, name}).
+   * @param {string|null} parentFolderId - Optional ID of the folder to start in.
+   * @param {Array<string>} mimeTypes - Array of MIME types to filter by.
    */
+  showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
+    const token = this.getCachedAccessToken();
+    this.showFilePickerSync(callback, token, parentFolderId, mimeTypes);
+  }
+
   /**
    * Shows the Google Folder Picker to select a folder.
    * @param {function} callback - Function to call with the result (error, {id, name}).

@@ -167,14 +167,46 @@ export function useGoogleDrive(dataManager) {
       showToast({ type: 'error', ...messages.googleDrive.initPending() });
       return null;
     }
+    if (!isDriveTokenWarm.value) {
+      showToast({ type: 'error', ...messages.googleDrive.initPending() });
+      return null;
+    }
     if (!dataManager.googleDriveManager) return null;
     isDriveActionInFlight.value = true;
 
     try {
+      if (typeof document !== 'undefined' && typeof document.requestStorageAccess === 'function') {
+        try {
+          await document.requestStorageAccess();
+        } catch (error) {
+          logAndToastError(error, messages.googleDrive.load.error, 'loadCharacterFromDrive');
+          return null;
+        }
+      }
+
       const folderId = cachedFolderId.value;
+      const cachedToken =
+        typeof dataManager.googleDriveManager.getCachedAccessToken === 'function'
+          ? dataManager.googleDriveManager.getCachedAccessToken()
+          : null;
+      const fallbackToken = typeof gapi !== 'undefined' && gapi.client?.getToken ? gapi.client.getToken()?.access_token : null;
+      const accessToken = cachedToken || fallbackToken;
+
+      if (!accessToken) {
+        const tokenError = new Error('Drive access token is not ready.');
+        logAndToastError(tokenError, messages.googleDrive.load.error, 'loadCharacterFromDrive');
+        return null;
+      }
+
+      if (typeof dataManager.googleDriveManager.showFilePickerSync !== 'function') {
+        const pickerError = new Error(messages.googleDrive.load.error().message);
+        logAndToastError(pickerError, (err) => messages.googleDrive.load.error(err), 'loadCharacterFromDrive');
+        return null;
+      }
+
       const file = await new Promise((resolve, reject) => {
         try {
-          dataManager.googleDriveManager.showFilePicker(
+          dataManager.googleDriveManager.showFilePickerSync(
             (err, pickedFile) => {
               if (err || !pickedFile) {
                 const pickerError = err || new Error(messages.googleDrive.load.noSelection().message);
@@ -187,6 +219,7 @@ export function useGoogleDrive(dataManager) {
               }
               resolve(pickedFile);
             },
+            accessToken,
             folderId,
             ['application/json', 'application/zip'],
           );

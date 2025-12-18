@@ -16,7 +16,7 @@
         @click="$emit('load-drive')"
       >
         <span v-if="showDriveLoading" class="load-modal__spinner" aria-hidden="true"></span>
-        <span>{{ loadDriveLabel }}</span>
+        <span>{{ driveButtonLabel }}</span>
       </button>
       <div class="load-modal__config">
         <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
@@ -101,9 +101,10 @@ watch(
 const canUseDrive = computed(() => props.isSignedIn && props.isDriveReady);
 const isDriveWarming = computed(() => canUseDrive.value && !props.isDriveTokenWarm);
 const showDriveLoading = computed(() => isDriveWarming.value || props.isDriveActionLoading);
-const isDriveButtonDisabled = computed(() => !canUseDrive.value || props.isDriveActionLoading);
+const isDriveButtonDisabled = computed(() => !canUseDrive.value || isDriveWarming.value || props.isDriveActionLoading);
 const isDriveControlsDisabled = computed(() => !props.isSignedIn || props.isDriveActionLoading);
 const isFolderPickerDisabled = computed(() => !canUseDrive.value || props.isDriveActionLoading);
+const driveButtonLabel = computed(() => (isDriveWarming.value ? '接続準備中…' : props.loadDriveLabel));
 
 function commitFolderPath() {
   if (!props.isSignedIn) {
