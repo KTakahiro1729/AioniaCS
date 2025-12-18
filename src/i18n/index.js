@@ -254,7 +254,33 @@ export const messages = {
   driveLoadPage: {
     title: t('driveLoadPage.title'),
     placeholder: t('driveLoadPage.placeholder'),
-    backLabel: t('driveLoadPage.buttons.back'),
+    buttons: {
+      back: t('driveLoadPage.buttons.back'),
+      refresh: t('driveLoadPage.buttons.refresh'),
+    },
+    status: {
+      loadingCache: t('driveLoadPage.status.loadingCache'),
+      syncing: t('driveLoadPage.status.syncing'),
+      refreshed: t('driveLoadPage.status.refreshed'),
+      loadMore: t('driveLoadPage.status.loadMore'),
+      error: t('driveLoadPage.status.error'),
+    },
+    labels: {
+      untitled: t('driveLoadPage.labels.untitled'),
+      unknownCharacter: t('driveLoadPage.labels.unknownCharacter'),
+      modified: t('driveLoadPage.labels.modified'),
+      hash: t('driveLoadPage.labels.hash'),
+      notAvailable: t('driveLoadPage.labels.notAvailable'),
+      unknownDate: t('driveLoadPage.labels.unknownDate'),
+      outOfSync: t('driveLoadPage.labels.outOfSync'),
+    },
+    errors: {
+      missingDriveManager: t('driveLoadPage.errors.missingDriveManager'),
+      folderUnavailable: t('driveLoadPage.errors.folderUnavailable'),
+      apiUnavailable: t('driveLoadPage.errors.apiUnavailable'),
+      cacheFailed: t('driveLoadPage.errors.cacheFailed'),
+      syncFailed: t('driveLoadPage.errors.syncFailed'),
+    },
   },
   sheet: {
     loadIndicator: {

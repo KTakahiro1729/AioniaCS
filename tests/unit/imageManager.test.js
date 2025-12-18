@@ -1,4 +1,4 @@
-import { describe, it, beforeAll, beforeEach, expect, vi } from 'vitest';
+import { describe, it, beforeAll, beforeEach, expect } from 'vitest';
 
 import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
 import { messages } from '@/i18n/index.js';

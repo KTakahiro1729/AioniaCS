@@ -1,4 +1,4 @@
-import { watch, onMounted } from 'vue';
+import { watch } from 'vue';
 
 export const LOCAL_CHARACTER_STORAGE_KEY = 'aionia-character';
 
