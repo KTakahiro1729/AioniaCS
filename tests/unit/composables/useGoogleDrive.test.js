@@ -95,6 +95,35 @@ describe('useGoogleDrive', () => {
     expect(uiStore.lastSavedSnapshot).toBe(buildSnapshotFromStore(charStore));
   });
 
+  test('loadCharacterFromDrive clears viewing mode after loading own file', async () => {
+    const loadData = {
+      character: { name: 'Owner' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const dataManager = {
+      saveCharacterToDrive: vi.fn(),
+      loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
+      googleDriveManager: {
+        showFilePicker: (cb) => cb(null, { id: 'file-2', name: 'Owner.json' }),
+        findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
+      },
+      getDriveFileName: vi.fn().mockReturnValue('Owner.json'),
+    };
+
+    const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isSignedIn = true;
+    uiStore.isViewingShared = true;
+
+    await loadCharacterFromDrive();
+
+    expect(uiStore.isViewingShared).toBe(false);
+  });
+
   test('promptForDriveFolder applies picker selection to drive path', async () => {
     const desiredPath = '慈悲なきアイオニア/PC/第一キャンペーン';
     const stubManager = createDriveManagerStub(desiredPath);
