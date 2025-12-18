@@ -14,6 +14,7 @@ function baseProps(overrides = {}) {
     changeFolderLabel: 'change',
     loadLocalLabel: 'local',
     loadDriveLabel: 'drive',
+    selectCharacterLabel: 'select',
     signInLabel: 'signin',
     signInMessage: 'message',
     ...overrides,
@@ -40,5 +41,13 @@ describe('LoadModal', () => {
     const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: false }) });
     expect(wrapper.find('.load-modal__input').attributes('disabled')).toBeDefined();
     expect(wrapper.find('[data-test="load-modal-drive-button"]').exists()).toBe(false);
+  });
+
+  test('emits select-character when selector button clicked', async () => {
+    const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: true }) });
+    const button = wrapper.find('[data-test="load-modal-select-character"]');
+    expect(button.exists()).toBe(true);
+    await button.trigger('click');
+    expect(wrapper.emitted('select-character')).toHaveLength(1);
   });
 });

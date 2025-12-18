@@ -226,6 +226,7 @@ export const messages = {
         buttons: {
           loadLocal: t('ui.modal.load.buttons.loadLocal'),
           loadDrive: t('ui.modal.load.buttons.loadDrive'),
+          selectCharacter: t('ui.modal.load.buttons.selectCharacter'),
         },
         signInMessage: t('ui.modal.load.signInMessage'),
       },
@@ -249,6 +250,11 @@ export const messages = {
         },
       },
     },
+  },
+  driveLoadPage: {
+    title: t('driveLoadPage.title'),
+    placeholder: t('driveLoadPage.placeholder'),
+    backLabel: t('driveLoadPage.buttons.back'),
   },
   sheet: {
     loadIndicator: {

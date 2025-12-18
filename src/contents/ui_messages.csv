@@ -103,7 +103,11 @@ ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes 
 ui.modal.load.title,読込,,Load modal title
 ui.modal.load.buttons.loadLocal,ローカルから読み込む,,Load modal local button
 ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button
+ui.modal.load.buttons.selectCharacter,キャラクターを選ぶ,,Load modal select character button
 ui.modal.load.signInMessage,Drive機能を使うにはGoogleにサインインしてください。,,Load modal sign-in message
+driveLoadPage.title,キャラクターを選ぶ,,Drive load page title
+driveLoadPage.placeholder,ここにGoogle Drive上のキャラクター一覧が表示されます,,Drive load page placeholder
+driveLoadPage.buttons.back,シートに戻る,,Drive load page back button
 ui.modal.io.title,入出力,,IO modal title
 ui.modal.io.buttons.saveLocal,ローカルファイルで出力,,IO modal save local button
 ui.modal.io.buttons.print,印刷,,IO modal print button

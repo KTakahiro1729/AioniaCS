@@ -6,6 +6,7 @@ import { isDesktopDevice } from '@/shared/utils/device.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
+import { useModalStore } from '@/features/modals/stores/modalStore.js';
 
 vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
@@ -18,6 +19,10 @@ vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
 }));
 vi.mock('@/features/cloud-sync/composables/useShare.js', () => ({
   useShare: vi.fn(),
+}));
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
+vi.mock('@/app/router/index.js', () => ({
+  router: { push: pushMock },
 }));
 
 describe('useAppModals', () => {
@@ -51,6 +56,7 @@ describe('useAppModals', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setActivePinia(createPinia());
+    pushMock.mockClear();
     showModalMock = vi.fn().mockResolvedValue(null);
     useModal.mockReturnValue({ showModal: showModalMock });
     showToastMock = vi.fn();
@@ -135,5 +141,16 @@ describe('useAppModals', () => {
     await openShareModal();
     expect(copyEditCallback).toHaveBeenCalled();
     expect(showAsyncToastMock).not.toHaveBeenCalled();
+  });
+
+  test('openLoadModal select-character routes to drive load page', async () => {
+    const { openLoadModal } = useAppModals(createOptions());
+    const modalStore = useModalStore();
+    await openLoadModal();
+    const args = showModalMock.mock.calls[0][0];
+    modalStore.showModal({});
+    await args.on['select-character']();
+    expect(modalStore.isVisible).toBe(false);
+    expect(pushMock).toHaveBeenCalledWith({ name: 'drive-load' });
   });
 });
