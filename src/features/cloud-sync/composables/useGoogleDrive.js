@@ -194,7 +194,7 @@ export function useGoogleDrive(dataManager) {
 
       if (!accessToken) {
         const tokenError = new Error('Drive access token is not ready.');
-        logAndToastError(tokenError, messages.googleDrive.load.error, 'loadCharacterFromDrive');
+        logAndToastError(tokenError, () => messages.googleDrive.load.error(), 'loadCharacterFromDrive');
         return null;
       }
 
