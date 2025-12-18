@@ -7,3 +7,11 @@ CREATE TABLE IF NOT EXISTS sessions (
   created_at INTEGER,
   expires_at INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS folder_configs (
+  user_id TEXT PRIMARY KEY,
+  folder_id TEXT,
+  folder_name TEXT,
+  folder_path TEXT,
+  updated_at INTEGER
+);

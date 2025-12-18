@@ -72,6 +72,7 @@ export function useAppModals(options) {
         'sign-in': handleSignInClick,
         'update-drive-folder-path': updateDriveFolderPath,
         'choose-drive-folder': promptForDriveFolder,
+        'prefetch-drive': prefetchDriveAccessToken,
       },
     });
 

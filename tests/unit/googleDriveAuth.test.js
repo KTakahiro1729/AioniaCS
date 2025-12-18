@@ -42,6 +42,18 @@ describe('GoogleDriveManager auth', () => {
     expect(gapi.client.setToken).toHaveBeenCalledWith({ access_token: 'server-access', expires_in: 3600 });
   });
 
+  test('ensureAccessToken reuses cached token without fetch', async () => {
+    const gdm = initializeGoogleDriveManager('k', 'c');
+    gdm.currentTokenInfo = { accessToken: 'cached', expiresAt: Date.now() + 60000 };
+    gapi.client.getToken = vi.fn(() => ({ access_token: 'cached' }));
+
+    await gdm.onGapiLoad();
+    const token = await gdm.ensureAccessToken();
+
+    expect(token).toBe('cached');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   test('handleSignIn opens login endpoint in a popup', () => {
     const gdm = initializeGoogleDriveManager('k', 'c');
     gdm.handleSignIn();

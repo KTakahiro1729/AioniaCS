@@ -35,6 +35,9 @@ describe('useGoogleDrive', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, json: async () => ({ folder_path: '慈悲なきアイオニア', folder_id: null, folder_name: null }) }),
+    );
   });
 
   test('saveCharacterToDrive updates an existing file when current id is set', async () => {
@@ -76,23 +79,37 @@ describe('useGoogleDrive', () => {
       saveCharacterToDrive: vi.fn(),
       loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
       googleDriveManager: {
-        showFilePicker: (cb) => cb(null, { id: 'file-1', name: 'Explorer.json' }),
+        showFilePicker: vi.fn((cb, parentId) => cb(null, { id: 'file-1', name: 'Explorer.json', parentId })),
         findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
+        loadConfig: vi.fn().mockResolvedValue({ characterFolderPath: '慈悲なきアイオニア', folderId: 'folder-id' }),
       },
       getDriveFileName: vi.fn().mockReturnValue('Explorer.json'),
     };
-    const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
+    const { loadCharacterFromDrive, refreshDriveFolderPath } = useGoogleDrive(dataManager);
     const charStore = useCharacterStore();
     const uiStore = useUiStore();
     uiStore.isGapiInitialized = true;
     uiStore.isSignedIn = true;
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        folder_path: '慈悲なきアイオニア',
+        folder_id: 'folder-id',
+        folder_name: '慈悲なきアイオニア',
+      }),
+    });
 
+    await refreshDriveFolderPath();
     const result = await loadCharacterFromDrive();
 
     expect(result).toEqual(loadData);
     expect(charStore.character.name).toBe('Explorer');
     expect(uiStore.currentDriveFileId).toBe('file-1');
     expect(uiStore.lastSavedSnapshot).toBe(buildSnapshotFromStore(charStore));
+    expect(dataManager.googleDriveManager.showFilePicker).toHaveBeenCalledWith(expect.any(Function), 'folder-id', [
+      'application/json',
+      'application/zip',
+    ]);
   });
 
   test('promptForDriveFolder applies picker selection to drive path', async () => {
