@@ -1,4 +1,4 @@
-import { watch, onMounted } from 'vue';
+import { watch } from 'vue';
 
 export const LOCAL_CHARACTER_STORAGE_KEY = 'aionia-character';
 
@@ -35,6 +35,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
       specialSkills: characterStore.specialSkills,
       equipments: characterStore.equipments,
       histories: characterStore.histories,
+      currentDriveFileId: uiStore.currentDriveFileId,
     };
     try {
       storage.setItem(storageKey, JSON.stringify(payload));
@@ -85,6 +86,9 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
       }
       if (Array.isArray(parsed.histories)) {
         characterStore.histories.splice(0, characterStore.histories.length, ...parsed.histories);
+      }
+      if (Object.prototype.hasOwnProperty.call(parsed, 'currentDriveFileId')) {
+        uiStore.setCurrentDriveFileId(parsed.currentDriveFileId);
       }
       return true;
     } catch (error) {

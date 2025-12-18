@@ -74,6 +74,7 @@ describe('useLocalCharacterPersistence', () => {
       specialSkills: [{ group: 'tactics', name: '隠密', note: '', showNote: false }],
       equipments: { weapon1: { group: 'sword', name: '剣' } },
       histories: [{ sessionName: 'Session 1', memo: 'notes' }],
+      currentDriveFileId: 'drive-file-1',
     };
     storage.setItem(LOCAL_CHARACTER_STORAGE_KEY, JSON.stringify(payload));
     const { characterStore } = mountComposable();
@@ -83,6 +84,7 @@ describe('useLocalCharacterPersistence', () => {
     expect(characterStore.specialSkills[0].name).toBe('隠密');
     expect(characterStore.equipments.weapon1.name).toBe('剣');
     expect(characterStore.histories[0].sessionName).toBe('Session 1');
+    expect(useUiStore().currentDriveFileId).toBe('drive-file-1');
   });
 
   test('persists changes with debounce to localStorage', async () => {
@@ -95,6 +97,18 @@ describe('useLocalCharacterPersistence', () => {
     expect(storage.setItem).toHaveBeenCalled();
     const saved = JSON.parse(storage.getItem(LOCAL_CHARACTER_STORAGE_KEY));
     expect(saved.character.name).toBe('Auto Save');
+  });
+
+  test('persists currentDriveFileId along with character data', async () => {
+    const { characterStore, uiStore } = mountComposable();
+    uiStore.setCurrentDriveFileId('drive-file-2');
+
+    characterStore.character.name = 'Linked Save';
+    await nextTick();
+    vi.runAllTimers();
+
+    const saved = JSON.parse(storage.getItem(LOCAL_CHARACTER_STORAGE_KEY));
+    expect(saved.currentDriveFileId).toBe('drive-file-2');
   });
 
   test('skips persistence when viewing shared sheet', async () => {

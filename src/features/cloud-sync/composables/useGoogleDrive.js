@@ -172,6 +172,7 @@ export function useGoogleDrive(dataManager) {
             Object.assign(characterStore.equipments, parsedData.equipments);
             characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
             uiStore.setCurrentDriveFileId(file.id);
+            uiStore.isViewingShared = false;
             removeStoredCharacterDraft();
             uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
             return parsedData;
