@@ -276,14 +276,18 @@ export const messages = {
       load: t('driveLoadPage.actions.load'),
       delete: t('driveLoadPage.actions.delete'),
       share: t('driveLoadPage.actions.share'),
+      unshare: t('driveLoadPage.actions.unshare'),
+      unshareDisabled: t('driveLoadPage.actions.unshareDisabled'),
       download: t('driveLoadPage.actions.download'),
       loadAria: (name) => t('driveLoadPage.actions.loadAria', { name }),
       deleteAria: (name) => t('driveLoadPage.actions.deleteAria', { name }),
       shareAria: (name) => t('driveLoadPage.actions.shareAria', { name }),
+      unshareAria: (name) => t('driveLoadPage.actions.unshareAria', { name }),
       downloadAria: (name) => t('driveLoadPage.actions.downloadAria', { name }),
     },
     confirmations: {
       delete: (name) => t('driveLoadPage.confirmations.delete', { name }),
+      unshare: (name) => t('driveLoadPage.confirmations.unshare', { name }),
     },
     toasts: {
       share: {
@@ -298,6 +302,20 @@ export const messages = {
         error: (err) => ({
           title: t('driveLoadPage.toasts.share.error.title'),
           message: err?.message || t('driveLoadPage.toasts.share.error.message'),
+        }),
+      },
+      unshare: {
+        loading: () => ({
+          title: t('driveLoadPage.toasts.unshare.loading.title'),
+          message: t('driveLoadPage.toasts.unshare.loading.message'),
+        }),
+        success: () => ({
+          title: t('driveLoadPage.toasts.unshare.success.title'),
+          message: t('driveLoadPage.toasts.unshare.success.message'),
+        }),
+        error: (err) => ({
+          title: t('driveLoadPage.toasts.unshare.error.title'),
+          message: err?.message || t('driveLoadPage.toasts.unshare.error.message'),
         }),
       },
       download: {

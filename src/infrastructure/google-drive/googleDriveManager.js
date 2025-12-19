@@ -896,6 +896,37 @@ export class GoogleDriveManager {
     }
   }
 
+  async unshareFile(fileId) {
+    if (!fileId) {
+      console.error('No fileId provided to unshareFile.');
+      return false;
+    }
+
+    if (!gapi.client?.drive?.permissions?.list) {
+      console.error('GAPI client or Drive API not loaded for unshareFile.');
+      return false;
+    }
+
+    await this.ensureAccessToken();
+
+    try {
+      const response = await gapi.client.drive.permissions.list({
+        fileId,
+        fields: 'permissions(id, type, role)',
+      });
+      const permissions = response?.result?.permissions || response?.body?.permissions || [];
+      const anyonePermission = permissions.find((permission) => permission.type === 'anyone');
+      if (!anyonePermission?.id) {
+        return true;
+      }
+      await gapi.client.drive.permissions.delete({ fileId, permissionId: anyonePermission.id });
+      return true;
+    } catch (error) {
+      console.error('Failed to remove public permissions from Drive file:', error);
+      return false;
+    }
+  }
+
   async isFileInConfiguredFolder(fileId) {
     if (!fileId) {
       return false;

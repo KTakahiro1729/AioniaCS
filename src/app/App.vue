@@ -165,7 +165,47 @@ watch(
 );
 
 const { initialize } = useAppInitialization(dataManager);
-onMounted(initialize);
+const pendingSharedId = ref(null);
+
+function parseSharedId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('sharedId');
+}
+
+function clearSharedIdFromUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('sharedId');
+  window.history.replaceState({}, document.title, url.toString());
+}
+
+async function attemptSharedLoad() {
+  if (!pendingSharedId.value) {
+    return;
+  }
+  if (!uiStore.isSignedIn || !isDriveReady.value) {
+    return;
+  }
+  const loaded = await loadCharacterFromDrive(pendingSharedId.value);
+  if (loaded) {
+    uiStore.isViewingShared = true;
+    clearSharedIdFromUrl();
+    pendingSharedId.value = null;
+  }
+}
+
+watch(
+  [() => uiStore.isSignedIn, isDriveReady],
+  () => {
+    attemptSharedLoad();
+  },
+  { immediate: false },
+);
+
+onMounted(async () => {
+  await initialize();
+  pendingSharedId.value = parseSharedId();
+  await attemptSharedLoad();
+});
 </script>
 
 <template>
