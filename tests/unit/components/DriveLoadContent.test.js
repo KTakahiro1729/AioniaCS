@@ -67,6 +67,7 @@ const initialize = vi.fn();
 const refresh = vi.fn();
 const cleanup = vi.fn();
 const selectCharacter = vi.fn();
+const syncItemMetadata = vi.fn().mockResolvedValue();
 
 vi.mock('@/features/cloud-sync/composables/useDriveLoadPageState.js', () => {
   return {
@@ -82,6 +83,7 @@ vi.mock('@/features/cloud-sync/composables/useDriveLoadPageState.js', () => {
       refresh,
       cleanup,
       selectCharacter,
+      syncItemMetadata,
     }),
   };
 });
@@ -91,6 +93,8 @@ describe('DriveLoadContent', () => {
     revealMore.mockClear();
     initialize.mockClear();
     selectCharacter.mockClear();
+    syncItemMetadata.mockClear();
+    syncItemMetadata.mockResolvedValue();
     hideModalMock.mockClear();
     managerMock.deleteCharacterFile.mockReset();
     managerMock.ensureFilePublic.mockReset();
@@ -124,6 +128,26 @@ describe('DriveLoadContent', () => {
     expect(hideModalMock).toHaveBeenCalled();
   });
 
+  it('syncs metadata for out-of-sync items without blocking load', async () => {
+    displayedItems.value = [
+      {
+        id: 'file-sync',
+        fileName: 'Hero.zip',
+        characterName: 'ロードテスト',
+        lastModifiedAtDrive: 1700,
+        createdAt: 1600,
+        outOfSync: true,
+      },
+    ];
+
+    const wrapper = mount(DriveLoadContent);
+    await wrapper.find('[data-test="drive-row-load"]').trigger('click');
+
+    expect(syncItemMetadata).toHaveBeenCalledWith('file-sync');
+    expect(selectCharacter).toHaveBeenCalledWith('file-sync');
+    expect(hideModalMock).toHaveBeenCalled();
+  });
+
   it('renders character info with timestamps and warnings', () => {
     displayedItems.value = [
       {
@@ -142,7 +166,9 @@ describe('DriveLoadContent', () => {
     const fields = wrapper.findAll('[data-test="drive-row-field"]');
     expect(fields[0].text()).toContain(messages.driveLoadPage.labels.created);
     expect(fields[1].text()).toContain(messages.driveLoadPage.labels.modified);
-    expect(wrapper.find('[data-test="drive-row-warning"]').text()).toBe(messages.driveLoadPage.labels.hashWarning);
+    const warning = wrapper.find('[data-test="drive-row-warning"]');
+    expect(warning.text()).toBe('▲');
+    expect(warning.attributes('title')).toBe(messages.driveLoadPage.labels.hashWarning);
   });
 
   it('omits non-zip entries from the rendered list', () => {

@@ -23,6 +23,7 @@ const {
   refresh,
   cleanup,
   selectCharacter,
+  syncItemMetadata,
 } = useDriveLoadPageState();
 
 const { showAsyncToast, logAndToastError } = useNotifications();
@@ -117,9 +118,14 @@ function requireDriveManager() {
   return driveManager;
 }
 
-function handleLoad(fileId) {
-  if (!fileId) return;
-  selectCharacter(fileId);
+function handleLoad(item) {
+  if (!item?.id) return;
+  if (item.outOfSync) {
+    syncItemMetadata(item.id).catch((error) =>
+      logAndToastError(error, { title: messages.driveLoadPage.title, message: messages.driveLoadPage.errors.syncFailed }, 'sync-item-metadata'),
+    );
+  }
+  selectCharacter(item.id);
   modalStore.hideModal();
 }
 
@@ -236,17 +242,21 @@ onBeforeUnmount(() => {
               <div class="drive-row__heading">
                 <h2 class="drive-row__title" data-test="drive-row-title">{{ getCharacterName(item) }}</h2>
                 <div class="drive-row__badges">
+                  <span
+                    v-if="item.outOfSync"
+                    class="drive-row__indicator drive-row__indicator--warning"
+                    role="img"
+                    :title="messages.driveLoadPage.labels.hashWarning"
+                    :aria-label="messages.driveLoadPage.labels.hashWarning"
+                    data-test="drive-row-warning"
+                  >
+                    ▲
+                  </span>
                   <span v-if="item.shared" class="drive-row__badge drive-row__badge--muted" role="status">
                     {{ messages.driveLoadPage.labels.shared }}
                   </span>
-                  <span v-if="item.outOfSync" class="drive-row__badge drive-row__badge--warning" role="status">
-                    {{ messages.driveLoadPage.labels.outOfSync }}
-                  </span>
                 </div>
               </div>
-              <p v-if="item.outOfSync" class="drive-row__warning" data-test="drive-row-warning" role="status">
-                {{ messages.driveLoadPage.labels.hashWarning }}
-              </p>
             </div>
             <div class="drive-row__meta">
               <dl class="drive-row__meta-grid">
@@ -265,7 +275,7 @@ onBeforeUnmount(() => {
                   type="button"
                   :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
                   data-test="drive-row-load"
-                  @click="handleLoad(item.id)"
+                  @click="handleLoad(item)"
                 >
                   {{ messages.driveLoadPage.actions.load }}
                 </button>
@@ -457,6 +467,25 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
+.drive-row__indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 200, 70, 0.55);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 220, 120, 0.18), rgba(40, 30, 10, 0.85));
+  color: #f6d76b;
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: 0 0 12px rgba(255, 200, 70, 0.15);
+}
+
+.drive-row__indicator--warning {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 220, 120, 0.2), rgba(60, 45, 20, 0.9));
+}
+
 .drive-row__badge {
   background: #ffb347;
   color: #1a1a24;
@@ -467,25 +496,10 @@ onBeforeUnmount(() => {
   border: 1px solid transparent;
 }
 
-.drive-row__badge--warning {
-  background: #ff6b6b;
-  color: #1a1a24;
-}
-
 .drive-row__badge--muted {
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
   border-color: var(--color-border-muted, #3a3a4a);
-}
-
-.drive-row__warning {
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 107, 107, 0.4);
-  background: rgba(255, 107, 107, 0.08);
-  color: #ffdede;
-  font-size: 0.9rem;
 }
 
 .drive-row__meta {

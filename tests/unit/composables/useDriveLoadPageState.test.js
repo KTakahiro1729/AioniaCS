@@ -3,6 +3,7 @@ import { effectScope, nextTick } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
+import { calculateMetadataHash } from '@/infrastructure/google-drive/googleDriveManager.js';
 
 vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
   useNotifications: () => ({
@@ -247,6 +248,49 @@ describe('useDriveLoadPageState', () => {
 
     expect(state.displayedItems.value[0].outOfSync).toBe(true);
     expect(state.displayedItems.value[0].lastModifiedAtDrive).toBe(1200);
+
+    scope.stop();
+  });
+
+  it('recalculates metadata hash and posts sync payload for a single item', async () => {
+    const payload = {
+      character: { name: 'Sync Hero' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const expectedHash = await calculateMetadataHash(payload);
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createResponse({ items: [{ file_id: 'sync-1', file_name: 'Sync.zip', last_modified_at_drive: 1000 }] }))
+      .mockResolvedValue(createResponse({ items: [{ id: 'sync-1', fileName: 'Sync.zip', content_hash: expectedHash }] }));
+
+    const requestDrivePage = vi.fn().mockResolvedValue({ files: [], nextPageToken: null });
+
+    const driveManager = {
+      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
+      ensureAccessToken: vi.fn(),
+      loadFileContent: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    };
+
+    const scope = effectScope();
+    let state;
+    scope.run(() => {
+      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+    });
+
+    await state.initialize();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await state.syncItemMetadata('sync-1');
+
+    const syncRequest = fetchMock.mock.calls.at(-1);
+    const body = JSON.parse(syncRequest[1].body);
+    expect(body.files[0].appProperties.last_app_hash).toBe(expectedHash);
+    expect(driveManager.loadFileContent).toHaveBeenCalledWith('sync-1');
+    expect(state.displayedItems.value[0].contentHash).toBe(expectedHash);
 
     scope.stop();
   });

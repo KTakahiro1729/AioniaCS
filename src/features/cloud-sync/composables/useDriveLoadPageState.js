@@ -1,8 +1,9 @@
 import { computed, ref } from 'vue';
-import { getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
+import { calculateMetadataHash, getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/i18n/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
+import { deserializeCharacterPayload } from '@/shared/utils/characterSerialization.js';
 
 const DISPLAY_BATCH = 10;
 const PREFETCH_BUFFER = 10;
@@ -285,6 +286,37 @@ export function useDriveLoadPageState(options = {}) {
     storeItems(mapped, { cachedOnly: false });
   }
 
+  async function syncItemMetadata(id) {
+    if (!id) return null;
+    const target = cacheMap.get(id) || {};
+    try {
+      const content = await driveManager.loadFileContent(id);
+      const payload = await deserializeCharacterPayload(content);
+      const hash = await calculateMetadataHash(payload);
+
+      const characterName =
+        target.characterName || payload?.character?.name || payload?.character?.characterName || payload?.character?.character_name || '';
+
+      const syncPayload = [
+        {
+          id,
+          name: target.fileName,
+          modifiedTime: target.lastModifiedAtDrive ? new Date(target.lastModifiedAtDrive * 1000).toISOString() : undefined,
+          appProperties:
+            hash || characterName ? { last_app_hash: hash || undefined, character_name: characterName || undefined } : undefined,
+          hasThumbnail: target.hasThumbnail || undefined,
+        },
+      ];
+
+      const response = await postSync(syncPayload, { allowEmpty: true });
+      applySyncResponse(response);
+      return response;
+    } catch (error) {
+      handleError(error, 'syncItemMetadata');
+      return null;
+    }
+  }
+
   async function postSync(payload, { allowEmpty = false } = {}) {
     if (!payload || payload.length === 0) {
       if (!allowEmpty) return [];
@@ -406,5 +438,6 @@ export function useDriveLoadPageState(options = {}) {
     cleanup,
     refresh: () => syncFromDrive(),
     selectCharacter,
+    syncItemMetadata,
   };
 }
