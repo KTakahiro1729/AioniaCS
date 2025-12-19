@@ -99,12 +99,12 @@ ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes 
 ui.modal.load.title,読込,,Load modal title
 ui.modal.load.buttons.loadLocal,ローカルから読み込む,,Load modal local button
 ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button
-ui.modal.load.buttons.selectCharacter,キャラクターを選ぶ,,Load modal select character button
+ui.modal.load.buttons.selectCharacter,Driveから読み込む,,Load modal select character button
 ui.modal.load.signInMessage,Drive機能を使うにはGoogleにサインインしてください。,,Load modal sign-in message
-driveLoadPage.title,キャラクターを選ぶ,,Drive load page title
+driveLoadPage.title,保存済み冒険者,,Drive load page title
 driveLoadPage.placeholder,ここにGoogle Drive上のキャラクター一覧が表示されます,,Drive load page placeholder
 driveLoadPage.buttons.back,シートに戻る,,Drive load page back button
-driveLoadPage.buttons.refresh,再同期,,Drive load page refresh button
+driveLoadPage.buttons.refresh,同期,,Drive load page refresh button
 driveLoadPage.status.loadingCache,キャッシュを読み込み中…,,Drive load page cache status
 driveLoadPage.status.syncing,Google Driveと同期中…,,Drive load page syncing status
 driveLoadPage.status.refreshed,最新の一覧を表示しています,,Drive load page refreshed status

@@ -7,7 +7,7 @@
       </button>
     </section>
     <section class="load-modal__section load-modal__section--drive">
-      <button class="button-base load-modal__button" type="button" :disabled="!canUseDrive" data-test="load-modal-select-character" @click="$emit('select-character')">
+      <button v-if="isSignedIn" class="button-base load-modal__button" type="button" :disabled="!canUseDrive" data-test="load-modal-select-character" @click="$emit('select-character')">
         {{ selectCharacterLabel }}
       </button>
       <div class="load-modal__config">
