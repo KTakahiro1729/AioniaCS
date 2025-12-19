@@ -113,6 +113,7 @@ driveLoadPage.status.error,一覧の取得に失敗しました,,Drive load page
 driveLoadPage.status.retryHint,再試行してください。ネットワークや認証状態をご確認ください,,Drive load page retry hint
 driveLoadPage.labels.untitled,無題のファイル,,Drive load page untitled label
 driveLoadPage.labels.unknownCharacter,キャラクター名未設定,,Drive load page unknown character label
+driveLoadPage.labels.created,作成日時,,Drive load page created label
 driveLoadPage.labels.modified,更新日時,,Drive load page modified label
 driveLoadPage.labels.hash,ハッシュ,,Drive load page hash label
 driveLoadPage.labels.driveHash,Drive上のハッシュ,,Drive load page drive hash label
@@ -124,6 +125,33 @@ driveLoadPage.labels.hashWarning,ハッシュが一致しません。外部で�
 driveLoadPage.labels.shared,共有中,,Drive load page shared badge
 driveLoadPage.labels.sharedAria,このファイルは共有されています,,Drive load page shared aria label
 driveLoadPage.labels.selectAction,このキャラクターを開く,,Drive load page select card aria label
+driveLoadPage.actions.load,読込,,Drive load page load action
+driveLoadPage.actions.delete,削除,,Drive load page delete action
+driveLoadPage.actions.share,共有,,Drive load page share action
+driveLoadPage.actions.download,保存,,Drive load page download action
+driveLoadPage.actions.loadAria,{name}を開く,,Drive load page load aria
+driveLoadPage.actions.deleteAria,{name}を削除する,,Drive load page delete aria
+driveLoadPage.actions.shareAria,{name}を共有する,,Drive load page share aria
+driveLoadPage.actions.downloadAria,{name}を端末に保存する,,Drive load page download aria
+driveLoadPage.confirmations.delete,{name}を削除しますか？この操作は元に戻せません。,,Drive load page delete confirmation
+driveLoadPage.toasts.share.loading.title,共有リンクを作成中,,Drive load page share loading title
+driveLoadPage.toasts.share.loading.message,公開リンクを準備しています…,,Drive load page share loading message
+driveLoadPage.toasts.share.success.title,共有リンクをコピーしました,,Drive load page share success title
+driveLoadPage.toasts.share.success.message,リンクをクリップボードにコピーしました,,Drive load page share success message
+driveLoadPage.toasts.share.error.title,共有に失敗しました,,Drive load page share error title
+driveLoadPage.toasts.share.error.message,共有リンクの作成に失敗しました,,Drive load page share error message
+driveLoadPage.toasts.download.loading.title,ダウンロードを準備中,,Drive load page download loading title
+driveLoadPage.toasts.download.loading.message,ファイルを取得しています…,,Drive load page download loading message
+driveLoadPage.toasts.download.success.title,ダウンロード開始,,Drive load page download success title
+driveLoadPage.toasts.download.success.message,端末への保存を開始しました,,Drive load page download success message
+driveLoadPage.toasts.download.error.title,ダウンロードに失敗しました,,Drive load page download error title
+driveLoadPage.toasts.download.error.message,ファイルを取得できませんでした,,Drive load page download error message
+driveLoadPage.toasts.delete.loading.title,削除中,,Drive load page delete loading title
+driveLoadPage.toasts.delete.loading.message,クラウド上のファイルを削除しています…,,Drive load page delete loading message
+driveLoadPage.toasts.delete.success.title,削除完了,,Drive load page delete success title
+driveLoadPage.toasts.delete.success.message,ファイルを削除しました,,Drive load page delete success message
+driveLoadPage.toasts.delete.error.title,削除に失敗しました,,Drive load page delete error title
+driveLoadPage.toasts.delete.error.message,ファイルの削除に失敗しました,,Drive load page delete error message
 driveLoadPage.errors.missingDriveManager,Driveの初期化が完了していません,,Drive load page missing manager error
 driveLoadPage.errors.folderUnavailable,キャラクターフォルダにアクセスできません,,Drive load page folder unavailable error
 driveLoadPage.errors.apiUnavailable,Google Drive APIが利用できません,,Drive load page api unavailable error
