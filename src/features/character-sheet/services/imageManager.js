@@ -75,21 +75,25 @@ export const ImageManager = {
       throw new Error('Canvas is not supported in this environment.');
     }
 
+    const targetSize = Math.max(1, Number.isFinite(size) ? size : 256);
     const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = targetSize;
+    canvas.height = targetSize;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Canvas context could not be created.');
     }
 
-    const scale = Math.min(size / (img.width || size), size / (img.height || size), 1);
-    const drawWidth = Math.max(1, Math.round((img.width || size) * scale));
-    const drawHeight = Math.max(1, Math.round((img.height || size) * scale));
-    const offsetX = Math.round((size - drawWidth) / 2);
-    const offsetY = Math.round((size - drawHeight) / 2);
+    const baseWidth = Math.max(1, Number.isFinite(img.width) ? img.width : 0);
+    const baseHeight = Math.max(1, Number.isFinite(img.height) ? img.height : 0);
+    const scale = Math.min(targetSize / baseWidth, targetSize / baseHeight, 1);
+    const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    const drawWidth = Math.max(1, Math.round(baseWidth * safeScale));
+    const drawHeight = Math.max(1, Math.round(baseHeight * safeScale));
+    const offsetX = Math.round((targetSize - drawWidth) / 2);
+    const offsetY = Math.round((targetSize - drawHeight) / 2);
 
-    ctx.clearRect(0, 0, size, size);
+    ctx.clearRect(0, 0, targetSize, targetSize);
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
     return canvas.toDataURL(mimeType);

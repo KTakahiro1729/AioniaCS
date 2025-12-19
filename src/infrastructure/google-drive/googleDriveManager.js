@@ -1002,11 +1002,7 @@ export class GoogleDriveManager {
     }
   }
 
-  /**
-   * Creates a character data file inside the configured Drive folder.
-   * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
-   */
-  async createCharacterFile(payload) {
+  async _buildCharacterFileParams(payload) {
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
@@ -1016,6 +1012,18 @@ export class GoogleDriveManager {
     const contentHints = payload?.thumbnail
       ? this.buildContentHintsFromThumbnail(payload.thumbnail, payload.thumbnailMimeType)
       : payload?.contentHints;
+
+    return { mimeType, fileName, folderId, appProperties, contentHints };
+  }
+
+  /**
+   * Creates a character data file inside the configured Drive folder.
+   * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
+   */
+  async createCharacterFile(payload) {
+    const params = await this._buildCharacterFileParams(payload);
+    if (!params) return null;
+    const { mimeType, fileName, folderId, appProperties, contentHints } = params;
     return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType, appProperties, contentHints);
   }
 
@@ -1025,15 +1033,9 @@ export class GoogleDriveManager {
    * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
    */
   async updateCharacterFile(id, payload) {
-    const mimeType = payload?.mimeType || 'application/zip';
-    const extension = mimeType === 'application/zip' ? 'zip' : 'json';
-    const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
-    if (!folderId) return null;
-    const appProperties = payload?.hashData ? await this.buildAppPropertiesFromPayload(payload.hashData) : undefined;
-    const contentHints = payload?.thumbnail
-      ? this.buildContentHintsFromThumbnail(payload.thumbnail, payload.thumbnailMimeType)
-      : payload?.contentHints;
+    const params = await this._buildCharacterFileParams(payload);
+    if (!params) return null;
+    const { mimeType, fileName, folderId, appProperties, contentHints } = params;
     return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType, appProperties, contentHints);
   }
 

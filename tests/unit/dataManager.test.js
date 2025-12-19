@@ -269,6 +269,8 @@ describe('DataManager', () => {
         updateCharacterFile: vi.fn().mockResolvedValue({ id: '1', name: 'c.zip' }),
         findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder-id'),
         isFileInConfiguredFolder: vi.fn().mockResolvedValue(true),
+        buildAppPropertiesFromPayload: vi.fn().mockResolvedValue(undefined),
+        buildContentHintsFromThumbnail: vi.fn().mockReturnValue(null),
       };
     });
 

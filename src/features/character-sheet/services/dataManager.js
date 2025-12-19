@@ -102,24 +102,7 @@ export class DataManager {
     event.target.value = null;
   }
 
-  /**
-   * Exports character data to a user selected Drive folder.
-   * @param {object} character - The character data.
-   * @param {Array} skills - The skills data.
-   * @param {Array} specialSkills - The special skills data.
-   * @param {object} equipments - The equipment data.
-   * @param {Array} histories - The histories data.
-   * @param {string} targetFolderId - The ID of the folder to save to.
-   * @param {string|null} currentFileId - The ID of the file if it exists (for updating).
-   * @param {string} fileName - The desired name for the file.
-   * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
-   */
-  async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId) {
-    if (!this.googleDriveManager) {
-      console.error('GoogleDriveManager not set in DataManager.');
-      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
-    }
-
+  async _buildDriveSaveContext(character, skills, specialSkills, equipments, histories) {
     const { data, images } = serializeCharacterForExport({
       character,
       skills,
@@ -143,10 +126,11 @@ export class DataManager {
       }
     }
 
+    const sanitizedName = this._sanitizeFileName(character.name);
     const payload = {
       content: archive.content,
       mimeType: archive.mimeType,
-      name: this._sanitizeFileName(character.name),
+      name: sanitizedName,
       hashData,
       ...(thumbnail
         ? {
@@ -155,9 +139,43 @@ export class DataManager {
           }
         : {}),
     };
-    const sanitizedFileName = `${this._sanitizeFileName(character.name)}.zip`;
-    const appProperties = await this.googleDriveManager.buildAppPropertiesFromPayload(hashData);
-    const contentHints = thumbnail ? this.googleDriveManager.buildContentHintsFromThumbnail(thumbnail, 'image/jpeg') : null;
+    const appProperties = this.googleDriveManager.buildAppPropertiesFromPayload
+      ? await this.googleDriveManager.buildAppPropertiesFromPayload(hashData)
+      : undefined;
+    const contentHints =
+      thumbnail && this.googleDriveManager.buildContentHintsFromThumbnail
+        ? this.googleDriveManager.buildContentHintsFromThumbnail(thumbnail, 'image/jpeg')
+        : null;
+    const sanitizedFileName = `${sanitizedName}.zip`;
+
+    return { payload, sanitizedFileName, appProperties, contentHints };
+  }
+
+  /**
+   * Exports character data to a user selected Drive folder.
+   * @param {object} character - The character data.
+   * @param {Array} skills - The skills data.
+   * @param {Array} specialSkills - The special skills data.
+   * @param {object} equipments - The equipment data.
+   * @param {Array} histories - The histories data.
+   * @param {string} targetFolderId - The ID of the folder to save to.
+   * @param {string|null} currentFileId - The ID of the file if it exists (for updating).
+   * @param {string} fileName - The desired name for the file.
+   * @returns {Promise<object|null>} Result from GoogleDriveManager.saveFile or null on error.
+   */
+  async exportDataToDriveFolder(character, skills, specialSkills, equipments, histories, targetFolderId, currentFileId) {
+    if (!this.googleDriveManager) {
+      console.error('GoogleDriveManager not set in DataManager.');
+      throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
+    }
+
+    const { payload, sanitizedFileName, appProperties, contentHints } = await this._buildDriveSaveContext(
+      character,
+      skills,
+      specialSkills,
+      equipments,
+      histories,
+    );
 
     try {
       const result = await this.googleDriveManager.saveFile(
@@ -186,42 +204,7 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const { data, images } = serializeCharacterForExport({
-      character,
-      skills,
-      specialSkills,
-      equipments,
-      histories,
-      includeImages: true,
-    });
-    const archive = await buildCharacterArchive({ data, images });
-    const hashData = data;
-    let thumbnail = null;
-
-    if (Array.isArray(images) && images.length > 0) {
-      try {
-        thumbnail = await ImageManager.createThumbnailFromDataUrl(images[0], {
-          size: 256,
-          mimeType: 'image/jpeg',
-        });
-      } catch (error) {
-        console.warn('Failed to build thumbnail from character images.', error);
-      }
-    }
-
-    const payload = {
-      content: archive.content,
-      mimeType: archive.mimeType,
-      name: this._sanitizeFileName(character.name),
-      hashData,
-      ...(thumbnail
-        ? {
-            thumbnail,
-            thumbnailMimeType: 'image/jpeg',
-          }
-        : {}),
-    };
-
+    const { payload } = await this._buildDriveSaveContext(character, skills, specialSkills, equipments, histories);
     let targetFileId = currentFileId;
     if (targetFileId) {
       const isInConfiguredFolder = await this.googleDriveManager.isFileInConfiguredFolder(targetFileId);
