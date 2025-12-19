@@ -124,6 +124,91 @@ describe('useDriveLoadPageState', () => {
     scope.stop();
   });
 
+  it('marks entries as out of sync when hashes differ', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createResponse({ items: [{ file_id: '1', file_name: 'Cached', content_hash: 'cache-hash', last_modified_at_drive: 1000 }] }),
+      )
+      .mockResolvedValue(createResponse({ items: [] }));
+
+    const requestDrivePage = vi.fn().mockResolvedValue({
+      files: [
+        {
+          id: '1',
+          name: 'Drive',
+          modifiedTime: '2024-01-01T00:00:00.000Z',
+          appProperties: { last_app_hash: 'drive-hash', character_name: 'Drive' },
+          shared: true,
+        },
+      ],
+      nextPageToken: null,
+    });
+
+    const driveManager = {
+      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
+      ensureAccessToken: vi.fn(),
+    };
+
+    const scope = effectScope();
+    let state;
+    scope.run(() => {
+      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+    });
+
+    await state.initialize();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(state.displayedItems.value[0].driveHash).toBe('drive-hash');
+    expect(state.displayedItems.value[0].cachedHash).toBe('cache-hash');
+    expect(state.displayedItems.value[0].outOfSync).toBe(true);
+    expect(state.displayedItems.value[0].shared).toBe(true);
+
+    scope.stop();
+  });
+
+  it('detects newer drive modifications even when hashes match', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createResponse({ items: [{ file_id: '1', file_name: 'Cached', content_hash: 'match', last_modified_at_drive: 1000 }] }),
+      )
+      .mockResolvedValue(createResponse({ items: [] }));
+
+    const requestDrivePage = vi.fn().mockResolvedValue({
+      files: [
+        {
+          id: '1',
+          name: 'Drive',
+          modifiedTime: '1970-01-01T00:20:00.000Z',
+          appProperties: { last_app_hash: 'match', character_name: 'Drive' },
+        },
+      ],
+      nextPageToken: null,
+    });
+
+    const driveManager = {
+      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
+      ensureAccessToken: vi.fn(),
+    };
+
+    const scope = effectScope();
+    let state;
+    scope.run(() => {
+      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+    });
+
+    await state.initialize();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(state.displayedItems.value[0].outOfSync).toBe(true);
+    expect(state.displayedItems.value[0].lastModifiedAtDrive).toBe(1200);
+
+    scope.stop();
+  });
+
   it('stores the selected file id in the ui store', () => {
     const fetchMock = vi.fn().mockResolvedValue(createResponse({ items: [] }));
     const requestDrivePage = vi.fn().mockResolvedValue({ files: [], nextPageToken: null });

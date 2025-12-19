@@ -4,10 +4,6 @@ googleDrive.auth.connected.title,Google Drive,,Drive auth connected title
 googleDrive.auth.connected.message,接続しました,,Drive auth connected body
 googleDrive.signOut.success.title,サインアウトしました,,Drive sign out success title
 googleDrive.signOut.success.message,,,Drive sign out success body (empty)
-googleDrive.folderPicker.unavailable.title,Google Drive,,Drive folder picker unavailable title
-googleDrive.folderPicker.unavailable.message,フォルダピッカーを利用できません,,Drive folder picker unavailable body
-googleDrive.folderPicker.error.title,Google Drive,,Drive folder picker error title
-googleDrive.folderPicker.error.message,フォルダ選択をキャンセルしました,,Drive folder picker default error body
 googleDrive.save.loading.title,Google Drive,,Drive save loading title
 googleDrive.save.loading.message,保存中...,,Drive save loading body
 googleDrive.save.newLoading.title,新規キャラクター,,Drive save new character loading title
@@ -119,9 +115,14 @@ driveLoadPage.labels.untitled,無題のファイル,,Drive load page untitled la
 driveLoadPage.labels.unknownCharacter,キャラクター名未設定,,Drive load page unknown character label
 driveLoadPage.labels.modified,更新日時,,Drive load page modified label
 driveLoadPage.labels.hash,ハッシュ,,Drive load page hash label
+driveLoadPage.labels.driveHash,Drive上のハッシュ,,Drive load page drive hash label
+driveLoadPage.labels.cachedHash,キャッシュのハッシュ,,Drive load page cached hash label
 driveLoadPage.labels.notAvailable,なし,,Drive load page not available label
 driveLoadPage.labels.unknownDate,日時不明,,Drive load page unknown date label
 driveLoadPage.labels.outOfSync,要同期,,Drive load page out-of-sync badge
+driveLoadPage.labels.hashWarning,ハッシュが一致しません。外部で編集された可能性があります,,Drive load page hash mismatch warning
+driveLoadPage.labels.shared,共有中,,Drive load page shared badge
+driveLoadPage.labels.sharedAria,このファイルは共有されています,,Drive load page shared aria label
 driveLoadPage.labels.selectAction,このキャラクターを開く,,Drive load page select card aria label
 driveLoadPage.errors.missingDriveManager,Driveの初期化が完了していません,,Drive load page missing manager error
 driveLoadPage.errors.folderUnavailable,キャラクターフォルダにアクセスできません,,Drive load page folder unavailable error

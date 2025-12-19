@@ -129,7 +129,18 @@ onBeforeUnmount(() => {
               <p class="drive-load-page__file-name">{{ item.fileName || messages.driveLoadPage.labels.untitled }}</p>
               <p class="drive-load-page__character-name">{{ item.characterName || messages.driveLoadPage.labels.unknownCharacter }}</p>
             </div>
-            <span v-if="item.outOfSync" class="drive-load-page__badge">{{ messages.driveLoadPage.labels.outOfSync }}</span>
+            <div class="drive-load-page__indicators" aria-live="polite">
+              <span
+                v-if="item.shared"
+                class="drive-load-page__badge drive-load-page__badge--muted"
+                :aria-label="messages.driveLoadPage.labels.sharedAria"
+              >
+                {{ messages.driveLoadPage.labels.shared }}
+              </span>
+              <span v-if="item.outOfSync" class="drive-load-page__badge drive-load-page__badge--warning" role="status">
+                {{ messages.driveLoadPage.labels.outOfSync }}
+              </span>
+            </div>
           </header>
           <dl class="drive-load-page__details">
             <div class="drive-load-page__row">
@@ -137,12 +148,21 @@ onBeforeUnmount(() => {
               <dd>{{ formatTimestamp(item.lastModifiedAtDrive) }}</dd>
             </div>
             <div class="drive-load-page__row">
-              <dt>{{ messages.driveLoadPage.labels.hash }}</dt>
-              <dd :title="item.contentHash || messages.driveLoadPage.labels.notAvailable">
-                {{ formatHash(item.contentHash) }}
+              <dt>{{ messages.driveLoadPage.labels.driveHash }}</dt>
+              <dd :title="item.driveHash || messages.driveLoadPage.labels.notAvailable">
+                {{ formatHash(item.driveHash) }}
+              </dd>
+            </div>
+            <div class="drive-load-page__row">
+              <dt>{{ messages.driveLoadPage.labels.cachedHash }}</dt>
+              <dd :title="item.cachedHash || messages.driveLoadPage.labels.notAvailable">
+                {{ formatHash(item.cachedHash) }}
               </dd>
             </div>
           </dl>
+          <p v-if="item.outOfSync" class="drive-load-page__warning" role="status">
+            {{ messages.driveLoadPage.labels.hashWarning }}
+          </p>
         </button>
       </div>
 
@@ -279,6 +299,12 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
+.drive-load-page__indicators {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .drive-load-page__file-name {
   margin: 0;
   font-weight: 700;
@@ -298,6 +324,17 @@ onBeforeUnmount(() => {
   padding: 4px 8px;
   font-size: 0.75rem;
   font-weight: 700;
+}
+
+.drive-load-page__badge--warning {
+  background: #ff6b6b;
+  color: #1a1a24;
+}
+
+.drive-load-page__badge--muted {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-muted, #3a3a4a);
 }
 
 .drive-load-page__details {
@@ -321,6 +358,16 @@ onBeforeUnmount(() => {
   margin: 0;
   text-align: right;
   color: var(--color-text-primary);
+}
+
+.drive-load-page__warning {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.08);
+  color: #ffdede;
+  font-size: 0.9rem;
 }
 
 .drive-load-page__sentinel {

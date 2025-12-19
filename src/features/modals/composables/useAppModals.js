@@ -25,8 +25,6 @@ export function useAppModals(options) {
     printCharacterSheet,
     openPreviewPage,
     copyEditCallback,
-    loadCharacterFromDrive,
-    promptForDriveFolder,
     updateDriveFolderPath,
     canSignInToGoogle,
     isDriveReady,
@@ -40,9 +38,7 @@ export function useAppModals(options) {
       driveFolderPath: uiStore.driveFolderPath,
       driveFolderLabel: messages.characterHub.driveFolder.label,
       driveFolderPlaceholder: messages.characterHub.driveFolder.placeholder,
-      changeFolderLabel: messages.characterHub.driveFolder.changeButton,
       loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
-      loadDriveLabel: messages.ui.modal.load.buttons.loadDrive,
       selectCharacterLabel: messages.ui.modal.load.buttons.selectCharacter,
       signInLabel: messages.characterHub.buttons.signIn,
       signInMessage: messages.ui.modal.load.signInMessage,
@@ -55,10 +51,8 @@ export function useAppModals(options) {
       buttons: [],
       on: {
         'load-local': handleFileUpload,
-        'load-drive': loadCharacterFromDrive,
         'sign-in': handleSignInClick,
         'update-drive-folder-path': updateDriveFolderPath,
-        'choose-drive-folder': promptForDriveFolder,
         'select-character': () => {
           modalStore.resolveModal({ value: 'drive-load' });
           router.push({ name: 'drive-load' });

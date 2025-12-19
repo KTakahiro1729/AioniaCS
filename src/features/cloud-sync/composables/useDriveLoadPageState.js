@@ -9,6 +9,18 @@ const PREFETCH_BUFFER = 10;
 const INITIAL_PAGE_SIZE = 20;
 const NEXT_PAGE_SIZE = 10;
 
+function toSeconds(value) {
+  if (value == null) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value >= 1_000_000_000_000 ? Math.floor(value / 1000) : Math.floor(value);
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return Math.floor(date.getTime() / 1000);
+}
+
 export function normalizeMetadataItem(raw) {
   const id = raw?.fileId || raw?.file_id || raw?.id;
   if (!id) return null;
@@ -16,27 +28,59 @@ export function normalizeMetadataItem(raw) {
   const characterName =
     raw?.characterName || raw?.character_name || raw?.appProperties?.character_name || raw?.app_properties?.character_name || '';
   const fileName = raw?.fileName || raw?.file_name || raw?.name || '';
-  const contentHash =
-    raw?.contentHash || raw?.content_hash || raw?.appProperties?.last_app_hash || raw?.app_properties?.last_app_hash || null;
-  const modified = raw?.lastModifiedAtDrive || raw?.last_modified_at_drive || raw?.modifiedTime;
-  const lastModifiedAtDrive = modified ? Math.floor(new Date(modified).getTime() / 1000) : null;
+  const driveHash = raw?.appProperties?.last_app_hash || raw?.app_properties?.last_app_hash || null;
+  const cachedHash = raw?.contentHash || raw?.content_hash || null;
+  const driveModifiedAt = toSeconds(raw?.modifiedTime);
+  const cachedModifiedAt = toSeconds(raw?.lastModifiedAtDrive || raw?.last_modified_at_drive);
   const syncedAt = raw?.syncedAt || raw?.synced_at || null;
+  const shared = Boolean(raw?.shared);
   const outOfSync = Boolean(raw?.outOfSync || raw?.out_of_sync || raw?.hashMismatch || raw?.modifiedMismatch);
+  const lastModifiedAtDrive = driveModifiedAt ?? cachedModifiedAt;
+  const contentHash = driveHash || cachedHash || null;
 
-  return { id, characterName, fileName, contentHash, lastModifiedAtDrive, syncedAt, outOfSync };
+  return {
+    id,
+    characterName,
+    fileName,
+    driveHash,
+    cachedHash,
+    contentHash,
+    driveModifiedAt,
+    cachedModifiedAt,
+    lastModifiedAtDrive,
+    syncedAt,
+    shared,
+    outOfSync,
+  };
+}
+
+function determineOutOfSync(entry) {
+  if (!entry) return false;
+  if (entry.outOfSync) return true;
+  const driveHash = entry.driveHash;
+  const cachedHash = entry.cachedHash;
+  if (driveHash && cachedHash && driveHash !== cachedHash) return true;
+
+  const driveModifiedAt = entry.driveModifiedAt;
+  const baselineModifiedAt = entry.cachedModifiedAt ?? entry.syncedAt ?? null;
+  if (driveModifiedAt && baselineModifiedAt && driveModifiedAt > baselineModifiedAt) {
+    return true;
+  }
+  return false;
 }
 
 function buildSyncSource(item) {
   const normalized = normalizeMetadataItem(item);
   if (!normalized) return null;
+  const lastAppHash = normalized.driveHash || normalized.cachedHash || normalized.contentHash || null;
   return {
     id: normalized.id,
     name: normalized.fileName,
     modifiedTime: normalized.lastModifiedAtDrive ? new Date(normalized.lastModifiedAtDrive * 1000).toISOString() : undefined,
     appProperties:
-      normalized.contentHash || normalized.characterName
+      lastAppHash || normalized.characterName
         ? {
-            last_app_hash: normalized.contentHash || undefined,
+            last_app_hash: lastAppHash || undefined,
             character_name: normalized.characterName || undefined,
           }
         : undefined,
@@ -87,13 +131,14 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
 
   const response = await gapi.client.drive.files.list({
     q: `'${folderId}' in parents and mimeType='application/json' and trashed=false`,
-    fields: 'nextPageToken, files(id, name, modifiedTime, appProperties)',
+    fields: 'nextPageToken, files(id, name, modifiedTime, appProperties, shared)',
     spaces: 'drive',
     pageSize,
     pageToken,
   });
 
   return { files: response.result.files || [], nextPageToken: response.result.nextPageToken || null };
+}
 
 export function useDriveLoadPageState(options = {}) {
   const fetchImpl = options.fetchImpl || fetch;
@@ -161,11 +206,23 @@ export function useDriveLoadPageState(options = {}) {
     for (const raw of list) {
       const normalized = normalizeMetadataItem(raw);
       if (!normalized) continue;
-      cacheMap.set(normalized.id, {
+      const existing = cacheMap.get(normalized.id) || {};
+      const merged = {
+        ...existing,
         ...normalized,
         cachedOnly,
-        syncSource: raw.syncSource || buildSyncSource(raw),
-      });
+        contentHash: normalized.contentHash ?? existing.contentHash ?? null,
+        driveHash: normalized.driveHash ?? existing.driveHash ?? null,
+        cachedHash: normalized.cachedHash ?? existing.cachedHash ?? null,
+        driveModifiedAt: normalized.driveModifiedAt ?? existing.driveModifiedAt ?? null,
+        cachedModifiedAt: normalized.cachedModifiedAt ?? existing.cachedModifiedAt ?? null,
+        lastModifiedAtDrive: normalized.lastModifiedAtDrive ?? existing.lastModifiedAtDrive ?? null,
+        syncedAt: normalized.syncedAt ?? existing.syncedAt ?? null,
+        shared: normalized.shared ?? existing.shared ?? false,
+      };
+      merged.outOfSync = determineOutOfSync(merged);
+      merged.syncSource = existing.syncSource || raw.syncSource || buildSyncSource(raw);
+      cacheMap.set(normalized.id, merged);
     }
     updateItemsFromCacheMap();
   }

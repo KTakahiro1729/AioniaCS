@@ -43,7 +43,6 @@ const {
   handleSignOutClick,
   saveCharacterToDrive,
   loadCharacterFromDrive,
-  promptForDriveFolder,
   updateDriveFolderPath,
 } = useGoogleDrive(dataManager);
 
@@ -114,8 +113,6 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
-  loadCharacterFromDrive,
-  promptForDriveFolder,
   updateDriveFolderPath,
   canSignInToGoogle,
   isDriveReady,
@@ -152,6 +149,18 @@ watch(
     } else {
       document.body.classList.remove('is-modal-open');
     }
+  },
+);
+
+const lastLoadedDriveId = ref(uiStore.currentDriveFileId);
+watch(
+  () => uiStore.currentDriveFileId,
+  async (id) => {
+    if (!id || id === lastLoadedDriveId.value) {
+      return;
+    }
+    lastLoadedDriveId.value = id;
+    await loadCharacterFromDrive(id);
   },
 );
 

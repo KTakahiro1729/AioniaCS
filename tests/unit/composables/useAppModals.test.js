@@ -44,8 +44,6 @@ describe('useAppModals', () => {
       printCharacterSheet: vi.fn(),
       openPreviewPage: vi.fn(),
       copyEditCallback: vi.fn(),
-      loadCharacterFromDrive: vi.fn(),
-      promptForDriveFolder: vi.fn(),
       updateDriveFolderPath: vi.fn(),
       canSignInToGoogle: ref(true),
       isDriveReady: ref(true),
