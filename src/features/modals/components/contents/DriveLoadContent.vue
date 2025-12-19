@@ -118,14 +118,14 @@ function requireDriveManager() {
   return driveManager;
 }
 
-function handleLoad(item) {
+async function handleLoad(item) {
   if (!item?.id) return;
+  let prefetchedData = null;
   if (item.outOfSync) {
-    syncItemMetadata(item.id).catch((error) =>
-      logAndToastError(error, { title: messages.driveLoadPage.title, message: messages.driveLoadPage.errors.syncFailed }, 'sync-item-metadata'),
-    );
+    const result = await syncItemMetadata(item.id);
+    prefetchedData = result?.payload || null;
   }
-  selectCharacter(item.id);
+  selectCharacter(item.id, prefetchedData);
   modalStore.hideModal();
 }
 

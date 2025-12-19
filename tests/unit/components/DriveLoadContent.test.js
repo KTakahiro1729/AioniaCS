@@ -67,7 +67,7 @@ const initialize = vi.fn();
 const refresh = vi.fn();
 const cleanup = vi.fn();
 const selectCharacter = vi.fn();
-const syncItemMetadata = vi.fn().mockResolvedValue();
+const syncItemMetadata = vi.fn().mockResolvedValue({ payload: null, syncItems: [] });
 
 vi.mock('@/features/cloud-sync/composables/useDriveLoadPageState.js', () => {
   return {
@@ -124,7 +124,8 @@ describe('DriveLoadContent', () => {
     ];
     const wrapper = mount(DriveLoadContent);
     await wrapper.find('[data-test="drive-row-load"]').trigger('click');
-    expect(selectCharacter).toHaveBeenCalledWith('file-1');
+    await flushPromises();
+    expect(selectCharacter).toHaveBeenCalledWith('file-1', null);
     expect(hideModalMock).toHaveBeenCalled();
   });
 
@@ -139,12 +140,22 @@ describe('DriveLoadContent', () => {
         outOfSync: true,
       },
     ];
+    syncItemMetadata.mockResolvedValue({
+      payload: { character: { name: 'Synced' }, skills: [], specialSkills: [], equipments: {}, histories: [] },
+    });
 
     const wrapper = mount(DriveLoadContent);
     await wrapper.find('[data-test="drive-row-load"]').trigger('click');
+    await flushPromises();
 
     expect(syncItemMetadata).toHaveBeenCalledWith('file-sync');
-    expect(selectCharacter).toHaveBeenCalledWith('file-sync');
+    expect(selectCharacter).toHaveBeenCalledWith('file-sync', {
+      character: { name: 'Synced' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    });
     expect(hideModalMock).toHaveBeenCalled();
   });
 

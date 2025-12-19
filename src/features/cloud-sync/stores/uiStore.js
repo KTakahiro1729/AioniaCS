@@ -8,6 +8,7 @@ export const useUiStore = defineStore('ui', {
     isLoading: false,
     driveFolderPath: '慈悲なきアイオニア',
     currentDriveFileId: null,
+    prefetchedDriveData: {},
     isViewingShared: false,
     showSpecialSkillDescriptions: false,
     showItemDescriptions: false,
@@ -33,6 +34,18 @@ export const useUiStore = defineStore('ui', {
     },
     setCurrentDriveFileId(id) {
       this.currentDriveFileId = id;
+    },
+    setPrefetchedDriveData(id, data) {
+      if (!id || data == null) return;
+      this.prefetchedDriveData = { ...this.prefetchedDriveData, [id]: data };
+    },
+    consumePrefetchedDriveData(id) {
+      if (!id || !this.prefetchedDriveData[id]) return null;
+      const data = this.prefetchedDriveData[id];
+      const rest = { ...this.prefetchedDriveData };
+      delete rest[id];
+      this.prefetchedDriveData = rest;
+      return data;
     },
     clearCurrentDriveFileId() {
       this.currentDriveFileId = null;

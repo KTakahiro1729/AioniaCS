@@ -310,7 +310,8 @@ export function useDriveLoadPageState(options = {}) {
 
       const response = await postSync(syncPayload, { allowEmpty: true });
       applySyncResponse(response);
-      return response;
+      uiStore.setPrefetchedDriveData(id, payload);
+      return { payload, syncItems: response };
     } catch (error) {
       handleError(error, 'syncItemMetadata');
       return null;
@@ -420,8 +421,11 @@ export function useDriveLoadPageState(options = {}) {
     syncFromDrive();
   }
 
-  function selectCharacter(id) {
+  function selectCharacter(id, initialData) {
     if (!id) return;
+    if (initialData) {
+      uiStore.setPrefetchedDriveData(id, initialData);
+    }
     uiStore.setCurrentDriveFileId(id);
   }
 

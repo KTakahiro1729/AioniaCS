@@ -284,13 +284,17 @@ describe('useDriveLoadPageState', () => {
     await state.initialize();
     await nextTick();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    await state.syncItemMetadata('sync-1');
+    const result = await state.syncItemMetadata('sync-1');
 
     const syncRequest = fetchMock.mock.calls.at(-1);
     const body = JSON.parse(syncRequest[1].body);
     expect(body.files[0].appProperties.last_app_hash).toBe(expectedHash);
     expect(driveManager.loadFileContent).toHaveBeenCalledWith('sync-1');
     expect(state.displayedItems.value[0].contentHash).toBe(expectedHash);
+    expect(result.payload).toEqual(payload);
+
+    const uiStore = useUiStore();
+    expect(uiStore.prefetchedDriveData['sync-1']).toEqual(payload);
 
     scope.stop();
   });
@@ -310,8 +314,10 @@ describe('useDriveLoadPageState', () => {
     });
 
     const uiStore = useUiStore();
-    state.selectCharacter('abc');
+    const preload = { character: { name: 'Cache' } };
+    state.selectCharacter('abc', preload);
     expect(uiStore.currentDriveFileId).toBe('abc');
+    expect(uiStore.prefetchedDriveData.abc).toEqual(preload);
 
     scope.stop();
   });
