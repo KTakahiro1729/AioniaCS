@@ -3,6 +3,9 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { messages } from '@/i18n/index.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
+import { getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
+import { copyText } from '@/shared/utils/clipboard.js';
+import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 
 const router = useRouter();
 const sentinelRef = ref(null);
@@ -22,7 +25,19 @@ const {
   selectCharacter,
 } = useDriveLoadPageState();
 
-const isEmpty = computed(() => !isLoadingCache.value && displayedItems.value.length === 0);
+const { showAsyncToast, logAndToastError } = useNotifications();
+
+let driveManager = null;
+try {
+  driveManager = getGoogleDriveManagerInstance();
+} catch (error) {
+  logAndToastError(error, { title: messages.driveLoadPage.title, message: messages.driveLoadPage.errors.missingDriveManager });
+}
+
+const filteredItems = computed(() =>
+  displayedItems.value.filter((item) => typeof item?.fileName === 'string' && item.fileName.toLowerCase().endsWith('.zip')),
+);
+const isEmpty = computed(() => !isLoadingCache.value && filteredItems.value.length === 0);
 const isBusy = computed(() => isSyncing.value || isFetchingMore.value);
 const statusLabel = computed(() => statusMessage.value);
 const statusDetail = computed(() => (errorMessage.value ? messages.driveLoadPage.status.retryHint : ''));
@@ -31,16 +46,15 @@ function goBackToSheet() {
   router.push({ name: 'character-sheet' });
 }
 
-function onSelectCharacter(fileId) {
-  if (!fileId) return;
-  selectCharacter(fileId);
-  router.push({ name: 'character-sheet' });
+function getDisplayName(item) {
+  if (!item?.fileName) return messages.driveLoadPage.labels.untitled;
+  const name = item.fileName.replace(/\.zip$/i, '');
+  return name || messages.driveLoadPage.labels.untitled;
 }
 
-function formatHash(hash) {
-  if (!hash) return messages.driveLoadPage.labels.notAvailable;
-  const shortHash = hash.slice(0, 8);
-  return hash.length > 8 ? `${shortHash}...` : shortHash;
+function getDownloadName(item) {
+  if (!item?.fileName) return `${messages.driveLoadPage.labels.untitled}.zip`;
+  return item.fileName.toLowerCase().endsWith('.zip') ? item.fileName : `${item.fileName}.zip`;
 }
 
 function formatTimestamp(seconds) {
@@ -79,6 +93,76 @@ function setupObserver() {
   observer.value.observe(sentinelRef.value);
 }
 
+function requireDriveManager() {
+  if (!driveManager) {
+    throw new Error(messages.driveLoadPage.errors.missingDriveManager);
+  }
+  return driveManager;
+}
+
+function handleLoad(fileId) {
+  if (!fileId) return;
+  selectCharacter(fileId);
+  router.push({ name: 'character-sheet' });
+}
+
+async function handleDelete(item) {
+  if (!item?.id) return;
+  const confirmed = window.confirm(messages.driveLoadPage.confirmations.delete(getDisplayName(item)));
+  if (!confirmed) return;
+  const manager = requireDriveManager();
+  try {
+    await showAsyncToast(manager.deleteCharacterFile(item.id), messages.driveLoadPage.toasts.delete, 'drive-delete');
+    await refresh();
+  } catch (error) {
+    logAndToastError(error, messages.driveLoadPage.toasts.delete.error, 'drive-delete');
+  }
+}
+
+async function handleShare(item) {
+  if (!item?.id) return;
+  const manager = requireDriveManager();
+  const task = (async () => {
+    const link = await manager.ensureFilePublic(item.id);
+    if (!link) {
+      throw new Error(messages.share.errors.shareFailed);
+    }
+    await copyText(link);
+    return link;
+  })();
+
+  try {
+    await showAsyncToast(task, messages.driveLoadPage.toasts.share, 'drive-share');
+  } catch (error) {
+    logAndToastError(error, messages.driveLoadPage.toasts.share.error, 'drive-share');
+  }
+}
+
+async function handleDownload(item) {
+  if (!item?.id) return;
+  const manager = requireDriveManager();
+  const task = (async () => {
+    const content = await manager.loadFileContent(item.id);
+    if (!content) {
+      throw new Error(messages.driveLoadPage.toasts.download.error.message);
+    }
+    const blob = content instanceof Blob ? content : new Blob([content], { type: 'application/zip' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = getDownloadName(item);
+    link.click();
+    URL.revokeObjectURL(url);
+    return url;
+  })();
+
+  try {
+    await showAsyncToast(task, messages.driveLoadPage.toasts.download, 'drive-download');
+  } catch (error) {
+    logAndToastError(error, messages.driveLoadPage.toasts.download.error, 'drive-download');
+  }
+}
+
 onMounted(() => {
   initialize();
   setupObserver();
@@ -114,56 +198,82 @@ onBeforeUnmount(() => {
       <p v-if="isEmpty" class="drive-load-page__placeholder">{{ messages.driveLoadPage.placeholder }}</p>
 
       <div v-else class="drive-load-page__list" role="list">
-        <button
-          v-for="item in displayedItems"
+        <article
+          v-for="item in filteredItems"
           :key="item.id"
-          class="drive-load-page__card"
-          type="button"
+          class="drive-card"
           role="listitem"
-          :aria-label="`${messages.driveLoadPage.labels.selectAction}: ${item.fileName || messages.driveLoadPage.labels.untitled}`"
           data-test="drive-card"
-          @click="onSelectCharacter(item.id)"
         >
-          <header class="drive-load-page__card-header">
-            <div>
-              <p class="drive-load-page__file-name">{{ item.fileName || messages.driveLoadPage.labels.untitled }}</p>
-              <p class="drive-load-page__character-name">{{ item.characterName || messages.driveLoadPage.labels.unknownCharacter }}</p>
+          <header class="drive-card__header">
+            <div class="drive-card__title-block">
+              <h2 class="drive-card__title" data-test="drive-card-title">{{ getDisplayName(item) }}</h2>
+              <p class="drive-card__filename">{{ item.fileName || messages.driveLoadPage.labels.untitled }}</p>
             </div>
-            <div class="drive-load-page__indicators" aria-live="polite">
-              <span
-                v-if="item.shared"
-                class="drive-load-page__badge drive-load-page__badge--muted"
-                :aria-label="messages.driveLoadPage.labels.sharedAria"
-              >
+            <div class="drive-card__indicators">
+              <span v-if="item.shared" class="drive-card__badge drive-card__badge--muted" role="status">
                 {{ messages.driveLoadPage.labels.shared }}
               </span>
-              <span v-if="item.outOfSync" class="drive-load-page__badge drive-load-page__badge--warning" role="status">
+              <span v-if="item.outOfSync" class="drive-card__badge drive-card__badge--warning" role="status">
                 {{ messages.driveLoadPage.labels.outOfSync }}
               </span>
             </div>
           </header>
-          <dl class="drive-load-page__details">
-            <div class="drive-load-page__row">
+
+          <dl class="drive-card__meta">
+            <div class="drive-card__meta-row" data-test="drive-card-field">
+              <dt>{{ messages.driveLoadPage.labels.created }}</dt>
+              <dd>{{ formatTimestamp(item.createdAt) }}</dd>
+            </div>
+            <div class="drive-card__meta-row" data-test="drive-card-field">
               <dt>{{ messages.driveLoadPage.labels.modified }}</dt>
               <dd>{{ formatTimestamp(item.lastModifiedAtDrive) }}</dd>
             </div>
-            <div class="drive-load-page__row">
-              <dt>{{ messages.driveLoadPage.labels.driveHash }}</dt>
-              <dd :title="item.driveHash || messages.driveLoadPage.labels.notAvailable">
-                {{ formatHash(item.driveHash) }}
-              </dd>
-            </div>
-            <div class="drive-load-page__row">
-              <dt>{{ messages.driveLoadPage.labels.cachedHash }}</dt>
-              <dd :title="item.cachedHash || messages.driveLoadPage.labels.notAvailable">
-                {{ formatHash(item.cachedHash) }}
-              </dd>
-            </div>
           </dl>
-          <p v-if="item.outOfSync" class="drive-load-page__warning" role="status">
+
+          <p v-if="item.outOfSync" class="drive-card__warning" data-test="drive-card-warning" role="status">
             {{ messages.driveLoadPage.labels.hashWarning }}
           </p>
-        </button>
+
+          <div class="drive-card__actions">
+            <button
+              class="button-base button-base--primary"
+              type="button"
+              :aria-label="messages.driveLoadPage.actions.loadAria(getDisplayName(item))"
+              data-test="drive-card-load"
+              @click="handleLoad(item.id)"
+            >
+              {{ messages.driveLoadPage.actions.load }}
+            </button>
+            <button
+              class="button-base button-base--ghost"
+              type="button"
+              :aria-label="messages.driveLoadPage.actions.shareAria(getDisplayName(item))"
+              data-test="drive-card-share"
+              @click="handleShare(item)"
+            >
+              {{ messages.driveLoadPage.actions.share }}
+            </button>
+            <button
+              class="button-base button-base--ghost"
+              type="button"
+              :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
+              data-test="drive-card-download"
+              @click="handleDownload(item)"
+            >
+              {{ messages.driveLoadPage.actions.download }}
+            </button>
+            <button
+              class="button-base button-base--danger"
+              type="button"
+              :aria-label="messages.driveLoadPage.actions.deleteAria(getDisplayName(item))"
+              data-test="drive-card-delete"
+              @click="handleDelete(item)"
+            >
+              {{ messages.driveLoadPage.actions.delete }}
+            </button>
+          </div>
+        </article>
       </div>
 
       <div ref="sentinelRef" class="drive-load-page__sentinel" aria-hidden="true">
@@ -261,106 +371,96 @@ onBeforeUnmount(() => {
 
 .drive-load-page__list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
 }
 
-.drive-load-page__card {
-  appearance: none;
-  border: none;
-  text-align: left;
-  width: 100%;
+.drive-card {
   border: 1px solid var(--color-border-muted, #3a3a4a);
-  border-radius: 6px;
-  padding: 12px;
+  border-radius: 8px;
+  padding: 14px;
   background: linear-gradient(145deg, rgba(39, 39, 52, 0.9), rgba(26, 26, 36, 0.9));
   display: flex;
   flex-direction: column;
   gap: 10px;
-  color: inherit;
-  cursor: pointer;
-  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
-.drive-load-page__card:hover {
-  border-color: var(--color-border-normal);
-  transform: translateY(-1px);
-}
-
-.drive-load-page__card:focus-visible {
-  outline: 2px solid #4da3ff;
-  outline-offset: 2px;
-}
-
-.drive-load-page__card-header {
+.drive-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
 }
 
-.drive-load-page__indicators {
+.drive-card__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drive-card__title {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.drive-card__filename {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.drive-card__indicators {
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
-.drive-load-page__file-name {
-  margin: 0;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.drive-load-page__character-name {
-  margin: 4px 0 0;
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-}
-
-.drive-load-page__badge {
+.drive-card__badge {
   background: #ffb347;
   color: #1a1a24;
   border-radius: 12px;
   padding: 4px 8px;
   font-size: 0.75rem;
   font-weight: 700;
+  border: 1px solid transparent;
 }
 
-.drive-load-page__badge--warning {
+.drive-card__badge--warning {
   background: #ff6b6b;
   color: #1a1a24;
 }
 
-.drive-load-page__badge--muted {
-  background: rgba(255, 255, 255, 0.1);
+.drive-card__badge--muted {
+  background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border-muted, #3a3a4a);
+  border-color: var(--color-border-muted, #3a3a4a);
 }
 
-.drive-load-page__details {
+.drive-card__meta {
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.drive-load-page__row {
+.drive-card__meta-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
 }
 
-.drive-load-page__row dt {
+.drive-card__meta-row dt {
   color: var(--color-text-muted);
 }
 
-.drive-load-page__row dd {
+.drive-card__meta-row dd {
   margin: 0;
   text-align: right;
   color: var(--color-text-primary);
 }
 
-.drive-load-page__warning {
+.drive-card__warning {
   margin: 4px 0 0;
   padding: 8px 10px;
   border-radius: 6px;
@@ -368,6 +468,12 @@ onBeforeUnmount(() => {
   background: rgba(255, 107, 107, 0.08);
   color: #ffdede;
   font-size: 0.9rem;
+}
+
+.drive-card__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
 }
 
 .drive-load-page__sentinel {

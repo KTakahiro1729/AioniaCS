@@ -259,6 +259,7 @@ export const messages = {
     labels: {
       untitled: t('driveLoadPage.labels.untitled'),
       unknownCharacter: t('driveLoadPage.labels.unknownCharacter'),
+      created: t('driveLoadPage.labels.created'),
       modified: t('driveLoadPage.labels.modified'),
       hash: t('driveLoadPage.labels.hash'),
       driveHash: t('driveLoadPage.labels.driveHash'),
@@ -270,6 +271,63 @@ export const messages = {
       shared: t('driveLoadPage.labels.shared'),
       sharedAria: t('driveLoadPage.labels.sharedAria'),
       selectAction: t('driveLoadPage.labels.selectAction'),
+    },
+    actions: {
+      load: t('driveLoadPage.actions.load'),
+      delete: t('driveLoadPage.actions.delete'),
+      share: t('driveLoadPage.actions.share'),
+      download: t('driveLoadPage.actions.download'),
+      loadAria: (name) => t('driveLoadPage.actions.loadAria', { name }),
+      deleteAria: (name) => t('driveLoadPage.actions.deleteAria', { name }),
+      shareAria: (name) => t('driveLoadPage.actions.shareAria', { name }),
+      downloadAria: (name) => t('driveLoadPage.actions.downloadAria', { name }),
+    },
+    confirmations: {
+      delete: (name) => t('driveLoadPage.confirmations.delete', { name }),
+    },
+    toasts: {
+      share: {
+        loading: () => ({
+          title: t('driveLoadPage.toasts.share.loading.title'),
+          message: t('driveLoadPage.toasts.share.loading.message'),
+        }),
+        success: () => ({
+          title: t('driveLoadPage.toasts.share.success.title'),
+          message: t('driveLoadPage.toasts.share.success.message'),
+        }),
+        error: (err) => ({
+          title: t('driveLoadPage.toasts.share.error.title'),
+          message: err?.message || t('driveLoadPage.toasts.share.error.message'),
+        }),
+      },
+      download: {
+        loading: () => ({
+          title: t('driveLoadPage.toasts.download.loading.title'),
+          message: t('driveLoadPage.toasts.download.loading.message'),
+        }),
+        success: () => ({
+          title: t('driveLoadPage.toasts.download.success.title'),
+          message: t('driveLoadPage.toasts.download.success.message'),
+        }),
+        error: (err) => ({
+          title: t('driveLoadPage.toasts.download.error.title'),
+          message: err?.message || t('driveLoadPage.toasts.download.error.message'),
+        }),
+      },
+      delete: {
+        loading: () => ({
+          title: t('driveLoadPage.toasts.delete.loading.title'),
+          message: t('driveLoadPage.toasts.delete.loading.message'),
+        }),
+        success: () => ({
+          title: t('driveLoadPage.toasts.delete.success.title'),
+          message: t('driveLoadPage.toasts.delete.success.message'),
+        }),
+        error: (err) => ({
+          title: t('driveLoadPage.toasts.delete.error.title'),
+          message: err?.message || t('driveLoadPage.toasts.delete.error.message'),
+        }),
+      },
     },
     errors: {
       missingDriveManager: t('driveLoadPage.errors.missingDriveManager'),

@@ -8,6 +8,21 @@ const DISPLAY_BATCH = 10;
 const PREFETCH_BUFFER = 10;
 const INITIAL_PAGE_SIZE = 20;
 const NEXT_PAGE_SIZE = 10;
+const ZIP_MIME_TYPES = new Set(['application/zip', 'application/x-zip-compressed', 'multipart/x-zip', 'application/x-zip']);
+
+function isZipEntry(raw) {
+  const fileName = raw?.fileName || raw?.file_name || raw?.name || '';
+  const mimeType = raw?.mimeType || raw?.mime_type;
+  const hasZipExtension = typeof fileName === 'string' && fileName.toLowerCase().endsWith('.zip');
+  if (hasZipExtension) return true;
+  if (typeof mimeType === 'string') {
+    const normalized = mimeType.toLowerCase();
+    if (ZIP_MIME_TYPES.has(normalized) || normalized.includes('zip')) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function toSeconds(value) {
   if (value == null) return null;
@@ -24,14 +39,22 @@ function toSeconds(value) {
 export function normalizeMetadataItem(raw) {
   const id = raw?.fileId || raw?.file_id || raw?.id;
   if (!id) return null;
+  if (!isZipEntry(raw)) return null;
 
-  const characterName =
-    raw?.characterName || raw?.character_name || raw?.appProperties?.character_name || raw?.app_properties?.character_name || '';
   const fileName = raw?.fileName || raw?.file_name || raw?.name || '';
+  const baseName = typeof fileName === 'string' ? fileName.replace(/\.zip$/i, '') : '';
+  const characterName =
+    baseName ||
+    raw?.characterName ||
+    raw?.character_name ||
+    raw?.appProperties?.character_name ||
+    raw?.app_properties?.character_name ||
+    '';
   const driveHash = raw?.appProperties?.last_app_hash || raw?.app_properties?.last_app_hash || null;
   const cachedHash = raw?.contentHash || raw?.content_hash || null;
   const driveModifiedAt = toSeconds(raw?.modifiedTime);
   const cachedModifiedAt = toSeconds(raw?.lastModifiedAtDrive || raw?.last_modified_at_drive);
+  const createdAt = toSeconds(raw?.createdTime || raw?.created_time);
   const syncedAt = raw?.syncedAt || raw?.synced_at || null;
   const shared = raw?.shared == null ? null : Boolean(raw.shared);
   const outOfSync = Boolean(raw?.outOfSync || raw?.out_of_sync || raw?.hashMismatch || raw?.modifiedMismatch);
@@ -48,6 +71,7 @@ export function normalizeMetadataItem(raw) {
     driveModifiedAt,
     cachedModifiedAt,
     lastModifiedAtDrive,
+    createdAt,
     syncedAt,
     shared,
     outOfSync,
@@ -130,8 +154,8 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
   }
 
   const response = await gapi.client.drive.files.list({
-    q: `'${folderId}' in parents and mimeType='application/json' and trashed=false`,
-    fields: 'nextPageToken, files(id, name, modifiedTime, appProperties, shared)',
+    q: `'${folderId}' in parents and (mimeType='application/zip' or mimeType='application/x-zip-compressed' or mimeType='multipart/x-zip' or mimeType contains 'zip') and trashed=false`,
+    fields: 'nextPageToken, files(id, name, createdTime, modifiedTime, appProperties, shared, mimeType)',
     spaces: 'drive',
     pageSize,
     pageToken,
@@ -217,6 +241,7 @@ export function useDriveLoadPageState(options = {}) {
         driveModifiedAt: normalized.driveModifiedAt ?? existing.driveModifiedAt ?? null,
         cachedModifiedAt: normalized.cachedModifiedAt ?? existing.cachedModifiedAt ?? null,
         lastModifiedAtDrive: normalized.lastModifiedAtDrive ?? existing.lastModifiedAtDrive ?? null,
+        createdAt: normalized.createdAt ?? existing.createdAt ?? null,
         syncedAt: normalized.syncedAt ?? existing.syncedAt ?? null,
         shared: normalized.shared ?? existing.shared ?? false,
       };
