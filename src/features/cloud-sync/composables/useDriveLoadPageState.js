@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { calculateMetadataHash, getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
+import { getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/i18n/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
@@ -44,75 +44,26 @@ export function normalizeMetadataItem(raw) {
 
   const fileName = raw?.fileName || raw?.file_name || raw?.name || '';
   const baseName = typeof fileName === 'string' ? fileName.replace(/\.zip$/i, '') : '';
-  const characterName =
-    baseName ||
-    raw?.characterName ||
-    raw?.character_name ||
-    raw?.appProperties?.character_name ||
-    raw?.app_properties?.character_name ||
-    '';
-  const driveHash = raw?.appProperties?.last_app_hash || raw?.app_properties?.last_app_hash || null;
-  const cachedHash = raw?.contentHash || raw?.content_hash || null;
+  const characterName = baseName || raw?.characterName || raw?.character_name || '';
   const driveModifiedAt = toSeconds(raw?.modifiedTime);
-  const cachedModifiedAt = toSeconds(raw?.lastModifiedAtDrive || raw?.last_modified_at_drive);
   const createdAt = toSeconds(raw?.createdTime || raw?.created_time);
-  const syncedAt = raw?.syncedAt || raw?.synced_at || null;
   const shared = raw?.shared == null ? null : Boolean(raw.shared);
   const hasThumbnail = raw?.hasThumbnail ?? raw?.has_thumbnail ?? null;
   const thumbnailLink = raw?.thumbnailLink || raw?.thumbnail_link || null;
-  const outOfSync = Boolean(raw?.outOfSync || raw?.out_of_sync || raw?.hashMismatch || raw?.modifiedMismatch);
-  const lastModifiedAtDrive = driveModifiedAt ?? cachedModifiedAt;
-  const contentHash = driveHash || cachedHash || null;
 
   return {
     id,
     characterName,
     fileName,
-    driveHash,
-    cachedHash,
-    contentHash,
     driveModifiedAt,
-    cachedModifiedAt,
-    lastModifiedAtDrive,
+    cachedModifiedAt: null,
+    lastModifiedAtDrive: driveModifiedAt,
     createdAt,
-    syncedAt,
+    syncedAt: null,
     shared,
     hasThumbnail: hasThumbnail == null ? null : Boolean(hasThumbnail),
     thumbnailLink,
-    outOfSync,
-  };
-}
-
-function determineOutOfSync(entry) {
-  if (!entry) return false;
-  if (entry.outOfSync) return true;
-  const driveHash = entry.driveHash;
-  const cachedHash = entry.cachedHash;
-  if (driveHash && cachedHash && driveHash !== cachedHash) return true;
-
-  const driveModifiedAt = entry.driveModifiedAt;
-  const baselineModifiedAt = entry.cachedModifiedAt ?? entry.syncedAt ?? null;
-  if (driveModifiedAt && baselineModifiedAt && driveModifiedAt > baselineModifiedAt) {
-    return true;
-  }
-  return false;
-}
-
-function buildSyncSource(item) {
-  const normalized = normalizeMetadataItem(item);
-  if (!normalized) return null;
-  const lastAppHash = normalized.driveHash || normalized.cachedHash || normalized.contentHash || null;
-  return {
-    id: normalized.id,
-    name: normalized.fileName,
-    modifiedTime: normalized.lastModifiedAtDrive ? new Date(normalized.lastModifiedAtDrive * 1000).toISOString() : undefined,
-    appProperties:
-      lastAppHash || normalized.characterName
-        ? {
-            last_app_hash: lastAppHash || undefined,
-            character_name: normalized.characterName || undefined,
-          }
-        : undefined,
+    outOfSync: false,
   };
 }
 
@@ -121,18 +72,19 @@ function sortItems(list) {
     const left = a.lastModifiedAtDrive || 0;
     const right = b.lastModifiedAtDrive || 0;
     if (left !== right) return right - left;
-    return (a.fileName || '').localeCompare(b.fileName || '');
+    return (a.createdAt || 0) - (b.createdAt || 0);
   });
 }
 
 function stripInternal(entry) {
-  const { ...rest } = entry;
-  delete rest.cachedOnly;
-  delete rest.syncSource;
-  return rest;
+  if (!entry) return entry;
+  const cleaned = { ...entry };
+  delete cleaned.syncSource;
+  delete cleaned.cachedOnly;
+  return cleaned;
 }
 
-async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abortSignal }) {
+async function defaultRequestDrivePage(driveManager, { pageSize = INITIAL_PAGE_SIZE, pageToken = null, abortSignal = null } = {}) {
   if (!driveManager) {
     throw new Error(messages.driveLoadPage.errors.missingDriveManager);
   }
@@ -160,7 +112,7 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
 
   const response = await gapi.client.drive.files.list({
     q: `'${folderId}' in parents and (mimeType='application/zip' or mimeType='application/x-zip-compressed' or mimeType='multipart/x-zip' or mimeType contains 'zip') and trashed=false`,
-    fields: 'nextPageToken, files(id, name, createdTime, modifiedTime, appProperties, shared, mimeType, hasThumbnail, thumbnailLink)',
+    fields: 'nextPageToken, files(id, name, createdTime, modifiedTime, shared, mimeType, hasThumbnail, thumbnailLink)',
     spaces: 'drive',
     pageSize,
     pageToken,
@@ -170,11 +122,8 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
 }
 
 export function useDriveLoadPageState(options = {}) {
-  const fetchImpl = options.fetchImpl || fetch;
   const driveManager = options.driveManager || getGoogleDriveManagerInstance();
   const requestDrivePage = options.requestDrivePage || ((params) => defaultRequestDrivePage(driveManager, params));
-  const metadataEndpoint = options.metadataEndpoint || '/api/drive/metadata';
-  const syncEndpoint = options.syncEndpoint || '/api/drive/sync';
   const uiStore = useUiStore();
   const { logAndToastError } = useNotifications();
 
@@ -187,14 +136,12 @@ export function useDriveLoadPageState(options = {}) {
   const statusMessage = computed(() => {
     if (errorMessage.value) return errorMessage.value;
     if (isSyncing.value) return messages.driveLoadPage.status.syncing;
-    if (isLoadingCache.value) return messages.driveLoadPage.status.loadingCache;
     return messages.driveLoadPage.status.refreshed;
   });
   const displayedItems = computed(() => items.value.slice(0, visibleCount.value));
   const nextPageToken = ref(null);
 
   let disposed = false;
-  let fetchedAllPages = false;
   const abortControllers = new Set();
   const cacheMap = new Map();
 
@@ -206,24 +153,6 @@ export function useDriveLoadPageState(options = {}) {
     return normalized;
   }
 
-  function getSyncPayload(includeCachedPlaceholders) {
-    const entries = Array.from(cacheMap.values());
-    const source = includeCachedPlaceholders ? entries : entries.filter((item) => !item.cachedOnly);
-    return source.map((entry) => ({
-      id: entry.id,
-      name: entry.syncSource?.name || entry.fileName,
-      modifiedTime:
-        entry.syncSource?.modifiedTime ||
-        (entry.lastModifiedAtDrive ? new Date(entry.lastModifiedAtDrive * 1000).toISOString() : undefined),
-      appProperties:
-        entry.syncSource?.appProperties ||
-        (entry.contentHash || entry.characterName
-          ? { last_app_hash: entry.contentHash || undefined, character_name: entry.characterName || undefined }
-          : undefined),
-      hasThumbnail: entry.hasThumbnail || undefined,
-    }));
-  }
-
   function updateItemsFromCacheMap() {
     const publicItems = Array.from(cacheMap.values()).map((entry) => stripInternal(entry));
     items.value = sortItems(publicItems);
@@ -232,7 +161,7 @@ export function useDriveLoadPageState(options = {}) {
     }
   }
 
-  function storeItems(list, { cachedOnly = false } = {}) {
+  function storeItems(list) {
     for (const raw of list) {
       const normalized = normalizeMetadataItem(raw);
       if (!normalized) continue;
@@ -240,31 +169,14 @@ export function useDriveLoadPageState(options = {}) {
       const merged = {
         ...existing,
         ...normalized,
-        cachedOnly,
-        contentHash: normalized.contentHash ?? existing.contentHash ?? null,
-        driveHash: normalized.driveHash ?? existing.driveHash ?? null,
-        cachedHash: normalized.cachedHash ?? existing.cachedHash ?? null,
-        driveModifiedAt: normalized.driveModifiedAt ?? existing.driveModifiedAt ?? null,
-        cachedModifiedAt: normalized.cachedModifiedAt ?? existing.cachedModifiedAt ?? null,
         lastModifiedAtDrive: normalized.lastModifiedAtDrive ?? existing.lastModifiedAtDrive ?? null,
         createdAt: normalized.createdAt ?? existing.createdAt ?? null,
-        syncedAt: normalized.syncedAt ?? existing.syncedAt ?? null,
         shared: normalized.shared ?? existing.shared ?? false,
         hasThumbnail: normalized.hasThumbnail ?? existing.hasThumbnail ?? false,
         thumbnailLink: normalized.thumbnailLink ?? existing.thumbnailLink ?? null,
+        outOfSync: false,
       };
-      merged.outOfSync = determineOutOfSync(merged);
-      merged.syncSource = existing.syncSource || raw.syncSource || buildSyncSource(raw);
       cacheMap.set(normalized.id, merged);
-    }
-    updateItemsFromCacheMap();
-  }
-
-  function removeCachedOnly() {
-    for (const [key, entry] of cacheMap.entries()) {
-      if (entry.cachedOnly) {
-        cacheMap.delete(key);
-      }
     }
     updateItemsFromCacheMap();
   }
@@ -280,86 +192,16 @@ export function useDriveLoadPageState(options = {}) {
     abortControllers.clear();
   }
 
-  function applySyncResponse(syncItems) {
-    if (!Array.isArray(syncItems)) return;
-    const mapped = syncItems.map((item) => ({ ...item, syncSource: buildSyncSource(item) }));
-    storeItems(mapped, { cachedOnly: false });
-  }
-
   async function syncItemMetadata(id) {
-    if (!id) return null;
-    const target = cacheMap.get(id) || {};
+    if (!id || !driveManager?.loadFileContent) return null;
     try {
       const content = await driveManager.loadFileContent(id);
       const payload = await deserializeCharacterPayload(content);
-      const hash = await calculateMetadataHash(payload);
-
-      const characterName =
-        target.characterName || payload?.character?.name || payload?.character?.characterName || payload?.character?.character_name || '';
-
-      const syncPayload = [
-        {
-          id,
-          name: target.fileName,
-          modifiedTime: target.lastModifiedAtDrive ? new Date(target.lastModifiedAtDrive * 1000).toISOString() : undefined,
-          appProperties:
-            hash || characterName ? { last_app_hash: hash || undefined, character_name: characterName || undefined } : undefined,
-          hasThumbnail: target.hasThumbnail || undefined,
-        },
-      ];
-
-      const response = await postSync(syncPayload, { allowEmpty: true });
-      applySyncResponse(response);
       uiStore.setPrefetchedDriveData(id, payload);
-      return { payload, syncItems: response };
+      return { payload };
     } catch (error) {
       handleError(error, 'syncItemMetadata');
       return null;
-    }
-  }
-
-  async function postSync(payload, { allowEmpty = false } = {}) {
-    if (!payload || payload.length === 0) {
-      if (!allowEmpty) return [];
-    }
-    const controller = registerAborter(new AbortController());
-    try {
-      const response = await fetchImpl(syncEndpoint, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: payload || [] }),
-        signal: controller.signal,
-      });
-      if (!response.ok) {
-        throw new Error(messages.driveLoadPage.errors.syncFailed);
-      }
-      const data = await response.json();
-      return Array.isArray(data?.items) ? data.items : [];
-    } finally {
-      abortControllers.delete(controller);
-    }
-  }
-
-  async function fetchCachedMetadata() {
-    isLoadingCache.value = true;
-    errorMessage.value = '';
-    const controller = registerAborter(new AbortController());
-    try {
-      const response = await fetchImpl(metadataEndpoint, { credentials: 'include', signal: controller.signal });
-      if (!response.ok) {
-        throw new Error(messages.driveLoadPage.errors.cacheFailed);
-      }
-      const data = await response.json();
-      const incoming = Array.isArray(data?.items) ? data.items : [];
-      storeItems(incoming, { cachedOnly: true });
-    } catch (error) {
-      handleError(error, 'fetchCachedMetadata');
-    } finally {
-      abortControllers.delete(controller);
-      if (!disposed) {
-        isLoadingCache.value = false;
-      }
     }
   }
 
@@ -368,29 +210,16 @@ export function useDriveLoadPageState(options = {}) {
     isSyncing.value = true;
     isFetchingMore.value = Boolean(pageToken);
     errorMessage.value = '';
+    const controller = registerAborter(new AbortController());
     try {
       const pageSize = pageToken ? NEXT_PAGE_SIZE : INITIAL_PAGE_SIZE;
-      const { files, nextPageToken: token } = await requestDrivePage({ pageSize, pageToken, abortSignal: null });
-      storeItems(files, { cachedOnly: false });
+      const { files, nextPageToken: token } = await requestDrivePage({ pageSize, pageToken, abortSignal: controller.signal });
+      storeItems(files);
       nextPageToken.value = token || null;
-      fetchedAllPages = !token;
-      const payload = getSyncPayload(!fetchedAllPages);
-      const syncItems = await postSync(payload);
-      applySyncResponse(syncItems);
-      if (fetchedAllPages) {
-        removeCachedOnly();
-      }
     } catch (error) {
-      if (error?.status === 404 || error?.response?.status === 404) {
-        const missingId = error?.fileId || error?.id;
-        if (missingId) {
-          cacheMap.delete(missingId);
-          updateItemsFromCacheMap();
-          await postSync(getSyncPayload(true), { allowEmpty: true });
-        }
-      }
       handleError(error, 'syncFromDrive');
     } finally {
+      abortControllers.delete(controller);
       isSyncing.value = false;
       isFetchingMore.value = false;
     }
@@ -413,12 +242,11 @@ export function useDriveLoadPageState(options = {}) {
   async function initialize() {
     disposed = false;
     visibleCount.value = DISPLAY_BATCH;
-    fetchedAllPages = false;
     nextPageToken.value = null;
     cacheMap.clear();
     items.value = [];
-    await fetchCachedMetadata();
-    syncFromDrive();
+    isLoadingCache.value = false;
+    await syncFromDrive();
   }
 
   function selectCharacter(id, initialData) {

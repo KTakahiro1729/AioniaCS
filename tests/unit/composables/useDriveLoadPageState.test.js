@@ -3,7 +3,6 @@ import { effectScope, nextTick } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
-import { calculateMetadataHash } from '@/infrastructure/google-drive/googleDriveManager.js';
 
 vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
   useNotifications: () => ({
@@ -11,26 +10,12 @@ vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
   }),
 }));
 
-function createResponse(body) {
-  return {
-    ok: true,
-    json: async () => body,
-  };
-}
-
 describe('useDriveLoadPageState', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  it('loads cached metadata immediately and starts drive sync', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        createResponse({ items: [{ file_id: '1', file_name: 'Cached.zip', last_modified_at_drive: 1000, createdTime: 900 }] }),
-      )
-      .mockResolvedValue(createResponse({ items: [] }));
-
+  it('loads drive entries and strips zip extension for character names', async () => {
     const requestDrivePage = vi.fn().mockResolvedValue({
       files: [
         {
@@ -38,8 +23,8 @@ describe('useDriveLoadPageState', () => {
           name: 'Drive.zip',
           modifiedTime: '2024-01-01T00:00:00.000Z',
           createdTime: '2023-12-31T00:00:00.000Z',
-          appProperties: { character_name: 'Drive', last_app_hash: 'hash' },
           mimeType: 'application/zip',
+          thumbnailLink: 'https://example.com/thumb',
         },
       ],
       nextPageToken: 'next',
@@ -53,24 +38,21 @@ describe('useDriveLoadPageState', () => {
     const scope = effectScope();
     let state;
     scope.run(() => {
-      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+      state = useDriveLoadPageState({ requestDrivePage, driveManager });
     });
 
     await state.initialize();
-    expect(state.displayedItems.value[0].fileName).toBe('Cached.zip');
-    expect(state.displayedItems.value[0].characterName).toBe('Cached');
     await nextTick();
-    expect(requestDrivePage).toHaveBeenCalledWith({ pageSize: 20, pageToken: null, abortSignal: null });
+
+    expect(state.displayedItems.value[0].fileName).toBe('Drive.zip');
+    expect(state.displayedItems.value[0].characterName).toBe('Drive');
+    expect(state.displayedItems.value[0].thumbnailLink).toBe('https://example.com/thumb');
+    expect(requestDrivePage).toHaveBeenCalledWith({ pageSize: 20, pageToken: null, abortSignal: expect.any(AbortSignal) });
 
     scope.stop();
   });
 
   it('prefetches the next page when the visible buffer is low', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(createResponse({ items: [{ file_id: '1', file_name: 'Cached.zip', last_modified_at_drive: 1000 }] }))
-      .mockResolvedValue(createResponse({ items: [] }));
-
     const requestDrivePage = vi
       .fn()
       .mockResolvedValueOnce({
@@ -90,7 +72,7 @@ describe('useDriveLoadPageState', () => {
     const scope = effectScope();
     let state;
     scope.run(() => {
-      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+      state = useDriveLoadPageState({ requestDrivePage, driveManager });
     });
 
     await state.initialize();
@@ -102,12 +84,7 @@ describe('useDriveLoadPageState', () => {
     scope.stop();
   });
 
-  it('ignores non-zip entries from cache and drive responses', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(createResponse({ items: [{ file_id: '1', file_name: 'legacy.json', last_modified_at_drive: 800 }] }))
-      .mockResolvedValue(createResponse({ items: [] }));
-
+  it('ignores non-zip entries from drive responses', async () => {
     const requestDrivePage = vi.fn().mockResolvedValue({
       files: [
         { id: '2', name: 'Valid.zip', mimeType: 'application/zip' },
@@ -124,7 +101,7 @@ describe('useDriveLoadPageState', () => {
     const scope = effectScope();
     let state;
     scope.run(() => {
-      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+      state = useDriveLoadPageState({ requestDrivePage, driveManager });
     });
 
     await state.initialize();
@@ -137,135 +114,14 @@ describe('useDriveLoadPageState', () => {
     scope.stop();
   });
 
-  it('cleans up missing files on 404 errors', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(createResponse({ items: [{ file_id: '1', file_name: 'Cached.zip', last_modified_at_drive: 1000 }] }))
-      .mockResolvedValue(createResponse({ items: [] }));
-
-    const requestDrivePage = vi.fn().mockRejectedValue({ status: 404, fileId: '1' });
-
-    const driveManager = {
-      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
-      ensureAccessToken: vi.fn(),
-    };
-
-    const scope = effectScope();
-    scope.run(() => {
-      const state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
-      state.initialize();
-    });
-
-    await nextTick();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    const body = JSON.parse(fetchMock.mock.calls[1][1].body);
-    expect(body.files).toEqual([]);
-
-    scope.stop();
-  });
-
-  it('marks entries as out of sync when hashes differ', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        createResponse({ items: [{ file_id: '1', file_name: 'Cached.zip', content_hash: 'cache-hash', last_modified_at_drive: 1000 }] }),
-      )
-      .mockResolvedValue(createResponse({ items: [] }));
-
-    const requestDrivePage = vi.fn().mockResolvedValue({
-      files: [
-        {
-          id: '1',
-          name: 'Drive.zip',
-          modifiedTime: '2024-01-01T00:00:00.000Z',
-          appProperties: { last_app_hash: 'drive-hash', character_name: 'Drive' },
-          shared: true,
-          mimeType: 'application/zip',
-        },
-      ],
-      nextPageToken: null,
-    });
-
-    const driveManager = {
-      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
-      ensureAccessToken: vi.fn(),
-    };
-
-    const scope = effectScope();
-    let state;
-    scope.run(() => {
-      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
-    });
-
-    await state.initialize();
-    await nextTick();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(state.displayedItems.value[0].driveHash).toBe('drive-hash');
-    expect(state.displayedItems.value[0].cachedHash).toBe('cache-hash');
-    expect(state.displayedItems.value[0].outOfSync).toBe(true);
-    expect(state.displayedItems.value[0].shared).toBe(true);
-
-    scope.stop();
-  });
-
-  it('detects newer drive modifications even when hashes match', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        createResponse({ items: [{ file_id: '1', file_name: 'Cached.zip', content_hash: 'match', last_modified_at_drive: 1000 }] }),
-      )
-      .mockResolvedValue(createResponse({ items: [] }));
-
-    const requestDrivePage = vi.fn().mockResolvedValue({
-      files: [
-        {
-          id: '1',
-          name: 'Drive.zip',
-          modifiedTime: '1970-01-01T00:20:00.000Z',
-          appProperties: { last_app_hash: 'match', character_name: 'Drive' },
-          mimeType: 'application/zip',
-        },
-      ],
-      nextPageToken: null,
-    });
-
-    const driveManager = {
-      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
-      ensureAccessToken: vi.fn(),
-    };
-
-    const scope = effectScope();
-    let state;
-    scope.run(() => {
-      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
-    });
-
-    await state.initialize();
-    await nextTick();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(state.displayedItems.value[0].outOfSync).toBe(true);
-    expect(state.displayedItems.value[0].lastModifiedAtDrive).toBe(1200);
-
-    scope.stop();
-  });
-
-  it('recalculates metadata hash and posts sync payload for a single item', async () => {
+  it('prefetches metadata for a specific entry when requested', async () => {
     const payload = {
-      character: { name: 'Sync Hero' },
+      character: { playerName: 'GM', name: 'Hero' },
       skills: [],
       specialSkills: [],
       equipments: {},
       histories: [],
     };
-    const expectedHash = await calculateMetadataHash(payload);
-
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(createResponse({ items: [{ file_id: 'sync-1', file_name: 'Sync.zip', last_modified_at_drive: 1000 }] }))
-      .mockResolvedValue(createResponse({ items: [{ id: 'sync-1', fileName: 'Sync.zip', content_hash: expectedHash }] }));
 
     const requestDrivePage = vi.fn().mockResolvedValue({ files: [], nextPageToken: null });
 
@@ -278,46 +134,15 @@ describe('useDriveLoadPageState', () => {
     const scope = effectScope();
     let state;
     scope.run(() => {
-      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
+      state = useDriveLoadPageState({ requestDrivePage, driveManager });
     });
 
     await state.initialize();
-    await nextTick();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    const result = await state.syncItemMetadata('sync-1');
-
-    const syncRequest = fetchMock.mock.calls.at(-1);
-    const body = JSON.parse(syncRequest[1].body);
-    expect(body.files[0].appProperties.last_app_hash).toBe(expectedHash);
-    expect(driveManager.loadFileContent).toHaveBeenCalledWith('sync-1');
-    expect(state.displayedItems.value[0].contentHash).toBe(expectedHash);
-    expect(result.payload).toEqual(payload);
+    const result = await state.syncItemMetadata('file-1');
 
     const uiStore = useUiStore();
-    expect(uiStore.prefetchedDriveData['sync-1']).toEqual(payload);
-
-    scope.stop();
-  });
-
-  it('stores the selected file id in the ui store', () => {
-    const fetchMock = vi.fn().mockResolvedValue(createResponse({ items: [] }));
-    const requestDrivePage = vi.fn().mockResolvedValue({ files: [], nextPageToken: null });
-    const driveManager = {
-      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
-      ensureAccessToken: vi.fn(),
-    };
-
-    const scope = effectScope();
-    let state;
-    scope.run(() => {
-      state = useDriveLoadPageState({ fetchImpl: fetchMock, requestDrivePage, driveManager });
-    });
-
-    const uiStore = useUiStore();
-    const preload = { character: { name: 'Cache' } };
-    state.selectCharacter('abc', preload);
-    expect(uiStore.currentDriveFileId).toBe('abc');
-    expect(uiStore.prefetchedDriveData.abc).toEqual(preload);
+    expect(result?.payload?.character?.name).toBe('Hero');
+    expect(uiStore.consumePrefetchedDriveData('file-1')).toBeTruthy();
 
     scope.stop();
   });

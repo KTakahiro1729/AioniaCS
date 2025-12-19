@@ -112,7 +112,6 @@ export class DataManager {
       includeImages: true,
     });
     const archive = await buildCharacterArchive({ data, images });
-    const hashData = data;
     let thumbnail = null;
 
     if (Array.isArray(images) && images.length > 0) {
@@ -131,7 +130,6 @@ export class DataManager {
       content: archive.content,
       mimeType: archive.mimeType,
       name: sanitizedName,
-      hashData,
       ...(thumbnail
         ? {
             thumbnail,
@@ -139,16 +137,13 @@ export class DataManager {
           }
         : {}),
     };
-    const appProperties = this.googleDriveManager.buildAppPropertiesFromPayload
-      ? await this.googleDriveManager.buildAppPropertiesFromPayload(hashData)
-      : undefined;
     const contentHints =
       thumbnail && this.googleDriveManager.buildContentHintsFromThumbnail
         ? this.googleDriveManager.buildContentHintsFromThumbnail(thumbnail, 'image/png')
         : null;
     const sanitizedFileName = `${sanitizedName}.zip`;
 
-    return { payload, sanitizedFileName, appProperties, contentHints };
+    return { payload, sanitizedFileName, contentHints };
   }
 
   /**
@@ -169,7 +164,7 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const { payload, sanitizedFileName, appProperties, contentHints } = await this._buildDriveSaveContext(
+    const { payload, sanitizedFileName, contentHints } = await this._buildDriveSaveContext(
       character,
       skills,
       specialSkills,
@@ -184,7 +179,6 @@ export class DataManager {
         payload.content,
         currentFileId,
         payload.mimeType,
-        appProperties,
         contentHints,
       );
       return result;
