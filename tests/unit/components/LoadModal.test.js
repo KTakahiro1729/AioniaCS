@@ -12,7 +12,7 @@ function baseProps(overrides = {}) {
     driveFolderLabel: 'label',
     driveFolderPlaceholder: 'placeholder',
     loadLocalLabel: 'local',
-    selectCharacterLabel: 'select',
+    selectCharacterLabel: 'Driveから読み込む',
     signInLabel: 'signin',
     signInMessage: 'message',
     ...overrides,
@@ -38,13 +38,14 @@ describe('LoadModal', () => {
   test('disables drive controls when signed out', async () => {
     const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: false }) });
     expect(wrapper.find('.load-modal__input').attributes('disabled')).toBeDefined();
-    expect(wrapper.find('[data-test="load-modal-select-character"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-test="load-modal-select-character"]').exists()).toBe(false);
   });
 
-  test('emits select-character when selector button clicked', async () => {
+  test('shows drive load label and emits select-character when signed in', async () => {
     const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: true }) });
     const button = wrapper.find('[data-test="load-modal-select-character"]');
     expect(button.exists()).toBe(true);
+    expect(button.text()).toBe('Driveから読み込む');
     await button.trigger('click');
     expect(wrapper.emitted('select-character')).toHaveLength(1);
   });

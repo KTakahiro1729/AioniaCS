@@ -16,7 +16,6 @@ const {
   isLoadingCache,
   isSyncing,
   isFetchingMore,
-  statusMessage,
   errorMessage,
   initialize,
   revealMore,
@@ -43,8 +42,6 @@ const filteredItems = computed(() =>
 );
 const isEmpty = computed(() => !isLoadingCache.value && filteredItems.value.length === 0);
 const isBusy = computed(() => isSyncing.value || isFetchingMore.value);
-const statusLabel = computed(() => statusMessage.value);
-const statusDetail = computed(() => (errorMessage.value ? messages.driveLoadPage.status.retryHint : ''));
 
 function formatTimestamp(seconds) {
   if (!seconds) return messages.driveLoadPage.labels.unknownDate;
@@ -212,14 +209,19 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="drive-load" :aria-busy="isBusy">
-    <div class="drive-load__status" :data-busy="isBusy">
-      <div class="drive-load__status-indicator" :data-state="errorMessage ? 'error' : isSyncing ? 'sync' : 'idle'" />
-      <div class="drive-load__status-text">{{ statusLabel }}</div>
+    <header class="drive-load__header">
+      <div class="drive-load__title-group">
+        <div
+          class="drive-load__status-indicator"
+          :data-state="errorMessage ? 'error' : isSyncing ? 'sync' : 'idle'"
+          aria-hidden="true"
+        />
+        <h1 class="drive-load__title">{{ messages.driveLoadPage.title }}</h1>
+      </div>
       <button class="button-base drive-load__refresh" type="button" :disabled="isBusy" @click="refresh">
         {{ messages.driveLoadPage.buttons.refresh }}
       </button>
-    </div>
-    <p v-if="statusDetail" class="drive-load__status-detail">{{ statusDetail }}</p>
+    </header>
     <p v-if="isEmpty" class="drive-load__placeholder">{{ messages.driveLoadPage.placeholder }}</p>
 
     <div v-else class="drive-load__list" role="list">
@@ -334,19 +336,31 @@ onBeforeUnmount(() => {
 .drive-load {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px;
+  gap: 16px;
+  padding: 8px 8px 12px;
 }
 
-.drive-load__status {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+.drive-load__header {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border-muted, #3a3a4a);
-  border-radius: 6px;
-  background: var(--color-panel-body, #181824);
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 4px 0;
+  flex-wrap: wrap;
+}
+
+.drive-load__title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.drive-load__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
 }
 
 .drive-load__status-indicator {
@@ -366,21 +380,9 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.15);
 }
 
-.drive-load__status-text {
-  color: var(--color-text-primary);
-  font-weight: 600;
-  min-height: 20px;
-}
-
 .drive-load__refresh {
-  justify-self: end;
   min-width: 120px;
-}
-
-.drive-load__status-detail {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
+  align-self: flex-start;
 }
 
 .drive-load__placeholder {
@@ -403,7 +405,7 @@ onBeforeUnmount(() => {
 
 .drive-row__layout {
   display: grid;
-  grid-template-columns: 140px 1fr;
+  grid-template-columns: minmax(128px, 160px) 1fr;
   gap: 12px;
   align-items: stretch;
 }
@@ -412,21 +414,26 @@ onBeforeUnmount(() => {
   .drive-row__layout {
     grid-template-columns: 1fr;
   }
+
+  .drive-row__thumb {
+    justify-self: center;
+  }
 }
 
 .drive-row__thumb {
-  width: 100%;
-  min-height: 140px;
+  width: 128px;
+  height: 128px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--color-border-muted, #3a3a4a);
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.35));
+  justify-self: start;
 }
 
 .drive-row__thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
   display: block;
 }
 
