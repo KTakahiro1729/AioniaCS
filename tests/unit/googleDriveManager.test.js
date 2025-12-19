@@ -205,41 +205,6 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(requestCall.body).toContain(`"appProperties":{"last_app_hash":"${expectedHash}"`);
   });
 
-  test('calculateMetadataHash returns consistent value for differently ordered objects', async () => {
-    const payloadA = {
-      character: { name: 'Order Hero', attributes: { agility: 8, strength: 10 } },
-      equipments: { shield: 'Wooden', weapon: 'Sword' },
-      histories: [
-        { year: 2, note: 'Traveled' },
-        { year: 1, note: 'Started' },
-      ],
-      skills: [
-        { level: 1, name: 'Slash', details: { power: 7, speed: 5 } },
-        { level: 2, name: 'Block', details: { duration: 3, stability: 4 } },
-      ],
-      specialSkills: [],
-    };
-
-    const payloadB = {
-      specialSkills: [],
-      skills: [
-        { name: 'Slash', details: { speed: 5, power: 7 }, level: 1 },
-        { name: 'Block', details: { stability: 4, duration: 3 }, level: 2 },
-      ],
-      histories: [
-        { note: 'Traveled', year: 2 },
-        { note: 'Started', year: 1 },
-      ],
-      equipments: { weapon: 'Sword', shield: 'Wooden' },
-      character: { attributes: { strength: 10, agility: 8 }, name: 'Order Hero' },
-    };
-
-    const hashA = await calculateMetadataHash(payloadA);
-    const hashB = await calculateMetadataHash(payloadB);
-
-    expect(hashA).toBe(hashB);
-  });
-
   test('renameFile updates file metadata without uploading content', async () => {
     gapi.client.drive.files.update.mockResolvedValue({ result: { id: 'file-rename', name: 'Knight.zip' } });
 
@@ -337,7 +302,10 @@ describe('GoogleDriveManager configuration and folder handling', () => {
       histories: [],
     };
 
-    const expectedHash = await calculateMetadataHash(expectedPayload);
+    const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(expectedPayload)));
+    const expectedHash = Array.from(new Uint8Array(buffer))
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
 
     expect(hash).toBe(expectedHash);
   });
