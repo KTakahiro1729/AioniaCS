@@ -28,6 +28,21 @@ function stripImageData(payload) {
   return sanitized;
 }
 
+function sortObjectKeys(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => sortObjectKeys(item));
+  }
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .sort()
+      .reduce((sorted, key) => {
+        sorted[key] = sortObjectKeys(value[key]);
+        return sorted;
+      }, {});
+  }
+  return value;
+}
+
 function parseHashPayload(payload) {
   if (payload == null) {
     return null;
@@ -64,7 +79,8 @@ export async function calculateMetadataHash(payload) {
     return null;
   }
   const sanitized = stripImageData(parsed);
-  const jsonString = JSON.stringify(sanitized);
+  const sorted = sortObjectKeys(sanitized);
+  const jsonString = JSON.stringify(sorted);
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(jsonString));
   return bufferToHex(digest);
 }
