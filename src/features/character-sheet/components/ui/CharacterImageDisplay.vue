@@ -173,13 +173,13 @@ const handleImageUpload = async (event) => {
 }
 
 .image-display-area {
-  position: relative; 
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0;
   width: 100%;
-  min-height: 300px; 
+  min-height: 300px;
   flex: 1;
   background-color: var(--color-background);
   border: 1px solid var(--color-border-normal);
@@ -272,6 +272,7 @@ const handleImageUpload = async (event) => {
   flex-wrap: wrap;
   justify-content: center;
   padding: 10px 0;
+  flex-shrink: 0;
 }
 
 .imagefile-button--upload:hover {
@@ -304,8 +305,13 @@ const handleImageUpload = async (event) => {
 @media (min-width: 769px) {
   .character-image-container {
     flex: 1;
-    height: 100%;
+    min-height: 0;
     width: 100%;
+    overflow: hidden;
+  }
+
+  .image-display-area {
+    min-height: 0;
   }
 }
 </style>

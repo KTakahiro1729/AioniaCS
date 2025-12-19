@@ -85,13 +85,19 @@ const handleSpeciesChange = () => {
   .character-info {
     display: flex;
     flex-direction: column;
+    min-height: 0;
   }
 
   .character-info .box-content {
     display: flex;
     flex-direction: column;
     flex: 1;
-    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .character-info .info-row {
+    flex-shrink: 0;
   }
 }
 </style>
