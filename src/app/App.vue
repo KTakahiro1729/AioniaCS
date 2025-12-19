@@ -116,6 +116,7 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   updateDriveFolderPath,
   canSignInToGoogle,
   isDriveReady,
+  loadCharacterFromDrive,
 });
 
 const maxExperiencePoints = computed(() => characterStore.maxExperiencePoints);

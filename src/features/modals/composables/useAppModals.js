@@ -28,13 +28,14 @@ export function useAppModals(options) {
     updateDriveFolderPath,
     canSignInToGoogle,
     isDriveReady,
+    loadCharacterFromDrive,
   } = options;
 
   async function openDriveLoadModal() {
     await showModal({
       component: DriveLoadContent,
       title: messages.driveLoadPage.title,
-      props: {},
+      props: { loadCharacterFromDrive },
       buttons: [],
       size: 'wide',
     });

@@ -27,6 +27,12 @@ const {
 
 const { showAsyncToast, logAndToastError } = useNotifications();
 const modalStore = useModalStore();
+const props = defineProps({
+  loadCharacterFromDrive: {
+    type: Function,
+    default: null,
+  },
+});
 
 let driveManager = null;
 try {
@@ -122,7 +128,12 @@ async function handleLoad(item) {
     const result = await syncItemMetadata(item.id);
     prefetchedData = result?.payload || null;
   }
-  selectCharacter(item.id, prefetchedData);
+  const displayName = getCharacterName(item);
+  if (typeof props.loadCharacterFromDrive === 'function') {
+    await props.loadCharacterFromDrive(item.id, prefetchedData, displayName);
+  } else {
+    selectCharacter(item.id, prefetchedData);
+  }
   modalStore.hideModal();
 }
 
@@ -209,6 +220,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="drive-load" :aria-busy="isBusy">
+    <Teleport v-if="modalStore.isVisible" to="[data-slot='header-actions']">
+      <button class="button-base drive-load__refresh" type="button" :disabled="isBusy" @click="refresh">
+        {{ messages.driveLoadPage.buttons.refresh }}
+      </button>
+    </Teleport>
     <header class="drive-load__header">
       <div class="drive-load__title-group">
         <div
@@ -218,9 +234,6 @@ onBeforeUnmount(() => {
         />
         <h1 class="drive-load__title">{{ messages.driveLoadPage.title }}</h1>
       </div>
-      <button class="button-base drive-load__refresh" type="button" :disabled="isBusy" @click="refresh">
-        {{ messages.driveLoadPage.buttons.refresh }}
-      </button>
     </header>
     <p v-if="isEmpty" class="drive-load__placeholder">{{ messages.driveLoadPage.placeholder }}</p>
 
@@ -397,10 +410,18 @@ onBeforeUnmount(() => {
 }
 
 .drive-row {
-  border: 1px solid var(--color-border-muted, #3a3a4a);
+  border: 1px solid var(--color-border-normal);
   border-radius: 10px;
   padding: 14px;
-  background: linear-gradient(145deg, rgba(39, 39, 52, 0.9), rgba(26, 26, 36, 0.9));
+  background-color: var(--color-panel-body);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.drive-row:hover,
+.drive-row:focus-within {
+  background-color: var(--color-panel-sub-header);
+  border-color: var(--color-border-normal);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 35%);
 }
 
 .drive-row__layout {

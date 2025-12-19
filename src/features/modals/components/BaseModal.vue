@@ -8,6 +8,9 @@
             <div class="modal-icon" v-if="modal.type === 'critical'">!</div>
             <div class="modal-title">{{ modal.title }}</div>
           </div>
+          <div class="modal-header-actions" data-slot="header-actions">
+            <slot name="header-actions" />
+          </div>
         </div>
         <div class="modal-content box-content">
           <div class="modal-message" v-if="modal.message">
@@ -48,5 +51,20 @@ function resolve(value) {
 .box-content {
   border: none;
   padding: 14px;
+}
+
+.modal-header {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-right: 36px;
+}
+
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
 }
 </style>
