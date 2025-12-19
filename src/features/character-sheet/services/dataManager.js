@@ -6,6 +6,7 @@ import {
   serializeCharacterForExport,
   toTimestampString,
 } from '@/shared/utils/characterSerialization.js';
+import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
 
 /**
  * データ管理系の機能を担当するクラス
@@ -128,15 +129,45 @@ export class DataManager {
       includeImages: true,
     });
     const archive = await buildCharacterArchive({ data, images });
+    const hashData = data;
+    let thumbnail = null;
+
+    if (Array.isArray(images) && images.length > 0) {
+      try {
+        thumbnail = await ImageManager.createThumbnailFromDataUrl(images[0], {
+          size: 256,
+          mimeType: 'image/jpeg',
+        });
+      } catch (error) {
+        console.warn('Failed to build thumbnail from character images.', error);
+      }
+    }
+
+    const payload = {
+      content: archive.content,
+      mimeType: archive.mimeType,
+      name: this._sanitizeFileName(character.name),
+      hashData,
+      ...(thumbnail
+        ? {
+            thumbnail,
+            thumbnailMimeType: 'image/jpeg',
+          }
+        : {}),
+    };
     const sanitizedFileName = `${this._sanitizeFileName(character.name)}.zip`;
+    const appProperties = await this.googleDriveManager.buildAppPropertiesFromPayload(hashData);
+    const contentHints = thumbnail ? this.googleDriveManager.buildContentHintsFromThumbnail(thumbnail, 'image/jpeg') : null;
 
     try {
       const result = await this.googleDriveManager.saveFile(
         targetFolderId,
         sanitizedFileName,
-        archive.content,
+        payload.content,
         currentFileId,
-        archive.mimeType,
+        payload.mimeType,
+        appProperties,
+        contentHints,
       );
       return result;
     } catch (error) {
@@ -164,6 +195,32 @@ export class DataManager {
       includeImages: true,
     });
     const archive = await buildCharacterArchive({ data, images });
+    const hashData = data;
+    let thumbnail = null;
+
+    if (Array.isArray(images) && images.length > 0) {
+      try {
+        thumbnail = await ImageManager.createThumbnailFromDataUrl(images[0], {
+          size: 256,
+          mimeType: 'image/jpeg',
+        });
+      } catch (error) {
+        console.warn('Failed to build thumbnail from character images.', error);
+      }
+    }
+
+    const payload = {
+      content: archive.content,
+      mimeType: archive.mimeType,
+      name: this._sanitizeFileName(character.name),
+      hashData,
+      ...(thumbnail
+        ? {
+            thumbnail,
+            thumbnailMimeType: 'image/jpeg',
+          }
+        : {}),
+    };
 
     let targetFileId = currentFileId;
     if (targetFileId) {
@@ -174,18 +231,10 @@ export class DataManager {
     }
 
     if (targetFileId) {
-      return this.googleDriveManager.updateCharacterFile(targetFileId, {
-        content: archive.content,
-        mimeType: archive.mimeType,
-        name: this._sanitizeFileName(character.name),
-      });
+      return this.googleDriveManager.updateCharacterFile(targetFileId, payload);
     }
 
-    return this.googleDriveManager.createCharacterFile({
-      content: archive.content,
-      mimeType: archive.mimeType,
-      name: this._sanitizeFileName(character.name),
-    });
+    return this.googleDriveManager.createCharacterFile(payload);
   }
 
   async findDriveFileByCharacterName(characterName) {

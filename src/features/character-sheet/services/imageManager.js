@@ -60,4 +60,38 @@ export const ImageManager = {
       return imagesArray; // Return original array if index is invalid
     }
   },
+
+  async createThumbnailFromDataUrl(imageSource, { size = 256, mimeType = 'image/png' } = {}) {
+    const dataUrl = typeof imageSource === 'string' ? imageSource : await this.loadImage(imageSource);
+
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error(messages.image.uploadErrors.readError));
+      image.src = dataUrl;
+    });
+
+    if (!globalThis.document?.createElement) {
+      throw new Error('Canvas is not supported in this environment.');
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Canvas context could not be created.');
+    }
+
+    const scale = Math.min(size / (img.width || size), size / (img.height || size), 1);
+    const drawWidth = Math.max(1, Math.round((img.width || size) * scale));
+    const drawHeight = Math.max(1, Math.round((img.height || size) * scale));
+    const offsetX = Math.round((size - drawWidth) / 2);
+    const offsetY = Math.round((size - drawHeight) / 2);
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+    return canvas.toDataURL(mimeType);
+  },
 };

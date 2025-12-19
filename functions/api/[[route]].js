@@ -337,7 +337,7 @@ app.get('/api/drive/metadata', async (c) => {
 
   try {
     const result = await c.env.DB.prepare(
-      'SELECT file_id, user_id, character_name, file_name, content_hash, last_modified_at_drive, synced_at FROM character_metadata WHERE user_id = ? ORDER BY synced_at DESC',
+      'SELECT file_id, user_id, character_name, file_name, content_hash, has_thumbnail, last_modified_at_drive, synced_at FROM character_metadata WHERE user_id = ? ORDER BY synced_at DESC',
     )
       .bind(auth.session.user_id)
       .all();
@@ -393,6 +393,7 @@ app.post('/api/drive/sync', async (c) => {
       const modifiedTime = file.modifiedTime || file.lastModifiedAtDrive || null;
       const lastModifiedMs = modifiedTime ? new Date(modifiedTime).getTime() : NaN;
       const lastModifiedAtDrive = Number.isFinite(lastModifiedMs) ? Math.floor(lastModifiedMs / 1000) : null;
+      const hasThumbnail = file.hasThumbnail || file.has_thumbnail ? 1 : 0;
 
       const previous = existingMap.get(fileId);
       const hashMismatch = Boolean(previous && previous.content_hash && contentHash && previous.content_hash !== contentHash);
@@ -402,16 +403,17 @@ app.post('/api/drive/sync', async (c) => {
 
       statements.push(
         c.env.DB.prepare(
-          `INSERT INTO character_metadata (file_id, user_id, character_name, file_name, content_hash, last_modified_at_drive, synced_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO character_metadata (file_id, user_id, character_name, file_name, content_hash, has_thumbnail, last_modified_at_drive, synced_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(file_id) DO UPDATE SET
              user_id=excluded.user_id,
              character_name=excluded.character_name,
              file_name=excluded.file_name,
-             content_hash=excluded.content_hash,
+              content_hash=excluded.content_hash,
+             has_thumbnail=excluded.has_thumbnail,
              last_modified_at_drive=excluded.last_modified_at_drive,
              synced_at=excluded.synced_at`,
-        ).bind(fileId, auth.session.user_id, characterName, fileName, contentHash, lastModifiedAtDrive, nowSeconds),
+        ).bind(fileId, auth.session.user_id, characterName, fileName, contentHash, hasThumbnail, lastModifiedAtDrive, nowSeconds),
       );
 
       items.push({
@@ -419,6 +421,7 @@ app.post('/api/drive/sync', async (c) => {
         fileName,
         characterName,
         contentHash,
+        hasThumbnail: Boolean(hasThumbnail),
         lastModifiedAtDrive,
         outOfSync: hashMismatch || modifiedMismatch,
       });
