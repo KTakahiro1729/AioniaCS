@@ -130,7 +130,8 @@ async function handleLoad(item) {
   }
   const displayName = getCharacterName(item);
   if (typeof props.loadCharacterFromDrive === 'function') {
-    await props.loadCharacterFromDrive(item.id, prefetchedData, displayName);
+    const loaded = await props.loadCharacterFromDrive(item.id, prefetchedData, displayName);
+    if (!loaded) return;
   } else {
     selectCharacter(item.id, prefetchedData);
   }
@@ -414,13 +415,12 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   padding: 14px;
   background-color: var(--color-panel-body);
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .drive-row:hover,
 .drive-row:focus-within {
   background-color: var(--color-panel-sub-header);
-  border-color: var(--color-border-normal);
   box-shadow: 0 4px 12px rgb(0 0 0 / 35%);
 }
 

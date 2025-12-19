@@ -64,7 +64,6 @@ function resolve(value) {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
   flex-wrap: wrap;
 }
 </style>
