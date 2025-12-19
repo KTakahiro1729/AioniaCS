@@ -33,7 +33,7 @@ export function normalizeMetadataItem(raw) {
   const driveModifiedAt = toSeconds(raw?.modifiedTime);
   const cachedModifiedAt = toSeconds(raw?.lastModifiedAtDrive || raw?.last_modified_at_drive);
   const syncedAt = raw?.syncedAt || raw?.synced_at || null;
-  const shared = Boolean(raw?.shared);
+  const shared = raw?.shared == null ? null : Boolean(raw.shared);
   const outOfSync = Boolean(raw?.outOfSync || raw?.out_of_sync || raw?.hashMismatch || raw?.modifiedMismatch);
   const lastModifiedAtDrive = driveModifiedAt ?? cachedModifiedAt;
   const contentHash = driveHash || cachedHash || null;
