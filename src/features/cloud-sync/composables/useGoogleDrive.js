@@ -115,7 +115,7 @@ export function useGoogleDrive(dataManager) {
     }
   }
 
-  async function loadCharacterFromDrive(fileId = uiStore.currentDriveFileId, initialData = null) {
+  async function loadCharacterFromDrive(fileId = uiStore.currentDriveFileId, initialData = null, displayName = null) {
     if (!isDriveReady.value) {
       showToast({ type: 'error', ...messages.googleDrive.initPending() });
       return null;
@@ -129,6 +129,7 @@ export function useGoogleDrive(dataManager) {
     }
 
     const providedData = initialData ?? uiStore.consumePrefetchedDriveData(targetId);
+    const targetName = displayName || targetId;
     const loadPromise = Promise.resolve(providedData ?? dataManager.loadDataFromDrive(targetId))
       .then((parsedData) => {
         const normalizedData = providedData ? dataManager.parseLoadedData(parsedData) : parsedData;
@@ -156,8 +157,8 @@ export function useGoogleDrive(dataManager) {
     showAsyncToast(
       loadPromise,
       {
-        loading: messages.googleDrive.load.loading(targetId),
-        success: messages.googleDrive.load.success(targetId),
+        loading: messages.googleDrive.load.loading(targetName),
+        success: messages.googleDrive.load.success(targetName),
         error: (loadErr) => messages.googleDrive.load.error(loadErr),
       },
       'loadCharacterFromDrive',
