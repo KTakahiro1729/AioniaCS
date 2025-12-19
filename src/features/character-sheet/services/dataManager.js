@@ -119,7 +119,7 @@ export class DataManager {
       try {
         thumbnail = await ImageManager.createThumbnailFromDataUrl(images[0], {
           size: 256,
-          mimeType: 'image/jpeg',
+          mimeType: 'image/png',
         });
       } catch (error) {
         console.warn('Failed to build thumbnail from character images.', error);
@@ -135,7 +135,7 @@ export class DataManager {
       ...(thumbnail
         ? {
             thumbnail,
-            thumbnailMimeType: 'image/jpeg',
+            thumbnailMimeType: 'image/png',
           }
         : {}),
     };
@@ -144,7 +144,7 @@ export class DataManager {
       : undefined;
     const contentHints =
       thumbnail && this.googleDriveManager.buildContentHintsFromThumbnail
-        ? this.googleDriveManager.buildContentHintsFromThumbnail(thumbnail, 'image/jpeg')
+        ? this.googleDriveManager.buildContentHintsFromThumbnail(thumbnail, 'image/png')
         : null;
     const sanitizedFileName = `${sanitizedName}.zip`;
 

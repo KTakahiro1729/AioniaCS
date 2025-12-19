@@ -167,7 +167,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     });
 
     const requestCall = gapi.client.request.mock.calls.at(-1)[0];
-    expect(requestCall.body).toContain('"contentHints":{"thumbnail":{"image":"a-b_","mimeType":"image/png"}}');
+    expect(requestCall.body).toContain('"contentHints":{"thumbnail":{"image":"a-b_=","mimeType":"image/png"}}');
   });
 
   test('updateCharacterFile patches existing file', async () => {
