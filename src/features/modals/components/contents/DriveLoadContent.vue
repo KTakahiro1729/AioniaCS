@@ -100,6 +100,16 @@ function getDownloadName(item) {
   return item.fileName.toLowerCase().endsWith('.zip') ? item.fileName : `${item.fileName}.zip`;
 }
 
+function getThumbnailUrl(item) {
+  const link = item?.thumbnailLink;
+  if (!link) return null;
+  if (/([?&]sz=)/.test(link)) {
+    return link;
+  }
+  const separator = link.includes('?') ? '&' : '?';
+  return `${link}${separator}sz=w256`;
+}
+
 function requireDriveManager() {
   if (!driveManager) {
     throw new Error(messages.driveLoadPage.errors.missingDriveManager);
@@ -215,80 +225,89 @@ onBeforeUnmount(() => {
         data-test="drive-row"
         :title="item.fileName || messages.driveLoadPage.labels.untitled"
       >
-        <div class="drive-row__main">
-          <div class="drive-row__heading">
-            <h2 class="drive-row__title" data-test="drive-row-title">{{ getCharacterName(item) }}</h2>
-            <div class="drive-row__badges">
-              <span v-if="item.shared" class="drive-row__badge drive-row__badge--muted" role="status">
-                {{ messages.driveLoadPage.labels.shared }}
-              </span>
-              <span v-if="item.outOfSync" class="drive-row__badge drive-row__badge--warning" role="status">
-                {{ messages.driveLoadPage.labels.outOfSync }}
-              </span>
-            </div>
+        <div class="drive-row__layout">
+          <div v-if="getThumbnailUrl(item)" class="drive-row__thumb">
+            <img :src="getThumbnailUrl(item)" loading="lazy" decoding="async" :alt="getCharacterName(item)" />
           </div>
-          <p v-if="item.outOfSync" class="drive-row__warning" data-test="drive-row-warning" role="status">
-            {{ messages.driveLoadPage.labels.hashWarning }}
-          </p>
-        </div>
-        <div class="drive-row__meta">
-          <dl class="drive-row__meta-grid">
-            <div class="drive-row__meta-item" data-test="drive-row-field">
-              <dt>{{ messages.driveLoadPage.labels.created }}</dt>
-              <dd>{{ formatTimestamp(item.createdAt) }}</dd>
+          <div v-else-if="item.hasThumbnail" class="drive-row__thumb drive-row__thumb--placeholder" aria-hidden="true" />
+
+          <div class="drive-row__content">
+            <div class="drive-row__main">
+              <div class="drive-row__heading">
+                <h2 class="drive-row__title" data-test="drive-row-title">{{ getCharacterName(item) }}</h2>
+                <div class="drive-row__badges">
+                  <span v-if="item.shared" class="drive-row__badge drive-row__badge--muted" role="status">
+                    {{ messages.driveLoadPage.labels.shared }}
+                  </span>
+                  <span v-if="item.outOfSync" class="drive-row__badge drive-row__badge--warning" role="status">
+                    {{ messages.driveLoadPage.labels.outOfSync }}
+                  </span>
+                </div>
+              </div>
+              <p v-if="item.outOfSync" class="drive-row__warning" data-test="drive-row-warning" role="status">
+                {{ messages.driveLoadPage.labels.hashWarning }}
+              </p>
             </div>
-            <div class="drive-row__meta-item" data-test="drive-row-field">
-              <dt>{{ messages.driveLoadPage.labels.modified }}</dt>
-              <dd>{{ formatTimestamp(item.lastModifiedAtDrive) }}</dd>
+            <div class="drive-row__meta">
+              <dl class="drive-row__meta-grid">
+                <div class="drive-row__meta-item" data-test="drive-row-field">
+                  <dt>{{ messages.driveLoadPage.labels.created }}</dt>
+                  <dd>{{ formatTimestamp(item.createdAt) }}</dd>
+                </div>
+                <div class="drive-row__meta-item" data-test="drive-row-field">
+                  <dt>{{ messages.driveLoadPage.labels.modified }}</dt>
+                  <dd>{{ formatTimestamp(item.lastModifiedAtDrive) }}</dd>
+                </div>
+              </dl>
+              <div class="drive-row__actions">
+                <button
+                  class="button-base button-base--primary"
+                  type="button"
+                  :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
+                  data-test="drive-row-load"
+                  @click="handleLoad(item.id)"
+                >
+                  {{ messages.driveLoadPage.actions.load }}
+                </button>
+                <button
+                  class="button-base button-base--danger"
+                  type="button"
+                  :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
+                  data-test="drive-row-delete"
+                  @click="handleDelete(item)"
+                >
+                  {{ messages.driveLoadPage.actions.delete }}
+                </button>
+                <button
+                  class="button-base button-base--ghost"
+                  type="button"
+                  :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
+                  data-test="drive-row-share"
+                  @click="handleShare(item)"
+                >
+                  {{ messages.driveLoadPage.actions.share }}
+                </button>
+                <button
+                  class="button-base button-base--ghost drive-row__unshare"
+                  type="button"
+                  :disabled="!item.shared"
+                  :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
+                  data-test="drive-row-unshare"
+                  @click="handleUnshare(item)"
+                >
+                  {{ item.shared ? messages.driveLoadPage.actions.unshare : messages.driveLoadPage.actions.unshareDisabled }}
+                </button>
+                <button
+                  class="button-base button-base--ghost"
+                  type="button"
+                  :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
+                  data-test="drive-row-download"
+                  @click="handleDownload(item)"
+                >
+                  {{ messages.driveLoadPage.actions.download }}
+                </button>
+              </div>
             </div>
-          </dl>
-          <div class="drive-row__actions">
-            <button
-              class="button-base button-base--primary"
-              type="button"
-              :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
-              data-test="drive-row-load"
-              @click="handleLoad(item.id)"
-            >
-              {{ messages.driveLoadPage.actions.load }}
-            </button>
-            <button
-              class="button-base button-base--danger"
-              type="button"
-              :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
-              data-test="drive-row-delete"
-              @click="handleDelete(item)"
-            >
-              {{ messages.driveLoadPage.actions.delete }}
-            </button>
-            <button
-              class="button-base button-base--ghost"
-              type="button"
-              :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
-              data-test="drive-row-share"
-              @click="handleShare(item)"
-            >
-              {{ messages.driveLoadPage.actions.share }}
-            </button>
-            <button
-              class="button-base button-base--ghost drive-row__unshare"
-              type="button"
-              :disabled="!item.shared"
-              :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
-              data-test="drive-row-unshare"
-              @click="handleUnshare(item)"
-            >
-              {{ item.shared ? messages.driveLoadPage.actions.unshare : messages.driveLoadPage.actions.unshareDisabled }}
-            </button>
-            <button
-              class="button-base button-base--ghost"
-              type="button"
-              :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
-              data-test="drive-row-download"
-              @click="handleDownload(item)"
-            >
-              {{ messages.driveLoadPage.actions.download }}
-            </button>
           </div>
         </div>
       </article>
@@ -370,16 +389,46 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   padding: 14px;
   background: linear-gradient(145deg, rgba(39, 39, 52, 0.9), rgba(26, 26, 36, 0.9));
+}
+
+.drive-row__layout {
   display: grid;
-  grid-template-columns: 2fr 3fr;
+  grid-template-columns: 140px 1fr;
   gap: 12px;
-  align-items: center;
+  align-items: stretch;
 }
 
 @media (max-width: 900px) {
-  .drive-row {
+  .drive-row__layout {
     grid-template-columns: 1fr;
   }
+}
+
+.drive-row__thumb {
+  width: 100%;
+  min-height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-muted, #3a3a4a);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.35));
+}
+
+.drive-row__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.drive-row__thumb--placeholder {
+  display: block;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05) 10px, rgba(0, 0, 0, 0.15) 10px, rgba(0, 0, 0, 0.15) 20px);
+}
+
+.drive-row__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .drive-row__main {

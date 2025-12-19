@@ -152,6 +152,24 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(requestCall.body).toContain('Content-Type: application/zip');
   });
 
+  test('saveFile injects url-safe thumbnail content hints when provided', async () => {
+    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-thumb', name: 'aioniacs.cfg' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-thumb', name: '慈悲なきアイオニア' } });
+    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-thumb', name: 'Hero.zip' } });
+
+    await gdm.createCharacterFile({
+      content: '{}',
+      mimeType: 'application/zip',
+      name: 'Hero',
+      thumbnail: 'data:image/png;base64,a+b/=',
+      thumbnailMimeType: 'image/png',
+    });
+
+    const requestCall = gapi.client.request.mock.calls.at(-1)[0];
+    expect(requestCall.body).toContain('"contentHints":{"thumbnail":{"image":"a-b_","mimeType":"image/png"}}');
+  });
+
   test('updateCharacterFile patches existing file', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-6', name: 'aioniacs.cfg' } });
@@ -290,5 +308,26 @@ describe('GoogleDriveManager configuration and folder handling', () => {
       .join('');
 
     expect(hash).toBe(expectedHash);
+  });
+
+  test('calculateMetadataHash ignores contentHints.thumbnail data', async () => {
+    const basePayload = {
+      character: { name: 'Thumbnail Tester' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+
+    const withThumbnail = {
+      ...basePayload,
+      contentHints: {
+        thumbnail: { image: 'abc123', mimeType: 'image/png' },
+      },
+    };
+
+    const [hashBase, hashWithThumbnail] = await Promise.all([calculateMetadataHash(basePayload), calculateMetadataHash(withThumbnail)]);
+
+    expect(hashWithThumbnail).toBe(hashBase);
   });
 });

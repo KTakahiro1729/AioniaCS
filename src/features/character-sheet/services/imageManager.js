@@ -60,4 +60,42 @@ export const ImageManager = {
       return imagesArray; // Return original array if index is invalid
     }
   },
+
+  async createThumbnailFromDataUrl(imageSource, { size = 256, mimeType = 'image/png' } = {}) {
+    const dataUrl = typeof imageSource === 'string' ? imageSource : await this.loadImage(imageSource);
+
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error(messages.image.uploadErrors.readError));
+      image.src = dataUrl;
+    });
+
+    if (!globalThis.document?.createElement) {
+      throw new Error('Canvas is not supported in this environment.');
+    }
+
+    const targetSize = Math.max(1, Number.isFinite(size) ? size : 256);
+    const canvas = document.createElement('canvas');
+    canvas.width = targetSize;
+    canvas.height = targetSize;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Canvas context could not be created.');
+    }
+
+    const baseWidth = Math.max(1, Number.isFinite(img.width) ? img.width : 0);
+    const baseHeight = Math.max(1, Number.isFinite(img.height) ? img.height : 0);
+    const scale = Math.min(targetSize / baseWidth, targetSize / baseHeight, 1);
+    const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    const drawWidth = Math.max(1, Math.round(baseWidth * safeScale));
+    const drawHeight = Math.max(1, Math.round(baseHeight * safeScale));
+    const offsetX = Math.round((targetSize - drawWidth) / 2);
+    const offsetY = Math.round((targetSize - drawHeight) / 2);
+
+    ctx.clearRect(0, 0, targetSize, targetSize);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+    return canvas.toDataURL(mimeType);
+  },
 };

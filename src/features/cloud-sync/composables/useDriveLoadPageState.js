@@ -57,6 +57,8 @@ export function normalizeMetadataItem(raw) {
   const createdAt = toSeconds(raw?.createdTime || raw?.created_time);
   const syncedAt = raw?.syncedAt || raw?.synced_at || null;
   const shared = raw?.shared == null ? null : Boolean(raw.shared);
+  const hasThumbnail = raw?.hasThumbnail ?? raw?.has_thumbnail ?? null;
+  const thumbnailLink = raw?.thumbnailLink || raw?.thumbnail_link || null;
   const outOfSync = Boolean(raw?.outOfSync || raw?.out_of_sync || raw?.hashMismatch || raw?.modifiedMismatch);
   const lastModifiedAtDrive = driveModifiedAt ?? cachedModifiedAt;
   const contentHash = driveHash || cachedHash || null;
@@ -74,6 +76,8 @@ export function normalizeMetadataItem(raw) {
     createdAt,
     syncedAt,
     shared,
+    hasThumbnail: hasThumbnail == null ? null : Boolean(hasThumbnail),
+    thumbnailLink,
     outOfSync,
   };
 }
@@ -155,7 +159,7 @@ async function defaultRequestDrivePage(driveManager, { pageSize, pageToken, abor
 
   const response = await gapi.client.drive.files.list({
     q: `'${folderId}' in parents and (mimeType='application/zip' or mimeType='application/x-zip-compressed' or mimeType='multipart/x-zip' or mimeType contains 'zip') and trashed=false`,
-    fields: 'nextPageToken, files(id, name, createdTime, modifiedTime, appProperties, shared, mimeType)',
+    fields: 'nextPageToken, files(id, name, createdTime, modifiedTime, appProperties, shared, mimeType, hasThumbnail, thumbnailLink)',
     spaces: 'drive',
     pageSize,
     pageToken,
@@ -215,6 +219,7 @@ export function useDriveLoadPageState(options = {}) {
         (entry.contentHash || entry.characterName
           ? { last_app_hash: entry.contentHash || undefined, character_name: entry.characterName || undefined }
           : undefined),
+      hasThumbnail: entry.hasThumbnail || undefined,
     }));
   }
 
@@ -244,6 +249,8 @@ export function useDriveLoadPageState(options = {}) {
         createdAt: normalized.createdAt ?? existing.createdAt ?? null,
         syncedAt: normalized.syncedAt ?? existing.syncedAt ?? null,
         shared: normalized.shared ?? existing.shared ?? false,
+        hasThumbnail: normalized.hasThumbnail ?? existing.hasThumbnail ?? false,
+        thumbnailLink: normalized.thumbnailLink ?? existing.thumbnailLink ?? null,
       };
       merged.outOfSync = determineOutOfSync(merged);
       merged.syncSource = existing.syncSource || raw.syncSource || buildSyncSource(raw);

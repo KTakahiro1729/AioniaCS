@@ -6,6 +6,7 @@ import {
   serializeCharacterForExport,
   toTimestampString,
 } from '@/shared/utils/characterSerialization.js';
+import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
 
 /**
  * データ管理系の機能を担当するクラス
@@ -101,6 +102,55 @@ export class DataManager {
     event.target.value = null;
   }
 
+  async _buildDriveSaveContext(character, skills, specialSkills, equipments, histories) {
+    const { data, images } = serializeCharacterForExport({
+      character,
+      skills,
+      specialSkills,
+      equipments,
+      histories,
+      includeImages: true,
+    });
+    const archive = await buildCharacterArchive({ data, images });
+    const hashData = data;
+    let thumbnail = null;
+
+    if (Array.isArray(images) && images.length > 0) {
+      try {
+        thumbnail = await ImageManager.createThumbnailFromDataUrl(images[0], {
+          size: 256,
+          mimeType: 'image/jpeg',
+        });
+      } catch (error) {
+        console.warn('Failed to build thumbnail from character images.', error);
+      }
+    }
+
+    const sanitizedName = this._sanitizeFileName(character.name);
+    const payload = {
+      content: archive.content,
+      mimeType: archive.mimeType,
+      name: sanitizedName,
+      hashData,
+      ...(thumbnail
+        ? {
+            thumbnail,
+            thumbnailMimeType: 'image/jpeg',
+          }
+        : {}),
+    };
+    const appProperties = this.googleDriveManager.buildAppPropertiesFromPayload
+      ? await this.googleDriveManager.buildAppPropertiesFromPayload(hashData)
+      : undefined;
+    const contentHints =
+      thumbnail && this.googleDriveManager.buildContentHintsFromThumbnail
+        ? this.googleDriveManager.buildContentHintsFromThumbnail(thumbnail, 'image/jpeg')
+        : null;
+    const sanitizedFileName = `${sanitizedName}.zip`;
+
+    return { payload, sanitizedFileName, appProperties, contentHints };
+  }
+
   /**
    * Exports character data to a user selected Drive folder.
    * @param {object} character - The character data.
@@ -119,24 +169,23 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const { data, images } = serializeCharacterForExport({
+    const { payload, sanitizedFileName, appProperties, contentHints } = await this._buildDriveSaveContext(
       character,
       skills,
       specialSkills,
       equipments,
       histories,
-      includeImages: true,
-    });
-    const archive = await buildCharacterArchive({ data, images });
-    const sanitizedFileName = `${this._sanitizeFileName(character.name)}.zip`;
+    );
 
     try {
       const result = await this.googleDriveManager.saveFile(
         targetFolderId,
         sanitizedFileName,
-        archive.content,
+        payload.content,
         currentFileId,
-        archive.mimeType,
+        payload.mimeType,
+        appProperties,
+        contentHints,
       );
       return result;
     } catch (error) {
@@ -155,16 +204,7 @@ export class DataManager {
       throw new Error('GoogleDriveManager not configured. Please sign in or initialize the Drive manager.');
     }
 
-    const { data, images } = serializeCharacterForExport({
-      character,
-      skills,
-      specialSkills,
-      equipments,
-      histories,
-      includeImages: true,
-    });
-    const archive = await buildCharacterArchive({ data, images });
-
+    const { payload } = await this._buildDriveSaveContext(character, skills, specialSkills, equipments, histories);
     let targetFileId = currentFileId;
     if (targetFileId) {
       const isInConfiguredFolder = await this.googleDriveManager.isFileInConfiguredFolder(targetFileId);
@@ -174,18 +214,10 @@ export class DataManager {
     }
 
     if (targetFileId) {
-      return this.googleDriveManager.updateCharacterFile(targetFileId, {
-        content: archive.content,
-        mimeType: archive.mimeType,
-        name: this._sanitizeFileName(character.name),
-      });
+      return this.googleDriveManager.updateCharacterFile(targetFileId, payload);
     }
 
-    return this.googleDriveManager.createCharacterFile({
-      content: archive.content,
-      mimeType: archive.mimeType,
-      name: this._sanitizeFileName(character.name),
-    });
+    return this.googleDriveManager.createCharacterFile(payload);
   }
 
   async findDriveFileByCharacterName(characterName) {

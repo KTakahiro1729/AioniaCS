@@ -16,6 +16,9 @@ function stripImageData(payload) {
     return payload;
   }
   const sanitized = JSON.parse(JSON.stringify(payload));
+  if (sanitized.contentHints) {
+    delete sanitized.contentHints;
+  }
   if (sanitized.character && typeof sanitized.character === 'object') {
     delete sanitized.character.images;
   }
@@ -88,6 +91,25 @@ function prepareMultipartPayload(fileContent) {
     return { body: uint8ArrayToBase64(bytes), transferEncoding: 'Content-Transfer-Encoding: base64\r\n' };
   }
   throw new Error('Unsupported file content type for Drive upload');
+}
+
+function toUrlSafeBase64(input) {
+  return input.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function buildThumbnailContentHints(thumbnail, mimeType = 'image/png') {
+  if (typeof thumbnail !== 'string' || thumbnail.length === 0) {
+    return null;
+  }
+  const commaIndex = thumbnail.indexOf(',');
+  const base64 = commaIndex >= 0 ? thumbnail.slice(commaIndex + 1) : thumbnail;
+  const safeBase64 = toUrlSafeBase64(base64);
+  return {
+    thumbnail: {
+      image: safeBase64,
+      mimeType,
+    },
+  };
 }
 
 function sanitizeFileName(name) {
@@ -527,7 +549,7 @@ export class GoogleDriveManager {
     try {
       const response = await gapi.client.drive.files.list({
         q: `'${folderId}' in parents and mimeType='${mimeType}' and trashed=false`,
-        fields: 'files(id, name, modifiedTime, appProperties, shared)',
+        fields: 'files(id, name, modifiedTime, appProperties, shared, hasThumbnail, thumbnailLink)',
         spaces: 'drive',
       });
       return response.result.files || [];
@@ -545,7 +567,7 @@ export class GoogleDriveManager {
    * @param {string|null} fileId - The ID of the file to update, or null to create a new file.
    * @returns {Promise<{id: string, name: string}|null>} File ID and name, or null on error.
    */
-  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json', appProperties = null) {
+  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json', appProperties = null, contentHints = null) {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for saveFile.');
       return null;
@@ -562,6 +584,9 @@ export class GoogleDriveManager {
     };
     if (appProperties) {
       metadata.appProperties = appProperties;
+    }
+    if (contentHints) {
+      metadata.contentHints = contentHints;
     }
     let payload;
     try {
@@ -968,18 +993,38 @@ export class GoogleDriveManager {
     }
   }
 
-  /**
-   * Creates a character data file inside the configured Drive folder.
-   * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
-   */
-  async createCharacterFile(payload) {
+  buildContentHintsFromThumbnail(thumbnail, mimeType = 'image/png') {
+    try {
+      return buildThumbnailContentHints(thumbnail, mimeType);
+    } catch (error) {
+      console.error('Failed to build thumbnail content hints:', error);
+      return null;
+    }
+  }
+
+  async _buildCharacterFileParams(payload) {
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
     const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
     const appProperties = payload?.hashData ? await this.buildAppPropertiesFromPayload(payload.hashData) : undefined;
-    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType, appProperties);
+    const contentHints = payload?.thumbnail
+      ? this.buildContentHintsFromThumbnail(payload.thumbnail, payload.thumbnailMimeType)
+      : payload?.contentHints;
+
+    return { mimeType, fileName, folderId, appProperties, contentHints };
+  }
+
+  /**
+   * Creates a character data file inside the configured Drive folder.
+   * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
+   */
+  async createCharacterFile(payload) {
+    const params = await this._buildCharacterFileParams(payload);
+    if (!params) return null;
+    const { mimeType, fileName, folderId, appProperties, contentHints } = params;
+    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType, appProperties, contentHints);
   }
 
   /**
@@ -988,13 +1033,10 @@ export class GoogleDriveManager {
    * @param {{content: string|ArrayBuffer|ArrayBufferView, mimeType?: string, name?: string}} payload
    */
   async updateCharacterFile(id, payload) {
-    const mimeType = payload?.mimeType || 'application/zip';
-    const extension = mimeType === 'application/zip' ? 'zip' : 'json';
-    const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
-    if (!folderId) return null;
-    const appProperties = payload?.hashData ? await this.buildAppPropertiesFromPayload(payload.hashData) : undefined;
-    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType, appProperties);
+    const params = await this._buildCharacterFileParams(payload);
+    if (!params) return null;
+    const { mimeType, fileName, folderId, appProperties, contentHints } = params;
+    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType, appProperties, contentHints);
   }
 
   async renameFile(fileId, newName) {

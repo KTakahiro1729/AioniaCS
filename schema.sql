@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS character_metadata (
   character_name TEXT,
   file_name TEXT,
   content_hash TEXT,
+  has_thumbnail INTEGER DEFAULT 0,
   last_modified_at_drive INTEGER,
   synced_at INTEGER
 );
