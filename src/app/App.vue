@@ -195,8 +195,12 @@ async function attemptSharedLoad() {
 
 watch(
   [() => uiStore.isSignedIn, isDriveReady],
-  () => {
-    attemptSharedLoad();
+  async () => {
+    try {
+      await attemptSharedLoad();
+    } catch (error) {
+      console.error('Failed to attempt shared load on watch:', error);
+    }
   },
   { immediate: false },
 );
@@ -204,7 +208,11 @@ watch(
 onMounted(async () => {
   await initialize();
   pendingSharedId.value = parseSharedId();
-  await attemptSharedLoad();
+    try {
+    await attemptSharedLoad();
+  } catch (error) {
+    console.error('Failed to load shared character on mount:', error);
+  }
 });
 </script>
 
