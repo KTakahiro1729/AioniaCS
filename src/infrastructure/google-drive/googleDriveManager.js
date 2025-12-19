@@ -32,7 +32,7 @@ function sortObjectKeys(value) {
   if (Array.isArray(value)) {
     return value.map((item) => sortObjectKeys(item));
   }
-  if (value && typeof value === 'object') {
+  if (Object.prototype.toString.call(value) === '[object Object]') {
     return Object.keys(value)
       .sort()
       .reduce((sorted, key) => {
