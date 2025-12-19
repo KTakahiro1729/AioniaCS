@@ -94,7 +94,7 @@ function prepareMultipartPayload(fileContent) {
 }
 
 function toUrlSafeBase64(input) {
-  return input.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  return input.replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 function buildThumbnailContentHints(thumbnail, mimeType = 'image/png') {
@@ -576,7 +576,8 @@ export class GoogleDriveManager {
     await this.ensureAccessToken();
 
     const boundary = '-------314159265358979323846';
-    const delimiter = `\r\n--${boundary}\r\n`;
+    const delimiter = `--${boundary}\r\n`;
+    const delimiterWithLeadingBreak = `\r\n--${boundary}\r\n`;
     const closeDelim = `\r\n--${boundary}--`;
     const metadata = {
       name: fileName,
@@ -602,7 +603,7 @@ export class GoogleDriveManager {
           delimiter +
           'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
           JSON.stringify(metadata) +
-          delimiter +
+          delimiterWithLeadingBreak +
           `Content-Type: ${mimeType}\r\n${payload.transferEncoding}\r\n` +
           payload.body +
           closeDelim;
@@ -610,12 +611,14 @@ export class GoogleDriveManager {
         const response = await gapi.client.request({
           path: `/upload/drive/v3/files/${fileId}`,
           method: 'PATCH',
-          params: { uploadType: 'multipart' },
+          params: { uploadType: 'multipart', fields: 'id,name,hasThumbnail,thumbnailLink' },
           headers: {
             'Content-Type': `multipart/related; boundary=${boundary}`,
           },
           body: multipartRequestBody,
         });
+        // Uncomment the line below to verify thumbnail acceptance during testing.
+        // console.log('Thumbnail status:', response.result?.hasThumbnail, response.result?.thumbnailLink);
         console.log('File updated successfully:', response.result);
         return { id: response.result.id, name: response.result.name };
       } catch (error) {
@@ -644,7 +647,7 @@ export class GoogleDriveManager {
         delimiter +
         'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
         JSON.stringify(createMetadata) +
-        delimiter +
+        delimiterWithLeadingBreak +
         `Content-Type: ${mimeType}\r\n${payload.transferEncoding}\r\n` +
         payload.body +
         closeDelim;
@@ -652,10 +655,12 @@ export class GoogleDriveManager {
       const response = await gapi.client.request({
         path: '/upload/drive/v3/files',
         method: 'POST',
-        params: { uploadType: 'multipart', fields: 'id,name' },
+        params: { uploadType: 'multipart', fields: 'id,name,hasThumbnail,thumbnailLink' },
         headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
         body: multipartRequestBody,
       });
+      // Uncomment the line below to verify thumbnail acceptance during testing.
+      // console.log('Thumbnail status:', response.result?.hasThumbnail, response.result?.thumbnailLink);
       console.log('File created successfully:', response.result);
       return { id: response.result.id, name: response.result.name };
     } catch (error) {
