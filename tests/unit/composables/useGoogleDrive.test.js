@@ -61,6 +61,7 @@ describe('useGoogleDrive', () => {
     const dataManager = {
       saveCharacterToDrive: vi.fn(),
       loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
+      parseLoadedData: vi.fn(),
       googleDriveManager: {},
       getDriveFileName: vi.fn().mockReturnValue('Explorer.json'),
     };
@@ -77,6 +78,36 @@ describe('useGoogleDrive', () => {
     expect(charStore.character.name).toBe('Explorer');
     expect(uiStore.currentDriveFileId).toBe('file-1');
     expect(uiStore.lastSavedSnapshot).toBe(buildSnapshotFromStore(charStore));
+  });
+
+  test('loadCharacterFromDrive uses initial data without downloading', async () => {
+    const initialData = {
+      character: { name: 'Prefetched' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const normalized = { ...initialData, character: { name: 'Normalized Prefetched' } };
+    const dataManager = {
+      saveCharacterToDrive: vi.fn(),
+      loadDataFromDrive: vi.fn(),
+      parseLoadedData: vi.fn().mockReturnValue(normalized),
+      googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Prefetched.json'),
+    };
+    const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
+    const charStore = useCharacterStore();
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isSignedIn = true;
+
+    const result = await loadCharacterFromDrive('file-prefetch', initialData);
+
+    expect(dataManager.loadDataFromDrive).not.toHaveBeenCalled();
+    expect(dataManager.parseLoadedData).toHaveBeenCalledWith(initialData);
+    expect(result).toEqual(normalized);
+    expect(charStore.character.name).toBe('Normalized Prefetched');
   });
 
   test('saveCharacterToDrive renames file when saved name differs from character name', async () => {

@@ -115,7 +115,7 @@ export function useGoogleDrive(dataManager) {
     }
   }
 
-  async function loadCharacterFromDrive(fileId = uiStore.currentDriveFileId) {
+  async function loadCharacterFromDrive(fileId = uiStore.currentDriveFileId, initialData = null) {
     if (!isDriveReady.value) {
       showToast({ type: 'error', ...messages.googleDrive.initPending() });
       return null;
@@ -128,21 +128,25 @@ export function useGoogleDrive(dataManager) {
       return null;
     }
 
-    const loadPromise = dataManager
-      .loadDataFromDrive(targetId)
+    const providedData = initialData ?? uiStore.consumePrefetchedDriveData(targetId);
+    const loadPromise = Promise.resolve(providedData ?? dataManager.loadDataFromDrive(targetId))
       .then((parsedData) => {
+        const normalizedData = providedData ? dataManager.parseLoadedData(parsedData) : parsedData;
+        if (!normalizedData) {
+          throw new Error(messages.googleDrive.load.missingData().message);
+        }
         if (!parsedData) {
           throw new Error(messages.googleDrive.load.missingData().message);
         }
-        Object.assign(characterStore.character, parsedData.character);
-        characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
-        characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
-        Object.assign(characterStore.equipments, parsedData.equipments);
-        characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+        Object.assign(characterStore.character, normalizedData.character);
+        characterStore.skills.splice(0, characterStore.skills.length, ...normalizedData.skills);
+        characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...normalizedData.specialSkills);
+        Object.assign(characterStore.equipments, normalizedData.equipments);
+        characterStore.histories.splice(0, characterStore.histories.length, ...normalizedData.histories);
         uiStore.setCurrentDriveFileId(targetId);
         removeStoredCharacterDraft();
         uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
-        return parsedData;
+        return normalizedData;
       })
       .catch((err) => {
         logAndToastError(err, (caught) => messages.googleDrive.load.error(caught), 'loadCharacterFromDrive');
