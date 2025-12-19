@@ -1,14 +1,9 @@
 import { router } from '@/app/router/index.js';
 
 describe('router configuration', () => {
-  test('includes character sheet and drive load routes', () => {
+  test('includes character sheet route only', () => {
     const routeNames = router.getRoutes().map((route) => route.name);
     expect(routeNames).toContain('character-sheet');
-    expect(routeNames).toContain('drive-load');
-  });
-
-  test('drive load route points to expected path', () => {
-    const driveLoadRoute = router.getRoutes().find((route) => route.name === 'drive-load');
-    expect(driveLoadRoute?.path).toBe('/drive/load');
+    expect(routeNames).not.toContain('drive-load');
   });
 });

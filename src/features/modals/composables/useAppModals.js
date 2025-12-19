@@ -4,11 +4,11 @@ import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 const LoadModal = defineAsyncComponent(() => import('@/features/modals/components/contents/LoadModal.vue'));
 const IoModal = defineAsyncComponent(() => import('@/features/modals/components/contents/IoModal.vue'));
+const DriveLoadContent = defineAsyncComponent(() => import('@/features/modals/components/contents/DriveLoadContent.vue'));
 import { isDesktopDevice } from '@/shared/utils/device.js';
 import { messages } from '@/i18n/index.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { router } from '@/app/router/index.js';
 
 export function useAppModals(options) {
   const uiStore = useUiStore();
@@ -29,6 +29,16 @@ export function useAppModals(options) {
     canSignInToGoogle,
     isDriveReady,
   } = options;
+
+  async function openDriveLoadModal() {
+    await showModal({
+      component: DriveLoadContent,
+      title: messages.driveLoadPage.title,
+      props: {},
+      buttons: [],
+      size: 'wide',
+    });
+  }
 
   async function openLoadModal() {
     const initialProps = {
@@ -53,9 +63,9 @@ export function useAppModals(options) {
         'load-local': handleFileUpload,
         'sign-in': handleSignInClick,
         'update-drive-folder-path': updateDriveFolderPath,
-        'select-character': () => {
+        'select-character': async () => {
           modalStore.resolveModal({ value: 'drive-load' });
-          router.push({ name: 'drive-load' });
+          await openDriveLoadModal();
         },
       },
     });

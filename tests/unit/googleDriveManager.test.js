@@ -23,6 +23,10 @@ describe('GoogleDriveManager configuration and folder handling', () => {
             delete: vi.fn(),
             update: vi.fn(),
           },
+          permissions: {
+            list: vi.fn(),
+            delete: vi.fn(),
+          },
         },
         request: vi.fn(),
         getToken: vi.fn(() => ({ access_token: 'cached-token' })),
@@ -237,6 +241,22 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   test('onGapiLoad rejects when gapi.load missing', async () => {
     delete gapi.load;
     await expect(gdm.onGapiLoad()).rejects.toThrow('GAPI core script not available for gapi.load.');
+  });
+
+  test('unshareFile removes anyone permission', async () => {
+    gapi.client.drive.permissions.list.mockResolvedValue({
+      result: { permissions: [{ id: 'perm-anyone', type: 'anyone' }] },
+    });
+    gapi.client.drive.permissions.delete.mockResolvedValue({});
+
+    const result = await gdm.unshareFile('file-share');
+
+    expect(gapi.client.drive.permissions.list).toHaveBeenCalledWith({
+      fileId: 'file-share',
+      fields: 'permissions(id, type, role)',
+    });
+    expect(gapi.client.drive.permissions.delete).toHaveBeenCalledWith({ fileId: 'file-share', permissionId: 'perm-anyone' });
+    expect(result).toBe(true);
   });
 
   test('singleton pattern remains enforced', () => {

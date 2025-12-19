@@ -27,6 +27,8 @@ describe('useShare', () => {
     uiStore.isSignedIn = false;
     const share = useShare({ googleDriveManager: {} });
     await expect(share.createShareLink()).rejects.toThrow('サインインしてください');
+    await expect(share.enableShare('file-1')).rejects.toThrow('サインインしてください');
+    await expect(share.disableShare('file-1')).rejects.toThrow('サインインしてください');
   });
 
   test('throws when drive manager missing ensureFilePublic', async () => {
@@ -34,6 +36,7 @@ describe('useShare', () => {
     uiStore.isSignedIn = true;
     const share = useShare({ googleDriveManager: {} });
     await expect(share.createShareLink()).rejects.toThrow('Google Drive マネージャーが設定されていません');
+    await expect(share.enableShare('file-1')).rejects.toThrow('Google Drive マネージャーが設定されていません');
   });
 
   test('throws when save fails', async () => {
@@ -72,5 +75,32 @@ describe('useShare', () => {
     expect(uiStore.currentDriveFileId).toBe('file123');
     expect(dataManager.saveCharacterToDrive).toHaveBeenCalled();
     expect(dataManager.googleDriveManager.ensureFilePublic).toHaveBeenCalledWith('file123');
+  });
+
+  test('enableShare returns app url without saving', async () => {
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    uiStore.currentDriveFileId = 'file-abc';
+    const dataManager = {
+      googleDriveManager: { ensureFilePublic: vi.fn().mockResolvedValue('https://drive.link/file-abc') },
+    };
+    const share = useShare(dataManager);
+    const link = await share.enableShare();
+
+    expect(link).toBe(`${window.location.origin}/app/index.html?foo=1&sharedId=file-abc`);
+    expect(dataManager.googleDriveManager.ensureFilePublic).toHaveBeenCalledWith('file-abc');
+  });
+
+  test('disableShare delegates to drive manager', async () => {
+    const uiStore = useUiStore();
+    uiStore.isSignedIn = true;
+    const dataManager = {
+      googleDriveManager: { unshareFile: vi.fn().mockResolvedValue(true) },
+    };
+    const share = useShare(dataManager);
+    const result = await share.disableShare('file-disable');
+
+    expect(result).toBe('file-disable');
+    expect(dataManager.googleDriveManager.unshareFile).toHaveBeenCalledWith('file-disable');
   });
 });

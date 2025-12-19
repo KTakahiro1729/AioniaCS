@@ -128,18 +128,28 @@ driveLoadPage.labels.selectAction,このキャラクターを開く,,Drive load 
 driveLoadPage.actions.load,読込,,Drive load page load action
 driveLoadPage.actions.delete,削除,,Drive load page delete action
 driveLoadPage.actions.share,共有,,Drive load page share action
+driveLoadPage.actions.unshare,共有解除,,Drive load page unshare action
+driveLoadPage.actions.unshareDisabled,未共有,,Drive load page unshare disabled action
 driveLoadPage.actions.download,保存,,Drive load page download action
 driveLoadPage.actions.loadAria,{name}を開く,,Drive load page load aria
 driveLoadPage.actions.deleteAria,{name}を削除する,,Drive load page delete aria
 driveLoadPage.actions.shareAria,{name}を共有する,,Drive load page share aria
+driveLoadPage.actions.unshareAria,{name}の共有を解除する,,Drive load page unshare aria
 driveLoadPage.actions.downloadAria,{name}を端末に保存する,,Drive load page download aria
 driveLoadPage.confirmations.delete,{name}を削除しますか？この操作は元に戻せません。,,Drive load page delete confirmation
+driveLoadPage.confirmations.unshare,{name}の共有を解除しますか？,,Drive load page unshare confirmation
 driveLoadPage.toasts.share.loading.title,共有リンクを作成中,,Drive load page share loading title
 driveLoadPage.toasts.share.loading.message,公開リンクを準備しています…,,Drive load page share loading message
 driveLoadPage.toasts.share.success.title,共有リンクをコピーしました,,Drive load page share success title
 driveLoadPage.toasts.share.success.message,リンクをクリップボードにコピーしました,,Drive load page share success message
 driveLoadPage.toasts.share.error.title,共有に失敗しました,,Drive load page share error title
 driveLoadPage.toasts.share.error.message,共有リンクの作成に失敗しました,,Drive load page share error message
+driveLoadPage.toasts.unshare.loading.title,共有設定を更新中,,Drive load page unshare loading title
+driveLoadPage.toasts.unshare.loading.message,公開設定を解除しています…,,Drive load page unshare loading message
+driveLoadPage.toasts.unshare.success.title,共有を解除しました,,Drive load page unshare success title
+driveLoadPage.toasts.unshare.success.message,共有リンクの無効化が完了しました,,Drive load page unshare success message
+driveLoadPage.toasts.unshare.error.title,共有解除に失敗しました,,Drive load page unshare error title
+driveLoadPage.toasts.unshare.error.message,共有設定の更新に失敗しました,,Drive load page unshare error message
 driveLoadPage.toasts.download.loading.title,ダウンロードを準備中,,Drive load page download loading title
 driveLoadPage.toasts.download.loading.message,ファイルを取得しています…,,Drive load page download loading message
 driveLoadPage.toasts.download.success.title,ダウンロード開始,,Drive load page download success title

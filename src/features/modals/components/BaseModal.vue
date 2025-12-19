@@ -1,7 +1,7 @@
 <template>
   <transition name="modal-fade">
     <div class="modal-overlay" v-if="modal.isVisible" @click.self="modalStore.hideModal()">
-      <div :class="['modal', modal.type ? `modal--${modal.type}` : '']">
+      <div :class="['modal', modal.type ? `modal--${modal.type}` : '', modal.size ? `modal--${modal.size}` : '']">
         <button class="modal-close close-cross" @click="modalStore.hideModal()">×</button>
         <div class="modal-header box-title" v-if="modal.title">
           <div class="modal-header-left">
