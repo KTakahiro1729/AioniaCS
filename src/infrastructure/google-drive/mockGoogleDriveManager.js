@@ -198,17 +198,31 @@ export class MockGoogleDriveManager {
   async listFiles(folderId) {
     return Object.values(this.state.files)
       .filter((file) => file.parentId === folderId)
-      .map((file) => ({ id: file.id, name: file.name }));
+      .map((file) => ({
+        id: file.id,
+        name: file.name,
+        modifiedTime: file.modifiedTime,
+        createdTime: file.createdTime,
+        shared: Boolean(file.shared),
+        hasThumbnail: Boolean(file.thumbnailLink),
+        thumbnailLink: file.thumbnailLink || null,
+      }));
   }
 
-  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json') {
+  async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json', contentHints = null) {
+    const now = new Date().toISOString();
     const id = fileId || `file-${this.state.fileCounter++}`;
+    const existing = this.state.files[id];
     this.state.files[id] = {
       id,
       name: fileName,
       content: fileContent,
       parentId: folderId,
       mimeType,
+      modifiedTime: now,
+      createdTime: existing?.createdTime || now,
+      shared: existing?.shared || false,
+      thumbnailLink: contentHints?.thumbnail?.image ? `mock-thumbnail-${id}` : existing?.thumbnailLink || null,
     };
     this._saveState();
     return { id, name: fileName };

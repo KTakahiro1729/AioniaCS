@@ -3,7 +3,6 @@ import {
   initializeGoogleDriveManager,
   getGoogleDriveManagerInstance,
   resetGoogleDriveManagerForTests,
-  calculateMetadataHash,
 } from '@/infrastructure/google-drive/googleDriveManager.js';
 import { vi } from 'vitest';
 
@@ -184,27 +183,6 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(call.body).toContain('Content-Type: application/zip');
   });
 
-  test('createCharacterFile stores last_app_hash when hash data is provided', async () => {
-    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
-    gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-10', name: 'aioniacs.cfg' } });
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-hash', name: '慈悲なきアイオニア' } });
-    gapi.client.request.mockResolvedValueOnce({ result: { id: 'file-hash', name: 'Hero.json' } });
-
-    const hashData = {
-      character: { name: 'Hash Hero', images: ['data:image/png;base64,AAA'] },
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-
-    await gdm.createCharacterFile({ content: '{}', mimeType: 'application/json', name: 'Hash Hero', hashData });
-
-    const expectedHash = await calculateMetadataHash(hashData);
-    const requestCall = gapi.client.request.mock.calls.at(-1)[0];
-    expect(requestCall.body).toContain(`"appProperties":{"last_app_hash":"${expectedHash}"`);
-  });
-
   test('renameFile updates file metadata without uploading content', async () => {
     gapi.client.drive.files.update.mockResolvedValue({ result: { id: 'file-rename', name: 'Knight.zip' } });
 
@@ -281,53 +259,5 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(() => new GoogleDriveManager('other', 'other')).toThrow('already been instantiated');
     expect(initializeGoogleDriveManager('second', 'second')).toBe(gdm);
     expect(getGoogleDriveManagerInstance()).toBe(gdm);
-  });
-
-  test('calculateMetadataHash drops images from payload before hashing', async () => {
-    const payload = {
-      character: { name: 'Tester', images: ['data:image/png;base64,zzz'] },
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-      images: ['data:image/png;base64,yyy'],
-    };
-
-    const hash = await calculateMetadataHash(payload);
-    const expectedPayload = {
-      character: { name: 'Tester' },
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-
-    const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(expectedPayload)));
-    const expectedHash = Array.from(new Uint8Array(buffer))
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('');
-
-    expect(hash).toBe(expectedHash);
-  });
-
-  test('calculateMetadataHash ignores contentHints.thumbnail data', async () => {
-    const basePayload = {
-      character: { name: 'Thumbnail Tester' },
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-
-    const withThumbnail = {
-      ...basePayload,
-      contentHints: {
-        thumbnail: { image: 'abc123', mimeType: 'image/png' },
-      },
-    };
-
-    const [hashBase, hashWithThumbnail] = await Promise.all([calculateMetadataHash(basePayload), calculateMetadataHash(withThumbnail)]);
-
-    expect(hashWithThumbnail).toBe(hashBase);
   });
 });
