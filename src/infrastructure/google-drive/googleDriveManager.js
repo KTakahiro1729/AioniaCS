@@ -106,7 +106,6 @@ export class GoogleDriveManager {
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
     this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
     this.gapiLoadedCallback = null;
-    this.pickerApiLoaded = false;
     this.aioniaFolderId = null;
     this.gapiLoadPromise = null;
     this.currentTokenInfo = null;
@@ -297,7 +296,8 @@ export class GoogleDriveManager {
         console.error('GDM: ' + err.message);
         return reject(err);
       }
-      gapi.load('client:picker', () => {
+      // Picker API removed; initialize only the Drive client for in-app loaders.
+      gapi.load('client', () => {
         if (typeof gapi.client === 'undefined' || !gapi.client.init) {
           const err = new Error('GAPI client script not available for gapi.client.init.');
           console.error('GDM: ' + err.message);
@@ -310,8 +310,7 @@ export class GoogleDriveManager {
             // scope: this.scope, // Scope is handled by GIS token client for Drive data access
           })
           .then(() => {
-            this.pickerApiLoaded = true;
-            console.log('GDM: GAPI client and Picker initialized.');
+            console.log('GDM: GAPI client initialized.');
             resolve();
           })
           .catch((error) => {
@@ -895,125 +894,6 @@ export class GoogleDriveManager {
       console.error('Failed to fetch share link from Drive:', error);
       return null;
     }
-  }
-
-  /**
-   * Shows the Google File Picker to select a file.
-   * @param {function} callback - Function to call with the result (error, {id, name}).
-   * @param {string|null} parentFolderId - Optional ID of the folder to start in.
-   * @param {Array<string>} mimeTypes - Array of MIME types to filter by.
-   */
-  async showFilePicker(callback, parentFolderId = null, mimeTypes = ['application/json']) {
-    if (!this.pickerApiLoaded) {
-      console.error('Picker API not loaded yet.');
-      if (callback) callback(new Error('Picker API not loaded.'));
-      return;
-    }
-
-    try {
-      await this.ensureAccessToken();
-    } catch (error) {
-      console.error('Failed to prepare Picker token:', error);
-      if (callback) callback(new Error('Authentication required.'));
-      return;
-    }
-
-    const token = gapi.client.getToken();
-    if (!token) {
-      console.error('User not signed in or token not available for Picker.');
-      if (callback) callback(new Error('Not signed in or token unavailable.'));
-      return;
-    }
-
-    const pickerCallback = (data) => {
-      if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
-        const doc = data[google.picker.Response.DOCUMENTS][0];
-        if (callback) callback(null, { id: doc.id, name: doc.name });
-      } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
-        console.log('Picker cancelled by user.');
-        if (callback) callback(new Error('Picker cancelled by user.'));
-      }
-    };
-
-    const view = new google.picker.View(google.picker.ViewId.DOCS);
-    if (parentFolderId) {
-      view.setParent(parentFolderId);
-    }
-    if (mimeTypes && mimeTypes.length > 0) {
-      view.setMimeTypes(mimeTypes.join(','));
-    }
-
-    const pickerBuilder = new google.picker.PickerBuilder()
-      .setOrigin(window.location.origin)
-      .addView(view)
-      .enableFeature(google.picker.Feature.NAV_HIDDEN)
-      .setOAuthToken(token.access_token)
-      .setCallback(pickerCallback);
-
-    const picker = pickerBuilder.build();
-    picker.setVisible(true);
-  }
-
-  /**
-   * Shows the Google Folder Picker to select a folder.
-   * @param {function} callback - Function to call with the result (error, {id, name}).
-   */
-  /**
-   * Shows the Google Folder Picker to select a folder.
-   * @param {function} callback - Function to call with the result (error, {id, name}).
-   */
-  async showFolderPicker(callback) {
-    if (!this.pickerApiLoaded) {
-      console.error('Picker API not loaded yet for folder picker.');
-      if (callback) callback(new Error('Picker API not loaded.'));
-      return;
-    }
-
-    try {
-      await this.ensureAccessToken();
-    } catch (error) {
-      console.error('Failed to prepare Folder Picker token:', error);
-      if (callback) callback(new Error('Authentication required.'));
-      return;
-    }
-
-    const token = gapi.client.getToken();
-    if (!token) {
-      console.error('User not signed in or token not available for Folder Picker.');
-      if (callback) callback(new Error('Not signed in or token unavailable.'));
-      return;
-    }
-
-    const pickerCallback = async (data) => {
-      if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
-        const folder = data[google.picker.Response.DOCUMENTS][0];
-        try {
-          const path = await this.buildFolderPathFromId(folder.id);
-          if (callback) callback(null, { id: folder.id, name: folder.name, path: path || folder.name });
-        } catch (error) {
-          console.error('Error resolving selected folder path:', error);
-          if (callback) callback(error);
-        }
-      } else if (data[google.picker.Response.ACTION] === google.picker.Action.CANCEL) {
-        console.log('Folder Picker cancelled by user.');
-        if (callback) callback(new Error('Folder Picker cancelled by user.'));
-      }
-    };
-
-    const view = new google.picker.DocsView();
-    view.setIncludeFolders(true);
-    view.setSelectFolderEnabled(true);
-    view.setMimeTypes('application/vnd.google-apps.folder');
-
-    const pickerBuilder = new google.picker.PickerBuilder()
-      .setOrigin(window.location.origin)
-      .addView(view)
-      .setTitle('Select a folder')
-      .setOAuthToken(token.access_token)
-      .setCallback(pickerCallback);
-
-    const picker = pickerBuilder.build();
-    picker.setVisible(true);
   }
 
   async isFileInConfiguredFolder(fileId) {

@@ -7,15 +7,7 @@
       </button>
     </section>
     <section class="load-modal__section load-modal__section--drive">
-      <button class="button-base load-modal__button" v-if="canUseDrive" data-test="load-modal-drive-button" @click="$emit('load-drive')">
-        {{ loadDriveLabel }}
-      </button>
-      <button
-        class="button-base load-modal__button load-modal__button--secondary"
-        type="button"
-        data-test="load-modal-select-character"
-        @click="$emit('select-character')"
-      >
+      <button class="button-base load-modal__button" type="button" :disabled="!canUseDrive" data-test="load-modal-select-character" @click="$emit('select-character')">
         {{ selectCharacterLabel }}
       </button>
       <div class="load-modal__config">
@@ -31,14 +23,6 @@
             @blur="commitFolderPath"
             @keyup.enter.prevent="commitFolderPath"
           />
-          <button
-            type="button"
-            class="button-base load-modal__change-button"
-            :disabled="isFolderPickerDisabled"
-            @click="$emit('choose-drive-folder')"
-          >
-            {{ changeFolderLabel }}
-          </button>
         </div>
       </div>
     </section>
@@ -61,9 +45,7 @@ const props = defineProps({
   driveFolderPath: String,
   driveFolderLabel: String,
   driveFolderPlaceholder: String,
-  changeFolderLabel: String,
   loadLocalLabel: String,
-  loadDriveLabel: String,
   selectCharacterLabel: String,
   signInLabel: String,
   signInMessage: String,
@@ -71,10 +53,8 @@ const props = defineProps({
 
 const emit = defineEmits([
   'load-local',
-  'load-drive',
   'sign-in',
   'update-drive-folder-path',
-  'choose-drive-folder',
   'select-character',
 ]);
 
@@ -99,7 +79,6 @@ watch(
 
 const canUseDrive = computed(() => props.isSignedIn && props.isDriveReady);
 const isDriveControlsDisabled = computed(() => !props.isSignedIn);
-const isFolderPickerDisabled = computed(() => !canUseDrive.value);
 
 function commitFolderPath() {
   if (!props.isSignedIn) {
@@ -150,11 +129,6 @@ function handleLocalChange(event) {
   font-weight: 600;
 }
 
-.load-modal__input-group {
-  display: flex;
-  width: 100%;
-}
-
 .load-modal__input {
   flex: 1;
   padding: 8px 10px;
@@ -167,11 +141,6 @@ function handleLocalChange(event) {
 .load-modal__input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.load-modal__change-button {
-  border-radius: 0 4px 4px 0;
-  padding-inline: 12px;
 }
 
 .load-modal__section--local {

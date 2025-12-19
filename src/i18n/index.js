@@ -27,16 +27,6 @@ export const messages = {
         message: t('googleDrive.signOut.success.message'),
       }),
     },
-    folderPicker: {
-      unavailable: () => ({
-        title: t('googleDrive.folderPicker.unavailable.title'),
-        message: t('googleDrive.folderPicker.unavailable.message'),
-      }),
-      error: (err) => ({
-        title: t('googleDrive.folderPicker.error.title'),
-        message: err?.message || t('googleDrive.folderPicker.error.message'),
-      }),
-    },
     save: {
       loading: () => ({
         title: t('googleDrive.save.loading.title'),
@@ -271,9 +261,14 @@ export const messages = {
       unknownCharacter: t('driveLoadPage.labels.unknownCharacter'),
       modified: t('driveLoadPage.labels.modified'),
       hash: t('driveLoadPage.labels.hash'),
+      driveHash: t('driveLoadPage.labels.driveHash'),
+      cachedHash: t('driveLoadPage.labels.cachedHash'),
       notAvailable: t('driveLoadPage.labels.notAvailable'),
       unknownDate: t('driveLoadPage.labels.unknownDate'),
       outOfSync: t('driveLoadPage.labels.outOfSync'),
+      hashWarning: t('driveLoadPage.labels.hashWarning'),
+      shared: t('driveLoadPage.labels.shared'),
+      sharedAria: t('driveLoadPage.labels.sharedAria'),
       selectAction: t('driveLoadPage.labels.selectAction'),
     },
     errors: {

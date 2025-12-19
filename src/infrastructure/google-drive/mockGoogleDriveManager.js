@@ -16,7 +16,6 @@ export class MockGoogleDriveManager {
     this.clientId = clientId;
     this.storageKey = 'mockGoogleDriveData';
     this.configFileId = 'mock-config';
-    this.pickerApiLoaded = true;
     this._loadState();
     singletonInstance = this;
   }
@@ -29,7 +28,6 @@ export class MockGoogleDriveManager {
       folderCounter: 1,
       signedIn: false,
       config: this.getDefaultConfig(),
-      folderPickerQueue: [],
     };
 
     try {
@@ -38,10 +36,6 @@ export class MockGoogleDriveManager {
     } catch (error) {
       console.error('Failed to load mock state from localStorage, resetting.', error);
       this.state = defaultState;
-    }
-
-    if (!Array.isArray(this.state.folderPickerQueue)) {
-      this.state.folderPickerQueue = [];
     }
 
     this.configuredFolderId = null;
@@ -61,7 +55,6 @@ export class MockGoogleDriveManager {
       folderCounter: 1,
       signedIn: false,
       config: this.getDefaultConfig(),
-      folderPickerQueue: [],
     };
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
@@ -242,46 +235,6 @@ export class MockGoogleDriveManager {
     file.shared = true;
     this._saveState();
     return `https://drive.mock/${fileId}`;
-  }
-
-  showFilePicker(callback, parentFolderId = null) {
-    const files = Object.values(this.state.files).filter((file) => (parentFolderId ? file.parentId === parentFolderId : true));
-    const first = files[0];
-    if (first) {
-      callback?.(null, { id: first.id, name: first.name });
-    } else {
-      callback?.(new Error('No files available.'));
-    }
-  }
-
-  showFolderPicker(callback) {
-    const queue = Array.isArray(this.state.folderPickerQueue) ? this.state.folderPickerQueue : [];
-    if (queue.length > 0) {
-      const targetPath = this.normalizeFolderPath(queue.shift());
-      this.state.folderPickerQueue = queue;
-      this._saveState();
-      this.ensureFolderPath(targetPath)
-        .then(({ folder, normalized }) => {
-          if (!folder) {
-            callback?.(new Error('No folders available.'));
-            return;
-          }
-          callback?.(null, { id: folder.id, name: folder.name, path: normalized });
-        })
-        .catch((error) => {
-          callback?.(error);
-        });
-      return;
-    }
-
-    const folderId = this.configuredFolderId;
-    if (folderId) {
-      const folder = this.state.folders[folderId];
-      const path = this.cachedFolderPath || this.buildFolderPath(folderId);
-      callback?.(null, { id: folder.id, name: folder.name, path: path || folder.name });
-    } else {
-      callback?.(new Error('No folders available.'));
-    }
   }
 
   async findFileByName(fileName) {
