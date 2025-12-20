@@ -23,7 +23,7 @@
           <div class="delete-button-wrapper flex-item-delete" v-if="!uiStore.isViewingShared">
             <button
               type="button"
-              class="button-base list-button list-button--delete"
+              class="button-base button-base--delete list-button"
               @click="characterStore.removeSpecialSkill(index)"
               :disabled="localSpecialSkills.length <= 1 && !hasSpecialSkillContent(specialSkill)"
               :aria-label="sheetMessages.aria.removeSpecialSkill"

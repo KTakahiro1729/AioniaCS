@@ -13,7 +13,7 @@
               <div class="delete-button-wrapper" v-if="!uiStore.isViewingShared">
                 <button
                   type="button"
-                  class="button-base list-button list-button--delete"
+                  class="button-base button-base--delete list-button"
                   @click="characterStore.removeExpert(skill.id, expIndex)"
                   :disabled="skill.experts.length <= 1 && expert.value === ''"
                   :aria-label="sheetMessages.aria.removeExpert"

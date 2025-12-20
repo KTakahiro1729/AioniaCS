@@ -296,7 +296,7 @@ onBeforeUnmount(() => {
                   </button>
                 </div>
                 <button
-                  class="button-base button-base--danger drive-row__delete"
+                  class="button-base button-base--delete drive-row__delete"
                   type="button"
                   :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
                   data-test="drive-row-delete"

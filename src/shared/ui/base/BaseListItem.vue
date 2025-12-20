@@ -3,7 +3,7 @@
     <div v-if="showDeleteButton" class="delete-button-wrapper">
       <button
         type="button"
-        class="button-base list-button list-button--delete"
+        class="button-base button-base--delete list-button"
         @click="emitDelete"
         :disabled="!canDelete"
         :aria-label="sheetMessages.aria.deleteItem"
