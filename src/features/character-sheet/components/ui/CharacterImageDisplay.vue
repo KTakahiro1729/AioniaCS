@@ -2,12 +2,7 @@
   <div class="character-image-container">
     <div class="image-display-area">
       <template v-if="imagesInternal.length > 0">
-        <img
-          v-if="currentImageSrc"
-          :src="currentImageSrc"
-          class="character-image-display"
-          :alt="sheetMessages.images.alt"
-        />
+        <img v-if="currentImageSrc" :src="currentImageSrc" class="character-image-display" :alt="sheetMessages.images.alt" />
         <button
           @click="previousImage"
           class="button-base button-imagenav button-imagenav--prev"
@@ -24,24 +19,16 @@
         >
           &gt;
         </button>
-        <div class="image-count-display">
-          {{ currentImageIndex + 1 }} / {{ imagesInternal.length }}
-        </div>
+        <div class="image-count-display">{{ currentImageIndex + 1 }} / {{ imagesInternal.length }}</div>
       </template>
-      
+
       <div class="character-image-placeholder" v-else>
         {{ sheetMessages.images.empty }}
       </div>
     </div>
 
     <div class="image-controls" v-if="!uiStore.isViewingShared">
-      <input
-        type="file"
-        id="character_image_upload"
-        @change="handleImageUpload"
-        accept="image/*"
-        style="display: none"
-      />
+      <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none" />
       <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">
         {{ sheetMessages.images.add }}
       </label>
@@ -110,11 +97,7 @@ watch(
 const currentImageIndex = ref(0);
 
 const currentImageSrc = computed(() => {
-  if (
-    imagesInternal.value.length > 0 &&
-    currentImageIndex.value >= 0 &&
-    currentImageIndex.value < imagesInternal.value.length
-  ) {
+  if (imagesInternal.value.length > 0 && currentImageIndex.value >= 0 && currentImageIndex.value < imagesInternal.value.length) {
     return imagesInternal.value[currentImageIndex.value];
   }
   return null;
@@ -128,8 +111,7 @@ const nextImage = () => {
 
 const previousImage = () => {
   if (imagesInternal.value.length > 0) {
-    currentImageIndex.value =
-      (currentImageIndex.value - 1 + imagesInternal.value.length) % imagesInternal.value.length;
+    currentImageIndex.value = (currentImageIndex.value - 1 + imagesInternal.value.length) % imagesInternal.value.length;
   }
 };
 
@@ -180,8 +162,8 @@ const handleImageUpload = async (event) => {
   justify-content: center;
   margin-bottom: 0;
   width: 100%;
-  flex: 1 1 0;
-  height: 0;
+  flex: none;
+  height: 350px;
   min-height: clamp(220px, 32vh, 360px);
   background-color: var(--color-background);
   border: 1px solid var(--color-border-normal);
@@ -305,9 +287,8 @@ const handleImageUpload = async (event) => {
 
 @media (min-width: 769px) {
   .character-image-container {
-    flex: 1;
-    height: 100%;
-    width: 100%;
+    height: 0;
+    flex: 1 1 0;
     min-height: 0;
   }
 }
