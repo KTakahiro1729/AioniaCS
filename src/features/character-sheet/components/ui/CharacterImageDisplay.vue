@@ -31,7 +31,7 @@
       <button
         :disabled="!currentImageSrc"
         @click="removeCurrentImage"
-        class="button-base imagefile-button imagefile-button--delete"
+        class="button-base button-base--delete imagefile-button"
         :aria-label="sheetMessages.images.deleteAria"
       >
         {{ sheetMessages.images.delete }}
@@ -264,29 +264,6 @@ const handleImageUpload = async (event) => {
 
 .imagefile-button--add:hover:not(:disabled) {
   border-color: var(--color-accent);
-}
-
-.imagefile-button--delete {
-  color: var(--color-delete-text);
-  border-color: var(--color-delete-border);
-}
-
-.imagefile-button--delete:hover:not(:disabled) {
-  border-color: var(--color-delete-text);
-  box-shadow:
-    inset 0 0 3px var(--color-delete-text),
-    0 0 6px var(--color-delete-text);
-  text-shadow: 0 0 2px var(--color-delete-text);
-  color: var(--color-delete-text-light);
-}
-
-.imagefile-button--delete:disabled {
-  cursor: default;
-  background-color: transparent;
-  color: var(--color-border-normal);
-  border-color: var(--color-border-normal);
-  box-shadow: none;
-  text-shadow: none;
 }
 
 @media (min-width: 769px) {

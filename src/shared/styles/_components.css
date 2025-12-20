@@ -194,11 +194,12 @@
   border-color: var(--color-accent);
 }
 
-.list-button--delete {
+.button-base--delete {
   color: var(--color-delete-text);
   border-color: var(--color-delete-border);
 }
 
+.button-base--delete:hover:not(:disabled),
 .list-button--delete:hover:not(:disabled) {
   color: var(--color-delete-text);
   border-color: var(--color-delete-text);
