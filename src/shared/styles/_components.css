@@ -194,8 +194,7 @@
   border-color: var(--color-accent);
 }
 
-.button-base--delete,
-.list-button--delete {
+.button-base--delete {
   color: var(--color-delete-text);
   border-color: var(--color-delete-border);
 }
