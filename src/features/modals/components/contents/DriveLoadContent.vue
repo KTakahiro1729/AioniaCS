@@ -7,6 +7,7 @@ import { useNotifications } from '@/features/notifications/composables/useNotifi
 import { getDriveManagerInstance } from '@/infrastructure/google-drive/index.js';
 import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
+import { formatRelativeDateTime } from '@/shared/utils/utils.js';
 
 const sentinelRef = ref(null);
 const observer = ref(null);
@@ -16,7 +17,6 @@ const {
   isLoadingCache,
   isSyncing,
   isFetchingMore,
-  errorMessage,
   initialize,
   revealMore,
   refresh,
@@ -46,22 +46,21 @@ const { enableShare, disableShare } = useShare({ googleDriveManager: driveManage
 const filteredItems = computed(() =>
   displayedItems.value.filter((item) => typeof item?.fileName === 'string' && item.fileName.toLowerCase().endsWith('.zip')),
 );
-const isEmpty = computed(() => !isLoadingCache.value && filteredItems.value.length === 0);
-const isBusy = computed(() => isSyncing.value || isFetchingMore.value);
+const hasItems = computed(() => filteredItems.value.length > 0);
+const isLoadingEmpty = computed(() => (isLoadingCache.value || isSyncing.value) && !hasItems.value);
+const isEmpty = computed(() => !isLoadingEmpty.value && !hasItems.value);
+const isBusy = computed(() => isSyncing.value || isFetchingMore.value || isLoadingCache.value);
+const loadingLabel = computed(() => messages.driveLoadPage.status.loadingCache || '読み込み中……');
+const emptyLabel = computed(
+  () => messages.driveLoadPage.emptyMessage || messages.driveLoadPage.placeholder || '保存済みのキャラクターシートはありません',
+);
 
 function formatTimestamp(seconds) {
-  if (!seconds) return messages.driveLoadPage.labels.unknownDate;
-  const date = new Date(seconds * 1000);
-  if (Number.isNaN(date.getTime())) {
+  const formatted = formatRelativeDateTime(seconds);
+  if (!formatted) {
     return messages.driveLoadPage.labels.unknownDate;
   }
-  return new Intl.DateTimeFormat('ja-JP', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+  return formatted;
 }
 
 function setupObserver() {
@@ -227,12 +226,15 @@ onBeforeUnmount(() => {
       </button>
     </Teleport>
     <header class="drive-load__header">
-      <div class="drive-load__title-group">
-        <div class="drive-load__status-indicator" :data-state="errorMessage ? 'error' : isSyncing ? 'sync' : 'idle'" aria-hidden="true" />
-        <h1 class="drive-load__title">{{ messages.driveLoadPage.title }}</h1>
-      </div>
+      <h1 class="drive-load__title">{{ messages.driveLoadPage.title }}</h1>
     </header>
-    <p v-if="isEmpty" class="drive-load__placeholder">{{ messages.driveLoadPage.placeholder }}</p>
+
+    <div v-if="isLoadingEmpty" class="drive-load__state drive-load__state--loading">
+      <p class="drive-load__state-text">{{ loadingLabel }}</p>
+    </div>
+    <div v-else-if="isEmpty" class="drive-load__state drive-load__state--empty">
+      <p class="drive-load__state-text">{{ emptyLabel }}</p>
+    </div>
 
     <div v-else class="drive-load__list" role="list">
       <article
@@ -251,9 +253,17 @@ onBeforeUnmount(() => {
 
           <div class="drive-row__content">
             <div class="drive-row__main">
-              <div class="drive-row__heading">
+              <div class="drive-row__title-row">
                 <h2 class="drive-row__title" data-test="drive-row-title">{{ getCharacterName(item) }}</h2>
                 <div class="drive-row__badges">
+                  <span
+                    v-if="item.shared"
+                    class="drive-row__badge drive-row__badge--muted"
+                    role="status"
+                    :aria-label="messages.driveLoadPage.labels.sharedAria"
+                  >
+                    {{ messages.driveLoadPage.labels.shared }}
+                  </span>
                   <span
                     v-if="item.outOfSync"
                     class="drive-row__indicator drive-row__indicator--warning"
@@ -264,23 +274,8 @@ onBeforeUnmount(() => {
                   >
                     ▲
                   </span>
-                  <span v-if="item.shared" class="drive-row__badge drive-row__badge--muted" role="status">
-                    {{ messages.driveLoadPage.labels.shared }}
-                  </span>
                 </div>
               </div>
-            </div>
-            <div class="drive-row__meta">
-              <dl class="drive-row__meta-grid">
-                <div class="drive-row__meta-item" data-test="drive-row-field">
-                  <dt>{{ messages.driveLoadPage.labels.created }}</dt>
-                  <dd>{{ formatTimestamp(item.createdAt) }}</dd>
-                </div>
-                <div class="drive-row__meta-item" data-test="drive-row-field">
-                  <dt>{{ messages.driveLoadPage.labels.modified }}</dt>
-                  <dd>{{ formatTimestamp(item.lastModifiedAtDrive) }}</dd>
-                </div>
-              </dl>
               <div class="drive-row__actions">
                 <button
                   class="button-base button-base--primary"
@@ -330,6 +325,16 @@ onBeforeUnmount(() => {
                 </button>
               </div>
             </div>
+            <div class="drive-row__footer">
+              <div class="drive-row__dates">
+                <span data-test="drive-row-field">
+                  {{ messages.driveLoadPage.labels.created }}: {{ formatTimestamp(item.createdAt) }}
+                </span>
+                <span data-test="drive-row-field">
+                  {{ messages.driveLoadPage.labels.modified }}: {{ formatTimestamp(item.lastModifiedAtDrive) }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </article>
@@ -356,14 +361,6 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 12px;
   padding: 4px 4px 0;
-  flex-wrap: wrap;
-}
-
-.drive-load__title-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
 }
 
 .drive-load__title {
@@ -373,30 +370,25 @@ onBeforeUnmount(() => {
   color: var(--color-text-primary);
 }
 
-.drive-load__status-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--color-border-muted, #3a3a4a);
-}
-
-.drive-load__status-indicator[data-state='sync'] {
-  background: #4da3ff;
-  box-shadow: 0 0 0 6px rgba(77, 163, 255, 0.15);
-}
-
-.drive-load__status-indicator[data-state='error'] {
-  background: #ff6b6b;
-  box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.15);
-}
-
 .drive-load__refresh {
   align-self: flex-start;
 }
 
-.drive-load__placeholder {
+.drive-load__state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  border: 1px dashed var(--color-border-muted, #3a3a4a);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.drive-load__state-text {
   margin: 0;
-  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+  text-align: center;
 }
 
 .drive-load__list {
@@ -415,19 +407,25 @@ onBeforeUnmount(() => {
     box-shadow 0.2s ease;
 }
 
+.drive-row__layout {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
 .drive-row__thumb {
-  width: 128px;
-  height: 128px;
+  width: 120px;
+  height: 120px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--color-border-muted, #3a3a4a);
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.35));
-  justify-self: start;
+  flex-shrink: 0;
 }
 
 .drive-row__thumb img {
-  width: 128px;
-  height: 128px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
 }
@@ -445,21 +443,23 @@ onBeforeUnmount(() => {
 
 .drive-row__content {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .drive-row__main {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.drive-row__heading {
+.drive-row__title-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .drive-row__title {
@@ -467,12 +467,15 @@ onBeforeUnmount(() => {
   font-weight: 800;
   font-size: 1.1rem;
   letter-spacing: 0.3px;
+  flex: 1;
+  min-width: 0;
 }
 
 .drive-row__badges {
-  display: flex;
+  display: inline-flex;
   gap: 6px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .drive-row__indicator {
@@ -510,48 +513,31 @@ onBeforeUnmount(() => {
   border-color: var(--color-border-muted, #3a3a4a);
 }
 
-.drive-row__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
-}
-
-.drive-row__meta-grid {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(140px, 1fr));
-  gap: 8px 12px;
-}
-
-.drive-row__meta-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.drive-row__meta-item dt {
-  color: var(--color-text-muted);
-  font-size: 0.7rem;
-}
-
-.drive-row__meta-item dd {
-  margin: 0;
-  text-align: right;
-  color: var(--color-text-primary);
-  font-weight: 700;
-  font-size: 0.8rem;
-}
-
 .drive-row__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 8px;
+  justify-content: flex-start;
 }
 
 .drive-row__unshare:disabled {
   opacity: 0.5;
+}
+
+.drive-row__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drive-row__dates {
+  display: flex;
+  gap: 14px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .drive-load__sentinel {
@@ -559,5 +545,24 @@ onBeforeUnmount(() => {
   color: var(--color-text-muted);
   text-align: center;
   padding: 4px;
+}
+
+@media (max-width: 720px) {
+  .drive-row__layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .drive-row__content {
+    width: 100%;
+  }
+
+  .drive-row__actions {
+    justify-content: center;
+  }
+
+  .drive-row__footer {
+    justify-content: center;
+  }
 }
 </style>

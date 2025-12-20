@@ -153,18 +153,6 @@ watch(
   },
 );
 
-const lastLoadedDriveId = ref(uiStore.currentDriveFileId);
-watch(
-  () => uiStore.currentDriveFileId,
-  async (id) => {
-    if (!id || id === lastLoadedDriveId.value) {
-      return;
-    }
-    lastLoadedDriveId.value = id;
-    await loadCharacterFromDrive(id);
-  },
-);
-
 const { initialize } = useAppInitialization(dataManager);
 const pendingSharedId = ref(null);
 

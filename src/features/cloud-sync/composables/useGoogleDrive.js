@@ -107,6 +107,16 @@ export function useGoogleDrive(dataManager) {
     }
   }
 
+  function resolveDisplayName(displayName, providedData) {
+    const candidates = [
+      typeof displayName === 'string' ? displayName.trim() : '',
+      typeof providedData?.character?.name === 'string' ? providedData.character.name.trim() : '',
+      typeof characterStore.character.name === 'string' ? characterStore.character.name.trim() : '',
+    ].filter(Boolean);
+
+    return candidates[0] || messages.driveLoadPage.labels.unknownCharacter;
+  }
+
   async function loadCharacterFromDrive(fileId = uiStore.currentDriveFileId, initialData = null, displayName = null) {
     if (!isDriveReady.value) {
       showToast({ type: 'error', ...messages.googleDrive.initPending() });
@@ -121,7 +131,7 @@ export function useGoogleDrive(dataManager) {
     }
 
     const providedData = initialData ?? uiStore.consumePrefetchedDriveData(targetId);
-    const targetName = displayName || targetId;
+    const targetName = resolveDisplayName(displayName, providedData);
     const loadPromise = Promise.resolve(providedData ?? dataManager.loadDataFromDrive(targetId))
       .then((parsedData) => {
         const normalizedData = providedData ? dataManager.parseLoadedData(parsedData) : parsedData;
