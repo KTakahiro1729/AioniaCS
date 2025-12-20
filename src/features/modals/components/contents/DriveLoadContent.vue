@@ -22,7 +22,6 @@ const {
   refresh,
   cleanup,
   selectCharacter,
-  syncItemMetadata,
 } = useDriveLoadPageState();
 
 const { showAsyncToast, logAndToastError } = useNotifications();
@@ -122,17 +121,12 @@ function requireDriveManager() {
 
 async function handleLoad(item) {
   if (!item?.id) return;
-  let prefetchedData = null;
-  if (item.outOfSync) {
-    const result = await syncItemMetadata(item.id);
-    prefetchedData = result?.payload || null;
-  }
   const displayName = getCharacterName(item);
   if (typeof props.loadCharacterFromDrive === 'function') {
-    const loaded = await props.loadCharacterFromDrive(item.id, prefetchedData, displayName);
+    const loaded = await props.loadCharacterFromDrive(item.id, null, displayName);
     if (!loaded) return;
   } else {
-    selectCharacter(item.id, prefetchedData);
+    selectCharacter(item.id, null);
   }
   modalStore.hideModal();
 }
@@ -263,16 +257,6 @@ onBeforeUnmount(() => {
                     :aria-label="messages.driveLoadPage.labels.sharedAria"
                   >
                     {{ messages.driveLoadPage.labels.shared }}
-                  </span>
-                  <span
-                    v-if="item.outOfSync"
-                    class="drive-row__indicator drive-row__indicator--warning"
-                    role="img"
-                    :title="messages.driveLoadPage.labels.hashWarning"
-                    :aria-label="messages.driveLoadPage.labels.hashWarning"
-                    data-test="drive-row-warning"
-                  >
-                    ▲
                   </span>
                   <div class="drive-row__dates">
                     <span data-test="drive-row-field">
@@ -476,25 +460,6 @@ onBeforeUnmount(() => {
   gap: 6px;
   align-items: center;
   flex-shrink: 0;
-}
-
-.drive-row__indicator {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 200, 70, 0.55);
-  background: radial-gradient(circle at 30% 30%, rgba(255, 220, 120, 0.18), rgba(40, 30, 10, 0.85));
-  color: #f6d76b;
-  font-weight: 800;
-  font-size: 0.85rem;
-  box-shadow: 0 0 12px rgba(255, 200, 70, 0.15);
-}
-
-.drive-row__indicator--warning {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 220, 120, 0.2), rgba(60, 45, 20, 0.9));
 }
 
 .drive-row__badge {

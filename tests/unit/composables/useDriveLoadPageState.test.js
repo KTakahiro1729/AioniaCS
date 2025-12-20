@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { effectScope, nextTick } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
 
 vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
@@ -110,39 +109,6 @@ describe('useDriveLoadPageState', () => {
 
     expect(state.displayedItems.value).toHaveLength(1);
     expect(state.displayedItems.value[0].fileName).toBe('Valid.zip');
-
-    scope.stop();
-  });
-
-  it('prefetches metadata for a specific entry when requested', async () => {
-    const payload = {
-      character: { playerName: 'GM', name: 'Hero' },
-      skills: [],
-      specialSkills: [],
-      equipments: {},
-      histories: [],
-    };
-
-    const requestDrivePage = vi.fn().mockResolvedValue({ files: [], nextPageToken: null });
-
-    const driveManager = {
-      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
-      ensureAccessToken: vi.fn(),
-      loadFileContent: vi.fn().mockResolvedValue(JSON.stringify(payload)),
-    };
-
-    const scope = effectScope();
-    let state;
-    scope.run(() => {
-      state = useDriveLoadPageState({ requestDrivePage, driveManager });
-    });
-
-    await state.initialize();
-    const result = await state.syncItemMetadata('file-1');
-
-    const uiStore = useUiStore();
-    expect(result?.payload?.character?.name).toBe('Hero');
-    expect(uiStore.consumePrefetchedDriveData('file-1')).toBeTruthy();
 
     scope.stop();
   });
