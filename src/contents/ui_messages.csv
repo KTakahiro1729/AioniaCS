@@ -128,6 +128,9 @@ driveLoadPage.actions.delete,削除,,Drive load page delete action
 driveLoadPage.actions.share,共有,,Drive load page share action
 driveLoadPage.actions.unshare,共有解除,,Drive load page unshare action
 driveLoadPage.actions.unshareDisabled,未共有,,Drive load page unshare disabled action
+driveLoadPage.actions.unshareShort,解除,,Drive load page unshare short action
+driveLoadPage.actions.unshareDisabledShort,未共有,,Drive load page unshare disabled short action
+driveLoadPage.actions.cancel,キャンセル,,Drive load page cancel action
 driveLoadPage.actions.download,保存,,Drive load page download action
 driveLoadPage.actions.loadAria,{name}を開く,,Drive load page load aria
 driveLoadPage.actions.deleteAria,{name}を削除する,,Drive load page delete aria

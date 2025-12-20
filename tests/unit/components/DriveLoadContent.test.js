@@ -188,22 +188,25 @@ describe('DriveLoadContent', () => {
 
   it('deletes a file after confirmation', async () => {
     managerMock.deleteCharacterFile.mockResolvedValue();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     displayedItems.value = [
       { id: 'file-5', fileName: 'ToRemove.zip', characterName: 'Remove', lastModifiedAtDrive: 1700, createdAt: 1600 },
     ];
 
     const wrapper = mount(DriveLoadContent);
+    const deleteButton = wrapper.find('[data-test="drive-row-delete"]');
+    await deleteButton.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.html()).toContain(messages.driveLoadPage.confirmations.delete('Remove'));
+
     await wrapper.find('[data-test="drive-row-delete"]').trigger('click');
     await flushPromises();
 
-    expect(window.confirm).toHaveBeenCalled();
     expect(managerMock.deleteCharacterFile).toHaveBeenCalledWith('file-5');
   });
 
-  it('unshares a file when confirmed', async () => {
+  it('unshares a file immediately and refreshes', async () => {
     disableShareMock.mockResolvedValue(true);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     displayedItems.value = [
       { id: 'file-6', fileName: 'Shared.zip', characterName: 'Shared', shared: true, lastModifiedAtDrive: 1800, createdAt: 1750 },
     ];
@@ -214,5 +217,27 @@ describe('DriveLoadContent', () => {
 
     expect(disableShareMock).toHaveBeenCalledWith('file-6');
     expect(refresh).toHaveBeenCalled();
+  });
+
+  it('disables unshare button while processing', async () => {
+    let resolveUnshare;
+    const unsharePromise = new Promise((resolve) => {
+      resolveUnshare = resolve;
+    });
+    disableShareMock.mockReturnValue(unsharePromise);
+
+    displayedItems.value = [
+      { id: 'file-7', fileName: 'BusyShared.zip', characterName: 'BusyShared', shared: true, lastModifiedAtDrive: 1900, createdAt: 1850 },
+    ];
+
+    const wrapper = mount(DriveLoadContent);
+    const button = wrapper.find('[data-test="drive-row-unshare"]');
+    await button.trigger('click');
+
+    expect(button.attributes('disabled')).toBeDefined();
+
+    resolveUnshare();
+    await flushPromises();
+    expect(disableShareMock).toHaveBeenCalledWith('file-7');
   });
 });
