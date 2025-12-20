@@ -33,6 +33,7 @@ try {
 
 const { enableShare, disableShare } = useShare({ googleDriveManager: driveManager });
 const deletingItemId = ref(null);
+const processingItemId = ref(null);
 const unshareLabel = messages.driveLoadPage.actions.unshareShort ?? '解除';
 const unshareDisabledLabel =
   messages.driveLoadPage.actions.unshareDisabledShort ?? messages.driveLoadPage.actions.unshareDisabled ?? messages.driveLoadPage.actions.unshare;
@@ -118,6 +119,7 @@ function requireDriveManager() {
 
 async function handleLoad(item) {
   if (!item?.id) return;
+  cancelDelete();
   const displayName = getCharacterName(item);
   if (typeof props.loadCharacterFromDrive === 'function') {
     const loaded = await props.loadCharacterFromDrive(item.id, null, displayName);
@@ -153,6 +155,7 @@ async function confirmDelete(item) {
 
 async function handleShare(item) {
   if (!item?.id) return;
+  cancelDelete();
   const task = (async () => {
     const link = await enableShare(item.id);
     if (!link) {
@@ -171,18 +174,22 @@ async function handleShare(item) {
 
 async function handleUnshare(item) {
   if (!item?.id || !item.shared) return;
-  const confirmed = window.confirm(messages.driveLoadPage.confirmations.unshare(getCharacterName(item)));
-  if (!confirmed) return;
+  cancelDelete();
+  if (processingItemId.value) return;
+  processingItemId.value = item.id;
   try {
     await showAsyncToast(disableShare(item.id), messages.driveLoadPage.toasts.unshare, 'drive-unshare');
     await refresh();
   } catch (error) {
     logAndToastError(error, messages.driveLoadPage.toasts.unshare.error, 'drive-unshare');
+  } finally {
+    processingItemId.value = null;
   }
 }
 
 async function handleDownload(item) {
   if (!item?.id) return;
+  cancelDelete();
   const manager = requireDriveManager();
   const task = (async () => {
     const content = await manager.loadFileContent(item.id);
@@ -337,7 +344,7 @@ onBeforeUnmount(() => {
                     <button
                       class="button-base button-base--ghost drive-row__unshare is-joined-left"
                       type="button"
-                      :disabled="!item.shared"
+                      :disabled="!item.shared || processingItemId === item.id"
                       :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
                       data-test="drive-row-unshare"
                       @click="handleUnshare(item)"
