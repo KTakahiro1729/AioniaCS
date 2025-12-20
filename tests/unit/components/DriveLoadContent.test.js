@@ -188,16 +188,20 @@ describe('DriveLoadContent', () => {
 
   it('deletes a file after confirmation', async () => {
     managerMock.deleteCharacterFile.mockResolvedValue();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     displayedItems.value = [
       { id: 'file-5', fileName: 'ToRemove.zip', characterName: 'Remove', lastModifiedAtDrive: 1700, createdAt: 1600 },
     ];
 
     const wrapper = mount(DriveLoadContent);
+    const deleteButton = wrapper.find('[data-test="drive-row-delete"]');
+    await deleteButton.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.html()).toContain(messages.driveLoadPage.confirmations.delete('Remove'));
+
     await wrapper.find('[data-test="drive-row-delete"]').trigger('click');
     await flushPromises();
 
-    expect(window.confirm).toHaveBeenCalled();
     expect(managerMock.deleteCharacterFile).toHaveBeenCalledWith('file-5');
   });
 

@@ -32,6 +32,12 @@ try {
 }
 
 const { enableShare, disableShare } = useShare({ googleDriveManager: driveManager });
+const deletingItemId = ref(null);
+const unshareLabel = messages.driveLoadPage.actions.unshareShort ?? '解除';
+const unshareDisabledLabel =
+  messages.driveLoadPage.actions.unshareDisabledShort ?? messages.driveLoadPage.actions.unshareDisabled ?? messages.driveLoadPage.actions.unshare;
+const cancelLabel =
+  messages.ui?.confirmations?.unsavedChanges?.buttons?.find?.((button) => button.value === 'cancel')?.label || 'キャンセル';
 
 const filteredItems = computed(() =>
   displayedItems.value.filter((item) => typeof item?.fileName === 'string' && item.fileName.toLowerCase().endsWith('.zip')),
@@ -122,16 +128,26 @@ async function handleLoad(item) {
   modalStore.hideModal();
 }
 
-async function handleDelete(item) {
+function requestDelete(item) {
   if (!item?.id) return;
-  const confirmed = window.confirm(messages.driveLoadPage.confirmations.delete(getCharacterName(item)));
-  if (!confirmed) return;
+  deletingItemId.value = item.id;
+}
+
+function cancelDelete() {
+  deletingItemId.value = null;
+}
+
+async function confirmDelete(item) {
+  if (!item?.id) return;
   const manager = requireDriveManager();
+  deletingItemId.value = item.id;
   try {
     await showAsyncToast(manager.deleteCharacterFile(item.id), messages.driveLoadPage.toasts.delete, 'drive-delete');
     await refresh();
   } catch (error) {
     logAndToastError(error, messages.driveLoadPage.toasts.delete.error, 'drive-delete');
+  } finally {
+    cancelDelete();
   }
 }
 
@@ -256,54 +272,91 @@ onBeforeUnmount(() => {
                 </div>
               </div>
               <div class="drive-row__actions">
-                <div class="drive-row__action-group">
-                  <button
-                    class="button-base button-base--primary is-joined-right"
-                    type="button"
-                    :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
-                    data-test="drive-row-load"
-                    @click="handleLoad(item)"
-                  >
-                    {{ messages.driveLoadPage.actions.load }}
-                  </button>
-                  <button
-                    class="button-base button-base--ghost is-joined-left is-joined-right"
-                    type="button"
-                    :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
-                    data-test="drive-row-share"
-                    @click="handleShare(item)"
-                  >
-                    {{ messages.driveLoadPage.actions.share }}
-                  </button>
-                  <button
-                    class="button-base button-base--ghost drive-row__unshare is-joined-left is-joined-right"
-                    type="button"
-                    :disabled="!item.shared"
-                    :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
-                    data-test="drive-row-unshare"
-                    @click="handleUnshare(item)"
-                  >
-                    {{ item.shared ? messages.driveLoadPage.actions.unshare : messages.driveLoadPage.actions.unshareDisabled }}
-                  </button>
-                  <button
-                    class="button-base button-base--ghost is-joined-left"
-                    type="button"
-                    :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
-                    data-test="drive-row-download"
-                    @click="handleDownload(item)"
-                  >
-                    {{ messages.driveLoadPage.actions.download }}
-                  </button>
-                </div>
-                <button
-                  class="button-base button-base--delete drive-row__delete"
-                  type="button"
-                  :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
-                  data-test="drive-row-delete"
-                  @click="handleDelete(item)"
+                <div
+                  v-if="deletingItemId === item.id"
+                  class="drive-row__delete-confirm"
+                  role="status"
+                  aria-live="polite"
+                  :aria-label="messages.driveLoadPage.confirmations.delete(getCharacterName(item))"
                 >
-                  {{ messages.driveLoadPage.actions.delete }}
-                </button>
+                  <p class="drive-row__confirm-message">{{ messages.driveLoadPage.confirmations.delete(getCharacterName(item)) }}</p>
+                  <div class="drive-row__confirm-actions">
+                    <button
+                      class="button-base button-base--delete is-joined-right"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
+                      data-test="drive-row-delete"
+                      @click="confirmDelete(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.delete }}
+                    </button>
+                    <button
+                      class="button-base button-base--ghost is-joined-left"
+                      type="button"
+                      :aria-label="cancelLabel"
+                      @click="cancelDelete"
+                    >
+                      {{ cancelLabel }}
+                    </button>
+                  </div>
+                </div>
+                <template v-else>
+                  <div
+                    class="drive-row__action-cluster drive-row__action-cluster--data"
+                    :aria-label="messages.driveLoadPage.labels.selectAction"
+                  >
+                    <button
+                      class="button-base button-base--primary is-joined-right"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
+                      data-test="drive-row-load"
+                      @click="handleLoad(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.load }}
+                    </button>
+                    <button
+                      class="button-base button-base--ghost is-joined-left"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
+                      data-test="drive-row-download"
+                      @click="handleDownload(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.download }}
+                    </button>
+                  </div>
+                  <div class="drive-row__action-cluster drive-row__action-cluster--share">
+                    <button
+                      class="button-base button-base--ghost is-joined-right"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
+                      data-test="drive-row-share"
+                      @click="handleShare(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.share }}
+                    </button>
+                    <button
+                      class="button-base button-base--ghost drive-row__unshare is-joined-left"
+                      type="button"
+                      :disabled="!item.shared"
+                      :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
+                      data-test="drive-row-unshare"
+                      @click="handleUnshare(item)"
+                    >
+                      {{ item.shared ? unshareLabel : unshareDisabledLabel }}
+                    </button>
+                  </div>
+                  <div class="drive-row__action-cluster drive-row__action-cluster--danger">
+                    <button
+                      class="button-base button-base--delete drive-row__delete"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
+                      data-test="drive-row-delete"
+                      @click="requestDelete(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.delete }}
+                    </button>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -458,22 +511,47 @@ onBeforeUnmount(() => {
 .drive-row__actions {
   display: flex;
   flex-wrap: wrap;
-  column-gap: 12px;
-  row-gap: 8px;
+  gap: 10px 12px;
   justify-content: flex-end;
   align-items: stretch;
 }
 
-.drive-row__action-group {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 0;
-  row-gap: 8px;
+.drive-row__action-cluster {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  white-space: nowrap;
+  align-items: stretch;
+  flex-shrink: 0;
 }
 
-.drive-row__action-group > .button-base,
+.drive-row__confirm-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  white-space: nowrap;
+  align-items: stretch;
+}
+
+.drive-row__action-cluster > .button-base,
+.drive-row__confirm-actions > .button-base,
 .drive-row__delete {
   height: 48px;
+}
+
+.drive-row__delete-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.drive-row__confirm-message {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 700;
 }
 
 .drive-row__delete {
