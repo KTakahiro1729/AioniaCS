@@ -12,17 +12,8 @@ import { formatRelativeDateTime } from '@/shared/utils/utils.js';
 const sentinelRef = ref(null);
 const observer = ref(null);
 
-const {
-  displayedItems,
-  isLoadingCache,
-  isSyncing,
-  isFetchingMore,
-  initialize,
-  revealMore,
-  refresh,
-  cleanup,
-  selectCharacter,
-} = useDriveLoadPageState();
+const { displayedItems, isLoadingCache, isSyncing, isFetchingMore, initialize, revealMore, refresh, cleanup, selectCharacter } =
+  useDriveLoadPageState();
 
 const { showAsyncToast, logAndToastError } = useNotifications();
 const modalStore = useModalStore();
@@ -219,10 +210,6 @@ onBeforeUnmount(() => {
         {{ messages.driveLoadPage.buttons.refresh }}
       </button>
     </Teleport>
-    <header class="drive-load__header">
-      <h1 class="drive-load__title">{{ messages.driveLoadPage.title }}</h1>
-    </header>
-
     <div v-if="isLoadingEmpty" class="drive-load__state drive-load__state--loading">
       <p class="drive-load__state-text">{{ loadingLabel }}</p>
     </div>
@@ -335,7 +322,6 @@ onBeforeUnmount(() => {
 .drive-load {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   padding: 8px 8px 12px;
 }
 
@@ -398,8 +384,9 @@ onBeforeUnmount(() => {
 }
 
 .drive-row__thumb {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
+
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--color-border-muted, #3a3a4a);
@@ -428,9 +415,9 @@ onBeforeUnmount(() => {
 .drive-row__content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   flex: 1;
   min-width: 0;
+  justify-content: space-around;
 }
 
 .drive-row__main {
@@ -460,16 +447,6 @@ onBeforeUnmount(() => {
   gap: 6px;
   align-items: center;
   flex-shrink: 0;
-}
-
-.drive-row__badge {
-  background: #ffb347;
-  color: #1a1a24;
-  border-radius: 12px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 1px solid transparent;
 }
 
 .drive-row__badge--muted {
@@ -519,10 +496,8 @@ onBeforeUnmount(() => {
 }
 
 .drive-load__sentinel {
-  min-height: 16px;
   color: var(--color-text-muted);
   text-align: center;
-  padding: 4px;
 }
 
 @media (max-width: 720px) {
