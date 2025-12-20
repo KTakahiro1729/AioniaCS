@@ -37,8 +37,7 @@ const processingItemId = ref(null);
 const unshareLabel = messages.driveLoadPage.actions.unshareShort ?? '解除';
 const unshareDisabledLabel =
   messages.driveLoadPage.actions.unshareDisabledShort ?? messages.driveLoadPage.actions.unshareDisabled ?? messages.driveLoadPage.actions.unshare;
-const cancelLabel =
-  messages.ui?.confirmations?.unsavedChanges?.buttons?.find?.((button) => button.value === 'cancel')?.label || 'キャンセル';
+const cancelLabel = messages.driveLoadPage.actions.cancel ?? 'キャンセル';
 
 const filteredItems = computed(() =>
   displayedItems.value.filter((item) => typeof item?.fileName === 'string' && item.fileName.toLowerCase().endsWith('.zip')),
@@ -142,7 +141,6 @@ function cancelDelete() {
 async function confirmDelete(item) {
   if (!item?.id) return;
   const manager = requireDriveManager();
-  deletingItemId.value = item.id;
   try {
     await showAsyncToast(manager.deleteCharacterFile(item.id), messages.driveLoadPage.toasts.delete, 'drive-delete');
     await refresh();
@@ -523,21 +521,17 @@ onBeforeUnmount(() => {
   align-items: stretch;
 }
 
-.drive-row__action-cluster {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  gap: 0;
-  white-space: nowrap;
-  align-items: stretch;
-  flex-shrink: 0;
-}
-
+.drive-row__action-cluster,
 .drive-row__confirm-actions {
   display: inline-flex;
   flex-wrap: nowrap;
   gap: 0;
   white-space: nowrap;
   align-items: stretch;
+}
+
+.drive-row__action-cluster {
+  flex-shrink: 0;
 }
 
 .drive-row__action-cluster > .button-base,
