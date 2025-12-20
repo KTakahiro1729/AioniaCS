@@ -120,8 +120,6 @@ driveLoadPage.labels.driveHash,Drive上のハッシュ,,Drive load page drive ha
 driveLoadPage.labels.cachedHash,キャッシュのハッシュ,,Drive load page cached hash label
 driveLoadPage.labels.notAvailable,なし,,Drive load page not available label
 driveLoadPage.labels.unknownDate,日時不明,,Drive load page unknown date label
-driveLoadPage.labels.outOfSync,要同期,,Drive load page out-of-sync badge
-driveLoadPage.labels.hashWarning,ハッシュが一致しません。外部で編集された可能性があります,,Drive load page hash mismatch warning
 driveLoadPage.labels.shared,共有中,,Drive load page shared badge
 driveLoadPage.labels.sharedAria,このファイルは共有されています,,Drive load page shared aria label
 driveLoadPage.labels.selectAction,このキャラクターを開く,,Drive load page select card aria label

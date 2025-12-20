@@ -266,8 +266,6 @@ export const messages = {
       cachedHash: t('driveLoadPage.labels.cachedHash'),
       notAvailable: t('driveLoadPage.labels.notAvailable'),
       unknownDate: t('driveLoadPage.labels.unknownDate'),
-      outOfSync: t('driveLoadPage.labels.outOfSync'),
-      hashWarning: t('driveLoadPage.labels.hashWarning'),
       shared: t('driveLoadPage.labels.shared'),
       sharedAria: t('driveLoadPage.labels.sharedAria'),
       selectAction: t('driveLoadPage.labels.selectAction'),

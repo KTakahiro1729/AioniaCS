@@ -3,7 +3,6 @@ import { getDriveManagerInstance } from '@/infrastructure/google-drive/index.js'
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/i18n/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { deserializeCharacterPayload } from '@/shared/utils/characterSerialization.js';
 
 const DISPLAY_BATCH = 10;
 const PREFETCH_BUFFER = 10;
@@ -63,7 +62,6 @@ export function normalizeMetadataItem(raw) {
     shared,
     hasThumbnail: hasThumbnail == null ? null : Boolean(hasThumbnail),
     thumbnailLink,
-    outOfSync: false,
   };
 }
 
@@ -174,7 +172,6 @@ export function useDriveLoadPageState(options = {}) {
         shared: normalized.shared ?? existing.shared ?? false,
         hasThumbnail: normalized.hasThumbnail ?? existing.hasThumbnail ?? false,
         thumbnailLink: normalized.thumbnailLink ?? existing.thumbnailLink ?? null,
-        outOfSync: false,
       };
       cacheMap.set(normalized.id, merged);
     }
@@ -190,19 +187,6 @@ export function useDriveLoadPageState(options = {}) {
     disposed = true;
     abortControllers.forEach((controller) => controller.abort());
     abortControllers.clear();
-  }
-
-  async function syncItemMetadata(id) {
-    if (!id || !driveManager?.loadFileContent) return null;
-    try {
-      const content = await driveManager.loadFileContent(id);
-      const payload = await deserializeCharacterPayload(content);
-      uiStore.setPrefetchedDriveData(id, payload);
-      return { payload };
-    } catch (error) {
-      handleError(error, 'syncItemMetadata');
-      return null;
-    }
   }
 
   async function syncFromDrive(pageToken = null) {
@@ -270,6 +254,5 @@ export function useDriveLoadPageState(options = {}) {
     cleanup,
     refresh: () => syncFromDrive(),
     selectCharacter,
-    syncItemMetadata,
   };
 }
