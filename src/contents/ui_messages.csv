@@ -113,8 +113,8 @@ driveLoadPage.status.error,一覧の取得に失敗しました,,Drive load page
 driveLoadPage.status.retryHint,再試行してください。ネットワークや認証状態をご確認ください,,Drive load page retry hint
 driveLoadPage.labels.untitled,無題のファイル,,Drive load page untitled label
 driveLoadPage.labels.unknownCharacter,キャラクター名未設定,,Drive load page unknown character label
-driveLoadPage.labels.created,作成日時,,Drive load page created label
-driveLoadPage.labels.modified,更新日時,,Drive load page modified label
+driveLoadPage.labels.created,作成,,Drive load page created label
+driveLoadPage.labels.modified,更新,,Drive load page modified label
 driveLoadPage.labels.hash,ハッシュ,,Drive load page hash label
 driveLoadPage.labels.driveHash,Drive上のハッシュ,,Drive load page drive hash label
 driveLoadPage.labels.cachedHash,キャッシュのハッシュ,,Drive load page cached hash label

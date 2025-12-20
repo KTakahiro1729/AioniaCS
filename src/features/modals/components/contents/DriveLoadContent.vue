@@ -274,67 +274,65 @@ onBeforeUnmount(() => {
                   >
                     ▲
                   </span>
+                  <div class="drive-row__dates">
+                    <span data-test="drive-row-field">
+                      {{ messages.driveLoadPage.labels.created }}: {{ formatTimestamp(item.createdAt) }}
+                    </span>
+                    <span data-test="drive-row-field">
+                      {{ messages.driveLoadPage.labels.modified }}: {{ formatTimestamp(item.lastModifiedAtDrive) }}
+                    </span>
+                  </div>
                 </div>
               </div>
-            <div class="drive-row__actions">
-              <div class="drive-row__action-group">
+              <div class="drive-row__actions">
+                <div class="drive-row__action-group">
+                  <button
+                    class="button-base button-base--primary is-joined-right"
+                    type="button"
+                    :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
+                    data-test="drive-row-load"
+                    @click="handleLoad(item)"
+                  >
+                    {{ messages.driveLoadPage.actions.load }}
+                  </button>
+                  <button
+                    class="button-base button-base--ghost is-joined-left is-joined-right"
+                    type="button"
+                    :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
+                    data-test="drive-row-share"
+                    @click="handleShare(item)"
+                  >
+                    {{ messages.driveLoadPage.actions.share }}
+                  </button>
+                  <button
+                    class="button-base button-base--ghost drive-row__unshare is-joined-left is-joined-right"
+                    type="button"
+                    :disabled="!item.shared"
+                    :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
+                    data-test="drive-row-unshare"
+                    @click="handleUnshare(item)"
+                  >
+                    {{ item.shared ? messages.driveLoadPage.actions.unshare : messages.driveLoadPage.actions.unshareDisabled }}
+                  </button>
+                  <button
+                    class="button-base button-base--ghost is-joined-left"
+                    type="button"
+                    :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
+                    data-test="drive-row-download"
+                    @click="handleDownload(item)"
+                  >
+                    {{ messages.driveLoadPage.actions.download }}
+                  </button>
+                </div>
                 <button
-                  class="button-base button-base--primary is-joined-right"
+                  class="button-base button-base--danger drive-row__delete"
                   type="button"
-                  :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
-                  data-test="drive-row-load"
-                  @click="handleLoad(item)"
+                  :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
+                  data-test="drive-row-delete"
+                  @click="handleDelete(item)"
                 >
-                  {{ messages.driveLoadPage.actions.load }}
+                  {{ messages.driveLoadPage.actions.delete }}
                 </button>
-                <button
-                  class="button-base button-base--ghost is-joined-left is-joined-right"
-                  type="button"
-                  :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
-                  data-test="drive-row-share"
-                  @click="handleShare(item)"
-                >
-                  {{ messages.driveLoadPage.actions.share }}
-                </button>
-                <button
-                  class="button-base button-base--ghost drive-row__unshare is-joined-left is-joined-right"
-                  type="button"
-                  :disabled="!item.shared"
-                  :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
-                  data-test="drive-row-unshare"
-                  @click="handleUnshare(item)"
-                >
-                  {{ item.shared ? messages.driveLoadPage.actions.unshare : messages.driveLoadPage.actions.unshareDisabled }}
-                </button>
-                <button
-                  class="button-base button-base--ghost is-joined-left"
-                  type="button"
-                  :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
-                  data-test="drive-row-download"
-                  @click="handleDownload(item)"
-                >
-                  {{ messages.driveLoadPage.actions.download }}
-                </button>
-              </div>
-              <button
-                class="button-base button-base--danger drive-row__delete"
-                type="button"
-                :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
-                data-test="drive-row-delete"
-                @click="handleDelete(item)"
-              >
-                {{ messages.driveLoadPage.actions.delete }}
-              </button>
-            </div>
-            </div>
-            <div class="drive-row__footer">
-              <div class="drive-row__dates">
-                <span data-test="drive-row-field">
-                  {{ messages.driveLoadPage.labels.created }}: {{ formatTimestamp(item.createdAt) }}
-                </span>
-                <span data-test="drive-row-field">
-                  {{ messages.driveLoadPage.labels.modified }}: {{ formatTimestamp(item.lastModifiedAtDrive) }}
-                </span>
               </div>
             </div>
           </div>
@@ -512,7 +510,7 @@ onBeforeUnmount(() => {
 .drive-row__badge--muted {
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
-  border-color: var(--color-border-muted, #3a3a4a);
+  white-space: nowrap;
 }
 
 .drive-row__actions {
@@ -520,7 +518,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   column-gap: 12px;
   row-gap: 8px;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: stretch;
 }
 
@@ -537,17 +535,11 @@ onBeforeUnmount(() => {
 }
 
 .drive-row__delete {
-  margin-left: auto;
   flex-shrink: 0;
 }
 
 .drive-row__unshare:disabled {
   opacity: 0.5;
-}
-
-.drive-row__footer {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .drive-row__dates {
@@ -576,10 +568,6 @@ onBeforeUnmount(() => {
 
   .drive-row__content {
     width: 100%;
-  }
-
-  .drive-row__actions {
-    justify-content: center;
   }
 
   .drive-row__footer {
