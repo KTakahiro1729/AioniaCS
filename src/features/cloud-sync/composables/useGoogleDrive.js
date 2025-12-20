@@ -1,19 +1,11 @@
 import { ref, computed, onMounted } from 'vue';
-import { getGoogleDriveManagerInstance, initializeGoogleDriveManager } from '@/infrastructure/google-drive/googleDriveManager.js';
-import {
-  getMockGoogleDriveManagerInstance,
-  initializeMockGoogleDriveManager,
-} from '@/infrastructure/google-drive/mockGoogleDriveManager.js';
+import { getDriveManagerInstance, initializeDriveManager, isUsingMockDrive } from '@/infrastructure/google-drive/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { removeStoredCharacterDraft } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/i18n/index.js';
 import { buildSnapshotFromStore } from '@/features/character-sheet/utils/characterSnapshot.js';
-
-const useMock = import.meta.env.VITE_USE_MOCK_DRIVE === 'true';
-const getDriveManagerInstance = useMock ? getMockGoogleDriveManagerInstance : getGoogleDriveManagerInstance;
-const initializeDriveManager = useMock ? initializeMockGoogleDriveManager : initializeGoogleDriveManager;
 
 let scriptsWatched = false;
 
@@ -252,7 +244,7 @@ export function useGoogleDrive(dataManager) {
 
     scriptsWatched = true;
 
-    const handleGapiLoaded = async () => {
+    const handleDriveReady = async () => {
       if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
       console.info('Google API Loading...');
       try {
@@ -271,6 +263,11 @@ export function useGoogleDrive(dataManager) {
       }
     };
 
+    if (isUsingMockDrive()) {
+      handleDriveReady();
+      return;
+    }
+
     function waitForScript(selector, check) {
       return new Promise((resolve, reject) => {
         if (check()) {
@@ -288,7 +285,7 @@ export function useGoogleDrive(dataManager) {
     }
 
     waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
-      .then(handleGapiLoaded)
+      .then(handleDriveReady)
       .catch((error) => logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive'));
   }
 

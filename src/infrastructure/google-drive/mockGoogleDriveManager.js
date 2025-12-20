@@ -1,5 +1,24 @@
 import { deserializeCharacterPayload } from '@/shared/utils/characterSerialization.js';
 
+function toUrlSafeBase64(input) {
+  return input.replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+function buildThumbnailContentHints(thumbnail, mimeType = 'image/png') {
+  if (typeof thumbnail !== 'string' || thumbnail.length === 0) {
+    return null;
+  }
+  const commaIndex = thumbnail.indexOf(',');
+  const base64 = commaIndex >= 0 ? thumbnail.slice(commaIndex + 1) : thumbnail;
+  const safeBase64 = toUrlSafeBase64(base64);
+  return {
+    thumbnail: {
+      image: safeBase64,
+      mimeType,
+    },
+  };
+}
+
 function sanitizeFileName(name) {
   const sanitized = (name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
   return sanitized || '名もなき冒険者';
@@ -16,28 +35,40 @@ export class MockGoogleDriveManager {
     this.clientId = clientId;
     this.storageKey = 'mockGoogleDriveData';
     this.configFileId = 'mock-config';
+    this.currentTokenInfo = null;
     this._loadState();
     singletonInstance = this;
+    if (typeof window !== 'undefined') {
+      window.__DRIVE_DEV__ = this;
+    }
   }
 
-  _loadState() {
-    const defaultState = {
+  _getDefaultState() {
+    return {
       files: {},
       folders: {},
       fileCounter: 1,
       folderCounter: 1,
-      signedIn: false,
+      signedIn: true,
       config: this.getDefaultConfig(),
     };
+  }
 
+  _loadState() {
+    const defaultState = this._getDefaultState();
     try {
       const stored = localStorage.getItem(this.storageKey);
-      this.state = stored ? { ...defaultState, ...JSON.parse(stored) } : defaultState;
+      if (stored) {
+        this.state = { ...defaultState, ...JSON.parse(stored) };
+      } else {
+        this.state = defaultState;
+        this._seedSampleData();
+      }
     } catch (error) {
       console.error('Failed to load mock state from localStorage, resetting.', error);
-      this.state = defaultState;
+      this.state = { ...defaultState };
+      this._seedSampleData();
     }
-
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
     this._saveState();
@@ -47,17 +78,74 @@ export class MockGoogleDriveManager {
     localStorage.setItem(this.storageKey, JSON.stringify(this.state));
   }
 
+  _ensureFolderPathSync(path) {
+    const normalized = this.normalizeFolderPath(path);
+    let parentId = 'root';
+    let currentId = null;
+    for (const segment of this.getFolderSegments(normalized)) {
+      const existing = Object.values(this.state.folders).find((folder) => folder.name === segment && folder.parentId === parentId);
+      if (existing) {
+        currentId = existing.id;
+        parentId = existing.id;
+        continue;
+      }
+      const id = `folder-${this.state.folderCounter++}`;
+      const folder = { id, name: segment, parentId };
+      this.state.folders[id] = folder;
+      currentId = id;
+      parentId = id;
+    }
+    return { folderId: currentId, normalized };
+  }
+
+  _seedSampleData() {
+    const { folderId, normalized } = this._ensureFolderPathSync(this.state.config.characterFolderPath);
+    const now = Date.now();
+    const samples = [
+      {
+        name: '白銀の長い名前を持つキャラクター十二単風味.zip',
+        content: JSON.stringify({ name: '白銀の長い名前を持つキャラクター十二単風味' }),
+        shared: false,
+        thumbnailLink: null,
+      },
+      {
+        name: '影無き旅人.zip',
+        content: JSON.stringify({ name: '影無き旅人' }),
+        shared: true,
+        thumbnailLink: 'mock-thumbnail-seed-2',
+      },
+      {
+        name: '薄明の無貌.zip',
+        content: JSON.stringify({ name: '薄明の無貌' }),
+        shared: false,
+        thumbnailLink:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEklEQVR42mP8z8BQDwAFngJ/3N/1kAAAAABJRU5ErkJggg==',
+      },
+    ];
+    samples.forEach((sample, index) => {
+      const id = `file-${this.state.fileCounter++}`;
+      this.state.files[id] = {
+        id,
+        name: sample.name,
+        content: sample.content,
+        parentId: folderId,
+        mimeType: 'application/zip',
+        modifiedTime: new Date(now - index * 45 * 60 * 1000).toISOString(),
+        createdTime: new Date(now - (index + 1) * 45 * 60 * 1000).toISOString(),
+        shared: sample.shared,
+        thumbnailLink: sample.thumbnailLink,
+      };
+    });
+    this.configuredFolderId = folderId;
+    this.cachedFolderPath = normalized;
+  }
+
   reset() {
-    this.state = {
-      files: {},
-      folders: {},
-      fileCounter: 1,
-      folderCounter: 1,
-      signedIn: false,
-      config: this.getDefaultConfig(),
-    };
+    this.state = this._getDefaultState();
     this.configuredFolderId = null;
     this.cachedFolderPath = null;
+    this.currentTokenInfo = null;
+    this._seedSampleData();
     this._saveState();
   }
 
@@ -95,48 +183,57 @@ export class MockGoogleDriveManager {
     return segments.join('/');
   }
 
-  async ensureFolderPath(path) {
-    const normalized = this.normalizeFolderPath(path);
-    let parentId = 'root';
-    let currentFolder = null;
-
-    for (const segment of this.getFolderSegments(normalized)) {
-      let folder = await this.findFolder(segment, parentId);
-      if (!folder) {
-        folder = await this.createFolder(segment, parentId);
-      }
-      if (!folder) {
-        return { folder: null, normalized };
-      }
-      currentFolder = folder;
-      parentId = folder.id;
+  async buildFolderPathFromId(folderId) {
+    if (!folderId) {
+      return null;
     }
-
-    return { folder: currentFolder, normalized };
+    const path = this.buildFolderPath(folderId);
+    return path ? this.normalizeFolderPath(path) : null;
   }
 
   async onGapiLoad() {
     return Promise.resolve();
   }
 
-  async restoreSession() {
-    return this.state.signedIn;
+  async ensureAccessToken() {
+    if (!this.state.signedIn) {
+      throw new Error('Authentication required.');
+    }
+    const now = Date.now();
+    if (this.currentTokenInfo?.expiresAt > now) {
+      return this.currentTokenInfo.accessToken;
+    }
+    const accessToken = 'mock-access-token';
+    this.currentTokenInfo = { accessToken, expiresAt: now + 55 * 60 * 1000 };
+    return accessToken;
   }
 
-  handleSignIn(callback) {
+  async restoreSession() {
+    try {
+      await this.ensureAccessToken();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async handleSignIn() {
     this.state.signedIn = true;
     this._saveState();
-    if (callback) callback(null, { redirected: true });
+    await this.ensureAccessToken();
+    return true;
   }
 
-  handleSignOut(callback) {
+  async handleSignOut(callback) {
     this.state.signedIn = false;
+    this.currentTokenInfo = null;
     this._saveState();
     if (callback) callback();
   }
 
   async loadConfig() {
     this.state.config.characterFolderPath = this.normalizeFolderPath(this.state.config.characterFolderPath);
+    this.cachedFolderPath = null;
     return this.state.config;
   }
 
@@ -155,6 +252,7 @@ export class MockGoogleDriveManager {
   }
 
   async createFolder(name, parentId = 'root') {
+    await this.ensureAccessToken();
     const existing = await this.findFolder(name, parentId);
     if (existing) {
       return existing;
@@ -167,11 +265,21 @@ export class MockGoogleDriveManager {
   }
 
   async findFolder(name, parentId = 'root') {
+    await this.ensureAccessToken();
+    if (parentId === 'root' && name === 'root') {
+      return { id: 'root', name: 'root', parentId: null };
+    }
     return Object.values(this.state.folders).find((folder) => folder.name === name && folder.parentId === parentId) || null;
   }
 
-  async getOrCreateAppFolder() {
-    return this.findOrCreateConfiguredCharacterFolder();
+  async getOrCreateAppFolder(appFolderName) {
+    await this.ensureAccessToken();
+    const targetName = appFolderName || this.getDefaultConfig().characterFolderPath;
+    let folder = await this.findFolder(targetName, 'root');
+    if (!folder) {
+      folder = await this.createFolder(targetName, 'root');
+    }
+    return folder;
   }
 
   async ensureConfiguredFolder() {
@@ -180,7 +288,6 @@ export class MockGoogleDriveManager {
     if (this.configuredFolderId && this.cachedFolderPath === path) {
       return this.configuredFolderId;
     }
-
     const { folder, normalized } = await this.ensureFolderPath(path);
     if (!folder) {
       return null;
@@ -191,13 +298,32 @@ export class MockGoogleDriveManager {
     return folder.id;
   }
 
+  async ensureFolderPath(path) {
+    const normalized = this.normalizeFolderPath(path);
+    let parentId = 'root';
+    let currentFolder = null;
+    for (const segment of this.getFolderSegments(normalized)) {
+      let folder = await this.findFolder(segment, parentId);
+      if (!folder) {
+        folder = await this.createFolder(segment, parentId);
+      }
+      if (!folder) {
+        return { folder: null, normalized };
+      }
+      currentFolder = folder;
+      parentId = folder.id;
+    }
+    return { folder: currentFolder, normalized };
+  }
+
   async findOrCreateConfiguredCharacterFolder() {
     return this.ensureConfiguredFolder();
   }
 
-  async listFiles(folderId) {
+  async listFiles(folderId, mimeType = 'application/json') {
+    await this.ensureAccessToken();
     return Object.values(this.state.files)
-      .filter((file) => file.parentId === folderId)
+      .filter((file) => file.parentId === folderId && (!mimeType || file.mimeType === mimeType || file.mimeType === 'application/zip'))
       .map((file) => ({
         id: file.id,
         name: file.name,
@@ -210,6 +336,7 @@ export class MockGoogleDriveManager {
   }
 
   async saveFile(folderId, fileName, fileContent, fileId = null, mimeType = 'application/json', contentHints = null) {
+    await this.ensureAccessToken();
     const now = new Date().toISOString();
     const id = fileId || `file-${this.state.fileCounter++}`;
     const existing = this.state.files[id];
@@ -229,16 +356,20 @@ export class MockGoogleDriveManager {
   }
 
   async loadFileContent(fileId) {
+    await this.ensureAccessToken();
     const file = this.state.files[fileId];
     return file ? file.content : null;
   }
 
   async uploadAndShareFile(fileContent, fileName, mimeType = 'application/json') {
+    await this.ensureAccessToken();
     const info = await this.saveFile('shared', fileName, fileContent, null, mimeType);
+    await this.ensureFilePublic(info.id);
     return info.id;
   }
 
   async ensureFilePublic(fileId) {
+    await this.ensureAccessToken();
     if (!fileId) {
       return null;
     }
@@ -251,7 +382,17 @@ export class MockGoogleDriveManager {
     return `https://drive.mock/${fileId}`;
   }
 
+  async unshareFile(fileId) {
+    await this.ensureAccessToken();
+    const file = this.state.files[fileId];
+    if (!file) return false;
+    file.shared = false;
+    this._saveState();
+    return true;
+  }
+
   async findFileByName(fileName) {
+    await this.ensureAccessToken();
     if (!fileName) return null;
     const folderId = await this.findOrCreateConfiguredCharacterFolder();
     if (!folderId) return null;
@@ -266,25 +407,43 @@ export class MockGoogleDriveManager {
     return file ? file.parentId === folderId : false;
   }
 
-  async createCharacterFile(payload) {
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
-    if (!folderId) return null;
+  buildContentHintsFromThumbnail(thumbnail, mimeType = 'image/png') {
+    try {
+      return buildThumbnailContentHints(thumbnail, mimeType);
+    } catch (error) {
+      console.error('Failed to build thumbnail content hints:', error);
+      return null;
+    }
+  }
+
+  async _buildCharacterFileParams(payload) {
     const mimeType = payload?.mimeType || 'application/zip';
     const extension = mimeType === 'application/zip' ? 'zip' : 'json';
     const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType);
+    const folderId = await this.findOrCreateConfiguredCharacterFolder();
+    if (!folderId) return null;
+    const contentHints = payload?.thumbnail
+      ? this.buildContentHintsFromThumbnail(payload.thumbnail, payload.thumbnailMimeType)
+      : payload?.contentHints;
+    return { mimeType, fileName, folderId, contentHints };
+  }
+
+  async createCharacterFile(payload) {
+    const params = await this._buildCharacterFileParams(payload);
+    if (!params) return null;
+    const { mimeType, fileName, folderId, contentHints } = params;
+    return this.saveFile(folderId, fileName, payload?.content || '', null, mimeType, contentHints);
   }
 
   async updateCharacterFile(id, payload) {
-    const folderId = await this.findOrCreateConfiguredCharacterFolder();
-    if (!folderId) return null;
-    const mimeType = payload?.mimeType || 'application/zip';
-    const extension = mimeType === 'application/zip' ? 'zip' : 'json';
-    const fileName = `${sanitizeFileName(payload?.name)}.${extension}`;
-    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType);
+    const params = await this._buildCharacterFileParams(payload);
+    if (!params) return null;
+    const { mimeType, fileName, folderId, contentHints } = params;
+    return this.saveFile(folderId, fileName, payload?.content || '', id, mimeType, contentHints);
   }
 
   async renameFile(id, newName) {
+    await this.ensureAccessToken();
     if (!id || !newName) {
       throw new Error('File ID and new name are required to rename a file.');
     }
@@ -303,9 +462,24 @@ export class MockGoogleDriveManager {
   }
 
   async deleteCharacterFile(id) {
+    await this.ensureAccessToken();
     delete this.state.files[id];
     this._saveState();
   }
+
+  async readIndexFile() {
+    return [];
+  }
+
+  async writeIndexFile() {
+    return null;
+  }
+
+  async addIndexEntry() {}
+
+  async renameIndexEntry() {}
+
+  async removeIndexEntry() {}
 }
 
 export function initializeMockGoogleDriveManager(apiKey, clientId) {
