@@ -1,7 +1,7 @@
 <template>
   <button
     class="button-base animated-button"
-    :class="[stateClass, { 'is-animating': isAnimating }]"
+    :class="[stateClass, joinedClasses, { 'is-animating': isAnimating }]"
     :disabled="isAnimating"
     @click="$emit('click')"
   >
@@ -10,13 +10,14 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
   defaultLabel: { type: String, default: '' },
   animatingLabel: { type: String, default: '' },
   successLabel: { type: String, default: '' },
   trigger: { type: Number, default: 0 },
+  joined: { type: String, default: 'none' },
   timings: {
     type: Object,
     default: () => ({
@@ -34,6 +35,10 @@ const emit = defineEmits(['finished', 'click']);
 const currentLabel = ref(props.defaultLabel);
 const stateClass = ref('');
 const isAnimating = ref(false);
+const joinedClasses = computed(() => ({
+  'is-joined-left': props.joined === 'left' || props.joined === 'both',
+  'is-joined-right': props.joined === 'right' || props.joined === 'both',
+}));
 
 watch(
   () => props.trigger,

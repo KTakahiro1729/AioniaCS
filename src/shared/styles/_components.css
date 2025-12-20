@@ -169,6 +169,27 @@
   color: var(--color-accent);
 }
 
+.is-joined-right {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: -1px;
+}
+
+.is-joined-left {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.is-joined-left:hover,
+.is-joined-right:hover,
+.is-joined-left:focus,
+.is-joined-right:focus,
+.is-joined-left:focus-visible,
+.is-joined-right:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
 .list-button--add:hover:not(:disabled) {
   border-color: var(--color-accent);
 }

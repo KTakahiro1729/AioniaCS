@@ -13,16 +13,26 @@
       <div class="load-modal__config">
         <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
         <div class="load-modal__input-group">
-          <input
+          <BaseInput
             :id="folderInputId"
             class="load-modal__input"
             type="text"
             v-model="folderPathInput"
             :placeholder="driveFolderPlaceholder"
             :disabled="isDriveControlsDisabled"
+            :joined="'right'"
             @blur="commitFolderPath"
             @keyup.enter.prevent="commitFolderPath"
           />
+          <button
+            class="button-base button-base--primary load-modal__apply is-joined-left"
+            type="button"
+            :disabled="isDriveControlsDisabled"
+            data-test="load-modal-apply-folder"
+            @click="commitFolderPath"
+          >
+            {{ driveFolderChangeLabel }}
+          </button>
         </div>
       </div>
     </section>
@@ -37,6 +47,7 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
+import BaseInput from '@/shared/ui/base/BaseInput.vue';
 
 const props = defineProps({
   isSignedIn: Boolean,
@@ -44,6 +55,7 @@ const props = defineProps({
   isDriveReady: Boolean,
   driveFolderPath: String,
   driveFolderLabel: String,
+  driveFolderChangeLabel: { type: String, default: 'Apply' },
   driveFolderPlaceholder: String,
   loadLocalLabel: String,
   selectCharacterLabel: String,
@@ -118,6 +130,14 @@ function handleLocalChange(event) {
   gap: 8px;
 }
 
+.load-modal__input-group {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0;
+  row-gap: 8px;
+  align-items: stretch;
+}
+
 .load-modal__button--secondary {
   background-color: var(--color-panel);
   color: var(--color-text-primary, #fff);
@@ -130,17 +150,24 @@ function handleLocalChange(event) {
 }
 
 .load-modal__input {
-  flex: 1;
+  flex: 1 1 0;
   padding: 8px 10px;
-  border-radius: 4px 0 0 4px;
+  border-radius: 4px;
   border: 1px solid var(--color-border-normal);
   background-color: var(--color-panel-body);
   color: var(--color-text-primary, #fff);
+  box-sizing: border-box;
 }
 
 .load-modal__input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.load-modal__apply {
+  flex: 0 0 auto;
+  height: 48px;
+  padding-inline: 16px;
 }
 
 .load-modal__section--local {
