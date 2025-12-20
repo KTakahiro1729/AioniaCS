@@ -276,9 +276,10 @@ onBeforeUnmount(() => {
                   </span>
                 </div>
               </div>
-              <div class="drive-row__actions">
+            <div class="drive-row__actions">
+              <div class="drive-row__action-group">
                 <button
-                  class="button-base button-base--primary"
+                  class="button-base button-base--primary is-joined-right"
                   type="button"
                   :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
                   data-test="drive-row-load"
@@ -287,16 +288,7 @@ onBeforeUnmount(() => {
                   {{ messages.driveLoadPage.actions.load }}
                 </button>
                 <button
-                  class="button-base button-base--danger"
-                  type="button"
-                  :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
-                  data-test="drive-row-delete"
-                  @click="handleDelete(item)"
-                >
-                  {{ messages.driveLoadPage.actions.delete }}
-                </button>
-                <button
-                  class="button-base button-base--ghost"
+                  class="button-base button-base--ghost is-joined-left is-joined-right"
                   type="button"
                   :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
                   data-test="drive-row-share"
@@ -305,7 +297,7 @@ onBeforeUnmount(() => {
                   {{ messages.driveLoadPage.actions.share }}
                 </button>
                 <button
-                  class="button-base button-base--ghost drive-row__unshare"
+                  class="button-base button-base--ghost drive-row__unshare is-joined-left is-joined-right"
                   type="button"
                   :disabled="!item.shared"
                   :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
@@ -315,7 +307,7 @@ onBeforeUnmount(() => {
                   {{ item.shared ? messages.driveLoadPage.actions.unshare : messages.driveLoadPage.actions.unshareDisabled }}
                 </button>
                 <button
-                  class="button-base button-base--ghost"
+                  class="button-base button-base--ghost is-joined-left"
                   type="button"
                   :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
                   data-test="drive-row-download"
@@ -324,6 +316,16 @@ onBeforeUnmount(() => {
                   {{ messages.driveLoadPage.actions.download }}
                 </button>
               </div>
+              <button
+                class="button-base button-base--danger drive-row__delete"
+                type="button"
+                :aria-label="messages.driveLoadPage.actions.deleteAria(getCharacterName(item))"
+                data-test="drive-row-delete"
+                @click="handleDelete(item)"
+              >
+                {{ messages.driveLoadPage.actions.delete }}
+              </button>
+            </div>
             </div>
             <div class="drive-row__footer">
               <div class="drive-row__dates">
@@ -516,8 +518,27 @@ onBeforeUnmount(() => {
 .drive-row__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  column-gap: 12px;
+  row-gap: 8px;
   justify-content: flex-start;
+  align-items: stretch;
+}
+
+.drive-row__action-group {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0;
+  row-gap: 8px;
+}
+
+.drive-row__action-group > .button-base,
+.drive-row__delete {
+  height: 48px;
+}
+
+.drive-row__delete {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .drive-row__unshare:disabled {

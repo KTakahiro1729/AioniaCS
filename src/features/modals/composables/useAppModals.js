@@ -48,6 +48,7 @@ export function useAppModals(options) {
       isDriveReady: isDriveReady?.value ?? false,
       driveFolderPath: uiStore.driveFolderPath,
       driveFolderLabel: messages.characterHub.driveFolder.label,
+      driveFolderChangeLabel: messages.characterHub.driveFolder.changeButton,
       driveFolderPlaceholder: messages.characterHub.driveFolder.placeholder,
       loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
       selectCharacterLabel: messages.ui.modal.load.buttons.selectCharacter,

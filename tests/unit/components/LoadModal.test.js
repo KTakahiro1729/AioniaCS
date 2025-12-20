@@ -10,6 +10,7 @@ function baseProps(overrides = {}) {
     isDriveReady: true,
     driveFolderPath: 'path',
     driveFolderLabel: 'label',
+    driveFolderChangeLabel: 'change',
     driveFolderPlaceholder: 'placeholder',
     loadLocalLabel: 'local',
     selectCharacterLabel: 'Driveから読み込む',
@@ -38,6 +39,7 @@ describe('LoadModal', () => {
   test('disables drive controls when signed out', async () => {
     const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: false }) });
     expect(wrapper.find('.load-modal__input').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-test="load-modal-apply-folder"]').attributes('disabled')).toBeDefined();
     expect(wrapper.find('[data-test="load-modal-select-character"]').exists()).toBe(false);
   });
 
@@ -48,5 +50,12 @@ describe('LoadModal', () => {
     expect(button.text()).toBe('Driveから読み込む');
     await button.trigger('click');
     expect(wrapper.emitted('select-character')).toHaveLength(1);
+  });
+
+  test('emits update-drive-folder-path when apply is clicked while signed in', async () => {
+    const wrapper = mount(LoadModal, { props: baseProps({ isSignedIn: true }) });
+    const applyButton = wrapper.find('[data-test="load-modal-apply-folder"]');
+    await applyButton.trigger('click');
+    expect(wrapper.emitted('update-drive-folder-path')).toHaveLength(1);
   });
 });
