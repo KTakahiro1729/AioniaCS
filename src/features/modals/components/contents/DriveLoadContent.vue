@@ -228,11 +228,7 @@ onBeforeUnmount(() => {
     </Teleport>
     <header class="drive-load__header">
       <div class="drive-load__title-group">
-        <div
-          class="drive-load__status-indicator"
-          :data-state="errorMessage ? 'error' : isSyncing ? 'sync' : 'idle'"
-          aria-hidden="true"
-        />
+        <div class="drive-load__status-indicator" :data-state="errorMessage ? 'error' : isSyncing ? 'sync' : 'idle'" aria-hidden="true" />
         <h1 class="drive-load__title">{{ messages.driveLoadPage.title }}</h1>
       </div>
     </header>
@@ -395,7 +391,6 @@ onBeforeUnmount(() => {
 }
 
 .drive-load__refresh {
-  min-width: 120px;
   align-self: flex-start;
 }
 
@@ -415,30 +410,9 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   padding: 14px;
   background-color: var(--color-panel-body);
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.drive-row:hover,
-.drive-row:focus-within {
-  background-color: var(--color-panel-sub-header);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 35%);
-}
-
-.drive-row__layout {
-  display: grid;
-  grid-template-columns: minmax(128px, 160px) 1fr;
-  gap: 12px;
-  align-items: stretch;
-}
-
-@media (max-width: 900px) {
-  .drive-row__layout {
-    grid-template-columns: 1fr;
-  }
-
-  .drive-row__thumb {
-    justify-self: center;
-  }
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .drive-row__thumb {
@@ -460,12 +434,18 @@ onBeforeUnmount(() => {
 
 .drive-row__thumb--placeholder {
   display: block;
-  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05) 10px, rgba(0, 0, 0, 0.15) 10px, rgba(0, 0, 0, 0.15) 20px);
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.05) 10px,
+    rgba(0, 0, 0, 0.15) 10px,
+    rgba(0, 0, 0, 0.15) 20px
+  );
 }
 
 .drive-row__content {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   gap: 12px;
 }
 
@@ -552,7 +532,7 @@ onBeforeUnmount(() => {
 
 .drive-row__meta-item dt {
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: 0.7rem;
 }
 
 .drive-row__meta-item dd {
@@ -560,6 +540,7 @@ onBeforeUnmount(() => {
   text-align: right;
   color: var(--color-text-primary);
   font-weight: 700;
+  font-size: 0.8rem;
 }
 
 .drive-row__actions {

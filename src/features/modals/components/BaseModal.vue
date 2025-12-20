@@ -57,7 +57,7 @@ function resolve(value) {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding-right: 36px;
+  padding-right: 40px;
 }
 
 .modal-header-actions {
