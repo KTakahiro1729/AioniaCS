@@ -80,6 +80,59 @@ describe('useGoogleDrive', () => {
     expect(uiStore.lastSavedSnapshot).toBe(buildSnapshotFromStore(charStore));
   });
 
+  test('loadCharacterFromDrive uses provided display name in toast messages', async () => {
+    const loadData = {
+      character: { name: 'Explorer' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const dataManager = {
+      saveCharacterToDrive: vi.fn(),
+      loadDataFromDrive: vi.fn().mockResolvedValue(loadData),
+      parseLoadedData: vi.fn(),
+      googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Explorer.json'),
+    };
+    const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isSignedIn = true;
+
+    await loadCharacterFromDrive('file-display', null, 'Display Name');
+
+    const toastOptions = showAsyncToastMock.mock.calls[showAsyncToastMock.mock.calls.length - 1][1];
+    expect(toastOptions.loading).toEqual(messages.googleDrive.load.loading('Display Name'));
+    expect(toastOptions.success).toEqual(messages.googleDrive.load.success('Display Name'));
+  });
+
+  test('loadCharacterFromDrive falls back to character name when display name is missing', async () => {
+    const initialData = {
+      character: { name: 'Fallback Name' },
+      skills: [],
+      specialSkills: [],
+      equipments: {},
+      histories: [],
+    };
+    const dataManager = {
+      saveCharacterToDrive: vi.fn(),
+      loadDataFromDrive: vi.fn(),
+      parseLoadedData: vi.fn().mockReturnValue(initialData),
+      googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Fallback.json'),
+    };
+    const { loadCharacterFromDrive } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isSignedIn = true;
+
+    await loadCharacterFromDrive('file-fallback', initialData);
+
+    const toastOptions = showAsyncToastMock.mock.calls[showAsyncToastMock.mock.calls.length - 1][1];
+    expect(toastOptions.loading).toEqual(messages.googleDrive.load.loading('Fallback Name'));
+  });
+
   test('loadCharacterFromDrive uses initial data without downloading', async () => {
     const initialData = {
       character: { name: 'Prefetched' },
