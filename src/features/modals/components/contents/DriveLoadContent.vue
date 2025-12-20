@@ -4,7 +4,7 @@ import { messages } from '@/i18n/index.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
 import { copyText } from '@/shared/utils/clipboard.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
-import { getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
+import { getDriveManagerInstance } from '@/infrastructure/google-drive/index.js';
 import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 
@@ -36,7 +36,7 @@ const props = defineProps({
 
 let driveManager = null;
 try {
-  driveManager = getGoogleDriveManagerInstance();
+  driveManager = getDriveManagerInstance();
 } catch (error) {
   logAndToastError(error, { title: messages.driveLoadPage.title, message: messages.driveLoadPage.errors.missingDriveManager });
 }

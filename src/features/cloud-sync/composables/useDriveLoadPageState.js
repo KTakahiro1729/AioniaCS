@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { getGoogleDriveManagerInstance } from '@/infrastructure/google-drive/googleDriveManager.js';
+import { getDriveManagerInstance } from '@/infrastructure/google-drive/index.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/i18n/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
@@ -122,7 +122,7 @@ async function defaultRequestDrivePage(driveManager, { pageSize = INITIAL_PAGE_S
 }
 
 export function useDriveLoadPageState(options = {}) {
-  const driveManager = options.driveManager || getGoogleDriveManagerInstance();
+  const driveManager = options.driveManager || getDriveManagerInstance();
   const requestDrivePage = options.requestDrivePage || ((params) => defaultRequestDrivePage(driveManager, params));
   const uiStore = useUiStore();
   const { logAndToastError } = useNotifications();
