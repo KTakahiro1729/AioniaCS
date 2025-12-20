@@ -164,34 +164,35 @@ const handleImageUpload = async (event) => {
 .character-image-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   margin-bottom: 15px;
   padding: 0;
   border: 1px solid var(--color-border-normal);
   border-radius: 3px;
   background-color: var(--color-input-bg);
+  min-height: 0;
 }
 
 .image-display-area {
-  position: relative; 
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0;
   width: 100%;
-  min-height: 300px; 
-  flex: 1;
+  flex: 1 1 0;
+  height: 0;
+  min-height: clamp(220px, 32vh, 360px);
   background-color: var(--color-background);
   border: 1px solid var(--color-border-normal);
   border-radius: 2px;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 .character-image-display {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  height: auto;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -201,6 +202,7 @@ const handleImageUpload = async (event) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: clamp(220px, 32vh, 360px);
   color: var(--color-text-input-disabled);
 }
 
@@ -306,6 +308,7 @@ const handleImageUpload = async (event) => {
     flex: 1;
     height: 100%;
     width: 100%;
+    min-height: 0;
   }
 }
 </style>
