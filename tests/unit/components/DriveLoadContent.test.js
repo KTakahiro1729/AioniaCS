@@ -78,6 +78,8 @@ vi.mock('@/features/cloud-sync/composables/useDriveLoadPageState.js', () => {
       isLoadingCache: ref(false),
       isSyncing: ref(false),
       isFetchingMore: ref(false),
+      isLoading: computed(() => false),
+      isBusy: computed(() => false),
       statusMessage: computed(() => 'status'),
       errorMessage: ref(''),
       initialize,

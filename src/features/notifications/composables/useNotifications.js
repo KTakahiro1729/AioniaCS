@@ -55,25 +55,28 @@ export function useNotifications() {
   }
 
   function showAsyncToast(promise, messages, context = 'async-toast') {
+    const loadingOptions = resolveToastOptions(messages?.loading);
     const id = showToast({
       duration: 0,
       type: 'info',
-      ...(messages.loading || {}),
+      ...loadingOptions,
     });
 
     const finalize = (opts, type) => {
-      const duration = opts.duration === undefined ? 1000 : opts.duration;
-      store.updateToast(id, { duration, type, ...opts });
+      const normalized = opts || {};
+      const duration = normalized.duration === undefined ? 1000 : normalized.duration;
+      store.updateToast(id, { duration, type, ...normalized });
     };
 
     promise
       .then((res) => {
-        finalize(messages.success || {}, 'success');
+        const successOptions = resolveToastOptions(messages?.success, res);
+        finalize(successOptions, 'success');
         return res;
       })
       .catch((err) => {
         const normalized = logError(err, context);
-        const errorOpts = resolveToastOptions(messages.error, normalized);
+        const errorOpts = resolveToastOptions(messages?.error, normalized);
         finalize(errorOpts, 'error');
       });
 

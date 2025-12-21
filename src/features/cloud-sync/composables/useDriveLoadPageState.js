@@ -131,9 +131,11 @@ export function useDriveLoadPageState(options = {}) {
   const isFetchingMore = ref(false);
   const errorMessage = ref('');
   const visibleCount = ref(0);
+  const isLoading = computed(() => isLoadingCache.value || isSyncing.value);
+  const isBusy = computed(() => isLoading.value || isFetchingMore.value);
   const statusMessage = computed(() => {
     if (errorMessage.value) return errorMessage.value;
-    if (isSyncing.value) return messages.driveLoadPage.status.syncing;
+    if (isLoading.value) return messages.driveLoadPage.status.loading;
     return messages.driveLoadPage.status.refreshed;
   });
   const displayedItems = computed(() => items.value.slice(0, visibleCount.value));
@@ -252,6 +254,8 @@ export function useDriveLoadPageState(options = {}) {
     isLoadingCache,
     isSyncing,
     isFetchingMore,
+    isLoading,
+    isBusy,
     statusMessage,
     errorMessage,
     nextPageToken,

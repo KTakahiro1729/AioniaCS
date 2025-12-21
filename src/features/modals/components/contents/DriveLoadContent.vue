@@ -14,9 +14,8 @@ const observer = ref(null);
 
 const {
   displayedItems,
-  isLoadingCache,
-  isSyncing,
-  isFetchingMore,
+  isLoading,
+  isBusy,
   initialize,
   revealMore,
   refresh,
@@ -55,13 +54,13 @@ const filteredItems = computed(() =>
   displayedItems.value.filter((item) => typeof item?.fileName === 'string' && item.fileName.toLowerCase().endsWith('.zip')),
 );
 const hasItems = computed(() => filteredItems.value.length > 0);
-const isLoadingEmpty = computed(() => (isLoadingCache.value || isSyncing.value) && !hasItems.value);
+const isLoadingEmpty = computed(() => isLoading.value && !hasItems.value);
 const isEmpty = computed(() => !isLoadingEmpty.value && !hasItems.value);
-const isBusy = computed(() => isSyncing.value || isFetchingMore.value || isLoadingCache.value);
-const loadingLabel = computed(() => messages.driveLoadPage.status.loadingCache || '読み込み中……');
+const loadingLabel = computed(() => messages.driveLoadPage.status.loading || '読み込み中……');
 const emptyLabel = computed(
   () => messages.driveLoadPage.emptyMessage || messages.driveLoadPage.placeholder || '保存済みのキャラクターシートはありません',
 );
+const showSentinelMessage = computed(() => hasItems.value && isBusy.value);
 
 function formatTimestamp(seconds) {
   const formatted = formatRelativeDateTime(seconds);
@@ -378,8 +377,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div ref="sentinelRef" class="drive-load__sentinel" aria-hidden="true">
-      <span v-if="isSyncing">{{ messages.driveLoadPage.status.syncing }}</span>
-      <span v-else-if="isFetchingMore">{{ messages.driveLoadPage.status.loadMore }}</span>
+      <span v-if="showSentinelMessage">{{ loadingLabel }}</span>
     </div>
   </div>
 </template>

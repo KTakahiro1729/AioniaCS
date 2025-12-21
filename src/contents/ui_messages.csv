@@ -105,10 +105,8 @@ driveLoadPage.title,保存済み冒険者,,Drive load page title
 driveLoadPage.placeholder,ここにGoogle Drive上のキャラクター一覧が表示されます,,Drive load page placeholder
 driveLoadPage.buttons.back,シートに戻る,,Drive load page back button
 driveLoadPage.buttons.refresh,同期,,Drive load page refresh button
-driveLoadPage.status.loadingCache,キャッシュを読み込み中…,,Drive load page cache status
-driveLoadPage.status.syncing,Google Driveと同期中…,,Drive load page syncing status
+driveLoadPage.status.loading,読み込み中…,,Drive load page loading status
 driveLoadPage.status.refreshed,最新の一覧を表示しています,,Drive load page refreshed status
-driveLoadPage.status.loadMore,さらに読み込み中…,,Drive load page load more status
 driveLoadPage.status.error,一覧の取得に失敗しました,,Drive load page error status
 driveLoadPage.status.retryHint,再試行してください。ネットワークや認証状態をご確認ください,,Drive load page retry hint
 driveLoadPage.labels.untitled,無題のファイル,,Drive load page untitled label
