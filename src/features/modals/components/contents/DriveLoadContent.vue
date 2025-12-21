@@ -14,9 +14,8 @@ const observer = ref(null);
 
 const {
   displayedItems,
-  isLoadingCache,
-  isSyncing,
-  isFetchingMore,
+  isLoading,
+  isBusy,
   initialize,
   revealMore,
   refresh,
@@ -55,13 +54,13 @@ const filteredItems = computed(() =>
   displayedItems.value.filter((item) => typeof item?.fileName === 'string' && item.fileName.toLowerCase().endsWith('.zip')),
 );
 const hasItems = computed(() => filteredItems.value.length > 0);
-const isLoadingEmpty = computed(() => (isLoadingCache.value || isSyncing.value) && !hasItems.value);
+const isLoadingEmpty = computed(() => isLoading.value && !hasItems.value);
 const isEmpty = computed(() => !isLoadingEmpty.value && !hasItems.value);
-const isBusy = computed(() => isSyncing.value || isFetchingMore.value || isLoadingCache.value);
-const loadingLabel = computed(() => messages.driveLoadPage.status.loadingCache || '読み込み中……');
+const loadingLabel = computed(() => messages.driveLoadPage.status.loading || '読み込み中……');
 const emptyLabel = computed(
   () => messages.driveLoadPage.emptyMessage || messages.driveLoadPage.placeholder || '保存済みのキャラクターシートはありません',
 );
+const showSentinelMessage = computed(() => hasItems.value && isBusy.value);
 
 function formatTimestamp(seconds) {
   const formatted = formatRelativeDateTime(seconds);
@@ -157,8 +156,6 @@ async function confirmDelete(item) {
     await showAsyncToast(manager.deleteCharacterFile(item.id), messages.driveLoadPage.toasts.delete, 'drive-delete');
     removeItem(item.id);
     await refresh();
-  } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.delete.error, 'drive-delete');
   } finally {
     cancelDelete();
   }
@@ -179,7 +176,7 @@ async function handleShare(item) {
   try {
     await showAsyncToast(task, messages.driveLoadPage.toasts.share, 'drive-share');
   } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.share.error, 'drive-share');
+    return error;
   }
 }
 
@@ -191,8 +188,6 @@ async function handleUnshare(item) {
   try {
     await showAsyncToast(disableShare(item.id), messages.driveLoadPage.toasts.unshare, 'drive-unshare');
     await refresh();
-  } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.unshare.error, 'drive-unshare');
   } finally {
     processingItemId.value = null;
   }
@@ -220,7 +215,7 @@ async function handleDownload(item) {
   try {
     await showAsyncToast(task, messages.driveLoadPage.toasts.download, 'drive-download');
   } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.download.error, 'drive-download');
+    return error;
   }
 }
 
@@ -378,8 +373,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div ref="sentinelRef" class="drive-load__sentinel" aria-hidden="true">
-      <span v-if="isSyncing">{{ messages.driveLoadPage.status.syncing }}</span>
-      <span v-else-if="isFetchingMore">{{ messages.driveLoadPage.status.loadMore }}</span>
+      <span v-if="showSentinelMessage">{{ loadingLabel }}</span>
     </div>
   </div>
 </template>
