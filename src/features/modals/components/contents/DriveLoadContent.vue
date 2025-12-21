@@ -36,7 +36,9 @@ const deletingItemId = ref(null);
 const processingItemId = ref(null);
 const unshareLabel = messages.driveLoadPage.actions.unshareShort ?? '解除';
 const unshareDisabledLabel =
-  messages.driveLoadPage.actions.unshareDisabledShort ?? messages.driveLoadPage.actions.unshareDisabled ?? messages.driveLoadPage.actions.unshare;
+  messages.driveLoadPage.actions.unshareDisabledShort ??
+  messages.driveLoadPage.actions.unshareDisabled ??
+  messages.driveLoadPage.actions.unshare;
 const cancelLabel = messages.driveLoadPage.actions.cancel ?? 'キャンセル';
 
 const filteredItems = computed(() =>
@@ -258,12 +260,7 @@ onBeforeUnmount(() => {
               <div class="drive-row__title-row">
                 <h2 class="drive-row__title" data-test="drive-row-title">{{ getCharacterName(item) }}</h2>
                 <div class="drive-row__badges">
-                  <span
-                    v-if="item.shared"
-                    class="drive-row__badge drive-row__badge--muted"
-                    role="status"
-                    :aria-label="messages.driveLoadPage.labels.sharedAria"
-                  >
+                  <span v-if="item.shared" class="drive-row__badge" role="status" :aria-label="messages.driveLoadPage.labels.sharedAria">
                     {{ messages.driveLoadPage.labels.shared }}
                   </span>
                   <div class="drive-row__dates">
@@ -406,10 +403,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 160px;
-  border: 1px dashed var(--color-border-muted, #3a3a4a);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  min-height: 100px;
 }
 
 .drive-load__state-text {
@@ -507,10 +501,12 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.drive-row__badge--muted {
+.drive-row__badge {
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
   white-space: nowrap;
+  border-radius: 3px;
+  padding: 1px 5px;
 }
 
 .drive-row__actions {
