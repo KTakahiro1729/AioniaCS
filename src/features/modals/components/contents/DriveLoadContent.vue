@@ -12,8 +12,18 @@ import { formatRelativeDateTime } from '@/shared/utils/utils.js';
 const sentinelRef = ref(null);
 const observer = ref(null);
 
-const { displayedItems, isLoadingCache, isSyncing, isFetchingMore, initialize, revealMore, refresh, cleanup, selectCharacter } =
-  useDriveLoadPageState();
+const {
+  displayedItems,
+  isLoadingCache,
+  isSyncing,
+  isFetchingMore,
+  initialize,
+  revealMore,
+  refresh,
+  cleanup,
+  selectCharacter,
+  removeItem,
+} = useDriveLoadPageState();
 
 const { showAsyncToast, logAndToastError } = useNotifications();
 const modalStore = useModalStore();
@@ -145,6 +155,7 @@ async function confirmDelete(item) {
   const manager = requireDriveManager();
   try {
     await showAsyncToast(manager.deleteCharacterFile(item.id), messages.driveLoadPage.toasts.delete, 'drive-delete');
+    removeItem(item.id);
     await refresh();
   } catch (error) {
     logAndToastError(error, messages.driveLoadPage.toasts.delete.error, 'drive-delete');

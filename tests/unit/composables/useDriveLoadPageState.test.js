@@ -112,4 +112,43 @@ describe('useDriveLoadPageState', () => {
 
     scope.stop();
   });
+
+  it('removes items from the cache and public list when removeItem is called', async () => {
+    const requestDrivePage = vi.fn().mockResolvedValue({
+      files: [
+        { id: 'remove-1', name: 'Keep.zip', mimeType: 'application/zip' },
+        { id: 'remove-2', name: 'Delete.zip', mimeType: 'application/zip' },
+      ],
+      nextPageToken: null,
+    });
+
+    const driveManager = {
+      findOrCreateConfiguredCharacterFolder: vi.fn().mockResolvedValue('folder'),
+      ensureAccessToken: vi.fn(),
+    };
+
+    const scope = effectScope();
+    let state;
+    scope.run(() => {
+      state = useDriveLoadPageState({ requestDrivePage, driveManager });
+    });
+
+    await state.initialize();
+    await nextTick();
+
+    expect(state.displayedItems.value).toHaveLength(2);
+
+    state.removeItem('remove-2');
+    await nextTick();
+
+    expect(state.displayedItems.value).toHaveLength(1);
+    expect(state.displayedItems.value[0].id).toBe('remove-1');
+
+    state.removeItem('missing');
+    await nextTick();
+
+    expect(state.displayedItems.value).toHaveLength(1);
+
+    scope.stop();
+  });
 });

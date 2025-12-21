@@ -67,6 +67,9 @@ const initialize = vi.fn();
 const refresh = vi.fn();
 const cleanup = vi.fn();
 const selectCharacter = vi.fn();
+const removeItem = vi.fn((id) => {
+  displayedItems.value = displayedItems.value.filter((item) => item.id !== id);
+});
 
 vi.mock('@/features/cloud-sync/composables/useDriveLoadPageState.js', () => {
   return {
@@ -82,6 +85,7 @@ vi.mock('@/features/cloud-sync/composables/useDriveLoadPageState.js', () => {
       refresh,
       cleanup,
       selectCharacter,
+      removeItem,
     }),
   };
 });
@@ -98,6 +102,7 @@ describe('DriveLoadContent', () => {
     enableShareMock.mockReset();
     disableShareMock.mockReset();
     copyTextMock.mockReset();
+    removeItem.mockClear();
     displayedItems.value = [];
   });
 
@@ -203,6 +208,26 @@ describe('DriveLoadContent', () => {
     await flushPromises();
 
     expect(managerMock.deleteCharacterFile).toHaveBeenCalledWith('file-5');
+  });
+
+  it('removes an item from the DOM after deletion', async () => {
+    managerMock.deleteCharacterFile.mockResolvedValue();
+    displayedItems.value = [
+      { id: 'file-7', fileName: 'ToRemove.zip', characterName: 'Remove', lastModifiedAtDrive: 1700, createdAt: 1600 },
+      { id: 'file-8', fileName: 'Keep.zip', characterName: 'Keep', lastModifiedAtDrive: 1500, createdAt: 1400 },
+    ];
+
+    const wrapper = mount(DriveLoadContent);
+
+    await wrapper.find('[data-test="drive-row-delete"]').trigger('click');
+    await flushPromises();
+    await wrapper.find('[data-test="drive-row-delete"]').trigger('click');
+    await flushPromises();
+
+    expect(removeItem).toHaveBeenCalledWith('file-7');
+    const items = wrapper.findAll('[data-test="drive-row"]');
+    expect(items).toHaveLength(1);
+    expect(items[0].text()).toContain('Keep');
   });
 
   it('unshares a file immediately and refreshes', async () => {

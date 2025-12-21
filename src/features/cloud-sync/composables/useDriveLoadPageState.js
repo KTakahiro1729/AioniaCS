@@ -178,6 +178,12 @@ export function useDriveLoadPageState(options = {}) {
     updateItemsFromCacheMap();
   }
 
+  function removeItem(id) {
+    if (!id || !cacheMap.has(id)) return;
+    cacheMap.delete(id);
+    updateItemsFromCacheMap();
+  }
+
   function registerAborter(controller) {
     abortControllers.add(controller);
     return controller;
@@ -254,5 +260,6 @@ export function useDriveLoadPageState(options = {}) {
     cleanup,
     refresh: () => syncFromDrive(),
     selectCharacter,
+    removeItem,
   };
 }
