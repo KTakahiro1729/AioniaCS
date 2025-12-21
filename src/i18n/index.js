@@ -249,10 +249,8 @@ export const messages = {
       refresh: t('driveLoadPage.buttons.refresh'),
     },
     status: {
-      loadingCache: t('driveLoadPage.status.loadingCache'),
-      syncing: t('driveLoadPage.status.syncing'),
+      loading: t('driveLoadPage.status.loading'),
       refreshed: t('driveLoadPage.status.refreshed'),
-      loadMore: t('driveLoadPage.status.loadMore'),
       error: t('driveLoadPage.status.error'),
       retryHint: t('driveLoadPage.status.retryHint'),
     },
