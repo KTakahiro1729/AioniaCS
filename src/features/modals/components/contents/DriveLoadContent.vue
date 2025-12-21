@@ -156,8 +156,6 @@ async function confirmDelete(item) {
     await showAsyncToast(manager.deleteCharacterFile(item.id), messages.driveLoadPage.toasts.delete, 'drive-delete');
     removeItem(item.id);
     await refresh();
-  } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.delete.error, 'drive-delete');
   } finally {
     cancelDelete();
   }
@@ -178,7 +176,7 @@ async function handleShare(item) {
   try {
     await showAsyncToast(task, messages.driveLoadPage.toasts.share, 'drive-share');
   } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.share.error, 'drive-share');
+    return error;
   }
 }
 
@@ -190,8 +188,6 @@ async function handleUnshare(item) {
   try {
     await showAsyncToast(disableShare(item.id), messages.driveLoadPage.toasts.unshare, 'drive-unshare');
     await refresh();
-  } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.unshare.error, 'drive-unshare');
   } finally {
     processingItemId.value = null;
   }
@@ -219,7 +215,7 @@ async function handleDownload(item) {
   try {
     await showAsyncToast(task, messages.driveLoadPage.toasts.download, 'drive-download');
   } catch (error) {
-    logAndToastError(error, messages.driveLoadPage.toasts.download.error, 'drive-download');
+    return error;
   }
 }
 

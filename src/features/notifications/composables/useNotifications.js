@@ -68,7 +68,7 @@ export function useNotifications() {
       store.updateToast(id, { duration, type, ...normalized });
     };
 
-    promise
+    const managedPromise = promise
       .then((res) => {
         const successOptions = resolveToastOptions(messages?.success, res);
         finalize(successOptions, 'success');
@@ -78,9 +78,10 @@ export function useNotifications() {
         const normalized = logError(err, context);
         const errorOpts = resolveToastOptions(messages?.error, normalized);
         finalize(errorOpts, 'error');
+        throw normalized;
       });
 
-    return promise;
+    return managedPromise;
   }
 
   return { showToast, showAsyncToast, logAndToastError };

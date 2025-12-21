@@ -132,29 +132,24 @@ export function useGoogleDrive(dataManager) {
 
     const providedData = initialData ?? uiStore.consumePrefetchedDriveData(targetId);
     const targetName = resolveDisplayName(displayName, providedData);
-    const loadPromise = Promise.resolve(providedData ?? dataManager.loadDataFromDrive(targetId))
-      .then((parsedData) => {
-        const normalizedData = providedData ? dataManager.parseLoadedData(parsedData) : parsedData;
-        if (!normalizedData) {
-          throw new Error(messages.googleDrive.load.missingData().message);
-        }
-        if (!parsedData) {
-          throw new Error(messages.googleDrive.load.missingData().message);
-        }
-        Object.assign(characterStore.character, normalizedData.character);
-        characterStore.skills.splice(0, characterStore.skills.length, ...normalizedData.skills);
-        characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...normalizedData.specialSkills);
-        Object.assign(characterStore.equipments, normalizedData.equipments);
-        characterStore.histories.splice(0, characterStore.histories.length, ...normalizedData.histories);
-        uiStore.setCurrentDriveFileId(targetId);
-        removeStoredCharacterDraft();
-        uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
-        return normalizedData;
-      })
-      .catch((err) => {
-        logAndToastError(err, (caught) => messages.googleDrive.load.error(caught), 'loadCharacterFromDrive');
-        return null;
-      });
+    const loadPromise = Promise.resolve(providedData ?? dataManager.loadDataFromDrive(targetId)).then((parsedData) => {
+      const normalizedData = providedData ? dataManager.parseLoadedData(parsedData) : parsedData;
+      if (!normalizedData) {
+        throw new Error(messages.googleDrive.load.missingData().message);
+      }
+      if (!parsedData) {
+        throw new Error(messages.googleDrive.load.missingData().message);
+      }
+      Object.assign(characterStore.character, normalizedData.character);
+      characterStore.skills.splice(0, characterStore.skills.length, ...normalizedData.skills);
+      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...normalizedData.specialSkills);
+      Object.assign(characterStore.equipments, normalizedData.equipments);
+      characterStore.histories.splice(0, characterStore.histories.length, ...normalizedData.histories);
+      uiStore.setCurrentDriveFileId(targetId);
+      removeStoredCharacterDraft();
+      uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
+      return normalizedData;
+    });
 
     showAsyncToast(
       loadPromise,
@@ -166,7 +161,7 @@ export function useGoogleDrive(dataManager) {
       'loadCharacterFromDrive',
     );
 
-    return loadPromise;
+    return loadPromise.catch(() => null);
   }
 
   async function saveCharacterToDrive(option = false) {
