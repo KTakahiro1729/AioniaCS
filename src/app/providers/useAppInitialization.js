@@ -15,14 +15,30 @@ function waitForGoogleScript() {
   if (!script) {
     return Promise.resolve();
   }
-  return new Promise((resolve) => {
-    const finalize = () => {
-      script.removeEventListener('load', finalize);
-      script.removeEventListener('error', finalize);
+  return new Promise((resolve, reject) => {
+    let timerId;
+    const cleanup = () => {
+      if (timerId) {
+        clearTimeout(timerId);
+        timerId = null;
+      }
+      script.removeEventListener('load', onLoad);
+      script.removeEventListener('error', onError);
+    };
+    const onLoad = () => {
+      cleanup();
       resolve();
     };
-    script.addEventListener('load', finalize);
-    script.addEventListener('error', finalize);
+    const onError = () => {
+      cleanup();
+      reject(new Error('Google API script failed to load.'));
+    };
+    timerId = setTimeout(() => {
+      cleanup();
+      reject(new Error('Google API script load timed out.'));
+    }, 8000);
+    script.addEventListener('load', onLoad);
+    script.addEventListener('error', onError);
   });
 }
 
@@ -33,12 +49,11 @@ export function useAppInitialization() {
     const driveManager = initializeDriveManager(import.meta.env.VITE_GOOGLE_API_KEY, import.meta.env.VITE_GOOGLE_CLIENT_ID);
     const usingMock = isUsingMockDrive();
 
-    if (!usingMock) {
-      await waitForGoogleScript();
-    }
-
     if (driveManager && typeof driveManager.onGapiLoad === 'function') {
       try {
+        if (!usingMock) {
+          await waitForGoogleScript();
+        }
         await driveManager.onGapiLoad();
         uiStore.isGapiInitialized = true;
         const restored = await driveManager.restoreSession();
