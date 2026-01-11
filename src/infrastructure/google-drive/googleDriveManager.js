@@ -248,18 +248,23 @@ export class GoogleDriveManager {
       return this.gapiLoadPromise;
     }
 
+    if (typeof gapi === 'undefined' || !gapi.load) {
+      const err = new Error('GAPI core script not available for gapi.load.');
+      console.error('GDM: ' + err.message);
+      return Promise.reject(err);
+    }
+
     this.gapiLoadPromise = new Promise((resolve, reject) => {
-      if (typeof gapi === 'undefined' || !gapi.load) {
-        const err = new Error('GAPI core script not available for gapi.load.');
-        console.error('GDM: ' + err.message);
-        return reject(err);
-      }
+      const resetAndReject = (error) => {
+        this.gapiLoadPromise = null;
+        reject(error);
+      };
       // Picker API removed; initialize only the Drive client for in-app loaders.
       gapi.load('client', () => {
         if (typeof gapi.client === 'undefined' || !gapi.client.init) {
           const err = new Error('GAPI client script not available for gapi.client.init.');
           console.error('GDM: ' + err.message);
-          return reject(err);
+          return resetAndReject(err);
         }
         gapi.client
           .init({
@@ -273,7 +278,7 @@ export class GoogleDriveManager {
           })
           .catch((error) => {
             console.error('GDM: Error initializing GAPI client:', error);
-            reject(error);
+            resetAndReject(error);
           });
       });
     });
