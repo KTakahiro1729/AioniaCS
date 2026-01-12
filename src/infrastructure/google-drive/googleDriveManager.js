@@ -327,7 +327,12 @@ export class GoogleDriveManager {
       await this.ensureAccessToken();
       return true;
     } catch (error) {
-      console.error('Failed to restore session:', error);
+      const message = error?.message;
+      if (message === 'Authentication required.') {
+        console.info('GDM: No active session found. Starting as guest.');
+      } else {
+        console.error('Failed to restore session:', error);
+      }
       if (gapi.client && typeof gapi.client.setToken === 'function') {
         gapi.client.setToken('');
       }
