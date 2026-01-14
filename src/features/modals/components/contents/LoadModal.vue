@@ -44,10 +44,19 @@
           v-if="isSignedIn"
           :is-signed-in="isSignedIn"
           :is-drive-ready="isDriveReady"
-          :load-character-from-drive="loadCharacterFromDrive"
         />
         <p v-else class="load-modal__drive-hint">{{ signInMessage }}</p>
       </div>
+    </section>
+    <section class="load-modal__section load-modal__section--history">
+      <button
+        class="button-base load-modal__button"
+        :disabled="!hasHistory"
+        data-test="load-modal-history-button"
+        @click="$emit('open-history')"
+      >
+        {{ restoreHistoryLabel }}
+      </button>
     </section>
   </div>
 </template>
@@ -66,19 +75,14 @@ const props = defineProps({
   driveFolderChangeLabel: { type: String, default: 'Apply' },
   driveFolderPlaceholder: String,
   loadLocalLabel: String,
-  loadCharacterFromDrive: {
-    type: Function,
-    default: null,
-  },
+  loadDriveLabel: String,
+  restoreHistoryLabel: String,
+  hasHistory: Boolean,
   signInLabel: String,
   signInMessage: String,
 });
 
-const emit = defineEmits([
-  'load-local',
-  'sign-in',
-  'update-drive-folder-path',
-]);
+const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'open-history']);
 
 const folderInputId = 'load_modal_drive_folder';
 const folderPathInput = ref(props.driveFolderPath || '');
@@ -210,6 +214,11 @@ function handleLocalChange(event) {
   flex: 0 0 auto;
   height: 48px;
   padding-inline: 16px;
+}
+
+.load-modal__section--history {
+  border-top: 1px solid var(--color-border-normal);
+  padding-top: 12px;
 }
 
 .load-modal__signin-message {

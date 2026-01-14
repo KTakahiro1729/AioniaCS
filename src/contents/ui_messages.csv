@@ -4,6 +4,10 @@ googleDrive.auth.connected.title,Google Drive,,Drive auth connected title
 googleDrive.auth.connected.message,接続しました,,Drive auth connected body
 googleDrive.signOut.success.title,サインアウトしました,,Drive sign out success title
 googleDrive.signOut.success.message,,,Drive sign out success body (empty)
+googleDrive.folderPicker.unavailable.title,Google Drive,,Drive folder picker unavailable title
+googleDrive.folderPicker.unavailable.message,フォルダピッカーを利用できません,,Drive folder picker unavailable body
+googleDrive.folderPicker.error.title,Google Drive,,Drive folder picker error title
+googleDrive.folderPicker.error.message,フォルダ選択をキャンセルしました,,Drive folder picker default error body
 googleDrive.save.loading.title,Google Drive,,Drive save loading title
 googleDrive.save.loading.message,保存中...,,Drive save loading body
 googleDrive.save.newLoading.title,新規キャラクター,,Drive save new character loading title
@@ -45,11 +49,19 @@ share.needSignIn.message,サインインしてください,,Share sign-in needed
 share.toast.creating.title,共有リンク,,Share creating toast title
 share.toast.creating.message,作成中...,,Share creating toast body
 share.toast.success.title,共有リンク,,Share success toast title
-share.toast.success.message,URLをコピーしました,,Share success toast body
+share.toast.success.message,共有リンクを生成しました,,Share success toast body
 share.toast.error.title,共有リンク,,Share error toast title
 share.toast.error.message,共有リンクの生成に失敗しました,,Share error toast default body
 share.toast.clipboardUnavailable.title,共有リンク,,Share clipboard unavailable toast title
 share.toast.clipboardUnavailable.message,クリップボードにアクセスできません,,Share clipboard unavailable toast body
+share.resultModal.title,共有リンク,,Share result modal title
+share.resultModal.description,共有リンクが生成されました。下のURLをコピーして共有してください。,,Share result modal description
+share.resultModal.urlLabel,共有URL,,Share result modal url label
+share.resultModal.copyLabel,コピー,,Share result modal copy button
+share.resultModal.copySuccess.title,コピー,,Share result modal copy success title
+share.resultModal.copySuccess.message,URLをクリップボードにコピーしました,,Share result modal copy success message
+share.resultModal.copyError.title,コピー失敗,,Share result modal copy error title
+share.resultModal.copyError.message,コピーに失敗しました。もう一度お試しください,,Share result modal copy error message
 share.errors.saveFailed,Google Drive への保存に失敗しました,,Share save failed error
 share.errors.shareFailed,共有リンクの取得に失敗しました,,Share retrieval failed error
 share.errors.managerMissing,Google Drive マネージャーが設定されていません,,Share manager missing error
@@ -99,73 +111,13 @@ ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes 
 ui.modal.load.title,読込,,Load modal title
 ui.modal.load.buttons.loadLocal,ローカルから読み込む,,Load modal local button
 ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button
-ui.modal.load.buttons.selectCharacter,Driveから読み込む,,Load modal select character button
+ui.modal.load.buttons.restoreHistory,未保存のキャラクターを復元,,Load modal history recovery button
 ui.modal.load.signInMessage,Drive機能を使うにはGoogleにサインインしてください。,,Load modal sign-in message
-driveLoadPage.title,保存済み冒険者,,Drive load page title
-driveLoadPage.placeholder,ここにGoogle Drive上のキャラクター一覧が表示されます,,Drive load page placeholder
-driveLoadPage.buttons.back,シートに戻る,,Drive load page back button
-driveLoadPage.buttons.refresh,同期,,Drive load page refresh button
-driveLoadPage.status.loading,読み込み中…,,Drive load page loading status
-driveLoadPage.status.refreshed,最新の一覧を表示しています,,Drive load page refreshed status
-driveLoadPage.status.error,一覧の取得に失敗しました,,Drive load page error status
-driveLoadPage.status.retryHint,再試行してください。ネットワークや認証状態をご確認ください,,Drive load page retry hint
-driveLoadPage.labels.untitled,無題のファイル,,Drive load page untitled label
-driveLoadPage.labels.unknownCharacter,キャラクター名未設定,,Drive load page unknown character label
-driveLoadPage.labels.created,作成,,Drive load page created label
-driveLoadPage.labels.modified,更新,,Drive load page modified label
-driveLoadPage.labels.hash,ハッシュ,,Drive load page hash label
-driveLoadPage.labels.driveHash,Drive上のハッシュ,,Drive load page drive hash label
-driveLoadPage.labels.cachedHash,キャッシュのハッシュ,,Drive load page cached hash label
-driveLoadPage.labels.notAvailable,なし,,Drive load page not available label
-driveLoadPage.labels.unknownDate,日時不明,,Drive load page unknown date label
-driveLoadPage.labels.shared,共有中,,Drive load page shared badge
-driveLoadPage.labels.sharedAria,このファイルは共有されています,,Drive load page shared aria label
-driveLoadPage.labels.selectAction,このキャラクターを開く,,Drive load page select card aria label
-driveLoadPage.actions.load,読込,,Drive load page load action
-driveLoadPage.actions.delete,削除,,Drive load page delete action
-driveLoadPage.actions.share,共有,,Drive load page share action
-driveLoadPage.actions.unshare,共有解除,,Drive load page unshare action
-driveLoadPage.actions.unshareDisabled,共有解除,,Drive load page unshare disabled action
-driveLoadPage.actions.unshareShort,解除,,Drive load page unshare short action
-driveLoadPage.actions.unshareDisabledShort,解除,,Drive load page unshare disabled short action
-driveLoadPage.actions.cancel,キャンセル,,Drive load page cancel action
-driveLoadPage.actions.download,保存,,Drive load page download action
-driveLoadPage.actions.loadAria,{name}を開く,,Drive load page load aria
-driveLoadPage.actions.deleteAria,{name}を削除する,,Drive load page delete aria
-driveLoadPage.actions.shareAria,{name}を共有する,,Drive load page share aria
-driveLoadPage.actions.unshareAria,{name}の共有を解除する,,Drive load page unshare aria
-driveLoadPage.actions.downloadAria,{name}を端末に保存する,,Drive load page download aria
-driveLoadPage.confirmations.delete,{name}を削除しますか？この操作は元に戻せません。,,Drive load page delete confirmation
-driveLoadPage.confirmations.unshare,{name}の共有を解除しますか？,,Drive load page unshare confirmation
-driveLoadPage.toasts.share.loading.title,共有リンクを作成中,,Drive load page share loading title
-driveLoadPage.toasts.share.loading.message,公開リンクを準備しています…,,Drive load page share loading message
-driveLoadPage.toasts.share.success.title,共有リンクをコピーしました,,Drive load page share success title
-driveLoadPage.toasts.share.success.message,リンクをクリップボードにコピーしました,,Drive load page share success message
-driveLoadPage.toasts.share.error.title,共有に失敗しました,,Drive load page share error title
-driveLoadPage.toasts.share.error.message,共有リンクの作成に失敗しました,,Drive load page share error message
-driveLoadPage.toasts.unshare.loading.title,共有設定を更新中,,Drive load page unshare loading title
-driveLoadPage.toasts.unshare.loading.message,公開設定を解除しています…,,Drive load page unshare loading message
-driveLoadPage.toasts.unshare.success.title,共有を解除しました,,Drive load page unshare success title
-driveLoadPage.toasts.unshare.success.message,共有リンクの無効化が完了しました,,Drive load page unshare success message
-driveLoadPage.toasts.unshare.error.title,共有解除に失敗しました,,Drive load page unshare error title
-driveLoadPage.toasts.unshare.error.message,共有設定の更新に失敗しました,,Drive load page unshare error message
-driveLoadPage.toasts.download.loading.title,ダウンロードを準備中,,Drive load page download loading title
-driveLoadPage.toasts.download.loading.message,ファイルを取得しています…,,Drive load page download loading message
-driveLoadPage.toasts.download.success.title,ダウンロード開始,,Drive load page download success title
-driveLoadPage.toasts.download.success.message,端末への保存を開始しました,,Drive load page download success message
-driveLoadPage.toasts.download.error.title,ダウンロードに失敗しました,,Drive load page download error title
-driveLoadPage.toasts.download.error.message,ファイルを取得できませんでした,,Drive load page download error message
-driveLoadPage.toasts.delete.loading.title,削除中,,Drive load page delete loading title
-driveLoadPage.toasts.delete.loading.message,クラウド上のファイルを削除しています…,,Drive load page delete loading message
-driveLoadPage.toasts.delete.success.title,削除完了,,Drive load page delete success title
-driveLoadPage.toasts.delete.success.message,ファイルを削除しました,,Drive load page delete success message
-driveLoadPage.toasts.delete.error.title,削除に失敗しました,,Drive load page delete error title
-driveLoadPage.toasts.delete.error.message,ファイルの削除に失敗しました,,Drive load page delete error message
-driveLoadPage.errors.missingDriveManager,Driveの初期化が完了していません,,Drive load page missing manager error
-driveLoadPage.errors.folderUnavailable,キャラクターフォルダにアクセスできません,,Drive load page folder unavailable error
-driveLoadPage.errors.apiUnavailable,Google Drive APIが利用できません,,Drive load page api unavailable error
-driveLoadPage.errors.cacheFailed,キャッシュの読み込みに失敗しました,,Drive load page cache failed error
-driveLoadPage.errors.syncFailed,同期に失敗しました,,Drive load page sync failed error
+ui.modal.historyRecovery.title,未保存キャラクターの復元,,History recovery modal title
+ui.modal.historyRecovery.description,未保存のキャラクターを復元します。,,History recovery modal description
+ui.modal.historyRecovery.empty,保存された履歴はありません。,,History recovery modal empty state
+ui.modal.historyRecovery.confirm,現在の編集内容は破棄されます。よろしいですか？,,History recovery modal confirmation
+ui.modal.historyRecovery.cancel,キャンセル,,History recovery modal cancel
 ui.modal.io.title,入出力,,IO modal title
 ui.modal.io.buttons.saveLocal,ローカルファイルで出力,,IO modal save local button
 ui.modal.io.buttons.print,印刷,,IO modal print button
@@ -217,6 +169,19 @@ sheet.sections.weakness.columns.text,弱点,,Sheet weakness column text
 sheet.sections.weakness.columns.acquired,獲得,,Sheet weakness column acquired
 sheet.sections.skills.title,技能,,Sheet skills section title
 sheet.sections.memo.title,キャラクターメモ,,Sheet memo section title
+sheet.sections.memo.subMemo.titlePlaceholder,サブメモタイトル,,Sub memo title placeholder
+sheet.sections.memo.subMemo.contentPlaceholder,サブメモ内容,,Sub memo content placeholder
+sheet.sections.memo.subMemo.spoilerLabel,ネタバレ,,Sub memo spoiler toggle label
+sheet.sections.memo.subMemo.spoilerNotice,※ネタバレを含む内容です,,Sub memo spoiler guard notice
+sheet.sections.memo.subMemo.readButton,読む,,Sub memo reveal button label
+sheet.sections.memo.subMemo.addButton,サブメモを追加,,Sub memo add button label
+sheet.sections.memo.subMemo.deleteLabel,削除,,Sub memo delete button label
+sheet.sections.memo.subMemo.toggle.expand,表示,,Sub memo expand label
+sheet.sections.memo.subMemo.toggle.collapse,折りたたむ,,Sub memo collapse label
+sheet.sections.memo.subMemo.deleteConfirm.title,サブメモの削除,,Sub memo delete confirm title
+sheet.sections.memo.subMemo.deleteConfirm.message,このサブメモを削除しますか？,,Sub memo delete confirm message
+sheet.sections.memo.subMemo.deleteConfirm.delete,削除,,Sub memo delete confirm delete
+sheet.sections.memo.subMemo.deleteConfirm.cancel,キャンセル,,Sub memo delete confirm cancel
 sheet.sections.specialSkills.title,特技,,Sheet special skills section title
 sheet.sections.specialSkills.columns.group,種類,,Sheet special skills column group
 sheet.sections.specialSkills.columns.name,名称,,Sheet special skills column name

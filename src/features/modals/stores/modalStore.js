@@ -6,6 +6,7 @@ export const useModalStore = defineStore('modal', {
     isVisible: false,
     title: '',
     message: '',
+    type: '',
     component: shallowRef(null),
     props: {},
     buttons: [],
@@ -20,6 +21,7 @@ export const useModalStore = defineStore('modal', {
         this.isVisible = true;
         this.title = options.title || '';
         this.message = options.message || '';
+        this.type = options.type || '';
         this.component = options.component || null;
         this.props = options.props || {};
         this.buttons = options.buttons || [];
@@ -33,6 +35,7 @@ export const useModalStore = defineStore('modal', {
       this.isVisible = false;
       this.title = '';
       this.message = '';
+      this.type = '';
       this.component = null;
       this.props = {};
       this.buttons = [];
@@ -46,6 +49,9 @@ export const useModalStore = defineStore('modal', {
         this.resolvePromise(value);
       }
       this.hideModal();
+    },
+    openHistoryRecoveryModal(options) {
+      return this.showModal({ type: 'history-recovery', ...options });
     },
   },
 });

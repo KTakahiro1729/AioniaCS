@@ -14,6 +14,9 @@ function baseProps(overrides = {}) {
     driveFolderChangeLabel: 'change',
     driveFolderPlaceholder: 'placeholder',
     loadLocalLabel: 'local',
+    loadDriveLabel: 'drive',
+    restoreHistoryLabel: 'history',
+    hasHistory: false,
     signInLabel: 'signin',
     signInMessage: 'message',
     loadCharacterFromDrive: vi.fn(),
@@ -65,5 +68,21 @@ describe('LoadModal', () => {
     const applyButton = wrapper.find('[data-test="load-modal-apply-folder"]');
     await applyButton.trigger('click');
     expect(wrapper.emitted('update-drive-folder-path')).toHaveLength(1);
+  });
+
+  test('shows disabled history button when no history exists', async () => {
+    const wrapper = mount(LoadModal, { props: baseProps({ hasHistory: false }) });
+    const historyButton = wrapper.find('[data-test="load-modal-history-button"]');
+    expect(historyButton.exists()).toBe(true);
+    expect(historyButton.attributes('disabled')).toBeDefined();
+  });
+
+  test('shows enabled history button when history exists', async () => {
+    const wrapper = mount(LoadModal, { props: baseProps({ hasHistory: true }) });
+    const historyButton = wrapper.find('[data-test="load-modal-history-button"]');
+    expect(historyButton.exists()).toBe(true);
+    expect(historyButton.attributes('disabled')).toBeUndefined();
+    await historyButton.trigger('click');
+    expect(wrapper.emitted('open-history')).toHaveLength(1);
   });
 });

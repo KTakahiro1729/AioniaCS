@@ -133,6 +133,20 @@ export const messages = {
       shareFailed: t('share.errors.shareFailed'),
       managerMissing: t('share.errors.managerMissing'),
     },
+    resultModal: {
+      title: t('share.resultModal.title'),
+      description: t('share.resultModal.description'),
+      urlLabel: t('share.resultModal.urlLabel'),
+      copyLabel: t('share.resultModal.copyLabel'),
+      copySuccess: () => ({
+        title: t('share.resultModal.copySuccess.title'),
+        message: t('share.resultModal.copySuccess.message'),
+      }),
+      copyError: () => ({
+        title: t('share.resultModal.copyError.title'),
+        message: t('share.resultModal.copyError.message'),
+      }),
+    },
     loadError: {
       toast: (key = 'general') => ({
         title: t('share.loadError.title'),
@@ -216,9 +230,16 @@ export const messages = {
         buttons: {
           loadLocal: t('ui.modal.load.buttons.loadLocal'),
           loadDrive: t('ui.modal.load.buttons.loadDrive'),
-          selectCharacter: t('ui.modal.load.buttons.selectCharacter'),
+          restoreHistory: t('ui.modal.load.buttons.restoreHistory'),
         },
         signInMessage: t('ui.modal.load.signInMessage'),
+      },
+      historyRecovery: {
+        title: t('ui.modal.historyRecovery.title'),
+        description: t('ui.modal.historyRecovery.description'),
+        empty: t('ui.modal.historyRecovery.empty'),
+        confirm: t('ui.modal.historyRecovery.confirm'),
+        cancel: t('ui.modal.historyRecovery.cancel'),
       },
       io: {
         title: t('ui.modal.io.title'),
@@ -423,6 +444,25 @@ export const messages = {
       },
       memo: {
         title: t('sheet.sections.memo.title'),
+        subMemo: {
+          titlePlaceholder: t('sheet.sections.memo.subMemo.titlePlaceholder'),
+          contentPlaceholder: t('sheet.sections.memo.subMemo.contentPlaceholder'),
+          spoilerLabel: t('sheet.sections.memo.subMemo.spoilerLabel'),
+          spoilerNotice: t('sheet.sections.memo.subMemo.spoilerNotice'),
+          readButton: t('sheet.sections.memo.subMemo.readButton'),
+          addButton: t('sheet.sections.memo.subMemo.addButton'),
+          deleteLabel: t('sheet.sections.memo.subMemo.deleteLabel'),
+          toggle: {
+            expand: t('sheet.sections.memo.subMemo.toggle.expand'),
+            collapse: t('sheet.sections.memo.subMemo.toggle.collapse'),
+          },
+          deleteConfirm: {
+            title: t('sheet.sections.memo.subMemo.deleteConfirm.title'),
+            message: t('sheet.sections.memo.subMemo.deleteConfirm.message'),
+            delete: t('sheet.sections.memo.subMemo.deleteConfirm.delete'),
+            cancel: t('sheet.sections.memo.subMemo.deleteConfirm.cancel'),
+          },
+        },
       },
       specialSkills: {
         title: t('sheet.sections.specialSkills.title'),

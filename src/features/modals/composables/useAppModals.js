@@ -3,7 +3,9 @@ import { useModal } from './useModal.js';
 import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 const LoadModal = defineAsyncComponent(() => import('@/features/modals/components/contents/LoadModal.vue'));
+const HistoryRecoveryModal = defineAsyncComponent(() => import('@/features/modals/components/contents/HistoryRecoveryModal.vue'));
 const IoModal = defineAsyncComponent(() => import('@/features/modals/components/contents/IoModal.vue'));
+const ShareResultModal = defineAsyncComponent(() => import('@/features/modals/components/contents/ShareResultModal.vue'));
 import { isDesktopDevice } from '@/shared/utils/device.js';
 import { messages } from '@/i18n/index.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
@@ -27,8 +29,14 @@ export function useAppModals(options) {
     updateDriveFolderPath,
     canSignInToGoogle,
     isDriveReady,
-    loadCharacterFromDrive,
+    getLocalHistoryList,
+    restoreCharacterFromHistory,
   } = options;
+
+  const historyExists = () => {
+    const list = typeof getLocalHistoryList === 'function' ? getLocalHistoryList() : [];
+    return Array.isArray(list) && list.length > 0;
+  };
 
   async function openLoadModal() {
     const initialProps = {
@@ -40,7 +48,9 @@ export function useAppModals(options) {
       driveFolderChangeLabel: messages.characterHub.driveFolder.changeButton,
       driveFolderPlaceholder: messages.characterHub.driveFolder.placeholder,
       loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
-      loadCharacterFromDrive,
+      loadDriveLabel: messages.ui.modal.load.buttons.loadDrive,
+      restoreHistoryLabel: messages.ui.modal.load.buttons.restoreHistory,
+      hasHistory: historyExists(),
       signInLabel: messages.characterHub.buttons.signIn,
       signInMessage: messages.ui.modal.load.signInMessage,
     };
@@ -54,6 +64,8 @@ export function useAppModals(options) {
         'load-local': handleFileUpload,
         'sign-in': handleSignInClick,
         'update-drive-folder-path': updateDriveFolderPath,
+        'choose-drive-folder': promptForDriveFolder,
+        'open-history': () => openHistoryRecoveryModal(),
       },
     });
 
@@ -63,6 +75,7 @@ export function useAppModals(options) {
         canSignIn: canSignInToGoogle?.value ?? false,
         isDriveReady: isDriveReady?.value ?? false,
         driveFolderPath: uiStore.driveFolderPath,
+        hasHistory: historyExists(),
       }),
       (values) => {
         if (modalStore.component === LoadModal) {
@@ -138,14 +151,7 @@ export function useAppModals(options) {
       showToast({ type: 'error', ...messages.share.needSignIn() });
       return;
     }
-    const sharePromise = (async () => {
-      const link = await createShareLink();
-      if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
-        throw new Error(messages.share.toast.clipboardUnavailable().message);
-      }
-      await navigator.clipboard.writeText(link);
-      return link;
-    })();
+    const sharePromise = createShareLink();
 
     showAsyncToast(
       sharePromise,
@@ -157,8 +163,52 @@ export function useAppModals(options) {
       'openShareModal',
     );
 
+    sharePromise
+      .then((link) =>
+        showModal({
+          component: ShareResultModal,
+          title: messages.share.resultModal.title,
+          props: {
+            shareUrl: link,
+            description: messages.share.resultModal.description,
+            urlLabel: messages.share.resultModal.urlLabel,
+            copyLabel: messages.share.resultModal.copyLabel,
+          },
+          buttons: [],
+        }),
+      )
+      .catch((error) => console.error('Failed to show share result modal:', error));
+
     return sharePromise;
   }
 
-  return { openLoadModal, openIoModal, openShareModal };
+  async function openHistoryRecoveryModal() {
+    const historyList = typeof getLocalHistoryList === 'function' ? getLocalHistoryList() : [];
+    if (!Array.isArray(historyList) || historyList.length === 0) {
+      return;
+    }
+    await showModal({
+      component: HistoryRecoveryModal,
+      title: messages.ui.modal.historyRecovery.title,
+      props: {
+        historyList,
+        description: messages.ui.modal.historyRecovery.description,
+        emptyLabel: messages.ui.modal.historyRecovery.empty,
+        cancelLabel: messages.ui.modal.historyRecovery.cancel,
+        confirmMessage: messages.ui.modal.historyRecovery.confirm,
+      },
+      buttons: [],
+      on: {
+        restore: (item) => {
+          if (typeof restoreCharacterFromHistory === 'function') {
+            restoreCharacterFromHistory(item);
+          }
+          modalStore.hideModal();
+        },
+        close: () => modalStore.hideModal(),
+      },
+    });
+  }
+
+  return { openLoadModal, openIoModal, openShareModal, openHistoryRecoveryModal };
 }
