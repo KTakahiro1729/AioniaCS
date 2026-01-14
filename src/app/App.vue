@@ -110,6 +110,7 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   getChatPaletteText,
   printCharacterSheet,
   openPreviewPage,
+  loadCharacterFromDrive,
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
