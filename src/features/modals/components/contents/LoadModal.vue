@@ -44,6 +44,7 @@
           v-if="isSignedIn"
           :is-signed-in="isSignedIn"
           :is-drive-ready="isDriveReady"
+          :load-character-from-drive="loadCharacterFromDrive"
         />
         <p v-else class="load-modal__drive-hint">{{ signInMessage }}</p>
       </div>
@@ -77,6 +78,7 @@ const props = defineProps({
   loadLocalLabel: String,
   loadDriveLabel: String,
   restoreHistoryLabel: String,
+  loadCharacterFromDrive: Function,
   hasHistory: Boolean,
   signInLabel: String,
   signInMessage: String,
