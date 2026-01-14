@@ -240,8 +240,16 @@ export const messages = {
         buttons: {
           loadLocal: t('ui.modal.load.buttons.loadLocal'),
           loadDrive: t('ui.modal.load.buttons.loadDrive'),
+          restoreHistory: t('ui.modal.load.buttons.restoreHistory'),
         },
         signInMessage: t('ui.modal.load.signInMessage'),
+      },
+      historyRecovery: {
+        title: t('ui.modal.historyRecovery.title'),
+        description: t('ui.modal.historyRecovery.description'),
+        empty: t('ui.modal.historyRecovery.empty'),
+        confirm: t('ui.modal.historyRecovery.confirm'),
+        cancel: t('ui.modal.historyRecovery.cancel'),
       },
       io: {
         title: t('ui.modal.io.title'),

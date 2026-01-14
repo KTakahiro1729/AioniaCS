@@ -7,6 +7,7 @@ import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import {
   useLocalCharacterPersistence,
   LOCAL_CHARACTER_STORAGE_KEY,
+  HISTORY_STORAGE_KEY,
   removeStoredCharacterDraft,
 } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
 
@@ -25,10 +26,12 @@ function createMockStorage() {
 
 describe('useLocalCharacterPersistence', () => {
   let storage;
+  let historyStorage;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     storage = createMockStorage();
+    historyStorage = createMockStorage();
     vi.useFakeTimers();
   });
 
@@ -43,6 +46,9 @@ describe('useLocalCharacterPersistence', () => {
     const resolvedOptions = { debounceMs: 0, ...options };
     if (!Object.prototype.hasOwnProperty.call(resolvedOptions, 'storage')) {
       resolvedOptions.storage = storage;
+    }
+    if (!Object.prototype.hasOwnProperty.call(resolvedOptions, 'historyStorage')) {
+      resolvedOptions.historyStorage = historyStorage;
     }
     const instance = useLocalCharacterPersistence(characterStore, uiStore, resolvedOptions);
     return { instance, characterStore, uiStore };
@@ -64,7 +70,7 @@ describe('useLocalCharacterPersistence', () => {
     vi.runAllTimers();
 
     expect(sessionStorageMock.setItem).toHaveBeenCalled();
-    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+    expect(localStorageMock.setItem).toHaveBeenCalled();
   });
 
   test('hydrates store state from localStorage payload', () => {
@@ -97,6 +103,20 @@ describe('useLocalCharacterPersistence', () => {
     expect(saved.character.name).toBe('Auto Save');
   });
 
+  test('persists history without images when data changes', async () => {
+    const { characterStore } = mountComposable({ historyDebounceMs: 0 });
+    characterStore.character.images = ['data:image/png;base64,sample'];
+    characterStore.character.name = 'History Save';
+
+    await nextTick();
+    vi.runAllTimers();
+
+    expect(historyStorage.setItem).toHaveBeenCalled();
+    const savedHistory = JSON.parse(historyStorage.getItem(HISTORY_STORAGE_KEY));
+    expect(savedHistory[0].data.character.images).toEqual([]);
+    expect(savedHistory[0].meta.name).toBe('History Save');
+  });
+
   test('skips persistence when viewing shared sheet', async () => {
     const { characterStore, uiStore } = mountComposable();
     uiStore.isViewingShared = true;
@@ -106,11 +126,51 @@ describe('useLocalCharacterPersistence', () => {
     vi.runAllTimers();
 
     expect(storage.setItem).not.toHaveBeenCalled();
+    expect(historyStorage.setItem).not.toHaveBeenCalled();
   });
 
   test('clearLocalDraft removes stored payload', () => {
     storage.setItem(LOCAL_CHARACTER_STORAGE_KEY, JSON.stringify({ character: { name: 'To Remove' } }));
     removeStoredCharacterDraft(storage);
     expect(storage.removeItem).toHaveBeenCalledWith(LOCAL_CHARACTER_STORAGE_KEY);
+  });
+
+  test('restoreFromHistory hydrates store from provided history item', () => {
+    const { instance, characterStore } = mountComposable();
+    const historyItem = {
+      data: {
+        character: { name: 'Recovered', species: 'human' },
+        skills: [{ id: 'a', name: 'Skill A' }],
+        specialSkills: [{ group: 'tactics', name: 'Stealth', note: '', showNote: false }],
+        equipments: { weapon1: { group: 'blade', name: 'Sword' } },
+        histories: [{ sessionName: 'Old Session' }],
+      },
+    };
+
+    const restored = instance.restoreFromHistory(historyItem);
+
+    expect(restored).toBe(true);
+    expect(characterStore.character.name).toBe('Recovered');
+    expect(characterStore.skills[0].name).toBe('Skill A');
+    expect(characterStore.specialSkills[0].name).toBe('Stealth');
+    expect(characterStore.equipments.weapon1.name).toBe('Sword');
+    expect(characterStore.histories[0].sessionName).toBe('Old Session');
+  });
+
+  test('getHistoryList returns parsed history', () => {
+    historyStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify([{ data: { character: { name: 'History' } }, meta: { name: 'History' } }]));
+    const { instance } = mountComposable();
+
+    expect(instance.getHistoryList()).toHaveLength(1);
+    expect(instance.getHistoryList()[0].meta.name).toBe('History');
+  });
+
+  test('does not persist history when no significant change exists', async () => {
+    mountComposable({ historyDebounceMs: 0 });
+
+    await nextTick();
+    vi.runAllTimers();
+
+    expect(historyStorage.setItem).not.toHaveBeenCalled();
   });
 });
