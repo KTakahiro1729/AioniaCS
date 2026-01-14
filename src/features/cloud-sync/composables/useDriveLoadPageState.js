@@ -239,6 +239,9 @@ export function useDriveLoadPageState(options = {}) {
     items.value = [];
     isLoadingCache.value = false;
     await syncFromDrive();
+    if (shouldPrefetch()) {
+      await syncFromDrive(nextPageToken.value);
+    }
   }
 
   function selectCharacter(id, initialData) {
