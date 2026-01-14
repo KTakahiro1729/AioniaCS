@@ -265,6 +265,7 @@ export const messages = {
   driveLoadPage: {
     title: t('driveLoadPage.title'),
     placeholder: t('driveLoadPage.placeholder'),
+    emptyMessage: t('driveLoadPage.emptyMessage'),
     buttons: {
       back: t('driveLoadPage.buttons.back'),
       refresh: t('driveLoadPage.buttons.refresh'),

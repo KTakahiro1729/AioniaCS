@@ -69,6 +69,72 @@ share.loadError.title,共有データエラー,,Share load error title
 share.loadError.message.general,共有データの読み込みに失敗しました,,Share load error general message
 share.loadError.message.fetchFailed,共有データの取得に失敗しました,,Share load error fetch failed message
 share.loadError.message.parseFailed,共有データの解析に失敗しました,,Share load error parse failed message
+driveLoadPage.title,Drive読込,,Drive load page title
+driveLoadPage.placeholder,保存済みのキャラクターシートはありません,,Drive load page placeholder
+driveLoadPage.emptyMessage,保存済みのキャラクターシートはありません,,Drive load page empty message
+driveLoadPage.buttons.back,戻る,,Drive load page back button
+driveLoadPage.buttons.refresh,更新,,Drive load page refresh button
+driveLoadPage.status.loading,読み込み中……,,Drive load page loading status
+driveLoadPage.status.refreshed,更新しました,,Drive load page refreshed status
+driveLoadPage.status.error,読み込みに失敗しました,,Drive load page error status
+driveLoadPage.status.retryHint,再試行してください,,Drive load page retry hint
+driveLoadPage.labels.untitled,名称未設定,,Drive load page untitled label
+driveLoadPage.labels.unknownCharacter,不明なキャラクター,,Drive load page unknown character label
+driveLoadPage.labels.created,作成日,,Drive load page created label
+driveLoadPage.labels.modified,更新日,,Drive load page modified label
+driveLoadPage.labels.hash,ハッシュ,,Drive load page hash label
+driveLoadPage.labels.driveHash,Driveハッシュ,,Drive load page drive hash label
+driveLoadPage.labels.cachedHash,キャッシュハッシュ,,Drive load page cached hash label
+driveLoadPage.labels.notAvailable,なし,,Drive load page not available label
+driveLoadPage.labels.unknownDate,不明な日時,,Drive load page unknown date label
+driveLoadPage.labels.shared,共有中,,Drive load page shared label
+driveLoadPage.labels.sharedAria,共有中のファイル,,Drive load page shared aria label
+driveLoadPage.labels.selectAction,操作を選択,,Drive load page select action label
+driveLoadPage.actions.load,読込,,Drive load page load action
+driveLoadPage.actions.delete,削除,,Drive load page delete action
+driveLoadPage.actions.share,共有,,Drive load page share action
+driveLoadPage.actions.unshare,共有解除,,Drive load page unshare action
+driveLoadPage.actions.unshareShort,解除,,Drive load page unshare short action
+driveLoadPage.actions.unshareDisabled,共有なし,,Drive load page unshare disabled action
+driveLoadPage.actions.unshareDisabledShort,未共有,,Drive load page unshare disabled short action
+driveLoadPage.actions.cancel,キャンセル,,Drive load page cancel action
+driveLoadPage.actions.download,ダウンロード,,Drive load page download action
+driveLoadPage.actions.loadAria,{name} を読み込む,,Drive load page load aria label
+driveLoadPage.actions.deleteAria,{name} を削除する,,Drive load page delete aria label
+driveLoadPage.actions.shareAria,{name} を共有する,,Drive load page share aria label
+driveLoadPage.actions.unshareAria,{name} の共有を解除する,,Drive load page unshare aria label
+driveLoadPage.actions.downloadAria,{name} をダウンロードする,,Drive load page download aria label
+driveLoadPage.confirmations.delete,{name} を削除しますか？,,Drive load page delete confirmation
+driveLoadPage.confirmations.unshare,{name} の共有を解除しますか？,,Drive load page unshare confirmation
+driveLoadPage.toasts.share.loading.title,共有リンク,,Drive load page share loading toast title
+driveLoadPage.toasts.share.loading.message,共有リンクを作成中...,,Drive load page share loading toast message
+driveLoadPage.toasts.share.success.title,共有リンク,,Drive load page share success toast title
+driveLoadPage.toasts.share.success.message,共有リンクを生成しました,,Drive load page share success toast message
+driveLoadPage.toasts.share.error.title,共有リンク,,Drive load page share error toast title
+driveLoadPage.toasts.share.error.message,共有リンクの生成に失敗しました,,Drive load page share error toast message
+driveLoadPage.toasts.unshare.loading.title,共有解除,,Drive load page unshare loading toast title
+driveLoadPage.toasts.unshare.loading.message,共有を解除中...,,Drive load page unshare loading toast message
+driveLoadPage.toasts.unshare.success.title,共有解除,,Drive load page unshare success toast title
+driveLoadPage.toasts.unshare.success.message,共有を解除しました,,Drive load page unshare success toast message
+driveLoadPage.toasts.unshare.error.title,共有解除,,Drive load page unshare error toast title
+driveLoadPage.toasts.unshare.error.message,共有解除に失敗しました,,Drive load page unshare error toast message
+driveLoadPage.toasts.download.loading.title,ダウンロード,,Drive load page download loading toast title
+driveLoadPage.toasts.download.loading.message,ダウンロード中...,,Drive load page download loading toast message
+driveLoadPage.toasts.download.success.title,ダウンロード,,Drive load page download success toast title
+driveLoadPage.toasts.download.success.message,ダウンロードを開始しました,,Drive load page download success toast message
+driveLoadPage.toasts.download.error.title,ダウンロード,,Drive load page download error toast title
+driveLoadPage.toasts.download.error.message,ダウンロードに失敗しました,,Drive load page download error toast message
+driveLoadPage.toasts.delete.loading.title,削除,,Drive load page delete loading toast title
+driveLoadPage.toasts.delete.loading.message,削除中...,,Drive load page delete loading toast message
+driveLoadPage.toasts.delete.success.title,削除,,Drive load page delete success toast title
+driveLoadPage.toasts.delete.success.message,削除しました,,Drive load page delete success toast message
+driveLoadPage.toasts.delete.error.title,削除,,Drive load page delete error toast title
+driveLoadPage.toasts.delete.error.message,削除に失敗しました,,Drive load page delete error toast message
+driveLoadPage.errors.missingDriveManager,Google Drive マネージャーが設定されていません,,Drive load page missing manager error
+driveLoadPage.errors.folderUnavailable,保存先フォルダが利用できません,,Drive load page folder unavailable error
+driveLoadPage.errors.apiUnavailable,Google Drive API を利用できません,,Drive load page API unavailable error
+driveLoadPage.errors.cacheFailed,キャッシュの更新に失敗しました,,Drive load page cache failed error
+driveLoadPage.errors.syncFailed,同期に失敗しました,,Drive load page sync failed error
 characterHub.driveFolder.changeButton,選択,,Character hub folder change button
 characterHub.driveFolder.label,保存先フォルダ,,Character hub folder label
 characterHub.driveFolder.placeholder,慈悲なきアイオニア,,Character hub folder placeholder
