@@ -4,7 +4,6 @@ import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 const LoadModal = defineAsyncComponent(() => import('@/features/modals/components/contents/LoadModal.vue'));
 const IoModal = defineAsyncComponent(() => import('@/features/modals/components/contents/IoModal.vue'));
-const DriveLoadContent = defineAsyncComponent(() => import('@/features/modals/components/contents/DriveLoadContent.vue'));
 import { isDesktopDevice } from '@/shared/utils/device.js';
 import { messages } from '@/i18n/index.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
@@ -31,16 +30,6 @@ export function useAppModals(options) {
     loadCharacterFromDrive,
   } = options;
 
-  async function openDriveLoadModal() {
-    await showModal({
-      component: DriveLoadContent,
-      title: messages.driveLoadPage.title,
-      props: { loadCharacterFromDrive },
-      buttons: [],
-      size: 'wide',
-    });
-  }
-
   async function openLoadModal() {
     const initialProps = {
       isSignedIn: uiStore.isSignedIn,
@@ -51,7 +40,7 @@ export function useAppModals(options) {
       driveFolderChangeLabel: messages.characterHub.driveFolder.changeButton,
       driveFolderPlaceholder: messages.characterHub.driveFolder.placeholder,
       loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
-      selectCharacterLabel: messages.ui.modal.load.buttons.selectCharacter,
+      loadCharacterFromDrive,
       signInLabel: messages.characterHub.buttons.signIn,
       signInMessage: messages.ui.modal.load.signInMessage,
     };
@@ -65,10 +54,6 @@ export function useAppModals(options) {
         'load-local': handleFileUpload,
         'sign-in': handleSignInClick,
         'update-drive-folder-path': updateDriveFolderPath,
-        'select-character': async () => {
-          modalStore.resolveModal({ value: 'drive-load' });
-          await openDriveLoadModal();
-        },
       },
     });
 

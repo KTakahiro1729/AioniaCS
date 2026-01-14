@@ -93,6 +93,16 @@ vi.mock('@/features/cloud-sync/composables/useDriveLoadPageState.js', () => {
 });
 
 describe('DriveLoadContent', () => {
+  function mountWithProps(props = {}) {
+    return mount(DriveLoadContent, {
+      props: {
+        isSignedIn: true,
+        isDriveReady: true,
+        ...props,
+      },
+    });
+  }
+
   beforeEach(() => {
     revealMore.mockClear();
     initialize.mockClear();
@@ -109,9 +119,18 @@ describe('DriveLoadContent', () => {
   });
 
   it('triggers revealMore when the sentinel enters view', async () => {
-    mount(DriveLoadContent);
+    mountWithProps();
     observerCallback?.([{ isIntersecting: true }]);
     expect(revealMore).toHaveBeenCalled();
+    expect(initialize).toHaveBeenCalled();
+  });
+
+  it('waits for drive readiness before initializing', async () => {
+    const wrapper = mountWithProps({ isDriveReady: false });
+    await flushPromises();
+    expect(initialize).not.toHaveBeenCalled();
+    await wrapper.setProps({ isDriveReady: true });
+    await flushPromises();
     expect(initialize).toHaveBeenCalled();
   });
 
@@ -125,7 +144,7 @@ describe('DriveLoadContent', () => {
         createdAt: 1600,
       },
     ];
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     await wrapper.find('[data-test="drive-row-load"]').trigger('click');
     await flushPromises();
     expect(selectCharacter).toHaveBeenCalledWith('file-1', null);
@@ -144,7 +163,7 @@ describe('DriveLoadContent', () => {
       },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     expect(wrapper.find('[data-test="drive-row-title"]').text()).toBe('Shared Hero');
     const fields = wrapper.findAll('[data-test="drive-row-field"]');
     expect(fields[0].text()).toContain(messages.driveLoadPage.labels.created);
@@ -157,7 +176,7 @@ describe('DriveLoadContent', () => {
       { id: 'legacy', fileName: 'legacy.json', characterName: 'Legacy', lastModifiedAtDrive: 1300, createdAt: 900 },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     const cards = wrapper.findAll('[data-test="drive-row"]');
     expect(cards).toHaveLength(1);
     expect(cards[0].text()).toContain('Playable');
@@ -169,7 +188,7 @@ describe('DriveLoadContent', () => {
       { id: 'file-3', fileName: 'Shareable.zip', characterName: 'Shareable', lastModifiedAtDrive: 1500, createdAt: 1400 },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     await wrapper.find('[data-test="drive-row-share"]').trigger('click');
     await flushPromises();
 
@@ -185,7 +204,7 @@ describe('DriveLoadContent', () => {
       { id: 'file-4', fileName: 'Archive.zip', characterName: 'Archive', lastModifiedAtDrive: 1600, createdAt: 1500 },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     await wrapper.find('[data-test="drive-row-download"]').trigger('click');
     await flushPromises();
 
@@ -199,7 +218,7 @@ describe('DriveLoadContent', () => {
       { id: 'file-5', fileName: 'ToRemove.zip', characterName: 'Remove', lastModifiedAtDrive: 1700, createdAt: 1600 },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     const deleteButton = wrapper.find('[data-test="drive-row-delete"]');
     await deleteButton.trigger('click');
     await flushPromises();
@@ -219,7 +238,7 @@ describe('DriveLoadContent', () => {
       { id: 'file-8', fileName: 'Keep.zip', characterName: 'Keep', lastModifiedAtDrive: 1500, createdAt: 1400 },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
 
     await wrapper.find('[data-test="drive-row-delete"]').trigger('click');
     await flushPromises();
@@ -238,7 +257,7 @@ describe('DriveLoadContent', () => {
       { id: 'file-6', fileName: 'Shared.zip', characterName: 'Shared', shared: true, lastModifiedAtDrive: 1800, createdAt: 1750 },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     await wrapper.find('[data-test="drive-row-unshare"]').trigger('click');
     await flushPromises();
 
@@ -257,7 +276,7 @@ describe('DriveLoadContent', () => {
       { id: 'file-7', fileName: 'BusyShared.zip', characterName: 'BusyShared', shared: true, lastModifiedAtDrive: 1900, createdAt: 1850 },
     ];
 
-    const wrapper = mount(DriveLoadContent);
+    const wrapper = mountWithProps();
     const button = wrapper.find('[data-test="drive-row-unshare"]');
     await button.trigger('click');
 

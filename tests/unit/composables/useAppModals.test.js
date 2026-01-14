@@ -6,7 +6,6 @@ import { isDesktopDevice } from '@/shared/utils/device.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-import { useModalStore } from '@/features/modals/stores/modalStore.js';
 
 vi.mock('@/features/modals/composables/useModal.js', () => ({
   useModal: vi.fn(),
@@ -136,15 +135,11 @@ describe('useAppModals', () => {
     expect(showAsyncToastMock).not.toHaveBeenCalled();
   });
 
-  test('openLoadModal select-character opens drive modal', async () => {
-    const { openLoadModal } = useAppModals(createOptions());
-    const modalStore = useModalStore();
+  test('openLoadModal passes drive loader to modal props', async () => {
+    const loadCharacterFromDrive = vi.fn();
+    const { openLoadModal } = useAppModals(createOptions({ loadCharacterFromDrive }));
     await openLoadModal();
     const args = showModalMock.mock.calls[0][0];
-    modalStore.showModal({});
-    await args.on['select-character']();
-    expect(modalStore.isVisible).toBe(false);
-    expect(showModalMock).toHaveBeenCalledTimes(2);
-    expect(showModalMock.mock.calls[1][0].size).toBe('wide');
+    expect(args.props.loadCharacterFromDrive).toBe(loadCharacterFromDrive);
   });
 });

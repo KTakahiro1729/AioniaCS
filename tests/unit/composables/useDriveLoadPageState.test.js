@@ -47,6 +47,7 @@ describe('useDriveLoadPageState', () => {
     expect(state.displayedItems.value[0].characterName).toBe('Drive');
     expect(state.displayedItems.value[0].thumbnailLink).toBe('https://example.com/thumb');
     expect(requestDrivePage).toHaveBeenCalledWith({ pageSize: 20, pageToken: null, abortSignal: expect.any(AbortSignal) });
+    expect(requestDrivePage).toHaveBeenCalledWith({ pageSize: 10, pageToken: 'next', abortSignal: expect.any(AbortSignal) });
 
     scope.stop();
   });

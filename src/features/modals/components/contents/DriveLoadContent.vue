@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { messages } from '@/i18n/index.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
 import { copyText } from '@/shared/utils/clipboard.js';
@@ -11,6 +11,21 @@ import { formatRelativeDateTime } from '@/shared/utils/utils.js';
 
 const sentinelRef = ref(null);
 const observer = ref(null);
+
+const props = defineProps({
+  loadCharacterFromDrive: {
+    type: Function,
+    default: null,
+  },
+  isSignedIn: {
+    type: Boolean,
+    default: false,
+  },
+  isDriveReady: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const {
   displayedItems,
@@ -26,13 +41,6 @@ const {
 
 const { showAsyncToast, logAndToastError } = useNotifications();
 const modalStore = useModalStore();
-const props = defineProps({
-  loadCharacterFromDrive: {
-    type: Function,
-    default: null,
-  },
-});
-
 let driveManager = null;
 try {
   driveManager = getDriveManagerInstance();
@@ -61,6 +69,8 @@ const emptyLabel = computed(
   () => messages.driveLoadPage.emptyMessage || messages.driveLoadPage.placeholder || '保存済みのキャラクターシートはありません',
 );
 const showSentinelMessage = computed(() => hasItems.value && isBusy.value);
+const canInitialize = computed(() => props.isSignedIn && props.isDriveReady);
+const hasInitialized = ref(false);
 
 function formatTimestamp(seconds) {
   const formatted = formatRelativeDateTime(seconds);
@@ -220,9 +230,18 @@ async function handleDownload(item) {
 }
 
 onMounted(() => {
-  initialize();
   setupObserver();
 });
+
+watch(
+  canInitialize,
+  async (ready) => {
+    if (!ready || hasInitialized.value) return;
+    hasInitialized.value = true;
+    await initialize();
+  },
+  { immediate: true },
+);
 
 onBeforeUnmount(() => {
   if (observer.value) {
