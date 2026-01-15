@@ -1,63 +1,65 @@
 <template>
   <div class="load-modal">
-    <section class="load-modal__section load-modal__section--controls">
-      <div v-if="!isSignedIn" class="load-modal__signin">
-        <p class="load-modal__signin-message">{{ signInMessage }}</p>
-        <button class="button-base load-modal__button" :disabled="!canSignIn" data-test="load-modal-signin" @click="$emit('sign-in')">
-          {{ signInLabel }}
-        </button>
+    <section class="load-modal__section load-modal__section--actions">
+      <div class="load-modal__action">
+        <label class="button-base load-modal__button">
+          {{ loadLocalLabel }}
+          <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
+        </label>
       </div>
-      <label class="button-base load-modal__button">
-        {{ loadLocalLabel }}
-        <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
-      </label>
-      <div class="load-modal__config">
-        <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
-        <div class="load-modal__input-group">
-          <BaseInput
-            :id="folderInputId"
-            class="load-modal__input"
-            type="text"
-            v-model="folderPathInput"
-            :placeholder="driveFolderPlaceholder"
-            :disabled="isDriveControlsDisabled"
-            :joined="'right'"
-            @blur="commitFolderPath"
-            @keyup.enter.prevent="commitFolderPath"
-          />
-          <button
-            class="button-base button-base--primary load-modal__apply is-joined-left"
-            type="button"
-            :disabled="isDriveControlsDisabled"
-            data-test="load-modal-apply-folder"
-            @click="commitFolderPath"
-          >
-            {{ driveFolderChangeLabel }}
-          </button>
-        </div>
+      <div class="load-modal__action">
+        <button
+          class="button-base load-modal__button"
+          :disabled="!hasHistory"
+          data-test="load-modal-history-button"
+          @click="$emit('open-history')"
+        >
+          {{ restoreHistoryLabel }}
+        </button>
       </div>
     </section>
     <div class="load-modal__divider" />
     <section class="load-modal__section load-modal__section--drive">
-      <div class="load-modal__drive-scroll">
-        <DriveLoadContent
-          v-if="isSignedIn"
-          :is-signed-in="isSignedIn"
-          :is-drive-ready="isDriveReady"
-          :load-character-from-drive="loadCharacterFromDrive"
-        />
-        <p v-else class="load-modal__drive-hint">{{ signInMessage }}</p>
+      <div class="load-modal__drive-panel">
+        <div class="load-modal__config">
+          <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
+          <div class="load-modal__input-group">
+            <BaseInput
+              :id="folderInputId"
+              class="load-modal__input"
+              type="text"
+              v-model="folderPathInput"
+              :placeholder="driveFolderPlaceholder"
+              :disabled="isDriveControlsDisabled"
+              :joined="'right'"
+              @blur="commitFolderPath"
+              @keyup.enter.prevent="commitFolderPath"
+            />
+            <button
+              class="button-base button-base--primary load-modal__apply is-joined-left"
+              type="button"
+              :disabled="isDriveControlsDisabled"
+              data-test="load-modal-apply-folder"
+              @click="commitFolderPath"
+            >
+              {{ driveFolderChangeLabel }}
+            </button>
+          </div>
+        </div>
+        <div v-if="!isSignedIn" class="load-modal__signin">
+          <p class="load-modal__signin-message">{{ signInMessage }}</p>
+          <button class="button-base load-modal__button" :disabled="!canSignIn" data-test="load-modal-signin" @click="$emit('sign-in')">
+            {{ signInLabel }}
+          </button>
+        </div>
+        <div v-else class="load-modal__drive-scroll">
+          <DriveLoadContent
+            :is-signed-in="isSignedIn"
+            :is-drive-ready="isDriveReady"
+            :load-character-from-drive="loadCharacterFromDrive"
+          />
+        </div>
       </div>
-    </section>
-    <section class="load-modal__section load-modal__section--history">
-      <button
-        class="button-base load-modal__button"
-        :disabled="!hasHistory"
-        data-test="load-modal-history-button"
-        @click="$emit('open-history')"
-      >
-        {{ restoreHistoryLabel }}
-      </button>
     </section>
   </div>
 </template>
@@ -126,7 +128,7 @@ function handleLocalChange(event) {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: 70vh;
+  max-height: 72vh;
 }
 
 .load-modal__section {
@@ -135,13 +137,24 @@ function handleLocalChange(event) {
   gap: 12px;
 }
 
-.load-modal__section--controls,
+.load-modal__section--actions,
 .load-modal__section--drive {
   min-height: 0;
 }
 
+.load-modal__section--actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .load-modal__section--drive {
   flex: 1 1 auto;
+  min-height: 240px;
+}
+
+.load-modal__action {
+  flex: 1 1 240px;
 }
 
 .load-modal__signin {
@@ -164,12 +177,6 @@ function handleLocalChange(event) {
   min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
-}
-
-.load-modal__drive-hint {
-  margin: 0;
-  color: var(--color-text-muted);
-  text-align: center;
 }
 
 .load-modal__config {
@@ -218,14 +225,17 @@ function handleLocalChange(event) {
   padding-inline: 16px;
 }
 
-.load-modal__section--history {
-  border-top: 1px solid var(--color-border-normal);
-  padding-top: 12px;
-}
-
 .load-modal__signin-message {
   margin: 0;
   color: var(--color-text-muted);
+}
+
+.load-modal__drive-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .button-base:disabled {

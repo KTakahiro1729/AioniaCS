@@ -61,6 +61,7 @@ export function useAppModals(options) {
     const modalPromise = showModal({
       component: LoadModal,
       title: messages.ui.modal.load.title,
+      size: 'wide',
       props: initialProps,
       buttons: [],
       on: {
