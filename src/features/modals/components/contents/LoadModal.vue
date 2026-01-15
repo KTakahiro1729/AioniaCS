@@ -21,43 +21,45 @@
     <div class="load-modal__divider" />
     <section class="load-modal__section load-modal__section--drive">
       <div class="load-modal__drive-panel">
-        <div class="load-modal__config">
-          <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
-          <div class="load-modal__input-group">
-            <BaseInput
-              :id="folderInputId"
-              class="load-modal__input"
-              type="text"
-              v-model="folderPathInput"
-              :placeholder="driveFolderPlaceholder"
-              :disabled="isDriveControlsDisabled"
-              :joined="'right'"
-              @blur="commitFolderPath"
-              @keyup.enter.prevent="commitFolderPath"
-            />
-            <button
-              class="button-base button-base--primary load-modal__apply is-joined-left"
-              type="button"
-              :disabled="isDriveControlsDisabled"
-              data-test="load-modal-apply-folder"
-              @click="commitFolderPath"
-            >
-              {{ driveFolderChangeLabel }}
-            </button>
-          </div>
-        </div>
         <div v-if="!isSignedIn" class="load-modal__signin">
           <p class="load-modal__signin-message">{{ signInMessage }}</p>
           <button class="button-base load-modal__button" :disabled="!canSignIn" data-test="load-modal-signin" @click="$emit('sign-in')">
             {{ signInLabel }}
           </button>
         </div>
-        <div v-else class="load-modal__drive-scroll">
-          <DriveLoadContent
-            :is-signed-in="isSignedIn"
-            :is-drive-ready="isDriveReady"
-            :load-character-from-drive="loadCharacterFromDrive"
-          />
+        <div v-else class="load-modal__drive-content">
+          <div class="load-modal__config">
+            <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
+            <div class="load-modal__input-group">
+              <BaseInput
+                :id="folderInputId"
+                class="load-modal__input"
+                type="text"
+                v-model="folderPathInput"
+                :placeholder="driveFolderPlaceholder"
+                :disabled="isDriveControlsDisabled"
+                :joined="'right'"
+                @blur="commitFolderPath"
+                @keyup.enter.prevent="commitFolderPath"
+              />
+              <button
+                class="button-base button-base--primary load-modal__apply is-joined-left"
+                type="button"
+                :disabled="isDriveControlsDisabled"
+                data-test="load-modal-apply-folder"
+                @click="commitFolderPath"
+              >
+                {{ driveFolderChangeLabel }}
+              </button>
+            </div>
+          </div>
+          <div class="load-modal__drive-scroll">
+            <DriveLoadContent
+              :is-signed-in="isSignedIn"
+              :is-drive-ready="isDriveReady"
+              :load-character-from-drive="loadCharacterFromDrive"
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -78,7 +80,6 @@ const props = defineProps({
   driveFolderChangeLabel: { type: String, default: 'Apply' },
   driveFolderPlaceholder: String,
   loadLocalLabel: String,
-  loadDriveLabel: String,
   restoreHistoryLabel: String,
   loadCharacterFromDrive: Function,
   hasHistory: Boolean,
@@ -150,7 +151,7 @@ function handleLocalChange(event) {
 
 .load-modal__section--drive {
   flex: 1 1 auto;
-  min-height: 240px;
+  min-height: 0;
 }
 
 .load-modal__action {
@@ -161,6 +162,7 @@ function handleLocalChange(event) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-block: 8px;
 }
 
 .load-modal__button {
@@ -231,6 +233,14 @@ function handleLocalChange(event) {
 }
 
 .load-modal__drive-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.load-modal__drive-content {
   display: flex;
   flex-direction: column;
   gap: 12px;

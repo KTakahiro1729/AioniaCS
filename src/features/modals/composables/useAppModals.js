@@ -50,7 +50,6 @@ export function useAppModals(options) {
       driveFolderChangeLabel: messages.characterHub.driveFolder.changeButton,
       driveFolderPlaceholder: messages.characterHub.driveFolder.placeholder,
       loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
-      loadDriveLabel: messages.ui.modal.load.buttons.loadDrive,
       restoreHistoryLabel: messages.ui.modal.load.buttons.restoreHistory,
       loadCharacterFromDrive,
       hasHistory: historyExists(),
