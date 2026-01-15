@@ -87,7 +87,7 @@ const props = defineProps({
   signInMessage: String,
 });
 
-const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'open-history']);
+const emit = defineEmits(['load-local', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'open-history']);
 
 const folderInputId = 'load_modal_drive_folder';
 const folderPathInput = ref(props.driveFolderPath || '');
