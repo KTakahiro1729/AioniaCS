@@ -17,6 +17,10 @@ export const useModalStore = defineStore('modal', {
   }),
   actions: {
     showModal(options) {
+      // Reject any pending promise so callers don't hang indefinitely
+      if (this.rejectPromise) {
+        this.rejectPromise(new Error('Modal was dismissed by opening another modal.'));
+      }
       // Reset any leftover state from a previous modal before setting new state
       this._resetState();
       return new Promise((resolve, reject) => {

@@ -1,64 +1,73 @@
 <template>
   <div class="load-modal">
-    <section class="load-modal__section load-modal__section--controls">
-      <div v-if="!isSignedIn" class="load-modal__signin">
+    <!-- ヘッダー行: 未ログイン時はサインイン案内、ログイン時はサブアクションボタン -->
+    <div class="load-modal__header">
+      <template v-if="!isSignedIn">
         <p class="load-modal__signin-message">{{ signInMessage }}</p>
-        <button class="button-base load-modal__button" :disabled="!canSignIn" data-test="load-modal-signin" @click="$emit('sign-in')">
+        <button
+          class="button-base load-modal__signin-button"
+          :disabled="!canSignIn"
+          data-test="load-modal-signin"
+          @click="$emit('sign-in')"
+        >
           {{ signInLabel }}
         </button>
-      </div>
-      <label class="button-base load-modal__button">
-        {{ loadLocalLabel }}
-        <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
-      </label>
-      <div class="load-modal__config">
-        <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
-        <div class="load-modal__input-group">
-          <BaseInput
-            :id="folderInputId"
-            class="load-modal__input"
-            type="text"
-            v-model="folderPathInput"
-            :placeholder="driveFolderPlaceholder"
-            :disabled="isDriveControlsDisabled"
-            :joined="'right'"
-            @blur="commitFolderPath"
-            @keyup.enter.prevent="commitFolderPath"
-          />
+      </template>
+      <template v-else>
+        <div class="load-modal__sub-actions">
+          <label class="button-base button-base--ghost load-modal__sub-button">
+            {{ loadLocalLabel }}
+            <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
+          </label>
           <button
-            class="button-base button-base--primary load-modal__apply is-joined-left"
-            type="button"
-            :disabled="isDriveControlsDisabled"
-            data-test="load-modal-apply-folder"
-            @click="commitFolderPath"
+            class="button-base button-base--ghost load-modal__sub-button"
+            :disabled="!hasHistory"
+            data-test="load-modal-history-button"
+            @click="$emit('open-history')"
           >
-            {{ driveFolderChangeLabel }}
+            {{ restoreHistoryLabel }}
           </button>
         </div>
-      </div>
-    </section>
-    <div class="load-modal__divider" />
-    <section class="load-modal__section load-modal__section--drive">
-      <div class="load-modal__drive-scroll">
-        <DriveLoadContent
-          v-if="isSignedIn"
-          :is-signed-in="isSignedIn"
-          :is-drive-ready="isDriveReady"
-          :load-character-from-drive="loadCharacterFromDrive"
+      </template>
+    </div>
+
+    <!-- フォルダ設定: ログイン時のみ -->
+    <div v-if="isSignedIn" class="load-modal__folder">
+      <label class="load-modal__folder-label" :for="folderInputId">{{ driveFolderLabel }}</label>
+      <div class="load-modal__input-group">
+        <BaseInput
+          :id="folderInputId"
+          class="load-modal__input"
+          type="text"
+          v-model="folderPathInput"
+          :placeholder="driveFolderPlaceholder"
+          :disabled="isDriveControlsDisabled"
+          :joined="'right'"
+          @blur="commitFolderPath"
+          @keyup.enter.prevent="commitFolderPath"
         />
-        <p v-else class="load-modal__drive-hint">{{ signInMessage }}</p>
+        <button
+          class="button-base button-base--primary load-modal__apply is-joined-left"
+          type="button"
+          :disabled="isDriveControlsDisabled"
+          data-test="load-modal-apply-folder"
+          @click="commitFolderPath"
+        >
+          {{ driveFolderChangeLabel }}
+        </button>
       </div>
-    </section>
-    <section class="load-modal__section load-modal__section--history">
-      <button
-        class="button-base load-modal__button"
-        :disabled="!hasHistory"
-        data-test="load-modal-history-button"
-        @click="$emit('open-history')"
-      >
-        {{ restoreHistoryLabel }}
-      </button>
-    </section>
+    </div>
+
+    <!-- ドライブリスト -->
+    <div class="load-modal__drive-scroll">
+      <DriveLoadContent
+        v-if="isSignedIn"
+        :is-signed-in="isSignedIn"
+        :is-drive-ready="isDriveReady"
+        :load-character-from-drive="loadCharacterFromDrive"
+      />
+      <p v-else class="load-modal__drive-hint">{{ signInMessage }}</p>
+    </div>
   </div>
 </template>
 
@@ -125,80 +134,73 @@ function handleLocalChange(event) {
 .load-modal {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   max-height: 70vh;
 }
 
-.load-modal__section {
+/* ヘッダー行 */
+.load-modal__header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.load-modal__section--controls,
-.load-modal__section--drive {
-  min-height: 0;
-}
-
-.load-modal__section--drive {
-  flex: 1 1 auto;
-}
-
-.load-modal__signin {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-normal);
+  flex-wrap: wrap;
 }
 
-.load-modal__button {
+/* 未ログイン時: メッセージとボタンを縦並び */
+.load-modal__signin-message {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.load-modal__signin-button {
   width: 100%;
   justify-content: center;
 }
 
-.load-modal__divider {
-  border-top: 1px solid var(--color-border-normal);
+/* ログイン時: サブアクションボタン群を右寄せ */
+.load-modal__sub-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: auto;
 }
 
-.load-modal__drive-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
+.load-modal__sub-button {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  height: 30px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
-.load-modal__drive-hint {
-  margin: 0;
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.load-modal__config {
+/* フォルダ設定エリア */
+.load-modal__folder {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-normal);
 }
 
-.load-modal__input-group {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 0;
-  row-gap: 8px;
-  align-items: stretch;
-}
-
-.load-modal__button--secondary {
-  background-color: var(--color-panel);
-  color: var(--color-text-primary, #fff);
-  border: 1px solid var(--color-border-normal);
-}
-
-.load-modal__label {
+.load-modal__folder-label {
   font-size: 0.9rem;
   font-weight: 600;
 }
 
+/* フォルダ入力グループ */
+.load-modal__input-group {
+  display: flex;
+  align-items: stretch;
+}
+
 .load-modal__input {
   flex: 1 1 0;
+  min-width: 0;
   padding: 8px 10px;
   border-radius: 4px;
   border: 1px solid var(--color-border-normal);
@@ -218,14 +220,24 @@ function handleLocalChange(event) {
   padding-inline: 16px;
 }
 
-.load-modal__section--history {
-  border-top: 1px solid var(--color-border-normal);
-  padding-top: 12px;
+/* ドライブスクロール領域 */
+.load-modal__drive-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
-.load-modal__signin-message {
+.load-modal__drive-hint {
   margin: 0;
+  padding: 16px 14px;
   color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* hiddenファイル入力 */
+.hidden {
+  display: none;
 }
 
 .button-base:disabled {
