@@ -48,7 +48,7 @@ function resolve(value) {
 function onAfterLeave() {
   // Reset store state only after the leave transition has fully completed,
   // so child components (including Teleport targets) can cleanly unmount first.
-  // Guard against the case where a new modal was opened during the transition.
+  // Guard: if a new modal was opened during the transition, don't reset its state.
   if (!modalStore.isVisible) {
     modalStore._resetState();
   }

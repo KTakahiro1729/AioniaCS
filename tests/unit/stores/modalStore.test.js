@@ -43,4 +43,16 @@ describe('modalStore', () => {
     expect(store.title).toBe('');
     expect(store.component).toBeNull();
   });
+
+  test('showModal rejects pending promise when a new modal opens', async () => {
+    const store = useModalStore();
+    const firstPromise = store.showModal({ title: 'first' });
+    // Open a second modal while the first is still open
+    store.showModal({ title: 'second' });
+    // The first promise should be rejected
+    await expect(firstPromise).rejects.toThrow('Modal was dismissed by opening another modal.');
+    // The new modal state should be set correctly
+    expect(store.title).toBe('second');
+    expect(store.isVisible).toBe(true);
+  });
 });

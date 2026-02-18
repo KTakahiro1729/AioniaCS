@@ -17,7 +17,7 @@ export const useModalStore = defineStore('modal', {
   }),
   actions: {
     showModal(options) {
-      // Reject any pending promise so callers don't hang indefinitely
+      // If a modal is already open or closing, reject its pending promise to prevent hangs
       if (this.rejectPromise) {
         this.rejectPromise(new Error('Modal was dismissed by opening another modal.'));
       }
