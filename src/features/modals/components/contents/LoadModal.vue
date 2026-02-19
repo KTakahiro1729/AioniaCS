@@ -1,6 +1,5 @@
 <template>
   <div class="load-modal">
-    <!-- ヘッダー行: 未ログイン時はサインイン案内、ログイン時はサブアクションボタン -->
     <div class="load-modal__header">
       <template v-if="!isSignedIn">
         <p class="load-modal__signin-message">{{ signInMessage }}</p>
@@ -31,7 +30,6 @@
       </template>
     </div>
 
-    <!-- フォルダ設定: ログイン時のみ -->
     <div v-if="isSignedIn" class="load-modal__folder">
       <label class="load-modal__folder-label" :for="folderInputId">{{ driveFolderLabel }}</label>
       <div class="load-modal__input-group">
@@ -58,7 +56,6 @@
       </div>
     </div>
 
-    <!-- ドライブリスト -->
     <div class="load-modal__drive-scroll">
       <DriveLoadContent
         v-if="isSignedIn"
@@ -85,7 +82,6 @@ const props = defineProps({
   driveFolderChangeLabel: { type: String, default: 'Apply' },
   driveFolderPlaceholder: String,
   loadLocalLabel: String,
-  loadDriveLabel: String,
   restoreHistoryLabel: String,
   loadCharacterFromDrive: Function,
   hasHistory: Boolean,
@@ -93,7 +89,7 @@ const props = defineProps({
   signInMessage: String,
 });
 
-const emit = defineEmits(['load-local', 'load-drive', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'open-history']);
+const emit = defineEmits(['load-local', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'open-history']);
 
 const folderInputId = 'load_modal_drive_folder';
 const folderPathInput = ref(props.driveFolderPath || '');
@@ -135,10 +131,9 @@ function handleLocalChange(event) {
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-height: 70vh;
+  max-height: 72vh;
 }
 
-/* ヘッダー行 */
 .load-modal__header {
   display: flex;
   align-items: center;
@@ -149,12 +144,12 @@ function handleLocalChange(event) {
   flex-wrap: wrap;
 }
 
-/* 未ログイン時: メッセージとボタンを縦並び */
 .load-modal__signin-message {
   flex: 1 1 100%;
   margin: 0;
   color: var(--color-text-muted);
   font-size: 0.9rem;
+  padding-block: 8px;
 }
 
 .load-modal__signin-button {
@@ -162,7 +157,6 @@ function handleLocalChange(event) {
   justify-content: center;
 }
 
-/* ログイン時: サブアクションボタン群を右寄せ */
 .load-modal__sub-actions {
   display: flex;
   gap: 6px;
@@ -178,7 +172,6 @@ function handleLocalChange(event) {
   white-space: nowrap;
 }
 
-/* フォルダ設定エリア */
 .load-modal__folder {
   display: flex;
   flex-direction: column;
@@ -192,7 +185,6 @@ function handleLocalChange(event) {
   font-weight: 600;
 }
 
-/* フォルダ入力グループ */
 .load-modal__input-group {
   display: flex;
   align-items: stretch;
@@ -220,7 +212,6 @@ function handleLocalChange(event) {
   padding-inline: 16px;
 }
 
-/* ドライブスクロール領域 */
 .load-modal__drive-scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -232,12 +223,6 @@ function handleLocalChange(event) {
   margin: 0;
   padding: 16px 14px;
   color: var(--color-text-muted);
-  text-align: center;
-}
-
-/* hiddenファイル入力 */
-.hidden {
-  display: none;
 }
 
 .button-base:disabled {

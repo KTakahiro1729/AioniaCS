@@ -51,10 +51,11 @@ describe('LoadModal', () => {
     expect(wrapper.emitted('sign-in')).toHaveLength(1);
   });
 
-  test('disables drive controls when signed out', async () => {
+  test('hides drive controls when signed out', async () => {
     const wrapper = mountWithStubs(baseProps({ isSignedIn: false }));
-    expect(wrapper.find('.load-modal__input').attributes('disabled')).toBeDefined();
-    expect(wrapper.find('[data-test="load-modal-apply-folder"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.find('.load-modal__config').exists()).toBe(false);
+    expect(wrapper.find('.load-modal__input').exists()).toBe(false);
+    expect(wrapper.find('[data-test="load-modal-apply-folder"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="drive-load-content-stub"]').exists()).toBe(false);
   });
 
