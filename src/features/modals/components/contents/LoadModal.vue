@@ -1,35 +1,24 @@
 <template>
   <div class="load-modal">
+    <!-- ヘッダー行: サブアクションボタン（常に表示） -->
     <div class="load-modal__header">
-      <template v-if="!isSignedIn">
-        <p class="load-modal__signin-message">{{ signInMessage }}</p>
+      <div class="load-modal__sub-actions">
+        <label class="button-base button-base--ghost load-modal__sub-button">
+          {{ loadLocalLabel }}
+          <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
+        </label>
         <button
-          class="button-base load-modal__signin-button"
-          :disabled="!canSignIn"
-          data-test="load-modal-signin"
-          @click="$emit('sign-in')"
+          class="button-base button-base--ghost load-modal__sub-button"
+          :disabled="!hasHistory"
+          data-test="load-modal-history-button"
+          @click="$emit('open-history')"
         >
-          {{ signInLabel }}
+          {{ restoreHistoryLabel }}
         </button>
-      </template>
-      <template v-else>
-        <div class="load-modal__sub-actions">
-          <label class="button-base button-base--ghost load-modal__sub-button">
-            {{ loadLocalLabel }}
-            <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
-          </label>
-          <button
-            class="button-base button-base--ghost load-modal__sub-button"
-            :disabled="!hasHistory"
-            data-test="load-modal-history-button"
-            @click="$emit('open-history')"
-          >
-            {{ restoreHistoryLabel }}
-          </button>
-        </div>
-      </template>
+      </div>
     </div>
 
+    <!-- フォルダ設定: ログイン時のみ -->
     <div v-if="isSignedIn" class="load-modal__folder">
       <label class="load-modal__folder-label" :for="folderInputId">{{ driveFolderLabel }}</label>
       <div class="load-modal__input-group">
@@ -56,14 +45,26 @@
       </div>
     </div>
 
+    <!-- ドライブリスト / サインインセクション -->
     <div class="load-modal__drive-scroll">
-      <DriveLoadContent
-        v-if="isSignedIn"
-        :is-signed-in="isSignedIn"
-        :is-drive-ready="isDriveReady"
-        :load-character-from-drive="loadCharacterFromDrive"
-      />
-      <p v-else class="load-modal__drive-hint">{{ signInMessage }}</p>
+      <template v-if="isSignedIn">
+        <DriveLoadContent
+          :is-signed-in="isSignedIn"
+          :is-drive-ready="isDriveReady"
+          :load-character-from-drive="loadCharacterFromDrive"
+        />
+      </template>
+      <div v-else class="load-modal__signin">
+        <p class="load-modal__signin-message">{{ signInMessage }}</p>
+        <button
+          class="button-base load-modal__signin-button"
+          :disabled="!canSignIn"
+          data-test="load-modal-signin"
+          @click="$emit('sign-in')"
+        >
+          {{ signInLabel }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -144,16 +145,24 @@ function handleLocalChange(event) {
   flex-wrap: wrap;
 }
 
+.load-modal__signin {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 14px;
+  align-items: center;
+}
+
 .load-modal__signin-message {
-  flex: 1 1 100%;
   margin: 0;
   color: var(--color-text-muted);
   font-size: 0.9rem;
-  padding-block: 8px;
+  text-align: center;
 }
 
 .load-modal__signin-button {
   width: 100%;
+  max-width: 240px;
   justify-content: center;
 }
 
