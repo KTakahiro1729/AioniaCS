@@ -1,15 +1,14 @@
 <template>
   <div class="load-modal">
-    <section class="load-modal__section load-modal__section--actions">
-      <div class="load-modal__action">
-        <label class="button-base load-modal__button">
+    <!-- ヘッダー行: サブアクションボタン（常に表示） -->
+    <div class="load-modal__header">
+      <div class="load-modal__sub-actions">
+        <label class="button-base button-base--ghost load-modal__sub-button">
           {{ loadLocalLabel }}
           <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
         </label>
-      </div>
-      <div class="load-modal__action">
         <button
-          class="button-base load-modal__button"
+          class="button-base button-base--ghost load-modal__sub-button"
           :disabled="!hasHistory"
           data-test="load-modal-history-button"
           @click="$emit('open-history')"
@@ -17,52 +16,56 @@
           {{ restoreHistoryLabel }}
         </button>
       </div>
-    </section>
-    <div class="load-modal__divider" />
-    <section class="load-modal__section load-modal__section--drive">
-      <div class="load-modal__drive-panel">
-        <div v-if="!isSignedIn" class="load-modal__signin">
-          <p class="load-modal__signin-message">{{ signInMessage }}</p>
-          <button class="button-base load-modal__button" :disabled="!canSignIn" data-test="load-modal-signin" @click="$emit('sign-in')">
-            {{ signInLabel }}
-          </button>
-        </div>
-        <div v-else class="load-modal__drive-content">
-          <div class="load-modal__config">
-            <label class="load-modal__label" :for="folderInputId">{{ driveFolderLabel }}</label>
-            <div class="load-modal__input-group">
-              <BaseInput
-                :id="folderInputId"
-                class="load-modal__input"
-                type="text"
-                v-model="folderPathInput"
-                :placeholder="driveFolderPlaceholder"
-                :disabled="isDriveControlsDisabled"
-                :joined="'right'"
-                @blur="commitFolderPath"
-                @keyup.enter.prevent="commitFolderPath"
-              />
-              <button
-                class="button-base button-base--primary load-modal__apply is-joined-left"
-                type="button"
-                :disabled="isDriveControlsDisabled"
-                data-test="load-modal-apply-folder"
-                @click="commitFolderPath"
-              >
-                {{ driveFolderChangeLabel }}
-              </button>
-            </div>
-          </div>
-          <div class="load-modal__drive-scroll">
-            <DriveLoadContent
-              :is-signed-in="isSignedIn"
-              :is-drive-ready="isDriveReady"
-              :load-character-from-drive="loadCharacterFromDrive"
-            />
-          </div>
-        </div>
+    </div>
+
+    <!-- フォルダ設定: ログイン時のみ -->
+    <div v-if="isSignedIn" class="load-modal__folder">
+      <label class="load-modal__folder-label" :for="folderInputId">{{ driveFolderLabel }}</label>
+      <div class="load-modal__input-group">
+        <BaseInput
+          :id="folderInputId"
+          class="load-modal__input"
+          type="text"
+          v-model="folderPathInput"
+          :placeholder="driveFolderPlaceholder"
+          :disabled="isDriveControlsDisabled"
+          :joined="'right'"
+          @blur="commitFolderPath"
+          @keyup.enter.prevent="commitFolderPath"
+        />
+        <button
+          class="button-base button-base--primary load-modal__apply is-joined-left"
+          type="button"
+          :disabled="isDriveControlsDisabled"
+          data-test="load-modal-apply-folder"
+          @click="commitFolderPath"
+        >
+          {{ driveFolderChangeLabel }}
+        </button>
       </div>
-    </section>
+    </div>
+
+    <!-- ドライブリスト / サインインセクション -->
+    <div class="load-modal__drive-scroll">
+      <template v-if="isSignedIn">
+        <DriveLoadContent
+          :is-signed-in="isSignedIn"
+          :is-drive-ready="isDriveReady"
+          :load-character-from-drive="loadCharacterFromDrive"
+        />
+      </template>
+      <div v-else class="load-modal__signin">
+        <p class="load-modal__signin-message">{{ signInMessage }}</p>
+        <button
+          class="button-base load-modal__signin-button"
+          :disabled="!canSignIn"
+          data-test="load-modal-signin"
+          @click="$emit('sign-in')"
+        >
+          {{ signInLabel }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -128,86 +131,77 @@ function handleLocalChange(event) {
 .load-modal {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   max-height: 72vh;
 }
 
-.load-modal__section {
+.load-modal__header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.load-modal__section--actions,
-.load-modal__section--drive {
-  min-height: 0;
-}
-
-.load-modal__section--actions {
-  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-normal);
   flex-wrap: wrap;
-  gap: 12px;
-}
-
-.load-modal__section--drive {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.load-modal__action {
-  flex: 1 1 240px;
 }
 
 .load-modal__signin {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-block: 8px;
+  gap: 12px;
+  padding: 16px 14px;
+  align-items: center;
 }
 
-.load-modal__button {
+.load-modal__signin-message {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.load-modal__signin-button {
   width: 100%;
+  max-width: 240px;
   justify-content: center;
 }
 
-.load-modal__divider {
-  border-top: 1px solid var(--color-border-normal);
+.load-modal__sub-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: auto;
 }
 
-.load-modal__drive-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
+.load-modal__sub-button {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  height: 30px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
-.load-modal__config {
+.load-modal__folder {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-normal);
 }
 
-.load-modal__input-group {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 0;
-  row-gap: 8px;
-  align-items: stretch;
-}
-
-.load-modal__button--secondary {
-  background-color: var(--color-panel);
-  color: var(--color-text-primary, #fff);
-  border: 1px solid var(--color-border-normal);
-}
-
-.load-modal__label {
+.load-modal__folder-label {
   font-size: 0.9rem;
   font-weight: 600;
 }
 
+.load-modal__input-group {
+  display: flex;
+  align-items: stretch;
+}
+
 .load-modal__input {
   flex: 1 1 0;
+  min-width: 0;
   padding: 8px 10px;
   border-radius: 4px;
   border: 1px solid var(--color-border-normal);
@@ -227,25 +221,17 @@ function handleLocalChange(event) {
   padding-inline: 16px;
 }
 
-.load-modal__signin-message {
+.load-modal__drive-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.load-modal__drive-hint {
   margin: 0;
+  padding: 16px 14px;
   color: var(--color-text-muted);
-}
-
-.load-modal__drive-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.load-modal__drive-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1 1 auto;
-  min-height: 0;
 }
 
 .button-base:disabled {

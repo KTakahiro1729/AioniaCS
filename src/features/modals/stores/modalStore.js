@@ -17,8 +17,13 @@ export const useModalStore = defineStore('modal', {
   }),
   actions: {
     showModal(options) {
+      // If a modal is already open or closing, reject its pending promise to prevent hangs
+      if (this.rejectPromise) {
+        this.rejectPromise(new Error('Modal was dismissed by opening another modal.'));
+      }
+      // Reset any leftover state from a previous modal before setting new state
+      this._resetState();
       return new Promise((resolve, reject) => {
-        this.isVisible = true;
         this.title = options.title || '';
         this.message = options.message || '';
         this.type = options.type || '';
@@ -29,10 +34,16 @@ export const useModalStore = defineStore('modal', {
         this.size = options.size || 'default';
         this.resolvePromise = resolve;
         this.rejectPromise = reject;
+        // Set isVisible last so all data is ready before render
+        this.isVisible = true;
       });
     },
     hideModal() {
+      // Only toggle visibility; state is preserved for the leave transition.
+      // BaseModal calls _resetState() via @after-leave once the transition ends.
       this.isVisible = false;
+    },
+    _resetState() {
       this.title = '';
       this.message = '';
       this.type = '';

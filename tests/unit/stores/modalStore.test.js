@@ -24,12 +24,35 @@ describe('modalStore', () => {
     expect(store.props.foo).toBe('bar');
   });
 
-  test('showModal stores events and resets', () => {
+  test('showModal stores events and hideModal preserves state', () => {
     const store = useModalStore();
     const handler = vi.fn();
     store.showModal({ on: { foo: handler } });
     expect(store.events.foo).toBe(handler);
     store.hideModal();
+    // hideModal only sets isVisible to false; state is preserved for the leave transition
+    expect(store.isVisible).toBe(false);
+    expect(store.events.foo).toBe(handler);
+  });
+
+  test('_resetState clears all modal state', () => {
+    const store = useModalStore();
+    store.showModal({ title: 'test', on: { foo: vi.fn() } });
+    store._resetState();
     expect(store.events).toEqual({});
+    expect(store.title).toBe('');
+    expect(store.component).toBeNull();
+  });
+
+  test('showModal rejects pending promise when a new modal opens', async () => {
+    const store = useModalStore();
+    const firstPromise = store.showModal({ title: 'first' });
+    // Open a second modal while the first is still open
+    store.showModal({ title: 'second' });
+    // The first promise should be rejected
+    await expect(firstPromise).rejects.toThrow('Modal was dismissed by opening another modal.');
+    // The new modal state should be set correctly
+    expect(store.title).toBe('second');
+    expect(store.isVisible).toBe(true);
   });
 });

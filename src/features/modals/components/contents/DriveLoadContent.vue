@@ -11,6 +11,7 @@ import { formatRelativeDateTime } from '@/shared/utils/utils.js';
 
 const sentinelRef = ref(null);
 const observer = ref(null);
+const isMounted = ref(false);
 
 const props = defineProps({
   loadCharacterFromDrive: {
@@ -231,6 +232,7 @@ async function handleDownload(item) {
 
 onMounted(() => {
   setupObserver();
+  isMounted.value = true;
 });
 
 watch(
@@ -253,7 +255,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="drive-load" :aria-busy="isBusy">
-    <Teleport v-if="modalStore.isVisible" to="[data-slot='header-actions']">
+    <Teleport v-if="isMounted && modalStore.isVisible" to="[data-slot='header-actions']">
       <button class="button-base drive-load__refresh" type="button" :disabled="isBusy" @click="refresh">
         {{ messages.driveLoadPage.buttons.refresh }}
       </button>
