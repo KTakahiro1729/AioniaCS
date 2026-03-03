@@ -143,6 +143,20 @@ describe('LoadModal', () => {
     expect(input.attributes('disabled')).toBeDefined();
   });
 
+  test('reverts input and does not emit update when validation throws', async () => {
+    findFolderMock.mockRejectedValue(new Error('network'));
+    const wrapper = mountWithStubs(baseProps({ isSignedIn: true, driveFolderPath: 'saved/path' }));
+    await wrapper.find('[data-test="load-modal-folder-toggle"]').trigger('click');
+
+    const input = wrapper.find('#load_modal_drive_folder');
+    await input.setValue('broken/path');
+    await wrapper.find('[data-test="load-modal-apply-folder"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.emitted('update-drive-folder-path')).toBeFalsy();
+    expect(input.element.value).toBe('saved/path');
+  });
+
   test('shows disabled history button when no history exists', async () => {
     const wrapper = mount(LoadModal, { props: baseProps({ hasHistory: false }) });
     const historyButton = wrapper.find('[data-test="load-modal-history-button"]');

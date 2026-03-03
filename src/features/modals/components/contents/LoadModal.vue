@@ -246,7 +246,8 @@ async function validateAndApplyFolderPath() {
       return;
     }
   } catch {
-    emit('update-drive-folder-path', normalized);
+    cancelFolderCreatePrompt();
+    folderPathInput.value = props.driveFolderPath || '';
     return;
   }
 
