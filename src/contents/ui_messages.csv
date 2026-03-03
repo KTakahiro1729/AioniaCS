@@ -135,9 +135,12 @@ driveLoadPage.errors.folderUnavailable,保存先フォルダが利用できま�
 driveLoadPage.errors.apiUnavailable,Google Drive API を利用できません,,Drive load page API unavailable error
 driveLoadPage.errors.cacheFailed,キャッシュの更新に失敗しました,,Drive load page cache failed error
 driveLoadPage.errors.syncFailed,同期に失敗しました,,Drive load page sync failed error
-characterHub.driveFolder.changeButton,選択,,Character hub folder change button
-characterHub.driveFolder.label,保存先フォルダ,,Character hub folder label
+characterHub.driveFolder.confirmButton,確定,,Character hub folder confirm button
+characterHub.driveFolder.label,Drive保存先,,Character hub folder label
 characterHub.driveFolder.placeholder,慈悲なきアイオニア,,Character hub folder placeholder
+characterHub.driveFolder.createConfirm,存在しないフォルダです。新しく作成しますか？,,Character hub folder create confirm message
+characterHub.driveFolder.createYes,はい,,Character hub folder create yes label
+characterHub.driveFolder.createNo,いいえ,,Character hub folder create no label
 characterHub.buttons.signIn,ログイン／Driveから読み込む,,Character hub sign in button
 image.loadError.title,画像読み込み失敗,,Image load error title
 image.loadError.message,{message},,Image load error body template

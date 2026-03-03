@@ -156,9 +156,12 @@ export const messages = {
   },
   characterHub: {
     driveFolder: {
-      changeButton: t('characterHub.driveFolder.changeButton'),
+      confirmButton: t('characterHub.driveFolder.confirmButton'),
       label: t('characterHub.driveFolder.label'),
       placeholder: t('characterHub.driveFolder.placeholder'),
+      createConfirm: t('characterHub.driveFolder.createConfirm'),
+      createYes: t('characterHub.driveFolder.createYes'),
+      createNo: t('characterHub.driveFolder.createNo'),
     },
     buttons: {
       signIn: t('characterHub.buttons.signIn'),
