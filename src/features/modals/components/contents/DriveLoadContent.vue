@@ -2,9 +2,11 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { messages } from '@/i18n/index.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
+import { copyText } from '@/shared/utils/clipboard.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { getDriveManagerInstance } from '@/infrastructure/google-drive/index.js';
 import { useModalStore } from '@/features/modals/stores/modalStore.js';
+import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { formatRelativeDateTime } from '@/shared/utils/utils.js';
 
 const sentinelRef = ref(null);
@@ -47,7 +49,14 @@ try {
   logAndToastError(error, { title: messages.driveLoadPage.title, message: messages.driveLoadPage.errors.missingDriveManager });
 }
 
+const { enableShare, disableShare } = useShare({ googleDriveManager: driveManager });
 const deletingItemId = ref(null);
+const processingItemId = ref(null);
+const unshareLabel = messages.driveLoadPage.actions.unshareShort ?? '解除';
+const unshareDisabledLabel =
+  messages.driveLoadPage.actions.unshareDisabledShort ??
+  messages.driveLoadPage.actions.unshareDisabled ??
+  messages.driveLoadPage.actions.unshare;
 const cancelLabel = messages.driveLoadPage.actions.cancel ?? 'キャンセル';
 
 const filteredItems = computed(() =>
@@ -107,6 +116,11 @@ function getCharacterName(item) {
   return messages.driveLoadPage.labels.untitled;
 }
 
+function getDownloadName(item) {
+  if (!item?.fileName) return `${messages.driveLoadPage.labels.untitled}.zip`;
+  return item.fileName.toLowerCase().endsWith('.zip') ? item.fileName : `${item.fileName}.zip`;
+}
+
 function getThumbnailUrl(item) {
   const link = item?.thumbnailLink;
   if (!link) return null;
@@ -155,6 +169,64 @@ async function confirmDelete(item) {
     await refresh();
   } finally {
     cancelDelete();
+  }
+}
+
+async function handleShare(item) {
+  if (!item?.id) return;
+  cancelDelete();
+  const task = (async () => {
+    const link = await enableShare(item.id);
+    if (!link) {
+      throw new Error(messages.share.errors.shareFailed);
+    }
+    await copyText(link);
+    return link;
+  })();
+
+  try {
+    await showAsyncToast(task, messages.driveLoadPage.toasts.share, 'drive-share');
+  } catch (error) {
+    return error;
+  }
+}
+
+async function handleUnshare(item) {
+  if (!item?.id || !item.shared) return;
+  cancelDelete();
+  if (processingItemId.value) return;
+  processingItemId.value = item.id;
+  try {
+    await showAsyncToast(disableShare(item.id), messages.driveLoadPage.toasts.unshare, 'drive-unshare');
+    await refresh();
+  } finally {
+    processingItemId.value = null;
+  }
+}
+
+async function handleDownload(item) {
+  if (!item?.id) return;
+  cancelDelete();
+  const manager = requireDriveManager();
+  const task = (async () => {
+    const content = await manager.loadFileContent(item.id);
+    if (!content) {
+      throw new Error(messages.driveLoadPage.toasts.download.error.message);
+    }
+    const blob = content instanceof Blob ? content : new Blob([content], { type: 'application/zip' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = getDownloadName(item);
+    link.click();
+    URL.revokeObjectURL(url);
+    return url;
+  })();
+
+  try {
+    await showAsyncToast(task, messages.driveLoadPage.toasts.download, 'drive-download');
+  } catch (error) {
+    return error;
   }
 }
 
@@ -214,13 +286,18 @@ onBeforeUnmount(() => {
             <div class="drive-row__main">
               <div class="drive-row__title-row">
                 <h2 class="drive-row__title" data-test="drive-row-title">{{ getCharacterName(item) }}</h2>
-                <div class="drive-row__dates">
-                  <span data-test="drive-row-field">
-                    {{ messages.driveLoadPage.labels.created }}: {{ formatTimestamp(item.createdAt) }}
+                <div class="drive-row__badges">
+                  <span v-if="item.shared" class="drive-row__badge" role="status" :aria-label="messages.driveLoadPage.labels.sharedAria">
+                    {{ messages.driveLoadPage.labels.shared }}
                   </span>
-                  <span data-test="drive-row-field">
-                    {{ messages.driveLoadPage.labels.modified }}: {{ formatTimestamp(item.lastModifiedAtDrive) }}
-                  </span>
+                  <div class="drive-row__dates">
+                    <span data-test="drive-row-field">
+                      {{ messages.driveLoadPage.labels.created }}: {{ formatTimestamp(item.createdAt) }}
+                    </span>
+                    <span data-test="drive-row-field">
+                      {{ messages.driveLoadPage.labels.modified }}: {{ formatTimestamp(item.lastModifiedAtDrive) }}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div class="drive-row__actions">
@@ -258,13 +335,43 @@ onBeforeUnmount(() => {
                     :aria-label="messages.driveLoadPage.labels.selectAction"
                   >
                     <button
-                      class="button-base button-base--primary"
+                      class="button-base button-base--primary is-joined-right"
                       type="button"
                       :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
                       data-test="drive-row-load"
                       @click="handleLoad(item)"
                     >
                       {{ messages.driveLoadPage.actions.load }}
+                    </button>
+                    <button
+                      class="button-base button-base--ghost is-joined-left"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.downloadAria(getDownloadName(item))"
+                      data-test="drive-row-download"
+                      @click="handleDownload(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.download }}
+                    </button>
+                  </div>
+                  <div class="drive-row__action-cluster drive-row__action-cluster--share">
+                    <button
+                      class="button-base button-base--ghost is-joined-right"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
+                      data-test="drive-row-share"
+                      @click="handleShare(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.share }}
+                    </button>
+                    <button
+                      class="button-base button-base--ghost drive-row__unshare is-joined-left"
+                      type="button"
+                      :disabled="!item.shared || processingItemId === item.id"
+                      :aria-label="messages.driveLoadPage.actions.unshareAria(getCharacterName(item))"
+                      data-test="drive-row-unshare"
+                      @click="handleUnshare(item)"
+                    >
+                      {{ item.shared ? unshareLabel : unshareDisabledLabel }}
                     </button>
                   </div>
                   <div class="drive-row__action-cluster drive-row__action-cluster--danger">
@@ -413,6 +520,21 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.drive-row__badges {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.drive-row__badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
 .drive-row__actions {
   display: flex;
   flex-wrap: wrap;
@@ -457,6 +579,10 @@ onBeforeUnmount(() => {
 
 .drive-row__delete {
   flex-shrink: 0;
+}
+
+.drive-row__unshare:disabled {
+  opacity: 0.5;
 }
 
 .drive-row__dates {
