@@ -7,24 +7,14 @@ import { messages } from '@/i18n/index.js';
 
 const managerMock = {
   deleteCharacterFile: vi.fn(),
-  ensureFilePublic: vi.fn(),
-  loadFileContent: vi.fn(),
 };
+const enableShareMock = vi.fn();
+const copyTextMock = vi.fn();
 
 const hideModalMock = vi.fn();
-const enableShareMock = vi.fn();
-const disableShareMock = vi.fn();
-
 vi.mock('@/features/modals/stores/modalStore.js', () => ({
   useModalStore: () => ({
     hideModal: hideModalMock,
-  }),
-}));
-
-vi.mock('@/features/cloud-sync/composables/useShare.js', () => ({
-  useShare: () => ({
-    enableShare: enableShareMock,
-    disableShare: disableShareMock,
   }),
 }));
 
@@ -32,7 +22,11 @@ vi.mock('@/infrastructure/google-drive/googleDriveManager.js', () => ({
   getGoogleDriveManagerInstance: () => managerMock,
 }));
 
-const copyTextMock = vi.fn();
+vi.mock('@/features/cloud-sync/composables/useShare.js', () => ({
+  useShare: () => ({
+    enableShare: enableShareMock,
+  }),
+}));
 
 vi.mock('@/shared/utils/clipboard.js', () => ({
   copyText: (...args) => copyTextMock(...args),
@@ -57,9 +51,6 @@ class MockIntersectionObserver {
 }
 
 global.IntersectionObserver = MockIntersectionObserver;
-
-global.URL.createObjectURL = (blob) => `blob:${blob.size}`;
-global.URL.revokeObjectURL = vi.fn();
 
 const displayedItems = ref([]);
 const revealMore = vi.fn();
@@ -109,13 +100,24 @@ describe('DriveLoadContent', () => {
     selectCharacter.mockClear();
     hideModalMock.mockClear();
     managerMock.deleteCharacterFile.mockReset();
-    managerMock.ensureFilePublic.mockReset();
-    managerMock.loadFileContent.mockReset();
     enableShareMock.mockReset();
-    disableShareMock.mockReset();
     copyTextMock.mockReset();
     removeItem.mockClear();
     displayedItems.value = [];
+  });
+
+  it('shares a file and copies generated link', async () => {
+    enableShareMock.mockResolvedValue('https://example.com/share');
+    displayedItems.value = [
+      { id: 'file-3', fileName: 'Shareable.zip', characterName: 'Shareable', lastModifiedAtDrive: 1500, createdAt: 1400 },
+    ];
+
+    const wrapper = mountWithProps();
+    await wrapper.find('[data-test="drive-row-share"]').trigger('click');
+    await flushPromises();
+
+    expect(enableShareMock).toHaveBeenCalledWith('file-3');
+    expect(copyTextMock).toHaveBeenCalledWith('https://example.com/share');
   });
 
   it('triggers revealMore when the sentinel enters view', async () => {
@@ -159,7 +161,6 @@ describe('DriveLoadContent', () => {
         characterName: 'Shared Hero',
         lastModifiedAtDrive: 2000,
         createdAt: 1900,
-        shared: true,
       },
     ];
 
@@ -180,36 +181,6 @@ describe('DriveLoadContent', () => {
     const cards = wrapper.findAll('[data-test="drive-row"]');
     expect(cards).toHaveLength(1);
     expect(cards[0].text()).toContain('Playable');
-  });
-
-  it('shares a file through the share button and copies the link', async () => {
-    enableShareMock.mockResolvedValue('https://example.com/share');
-    displayedItems.value = [
-      { id: 'file-3', fileName: 'Shareable.zip', characterName: 'Shareable', lastModifiedAtDrive: 1500, createdAt: 1400 },
-    ];
-
-    const wrapper = mountWithProps();
-    await wrapper.find('[data-test="drive-row-share"]').trigger('click');
-    await flushPromises();
-
-    expect(enableShareMock).toHaveBeenCalledWith('file-3');
-    expect(copyTextMock).toHaveBeenCalledWith('https://example.com/share');
-  });
-
-  it('downloads a file with a readable filename', async () => {
-    const content = new Uint8Array([1, 2, 3]).buffer;
-    managerMock.loadFileContent.mockResolvedValue(content);
-
-    displayedItems.value = [
-      { id: 'file-4', fileName: 'Archive.zip', characterName: 'Archive', lastModifiedAtDrive: 1600, createdAt: 1500 },
-    ];
-
-    const wrapper = mountWithProps();
-    await wrapper.find('[data-test="drive-row-download"]').trigger('click');
-    await flushPromises();
-
-    expect(managerMock.loadFileContent).toHaveBeenCalledWith('file-4');
-    expect(global.URL.revokeObjectURL).toHaveBeenCalled();
   });
 
   it('deletes a file after confirmation', async () => {
@@ -249,41 +220,5 @@ describe('DriveLoadContent', () => {
     const items = wrapper.findAll('[data-test="drive-row"]');
     expect(items).toHaveLength(1);
     expect(items[0].text()).toContain('Keep');
-  });
-
-  it('unshares a file immediately and refreshes', async () => {
-    disableShareMock.mockResolvedValue(true);
-    displayedItems.value = [
-      { id: 'file-6', fileName: 'Shared.zip', characterName: 'Shared', shared: true, lastModifiedAtDrive: 1800, createdAt: 1750 },
-    ];
-
-    const wrapper = mountWithProps();
-    await wrapper.find('[data-test="drive-row-unshare"]').trigger('click');
-    await flushPromises();
-
-    expect(disableShareMock).toHaveBeenCalledWith('file-6');
-    expect(refresh).toHaveBeenCalled();
-  });
-
-  it('disables unshare button while processing', async () => {
-    let resolveUnshare;
-    const unsharePromise = new Promise((resolve) => {
-      resolveUnshare = resolve;
-    });
-    disableShareMock.mockReturnValue(unsharePromise);
-
-    displayedItems.value = [
-      { id: 'file-7', fileName: 'BusyShared.zip', characterName: 'BusyShared', shared: true, lastModifiedAtDrive: 1900, createdAt: 1850 },
-    ];
-
-    const wrapper = mountWithProps();
-    const button = wrapper.find('[data-test="drive-row-unshare"]');
-    await button.trigger('click');
-
-    expect(button.attributes('disabled')).toBeDefined();
-
-    resolveUnshare();
-    await flushPromises();
-    expect(disableShareMock).toHaveBeenCalledWith('file-7');
   });
 });

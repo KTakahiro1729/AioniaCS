@@ -156,9 +156,12 @@ export const messages = {
   },
   characterHub: {
     driveFolder: {
-      changeButton: t('characterHub.driveFolder.changeButton'),
+      confirmButton: t('characterHub.driveFolder.confirmButton'),
       label: t('characterHub.driveFolder.label'),
       placeholder: t('characterHub.driveFolder.placeholder'),
+      createConfirm: t('characterHub.driveFolder.createConfirm'),
+      createYes: t('characterHub.driveFolder.createYes'),
+      createNo: t('characterHub.driveFolder.createNo'),
     },
     buttons: {
       signIn: t('characterHub.buttons.signIn'),
@@ -286,29 +289,19 @@ export const messages = {
       cachedHash: t('driveLoadPage.labels.cachedHash'),
       notAvailable: t('driveLoadPage.labels.notAvailable'),
       unknownDate: t('driveLoadPage.labels.unknownDate'),
-      shared: t('driveLoadPage.labels.shared'),
-      sharedAria: t('driveLoadPage.labels.sharedAria'),
       selectAction: t('driveLoadPage.labels.selectAction'),
     },
     actions: {
       load: t('driveLoadPage.actions.load'),
-      delete: t('driveLoadPage.actions.delete'),
       share: t('driveLoadPage.actions.share'),
-      unshare: t('driveLoadPage.actions.unshare'),
-      unshareShort: t('driveLoadPage.actions.unshareShort'),
-      unshareDisabled: t('driveLoadPage.actions.unshareDisabled'),
-      unshareDisabledShort: t('driveLoadPage.actions.unshareDisabledShort'),
+      delete: t('driveLoadPage.actions.delete'),
       cancel: t('driveLoadPage.actions.cancel'),
-      download: t('driveLoadPage.actions.download'),
       loadAria: (name) => t('driveLoadPage.actions.loadAria', { name }),
-      deleteAria: (name) => t('driveLoadPage.actions.deleteAria', { name }),
       shareAria: (name) => t('driveLoadPage.actions.shareAria', { name }),
-      unshareAria: (name) => t('driveLoadPage.actions.unshareAria', { name }),
-      downloadAria: (name) => t('driveLoadPage.actions.downloadAria', { name }),
+      deleteAria: (name) => t('driveLoadPage.actions.deleteAria', { name }),
     },
     confirmations: {
       delete: (name) => t('driveLoadPage.confirmations.delete', { name }),
-      unshare: (name) => t('driveLoadPage.confirmations.unshare', { name }),
     },
     toasts: {
       share: {
@@ -323,34 +316,6 @@ export const messages = {
         error: (err) => ({
           title: t('driveLoadPage.toasts.share.error.title'),
           message: err?.message || t('driveLoadPage.toasts.share.error.message'),
-        }),
-      },
-      unshare: {
-        loading: () => ({
-          title: t('driveLoadPage.toasts.unshare.loading.title'),
-          message: t('driveLoadPage.toasts.unshare.loading.message'),
-        }),
-        success: () => ({
-          title: t('driveLoadPage.toasts.unshare.success.title'),
-          message: t('driveLoadPage.toasts.unshare.success.message'),
-        }),
-        error: (err) => ({
-          title: t('driveLoadPage.toasts.unshare.error.title'),
-          message: err?.message || t('driveLoadPage.toasts.unshare.error.message'),
-        }),
-      },
-      download: {
-        loading: () => ({
-          title: t('driveLoadPage.toasts.download.loading.title'),
-          message: t('driveLoadPage.toasts.download.loading.message'),
-        }),
-        success: () => ({
-          title: t('driveLoadPage.toasts.download.success.title'),
-          message: t('driveLoadPage.toasts.download.success.message'),
-        }),
-        error: (err) => ({
-          title: t('driveLoadPage.toasts.download.error.title'),
-          message: err?.message || t('driveLoadPage.toasts.download.error.message'),
         }),
       },
       delete: {
