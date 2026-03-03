@@ -1,14 +1,18 @@
 <template>
   <div class="load-modal">
-    <!-- ヘッダー行: サブアクションボタン（常に表示） -->
     <div class="load-modal__header">
       <div class="load-modal__sub-actions">
-        <label class="button-base button-base--ghost load-modal__sub-button">
-          {{ loadLocalLabel }}
-          <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
-        </label>
         <button
-          class="button-base button-base--ghost load-modal__sub-button"
+          v-if="isSignedIn"
+          class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
+          type="button"
+          data-test="load-modal-folder-toggle"
+          @click="toggleFolderEditor"
+        >
+          {{ driveFolderLabel }}
+        </button>
+        <button
+          class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
           :disabled="!hasHistory"
           data-test="load-modal-history-button"
           @click="$emit('open-history')"
@@ -18,34 +22,60 @@
       </div>
     </div>
 
-    <!-- フォルダ設定: ログイン時のみ -->
-    <div v-if="isSignedIn" class="load-modal__folder">
-      <label class="load-modal__folder-label" :for="folderInputId">{{ driveFolderLabel }}</label>
-      <div class="load-modal__input-group">
-        <BaseInput
-          :id="folderInputId"
-          class="load-modal__input"
-          type="text"
-          v-model="folderPathInput"
-          :placeholder="driveFolderPlaceholder"
-          :disabled="isDriveControlsDisabled"
-          :joined="'right'"
-          @blur="commitFolderPath"
-          @keyup.enter.prevent="commitFolderPath"
-        />
-        <button
-          class="button-base button-base--primary load-modal__apply is-joined-left"
-          type="button"
-          :disabled="isDriveControlsDisabled"
-          data-test="load-modal-apply-folder"
-          @click="commitFolderPath"
-        >
-          {{ driveFolderChangeLabel }}
-        </button>
-      </div>
+    <div class="load-modal__local-actions">
+      <label class="button-base load-modal__sub-button">
+        {{ loadLocalLabel }}
+        <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
+      </label>
     </div>
 
-    <!-- ドライブリスト / サインインセクション -->
+    <div v-if="isSignedIn && isFolderEditorOpen" class="load-modal__folder-editor">
+        <div class="load-modal__input-group">
+          <BaseInput
+            :id="folderInputId"
+            class="load-modal__input"
+            type="text"
+            v-model="folderPathInput"
+            :placeholder="driveFolderPlaceholder"
+            :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
+            :joined="'right'"
+            @keyup.enter.prevent="commitFolderPath"
+          />
+          <button
+            class="button-base button-base--primary load-modal__apply is-joined-left"
+            type="button"
+            :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
+            data-test="load-modal-apply-folder"
+            @click="commitFolderPath"
+          >
+            {{ driveFolderChangeLabel }}
+          </button>
+        </div>
+        <div v-if="isAwaitingFolderCreationChoice" class="load-modal__folder-confirm" role="status" aria-live="polite">
+          <p class="load-modal__folder-confirm-text">{{ driveFolderCreateConfirmMessage }}</p>
+          <div class="load-modal__folder-confirm-actions">
+            <button
+              class="button-base button-base--primary is-joined-right"
+              type="button"
+              :disabled="isDriveControlsDisabled"
+              data-test="load-modal-folder-create-yes"
+              @click="createAndApplyFolder"
+            >
+              {{ driveFolderCreateYesLabel }}
+            </button>
+            <button
+              class="button-base button-base--ghost is-joined-left"
+              type="button"
+              :disabled="isDriveControlsDisabled"
+              data-test="load-modal-folder-create-no"
+              @click="cancelFolderCreatePrompt"
+            >
+              {{ driveFolderCreateNoLabel }}
+            </button>
+          </div>
+        </div>
+    </div>
+
     <div class="load-modal__drive-scroll">
       <template v-if="isSignedIn">
         <DriveLoadContent
@@ -73,6 +103,7 @@
 import { ref, watch, computed } from 'vue';
 import BaseInput from '@/shared/ui/base/BaseInput.vue';
 import DriveLoadContent from '@/features/modals/components/contents/DriveLoadContent.vue';
+import { getDriveManagerInstance } from '@/infrastructure/google-drive/index.js';
 
 const props = defineProps({
   isSignedIn: Boolean,
@@ -82,6 +113,9 @@ const props = defineProps({
   driveFolderLabel: String,
   driveFolderChangeLabel: { type: String, default: 'Apply' },
   driveFolderPlaceholder: String,
+  driveFolderCreateConfirmMessage: { type: String, default: '存在しないフォルダです。新しく作成しますか？' },
+  driveFolderCreateYesLabel: { type: String, default: 'はい' },
+  driveFolderCreateNoLabel: { type: String, default: 'いいえ' },
   loadLocalLabel: String,
   restoreHistoryLabel: String,
   loadCharacterFromDrive: Function,
@@ -90,10 +124,14 @@ const props = defineProps({
   signInMessage: String,
 });
 
-const emit = defineEmits(['load-local', 'sign-in', 'update-drive-folder-path', 'choose-drive-folder', 'open-history']);
+const emit = defineEmits(['load-local', 'sign-in', 'update-drive-folder-path', 'open-history']);
 
 const folderInputId = 'load_modal_drive_folder';
 const folderPathInput = ref(props.driveFolderPath || '');
+const pendingFolderPath = ref('');
+const isFolderEditorOpen = ref(false);
+const isAwaitingFolderCreationChoice = ref(false);
+const isApplyingFolder = ref(false);
 
 watch(
   () => props.driveFolderPath,
@@ -107,18 +145,144 @@ watch(
   (signedIn) => {
     if (!signedIn) {
       folderPathInput.value = props.driveFolderPath || '';
+      isFolderEditorOpen.value = false;
+      isAwaitingFolderCreationChoice.value = false;
+      isApplyingFolder.value = false;
     }
   },
 );
 
-const isDriveControlsDisabled = computed(() => !props.isSignedIn);
+const isDriveControlsDisabled = computed(() => !props.isSignedIn || isApplyingFolder.value);
 
 function commitFolderPath() {
   if (!props.isSignedIn) {
     folderPathInput.value = props.driveFolderPath || '';
     return;
   }
-  emit('update-drive-folder-path', folderPathInput.value);
+  validateAndApplyFolderPath();
+}
+
+function toggleFolderEditor() {
+  isFolderEditorOpen.value = !isFolderEditorOpen.value;
+  if (!isFolderEditorOpen.value) {
+    cancelFolderCreatePrompt();
+    folderPathInput.value = props.driveFolderPath || '';
+  }
+}
+
+function normalizePath(path, manager) {
+  if (manager && typeof manager.normalizeFolderPath === 'function') {
+    return manager.normalizeFolderPath(path);
+  }
+  if (typeof path !== 'string') {
+    return '';
+  }
+  return path
+    .replace(/\\/g, '/')
+    .split('/')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+    .join('/');
+}
+
+async function ensureFolderPath(path, manager, createMissing = false) {
+  const segments = normalizePath(path, manager)
+    .split('/')
+    .filter(Boolean);
+
+  if (segments.length === 0) {
+    return true;
+  }
+
+  if (!manager || typeof manager.findFolder !== 'function') {
+    return false;
+  }
+
+  let parentId = 'root';
+  for (const segment of segments) {
+    let folder = await manager.findFolder(segment, parentId);
+    if (!folder?.id) {
+      if (!createMissing || typeof manager.createFolder !== 'function') {
+        return false;
+      }
+      folder = await manager.createFolder(segment, parentId);
+      if (!folder?.id) {
+        return false;
+      }
+    }
+    parentId = folder.id;
+  }
+
+  return true;
+}
+
+function resolveDriveManager() {
+  try {
+    return getDriveManagerInstance();
+  } catch {
+    return null;
+  }
+}
+
+async function validateAndApplyFolderPath() {
+  const manager = resolveDriveManager();
+  if (!manager) {
+    emit('update-drive-folder-path', folderPathInput.value);
+    return;
+  }
+
+  const normalized = normalizePath(folderPathInput.value, manager);
+  if (!normalized) {
+    cancelFolderCreatePrompt();
+    emit('update-drive-folder-path', normalized);
+    return;
+  }
+
+  try {
+    const exists = await ensureFolderPath(normalized, manager, false);
+    if (exists) {
+      cancelFolderCreatePrompt();
+      emit('update-drive-folder-path', normalized);
+      return;
+    }
+  } catch {
+    emit('update-drive-folder-path', normalized);
+    return;
+  }
+
+  pendingFolderPath.value = normalized;
+  isAwaitingFolderCreationChoice.value = true;
+}
+
+function cancelFolderCreatePrompt() {
+  pendingFolderPath.value = '';
+  isAwaitingFolderCreationChoice.value = false;
+}
+
+async function createAndApplyFolder() {
+  const manager = resolveDriveManager();
+  const targetPath = normalizePath(pendingFolderPath.value || folderPathInput.value, manager);
+  if (!targetPath) {
+    return;
+  }
+
+  if (!manager) {
+    cancelFolderCreatePrompt();
+    emit('update-drive-folder-path', targetPath);
+    return;
+  }
+
+  isApplyingFolder.value = true;
+  try {
+    const created = await ensureFolderPath(targetPath, manager, true);
+    if (!created) {
+      return;
+    }
+    cancelFolderCreatePrompt();
+    emit('update-drive-folder-path', targetPath);
+  } finally {
+    isApplyingFolder.value = false;
+  }
 }
 
 function handleLocalChange(event) {
@@ -141,7 +305,6 @@ function handleLocalChange(event) {
   justify-content: flex-end;
   gap: 8px;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--color-border-normal);
   flex-wrap: wrap;
 }
 
@@ -174,24 +337,26 @@ function handleLocalChange(event) {
 }
 
 .load-modal__sub-button {
-  font-size: 0.8rem;
-  padding: 4px 10px;
-  height: 30px;
-  line-height: 1;
+  height: 48px;
   white-space: nowrap;
 }
 
-.load-modal__folder {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--color-border-normal);
+.load-modal__sub-button--compact {
+  height: 30px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  line-height: 1;
 }
 
-.load-modal__folder-label {
-  font-size: 0.9rem;
-  font-weight: 600;
+.load-modal__local-actions {
+  padding: 10px 14px;
+  display: flex;
+}
+
+.load-modal__folder-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .load-modal__input-group {
@@ -219,6 +384,21 @@ function handleLocalChange(event) {
   flex: 0 0 auto;
   height: 48px;
   padding-inline: 16px;
+}
+
+.load-modal__folder-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.load-modal__folder-confirm-text {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.load-modal__folder-confirm-actions {
+  display: inline-flex;
 }
 
 .load-modal__drive-scroll {
