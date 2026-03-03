@@ -2,15 +2,68 @@
   <div class="load-modal">
     <div class="load-modal__header">
       <div class="load-modal__sub-actions">
-        <button
-          v-if="isSignedIn"
-          class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
-          type="button"
-          data-test="load-modal-folder-toggle"
-          @click="toggleFolderEditor"
-        >
-          {{ driveFolderLabel }}
-        </button>
+        <div v-if="isSignedIn" class="load-modal__folder-controls">
+          <button
+            class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
+            type="button"
+            data-test="load-modal-folder-toggle"
+            @click="toggleFolderEditor"
+          >
+            {{ driveFolderLabel }}
+          </button>
+
+          <div v-if="isFolderEditorOpen" class="load-modal__folder-editor">
+            <div class="load-modal__input-group">
+              <BaseInput
+                :id="folderInputId"
+                class="load-modal__input"
+                type="text"
+                v-model="folderPathInput"
+                :placeholder="driveFolderPlaceholder"
+                :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
+                :joined="'right'"
+                @keyup.enter.prevent="commitFolderPath"
+              />
+              <button
+                class="button-base button-base--primary load-modal__apply is-joined-left"
+                type="button"
+                :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
+                data-test="load-modal-apply-folder"
+                @click="commitFolderPath"
+              >
+                {{ driveFolderChangeLabel }}
+              </button>
+            </div>
+            <div
+              v-if="isAwaitingFolderCreationChoice"
+              class="load-modal__folder-confirm"
+              role="status"
+              aria-live="polite"
+            >
+              <p class="load-modal__folder-confirm-text">{{ driveFolderCreateConfirmMessage }}</p>
+              <div class="load-modal__folder-confirm-actions">
+                <button
+                  class="button-base button-base--primary is-joined-right"
+                  type="button"
+                  :disabled="isDriveControlsDisabled"
+                  data-test="load-modal-folder-create-yes"
+                  @click="createAndApplyFolder"
+                >
+                  {{ driveFolderCreateYesLabel }}
+                </button>
+                <button
+                  class="button-base button-base--ghost is-joined-left"
+                  type="button"
+                  :disabled="isDriveControlsDisabled"
+                  data-test="load-modal-folder-create-no"
+                  @click="cancelFolderCreatePrompt"
+                >
+                  {{ driveFolderCreateNoLabel }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
         <button
           class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
           :disabled="!hasHistory"
@@ -27,53 +80,6 @@
         {{ loadLocalLabel }}
         <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
       </label>
-    </div>
-
-    <div v-if="isSignedIn && isFolderEditorOpen" class="load-modal__folder-editor">
-        <div class="load-modal__input-group">
-          <BaseInput
-            :id="folderInputId"
-            class="load-modal__input"
-            type="text"
-            v-model="folderPathInput"
-            :placeholder="driveFolderPlaceholder"
-            :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
-            :joined="'right'"
-            @keyup.enter.prevent="commitFolderPath"
-          />
-          <button
-            class="button-base button-base--primary load-modal__apply is-joined-left"
-            type="button"
-            :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
-            data-test="load-modal-apply-folder"
-            @click="commitFolderPath"
-          >
-            {{ driveFolderChangeLabel }}
-          </button>
-        </div>
-        <div v-if="isAwaitingFolderCreationChoice" class="load-modal__folder-confirm" role="status" aria-live="polite">
-          <p class="load-modal__folder-confirm-text">{{ driveFolderCreateConfirmMessage }}</p>
-          <div class="load-modal__folder-confirm-actions">
-            <button
-              class="button-base button-base--primary is-joined-right"
-              type="button"
-              :disabled="isDriveControlsDisabled"
-              data-test="load-modal-folder-create-yes"
-              @click="createAndApplyFolder"
-            >
-              {{ driveFolderCreateYesLabel }}
-            </button>
-            <button
-              class="button-base button-base--ghost is-joined-left"
-              type="button"
-              :disabled="isDriveControlsDisabled"
-              data-test="load-modal-folder-create-no"
-              @click="cancelFolderCreatePrompt"
-            >
-              {{ driveFolderCreateNoLabel }}
-            </button>
-          </div>
-        </div>
     </div>
 
     <div class="load-modal__drive-scroll">
@@ -235,6 +241,7 @@ async function validateAndApplyFolderPath() {
   if (!normalized) {
     cancelFolderCreatePrompt();
     emit('update-drive-folder-path', normalized);
+    isFolderEditorOpen.value = false;
     return;
   }
 
@@ -243,6 +250,7 @@ async function validateAndApplyFolderPath() {
     if (exists) {
       cancelFolderCreatePrompt();
       emit('update-drive-folder-path', normalized);
+      isFolderEditorOpen.value = false;
       return;
     }
   } catch {
@@ -281,6 +289,7 @@ async function createAndApplyFolder() {
     }
     cancelFolderCreatePrompt();
     emit('update-drive-folder-path', targetPath);
+    isFolderEditorOpen.value = false;
   } finally {
     isApplyingFolder.value = false;
   }
@@ -333,8 +342,14 @@ function handleLocalChange(event) {
 .load-modal__sub-actions {
   display: flex;
   gap: 6px;
-  align-items: center;
+  align-items: flex-start;
   margin-left: auto;
+}
+
+.load-modal__folder-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .load-modal__sub-button {
@@ -354,6 +369,11 @@ function handleLocalChange(event) {
   display: flex;
 }
 
+.load-modal__local-actions > .load-modal__sub-button {
+  width: 100%;
+  justify-content: center;
+}
+
 .load-modal__folder-editor {
   display: flex;
   flex-direction: column;
@@ -368,6 +388,7 @@ function handleLocalChange(event) {
 .load-modal__input {
   flex: 1 1 0;
   min-width: 0;
+  height: 48px;
   padding: 8px 10px;
   border-radius: 4px;
   border: 1px solid var(--color-border-normal);

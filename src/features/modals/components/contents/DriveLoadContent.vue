@@ -280,7 +280,7 @@ onBeforeUnmount(() => {
                     :aria-label="messages.driveLoadPage.labels.selectAction"
                   >
                     <button
-                      class="button-base button-base--primary"
+                      class="button-base button-base--primary is-joined-right"
                       type="button"
                       :aria-label="messages.driveLoadPage.actions.loadAria(getCharacterName(item))"
                       data-test="drive-row-load"
@@ -289,7 +289,7 @@ onBeforeUnmount(() => {
                       {{ messages.driveLoadPage.actions.load }}
                     </button>
                     <button
-                      class="button-base button-base--ghost"
+                      class="button-base button-base--ghost is-joined-left"
                       type="button"
                       :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
                       data-test="drive-row-share"
