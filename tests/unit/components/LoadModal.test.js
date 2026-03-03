@@ -1,26 +1,8 @@
 import * as Vue from 'vue';
 global.Vue = Vue;
 import { mount } from '@vue/test-utils';
-import { flushPromises } from '@vue/test-utils';
 import { vi } from 'vitest';
 import LoadModal from '@/features/modals/components/contents/LoadModal.vue';
-
-const findFolderMock = vi.fn();
-const createFolderMock = vi.fn();
-
-vi.mock('@/infrastructure/google-drive/index.js', () => ({
-  getDriveManagerInstance: () => ({
-    normalizeFolderPath: (path) =>
-      String(path || '')
-        .replace(/\\/g, '/')
-        .split('/')
-        .map((segment) => segment.trim())
-        .filter(Boolean)
-        .join('/'),
-    findFolder: (...args) => findFolderMock(...args),
-    createFolder: (...args) => createFolderMock(...args),
-  }),
-}));
 
 function baseProps(overrides = {}) {
   return {
@@ -29,12 +11,10 @@ function baseProps(overrides = {}) {
     isDriveReady: true,
     driveFolderPath: 'path',
     driveFolderLabel: 'label',
-    driveFolderChangeLabel: 'confirm',
+    driveFolderChangeLabel: 'change',
     driveFolderPlaceholder: 'placeholder',
-    driveFolderCreateConfirmMessage: 'confirm create?',
-    driveFolderCreateYesLabel: 'yes',
-    driveFolderCreateNoLabel: 'no',
     loadLocalLabel: 'local',
+    loadDriveLabel: 'drive',
     restoreHistoryLabel: 'history',
     hasHistory: false,
     signInLabel: 'signin',
@@ -56,11 +36,6 @@ function mountWithStubs(props) {
 }
 
 describe('LoadModal', () => {
-  beforeEach(() => {
-    findFolderMock.mockReset();
-    createFolderMock.mockReset();
-  });
-
   test('emits load-local on file change', async () => {
     const wrapper = mountWithStubs(baseProps());
     const input = wrapper.find('input[type="file"]');
@@ -78,7 +53,7 @@ describe('LoadModal', () => {
 
   test('hides drive controls when signed out', async () => {
     const wrapper = mountWithStubs(baseProps({ isSignedIn: false }));
-    expect(wrapper.find('.load-modal__folder').exists()).toBe(false);
+    expect(wrapper.find('.load-modal__config').exists()).toBe(false);
     expect(wrapper.find('.load-modal__input').exists()).toBe(false);
     expect(wrapper.find('[data-test="load-modal-apply-folder"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="drive-load-content-stub"]').exists()).toBe(false);
@@ -89,34 +64,10 @@ describe('LoadModal', () => {
     expect(wrapper.find('[data-test="drive-load-content-stub"]').exists()).toBe(true);
   });
 
-  test('emits update-drive-folder-path when apply is clicked with existing folder path', async () => {
-    findFolderMock.mockResolvedValue({ id: 'folder-1' });
+  test('emits update-drive-folder-path when apply is clicked while signed in', async () => {
     const wrapper = mountWithStubs(baseProps({ isSignedIn: true }));
-    await wrapper.find('[data-test="load-modal-folder-toggle"]').trigger('click');
-    await wrapper.find('[data-test="load-modal-apply-folder"]').trigger('click');
-    await flushPromises();
-    expect(wrapper.emitted('update-drive-folder-path')).toHaveLength(1);
-    expect(createFolderMock).not.toHaveBeenCalled();
-  });
-
-  test('creates missing drive folders after yes and then emits update event', async () => {
-    findFolderMock.mockResolvedValue(null);
-    createFolderMock.mockResolvedValueOnce({ id: 'folder-parent' }).mockResolvedValueOnce({ id: 'folder-child' });
-
-    const wrapper = mountWithStubs(baseProps({ isSignedIn: true, driveFolderPath: 'missing/folder' }));
-    await wrapper.find('[data-test="load-modal-folder-toggle"]').trigger('click');
-    await wrapper.find('[data-test="load-modal-apply-folder"]').trigger('click');
-    await flushPromises();
-
-    expect(wrapper.text()).toContain('confirm create?');
-    expect(wrapper.find('[data-test="load-modal-apply-folder"]').attributes('disabled')).toBeDefined();
-
-    await wrapper.find('[data-test="load-modal-folder-create-yes"]').trigger('click');
-    await flushPromises();
-
-    expect(createFolderMock).toHaveBeenCalledTimes(2);
-    expect(createFolderMock).toHaveBeenNthCalledWith(1, 'missing', 'root');
-    expect(createFolderMock).toHaveBeenNthCalledWith(2, 'folder', 'folder-parent');
+    const applyButton = wrapper.find('[data-test="load-modal-apply-folder"]');
+    await applyButton.trigger('click');
     expect(wrapper.emitted('update-drive-folder-path')).toHaveLength(1);
   });
 
