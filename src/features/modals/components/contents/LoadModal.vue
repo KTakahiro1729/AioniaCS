@@ -1,9 +1,8 @@
 <template>
   <div class="load-modal">
-    <!-- ヘッダー行: サブアクションボタン（常に表示） -->
     <div class="load-modal__header">
       <div class="load-modal__sub-actions">
-        <label class="button-base load-modal__sub-button load-modal__sub-button--local">
+        <label class="button-base load-modal__sub-button">
           {{ loadLocalLabel }}
           <input type="file" class="hidden" accept=".json,.txt,.zip" @change="handleLocalChange" />
         </label>
@@ -18,9 +17,13 @@
       </div>
     </div>
 
-    <!-- フォルダ設定: ログイン時のみ -->
     <div v-if="isSignedIn" class="load-modal__folder">
-      <button class="button-base button-base--ghost load-modal__sub-button" type="button" data-test="load-modal-folder-toggle" @click="toggleFolderEditor">
+      <button
+        class="button-base button-base--ghost load-modal__sub-button"
+        type="button"
+        data-test="load-modal-folder-toggle"
+        @click="toggleFolderEditor"
+      >
         {{ driveFolderLabel }}
       </button>
       <div v-if="isFolderEditorOpen" class="load-modal__folder-editor">
@@ -48,10 +51,22 @@
         <div v-if="isAwaitingFolderCreationChoice" class="load-modal__folder-confirm" role="status" aria-live="polite">
           <p class="load-modal__folder-confirm-text">{{ driveFolderCreateConfirmMessage }}</p>
           <div class="load-modal__folder-confirm-actions">
-            <button class="button-base button-base--primary is-joined-right" type="button" data-test="load-modal-folder-create-yes" @click="createAndApplyFolder">
+            <button
+              class="button-base button-base--primary is-joined-right"
+              type="button"
+              :disabled="isDriveControlsDisabled"
+              data-test="load-modal-folder-create-yes"
+              @click="createAndApplyFolder"
+            >
               {{ driveFolderCreateYesLabel }}
             </button>
-            <button class="button-base button-base--ghost is-joined-left" type="button" data-test="load-modal-folder-create-no" @click="cancelFolderCreatePrompt">
+            <button
+              class="button-base button-base--ghost is-joined-left"
+              type="button"
+              :disabled="isDriveControlsDisabled"
+              data-test="load-modal-folder-create-no"
+              @click="cancelFolderCreatePrompt"
+            >
               {{ driveFolderCreateNoLabel }}
             </button>
           </div>
@@ -59,7 +74,6 @@
       </div>
     </div>
 
-    <!-- ドライブリスト / サインインセクション -->
     <div class="load-modal__drive-scroll">
       <template v-if="isSignedIn">
         <DriveLoadContent
@@ -115,6 +129,7 @@ const folderPathInput = ref(props.driveFolderPath || '');
 const pendingFolderPath = ref('');
 const isFolderEditorOpen = ref(false);
 const isAwaitingFolderCreationChoice = ref(false);
+const isApplyingFolder = ref(false);
 
 watch(
   () => props.driveFolderPath,
@@ -130,11 +145,12 @@ watch(
       folderPathInput.value = props.driveFolderPath || '';
       isFolderEditorOpen.value = false;
       isAwaitingFolderCreationChoice.value = false;
+      isApplyingFolder.value = false;
     }
   },
 );
 
-const isDriveControlsDisabled = computed(() => !props.isSignedIn);
+const isDriveControlsDisabled = computed(() => !props.isSignedIn || isApplyingFolder.value);
 
 function commitFolderPath() {
   if (!props.isSignedIn) {
@@ -167,36 +183,50 @@ function normalizePath(path, manager) {
     .join('/');
 }
 
-async function folderPathExists(path, manager) {
+async function ensureFolderPath(path, manager, createMissing = false) {
   const segments = normalizePath(path, manager)
     .split('/')
     .filter(Boolean);
+
   if (segments.length === 0 || !manager || typeof manager.findFolder !== 'function') {
     return false;
   }
 
   let parentId = 'root';
   for (const segment of segments) {
-    const folder = await manager.findFolder(segment, parentId);
+    let folder = await manager.findFolder(segment, parentId);
     if (!folder?.id) {
-      return false;
+      if (!createMissing || typeof manager.createFolder !== 'function') {
+        return false;
+      }
+      folder = await manager.createFolder(segment, parentId);
+      if (!folder?.id) {
+        return false;
+      }
     }
     parentId = folder.id;
   }
+
   return true;
 }
 
-async function validateAndApplyFolderPath() {
-  let manager = null;
+function resolveDriveManager() {
   try {
-    manager = getDriveManagerInstance();
+    return getDriveManagerInstance();
   } catch {
+    return null;
+  }
+}
+
+async function validateAndApplyFolderPath() {
+  const manager = resolveDriveManager();
+  if (!manager) {
     emit('update-drive-folder-path', folderPathInput.value);
     return;
   }
 
   const normalized = normalizePath(folderPathInput.value, manager);
-  const exists = await folderPathExists(normalized, manager);
+  const exists = await ensureFolderPath(normalized, manager, false);
   if (exists) {
     cancelFolderCreatePrompt();
     emit('update-drive-folder-path', normalized);
@@ -213,9 +243,29 @@ function cancelFolderCreatePrompt() {
 }
 
 async function createAndApplyFolder() {
-  const targetPath = pendingFolderPath.value || folderPathInput.value;
-  cancelFolderCreatePrompt();
-  emit('update-drive-folder-path', targetPath);
+  const manager = resolveDriveManager();
+  const targetPath = normalizePath(pendingFolderPath.value || folderPathInput.value, manager);
+  if (!targetPath) {
+    return;
+  }
+
+  if (!manager) {
+    cancelFolderCreatePrompt();
+    emit('update-drive-folder-path', targetPath);
+    return;
+  }
+
+  isApplyingFolder.value = true;
+  try {
+    const created = await ensureFolderPath(targetPath, manager, true);
+    if (!created) {
+      return;
+    }
+    cancelFolderCreatePrompt();
+    emit('update-drive-folder-path', targetPath);
+  } finally {
+    isApplyingFolder.value = false;
+  }
 }
 
 function handleLocalChange(event) {
@@ -273,11 +323,6 @@ function handleLocalChange(event) {
 .load-modal__sub-button {
   height: 48px;
   white-space: nowrap;
-}
-
-.load-modal__sub-button--local {
-  width: 100%;
-  justify-content: center;
 }
 
 .load-modal__folder {
