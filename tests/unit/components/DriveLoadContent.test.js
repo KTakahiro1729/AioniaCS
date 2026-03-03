@@ -8,6 +8,8 @@ import { messages } from '@/i18n/index.js';
 const managerMock = {
   deleteCharacterFile: vi.fn(),
 };
+const enableShareMock = vi.fn();
+const copyTextMock = vi.fn();
 
 const hideModalMock = vi.fn();
 vi.mock('@/features/modals/stores/modalStore.js', () => ({
@@ -18,6 +20,16 @@ vi.mock('@/features/modals/stores/modalStore.js', () => ({
 
 vi.mock('@/infrastructure/google-drive/googleDriveManager.js', () => ({
   getGoogleDriveManagerInstance: () => managerMock,
+}));
+
+vi.mock('@/features/cloud-sync/composables/useShare.js', () => ({
+  useShare: () => ({
+    enableShare: enableShareMock,
+  }),
+}));
+
+vi.mock('@/shared/utils/clipboard.js', () => ({
+  copyText: (...args) => copyTextMock(...args),
 }));
 
 vi.mock('@/features/notifications/composables/useNotifications.js', () => ({
@@ -88,8 +100,24 @@ describe('DriveLoadContent', () => {
     selectCharacter.mockClear();
     hideModalMock.mockClear();
     managerMock.deleteCharacterFile.mockReset();
+    enableShareMock.mockReset();
+    copyTextMock.mockReset();
     removeItem.mockClear();
     displayedItems.value = [];
+  });
+
+  it('shares a file and copies generated link', async () => {
+    enableShareMock.mockResolvedValue('https://example.com/share');
+    displayedItems.value = [
+      { id: 'file-3', fileName: 'Shareable.zip', characterName: 'Shareable', lastModifiedAtDrive: 1500, createdAt: 1400 },
+    ];
+
+    const wrapper = mountWithProps();
+    await wrapper.find('[data-test="drive-row-share"]').trigger('click');
+    await flushPromises();
+
+    expect(enableShareMock).toHaveBeenCalledWith('file-3');
+    expect(copyTextMock).toHaveBeenCalledWith('https://example.com/share');
   });
 
   it('triggers revealMore when the sentinel enters view', async () => {

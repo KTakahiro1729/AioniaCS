@@ -293,15 +293,31 @@ export const messages = {
     },
     actions: {
       load: t('driveLoadPage.actions.load'),
+      share: t('driveLoadPage.actions.share'),
       delete: t('driveLoadPage.actions.delete'),
       cancel: t('driveLoadPage.actions.cancel'),
       loadAria: (name) => t('driveLoadPage.actions.loadAria', { name }),
+      shareAria: (name) => t('driveLoadPage.actions.shareAria', { name }),
       deleteAria: (name) => t('driveLoadPage.actions.deleteAria', { name }),
     },
     confirmations: {
       delete: (name) => t('driveLoadPage.confirmations.delete', { name }),
     },
     toasts: {
+      share: {
+        loading: () => ({
+          title: t('driveLoadPage.toasts.share.loading.title'),
+          message: t('driveLoadPage.toasts.share.loading.message'),
+        }),
+        success: () => ({
+          title: t('driveLoadPage.toasts.share.success.title'),
+          message: t('driveLoadPage.toasts.share.success.message'),
+        }),
+        error: (err) => ({
+          title: t('driveLoadPage.toasts.share.error.title'),
+          message: err?.message || t('driveLoadPage.toasts.share.error.message'),
+        }),
+      },
       delete: {
         loading: () => ({
           title: t('driveLoadPage.toasts.delete.loading.title'),

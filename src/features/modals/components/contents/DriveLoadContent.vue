@@ -2,9 +2,11 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { messages } from '@/i18n/index.js';
 import { useDriveLoadPageState } from '@/features/cloud-sync/composables/useDriveLoadPageState.js';
+import { copyText } from '@/shared/utils/clipboard.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { getDriveManagerInstance } from '@/infrastructure/google-drive/index.js';
 import { useModalStore } from '@/features/modals/stores/modalStore.js';
+import { useShare } from '@/features/cloud-sync/composables/useShare.js';
 import { formatRelativeDateTime } from '@/shared/utils/utils.js';
 
 const sentinelRef = ref(null);
@@ -48,6 +50,7 @@ try {
 }
 
 const deletingItemId = ref(null);
+const { enableShare } = useShare({ googleDriveManager: driveManager });
 const cancelLabel = messages.driveLoadPage.actions.cancel ?? 'キャンセル';
 
 const filteredItems = computed(() =>
@@ -158,6 +161,25 @@ async function confirmDelete(item) {
   }
 }
 
+async function handleShare(item) {
+  if (!item?.id) return;
+  cancelDelete();
+  const task = (async () => {
+    const link = await enableShare(item.id);
+    if (!link) {
+      throw new Error(messages.share.errors.shareFailed);
+    }
+    await copyText(link);
+    return link;
+  })();
+
+  try {
+    await showAsyncToast(task, messages.driveLoadPage.toasts.share, 'drive-share');
+  } catch (error) {
+    return error;
+  }
+}
+
 onMounted(() => {
   setupObserver();
   isMounted.value = true;
@@ -265,6 +287,15 @@ onBeforeUnmount(() => {
                       @click="handleLoad(item)"
                     >
                       {{ messages.driveLoadPage.actions.load }}
+                    </button>
+                    <button
+                      class="button-base button-base--ghost"
+                      type="button"
+                      :aria-label="messages.driveLoadPage.actions.shareAria(getCharacterName(item))"
+                      data-test="drive-row-share"
+                      @click="handleShare(item)"
+                    >
+                      {{ messages.driveLoadPage.actions.share }}
                     </button>
                   </div>
                   <div class="drive-row__action-cluster drive-row__action-cluster--danger">

@@ -89,11 +89,19 @@ driveLoadPage.labels.notAvailable,なし,,Drive load page not available label
 driveLoadPage.labels.unknownDate,不明な日時,,Drive load page unknown date label
 driveLoadPage.labels.selectAction,操作を選択,,Drive load page select action label
 driveLoadPage.actions.load,読込,,Drive load page load action
+driveLoadPage.actions.share,共有,,Drive load page share action
 driveLoadPage.actions.delete,削除,,Drive load page delete action
 driveLoadPage.actions.cancel,キャンセル,,Drive load page cancel action
 driveLoadPage.actions.loadAria,{name} を読み込む,,Drive load page load aria label
+driveLoadPage.actions.shareAria,{name} を共有する,,Drive load page share aria label
 driveLoadPage.actions.deleteAria,{name} を削除する,,Drive load page delete aria label
 driveLoadPage.confirmations.delete,{name} を削除しますか？,,Drive load page delete confirmation
+driveLoadPage.toasts.share.loading.title,共有リンク,,Drive load page share loading toast title
+driveLoadPage.toasts.share.loading.message,共有リンクを作成中...,,Drive load page share loading toast message
+driveLoadPage.toasts.share.success.title,共有リンク,,Drive load page share success toast title
+driveLoadPage.toasts.share.success.message,共有リンクを生成しました,,Drive load page share success toast message
+driveLoadPage.toasts.share.error.title,共有リンク,,Drive load page share error toast title
+driveLoadPage.toasts.share.error.message,共有リンクの生成に失敗しました,,Drive load page share error toast message
 driveLoadPage.toasts.delete.loading.title,削除,,Drive load page delete loading toast title
 driveLoadPage.toasts.delete.loading.message,削除中...,,Drive load page delete loading toast message
 driveLoadPage.toasts.delete.success.title,削除,,Drive load page delete success toast title
