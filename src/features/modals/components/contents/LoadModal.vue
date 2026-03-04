@@ -4,7 +4,7 @@
       <div class="load-modal__sub-actions">
         <div v-if="isSignedIn" class="load-modal__folder-controls">
           <button
-            class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
+            class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact load-modal__folder-toggle"
             type="button"
             data-test="load-modal-folder-toggle"
             @click="toggleFolderEditor"
@@ -309,6 +309,10 @@ function handleLocalChange(event) {
   max-height: 72vh;
 }
 
+.load-modal * {
+  min-width: 0;
+}
+
 .load-modal__header {
   display: flex;
   align-items: center;
@@ -370,8 +374,13 @@ function handleLocalChange(event) {
 }
 
 .load-modal__local-actions > .load-modal__sub-button {
-  width: 100%;
+  width: auto;
+  max-width: 220px;
   justify-content: center;
+}
+
+.load-modal__folder-toggle {
+  min-width: 8.5rem;
 }
 
 .load-modal__folder-editor {
@@ -426,8 +435,8 @@ function handleLocalChange(event) {
 .load-modal__drive-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .load-modal__drive-hint {
