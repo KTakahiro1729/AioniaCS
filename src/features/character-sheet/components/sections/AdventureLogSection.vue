@@ -6,9 +6,15 @@
         <div class="delete-button-wrapper base-list-header-placeholder"></div>
         <div class="flex-grow">
           <div class="history-item-inputs">
-            <div class="flex-history-name"><label>{{ sheetMessages.sections.adventureLog.columns.scenario }}</label></div>
-            <div class="flex-history-exp"><label>{{ sheetMessages.sections.adventureLog.columns.experience }}</label></div>
-            <div class="flex-history-scar"><label>{{ sheetMessages.sections.adventureLog.columns.scar }}</label></div>
+            <div class="flex-history-name">
+              <label>{{ sheetMessages.sections.adventureLog.columns.scenario }}</label>
+            </div>
+            <div class="flex-history-exp">
+              <label>{{ sheetMessages.sections.adventureLog.columns.experience }}</label>
+            </div>
+            <div class="flex-history-scar">
+              <label>{{ sheetMessages.sections.adventureLog.columns.scar }}</label>
+            </div>
             <div class="flex-history-memo"></div>
           </div>
         </div>

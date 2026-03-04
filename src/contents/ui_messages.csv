@@ -45,7 +45,7 @@ googleDrive.config.updateSuccess.message,保存先フォルダを更新しまし
 googleDrive.config.updateError.title,設定更新失敗,,Drive config update error title
 googleDrive.config.updateError.message,保存先フォルダの更新に失敗しました,,Drive config update error body
 share.needSignIn.title,Google Drive,,Share sign-in needed title
-share.needSignIn.message,サインインしてください,,Share sign-in needed body
+share.needSignIn.message,ログインしてください,,Share sign-in needed body
 share.toast.creating.title,共有リンク,,Share creating toast title
 share.toast.creating.message,作成中...,,Share creating toast body
 share.toast.success.title,共有リンク,,Share success toast title
@@ -119,7 +119,7 @@ characterHub.driveFolder.placeholder,慈悲なきアイオニア,,Character hub 
 characterHub.driveFolder.createConfirm,存在しないフォルダです。新しく作成しますか？,,Character hub folder create confirm message
 characterHub.driveFolder.createYes,はい,,Character hub folder create yes label
 characterHub.driveFolder.createNo,いいえ,,Character hub folder create no label
-characterHub.buttons.signIn,ログイン／Driveから読み込む,,Character hub sign in button
+characterHub.buttons.signIn,Googleにログイン,,Character hub sign in button
 image.loadError.title,画像読み込み失敗,,Image load error title
 image.loadError.message,{message},,Image load error body template
 image.uploadErrors.noFile,画像ファイルが選択されていません。,,Image upload no file error
@@ -156,10 +156,10 @@ ui.confirmations.unsavedChanges.buttons.save,保存して続行,,Unsaved changes
 ui.confirmations.unsavedChanges.buttons.discard,保存せず続行,,Unsaved changes dialog discard button
 ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes dialog cancel button
 ui.modal.load.title,読込,,Load modal title
-ui.modal.load.buttons.loadLocal,ローカルファイル,,Load modal local button
+ui.modal.load.buttons.loadLocal,ローカルファイルから読込,,Load modal local button
 ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button
 ui.modal.load.buttons.restoreHistory,復元,,Load modal history recovery button
-ui.modal.load.signInMessage,Drive機能を使うにはGoogleにサインインしてください。,,Load modal sign-in message
+ui.modal.load.signInMessage,Drive機能を使うにはGoogleにログインしてください。,,Load modal sign-in message
 ui.modal.historyRecovery.title,未保存キャラクターの復元,,History recovery modal title
 ui.modal.historyRecovery.description,未保存のキャラクターを復元します。,,History recovery modal description
 ui.modal.historyRecovery.empty,保存された履歴はありません。,,History recovery modal empty state

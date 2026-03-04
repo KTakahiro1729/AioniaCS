@@ -62,7 +62,7 @@ export function useAppModals(options) {
     const modalPromise = showModal({
       component: LoadModal,
       title: messages.ui.modal.load.title,
-      size: 'wide',
+      size: uiStore.isSignedIn ? 'wide' : '',
       props: initialProps,
       buttons: [],
       on: {
@@ -84,6 +84,7 @@ export function useAppModals(options) {
       (values) => {
         if (modalStore.component === LoadModal) {
           Object.assign(modalStore.props, values);
+          modalStore.size = values.isSignedIn ? 'wide' : '';
         }
       },
       { immediate: true },

@@ -28,17 +28,8 @@ const props = defineProps({
   },
 });
 
-const {
-  displayedItems,
-  isLoading,
-  isBusy,
-  initialize,
-  revealMore,
-  refresh,
-  cleanup,
-  selectCharacter,
-  removeItem,
-} = useDriveLoadPageState();
+const { displayedItems, isLoading, isBusy, initialize, revealMore, refresh, cleanup, selectCharacter, removeItem } =
+  useDriveLoadPageState();
 
 const { showAsyncToast, logAndToastError } = useNotifications();
 const modalStore = useModalStore();
@@ -371,6 +362,7 @@ onBeforeUnmount(() => {
 
 .drive-row {
   border-bottom: 1px solid var(--color-border-normal);
+  border-radius: 10px;
   padding: 10px 4px;
   background-color: transparent;
   transition:
@@ -491,9 +483,9 @@ onBeforeUnmount(() => {
 
 .drive-row__dates {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;

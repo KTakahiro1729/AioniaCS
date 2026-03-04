@@ -3,13 +3,7 @@
     <p class="share-result-modal__description">{{ description }}</p>
     <label class="share-result-modal__label" :for="inputId">{{ urlLabel }}</label>
     <div class="share-result-modal__field">
-      <input
-        :id="inputId"
-        class="share-result-modal__input"
-        type="text"
-        :value="shareUrl"
-        readonly
-      />
+      <input :id="inputId" class="share-result-modal__input" type="text" :value="shareUrl" readonly />
       <button type="button" class="button-base share-result-modal__copy" @click="handleCopy">
         {{ copyLabel }}
       </button>
