@@ -1,4 +1,4 @@
-import { arrayBufferToBase64, base64ToArrayBuffer } from '../libs/sabalessshare/src/crypto.js';
+import { arrayBufferToBase64, base64ToArrayBuffer } from '../utils/shareCodec.js';
 
 export class DriveStorageAdapter {
   constructor(googleDriveManager) {

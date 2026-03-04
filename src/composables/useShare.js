@@ -1,6 +1,4 @@
-import { createShareLink } from '../libs/sabalessshare/src/index.js';
-import { createDynamicLink } from '../libs/sabalessshare/src/dynamic.js';
-import { arrayBufferToBase64 } from '../libs/sabalessshare/src/crypto.js';
+import { createShareLink, createDynamicLink, arrayBufferToBase64 } from '../utils/shareCodec.js';
 import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useNotifications } from './useNotifications.js';

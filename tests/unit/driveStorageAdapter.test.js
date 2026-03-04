@@ -1,6 +1,5 @@
 import { DriveStorageAdapter } from '../../src/services/driveStorageAdapter.js';
-import { arrayBufferToBase64 } from '../../src/libs/sabalessshare/src/crypto.js';
-vi.mock('../../src/libs/sabalessshare/src/crypto.js', async () => await import('./__mocks__/sabalessshare.js'));
+import { arrayBufferToBase64 } from '../../src/utils/shareCodec.js';
 
 describe('DriveStorageAdapter', () => {
   let adapter;

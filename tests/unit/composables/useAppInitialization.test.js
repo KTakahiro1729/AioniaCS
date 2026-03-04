@@ -3,17 +3,15 @@ import { useAppInitialization } from '../../../src/composables/useAppInitializat
 import { useCharacterStore } from '../../../src/stores/characterStore.js';
 import { useUiStore } from '../../../src/stores/uiStore.js';
 
-vi.mock('../../../src/libs/sabalessshare/src/url.js', () => ({
-  parseShareUrl: vi.fn(),
-}));
-
-vi.mock('../../../src/libs/sabalessshare/src/index.js', () => ({
-  receiveSharedData: vi.fn(),
-}));
-
-vi.mock('../../../src/libs/sabalessshare/src/dynamic.js', () => ({
-  receiveDynamicData: vi.fn(),
-}));
+vi.mock('../../../src/utils/shareCodec.js', async () => {
+  const actual = await vi.importActual('../../../src/utils/shareCodec.js');
+  return {
+    ...actual,
+    parseShareUrl: vi.fn(),
+    receiveSharedData: vi.fn(),
+    receiveDynamicData: vi.fn(),
+  };
+});
 
 vi.mock('../../../src/services/driveStorageAdapter.js', () => ({
   DriveStorageAdapter: vi.fn().mockImplementation(() => ({})),
@@ -30,8 +28,7 @@ describe('useAppInitialization', () => {
   });
 
   test('loads shared data when URL has params', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
+    const { parseShareUrl, receiveSharedData } = await import('../../../src/utils/shareCodec.js');
     parseShareUrl.mockReturnValue({ mode: 'simple' });
     const payload = {
       character: { name: 'Hero' },
@@ -56,7 +53,7 @@ describe('useAppInitialization', () => {
   });
 
   test('does nothing when no params', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
+    const { parseShareUrl } = await import('../../../src/utils/shareCodec.js');
     parseShareUrl.mockReturnValue(null);
     const dataManager = { googleDriveManager: {} };
     const { initialize } = useAppInitialization(dataManager);
@@ -69,8 +66,7 @@ describe('useAppInitialization', () => {
   });
 
   test('updates loading state', async () => {
-    const { parseShareUrl } = await import('../../../src/libs/sabalessshare/src/url.js');
-    const { receiveSharedData } = await import('../../../src/libs/sabalessshare/src/index.js');
+    const { parseShareUrl, receiveSharedData } = await import('../../../src/utils/shareCodec.js');
     parseShareUrl.mockReturnValue({ mode: 'simple' });
     let resolve;
     receiveSharedData.mockReturnValue(

@@ -1,9 +1,6 @@
 import { useCharacterStore } from '../stores/characterStore.js';
 import { useUiStore } from '../stores/uiStore.js';
-import { base64ToArrayBuffer } from '../libs/sabalessshare/src/crypto.js';
-import { receiveSharedData } from '../libs/sabalessshare/src/index.js';
-import { receiveDynamicData } from '../libs/sabalessshare/src/dynamic.js';
-import { parseShareUrl } from '../libs/sabalessshare/src/url.js';
+import { base64ToArrayBuffer, receiveSharedData, receiveDynamicData, parseShareUrl } from '../utils/shareCodec.js';
 import { DriveStorageAdapter } from '../services/driveStorageAdapter.js';
 import { useNotifications } from './useNotifications.js';
 import { useModal } from './useModal.js';
