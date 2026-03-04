@@ -1,14 +1,14 @@
 <template>
   <div class="io-modal">
-    <button class="button-base" @click="$emit('save-local')">
+    <button class="button-base io-modal__button" @click="$emit('save-local')">
       {{ saveLocalLabel }}
     </button>
-    <label class="button-base">
+    <label class="button-base io-modal__button">
       {{ loadLocalLabel }}
       <input type="file" class="hidden" @change="(e) => $emit('load-local', e)" accept=".json,.txt,.zip" />
     </label>
     <AnimatedButton
-      class="button-base"
+      class="button-base io-modal__button"
       :trigger="triggerKey"
       :default-label="outputLabels.default"
       :animating-label="outputLabels.animating"
@@ -16,10 +16,10 @@
       :timings="outputTimings"
       @click="$emit('output-cocofolia')"
     />
-    <button class="button-base" @click="$emit('print')">
+    <button class="button-base io-modal__button" @click="$emit('print')">
       {{ printLabel }}
     </button>
-    <button class="button-base" v-if="signedIn" @click="$emit('drive-folder')">
+    <button class="button-base io-modal__button" v-if="signedIn" @click="$emit('drive-folder')">
       {{ driveFolderLabel }}
     </button>
   </div>
@@ -66,6 +66,11 @@ onUnmounted(() => {
 .io-modal {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
+}
+
+.io-modal__button {
+  width: min(100%, 220px);
 }
 </style>

@@ -159,6 +159,7 @@ async function exportLocal(ch) {
 <style scoped>
 .character-hub {
   position: relative;
+  overflow: visible;
 }
 
 .character-hub--description {
@@ -169,6 +170,8 @@ async function exportLocal(ch) {
   list-style: none;
   padding: 0;
   margin: 0;
+  max-height: none;
+  overflow: visible;
 }
 
 .character-hub--item {

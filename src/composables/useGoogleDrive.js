@@ -17,6 +17,21 @@ export function useGoogleDrive(dataManager) {
 
   const canSignInToGoogle = computed(() => uiStore.canSignInToGoogle);
 
+  function fallbackToMockDrive() {
+    if (googleDriveManager.value instanceof MockGoogleDriveManager) return;
+    console.warn('Google API initialization failed. Falling back to MockGoogleDriveManager.');
+    googleDriveManager.value = new MockGoogleDriveManager();
+    dataManager.setGoogleDriveManager(googleDriveManager.value);
+    uiStore.isSignedIn = true;
+    uiStore.canSignInToGoogle = false;
+    dataManager.loadCharacterListFromDrive().then((list) => (uiStore.driveCharacters = list));
+    showToast({
+      type: 'warning',
+      title: 'Google Drive未接続',
+      message: 'Google APIの初期化に失敗したため、モックストレージへ切り替えました。',
+    });
+  }
+
   function handleSignInClick() {
     if (!googleDriveManager.value) return;
     const signInPromise = new Promise((resolve, reject) => {
@@ -174,7 +189,7 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGapiLoad();
         console.info('Google API Ready');
       } catch {
-        showToast({ type: 'error', ...messages.googleDrive.apiInitError() });
+        fallbackToMockDrive();
       }
     };
 
@@ -186,7 +201,7 @@ export function useGoogleDrive(dataManager) {
         await googleDriveManager.value.onGisLoad();
         console.info('Google Sign-In Ready');
       } catch {
-        showToast({ type: 'error', ...messages.googleDrive.signInInitError() });
+        fallbackToMockDrive();
       }
     };
 
@@ -208,11 +223,11 @@ export function useGoogleDrive(dataManager) {
 
     waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
       .then(handleGapiLoaded)
-      .catch(() => showToast({ type: 'error', ...messages.googleDrive.apiInitError() }));
+      .catch(fallbackToMockDrive);
 
     waitForScript('script[src="https://accounts.google.com/gsi/client"]', () => window.google && window.google.accounts)
       .then(handleGisLoaded)
-      .catch(() => showToast({ type: 'error', ...messages.googleDrive.signInInitError() }));
+      .catch(fallbackToMockDrive);
   }
 
   onMounted(() => {
