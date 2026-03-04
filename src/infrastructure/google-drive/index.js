@@ -7,6 +7,7 @@ import {
 
 const env = typeof import.meta !== 'undefined' ? import.meta.env : process.env;
 const useMockDrive = env?.VITE_USE_MOCK_DRIVE === 'true';
+const isDevEnvironment = env?.DEV === true || env?.NODE_ENV === 'development';
 
 let sharedInstance = null;
 let currentInitializer = null;
@@ -14,7 +15,7 @@ let currentGetter = null;
 let runtimeUseMockDrive = useMockDrive;
 
 function exposeDevGlobal(instance) {
-  if (runtimeUseMockDrive && typeof window !== 'undefined') {
+  if (runtimeUseMockDrive && isDevEnvironment && typeof window !== 'undefined') {
     window.__DRIVE_DEV__ = instance;
   }
 }
