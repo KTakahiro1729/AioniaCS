@@ -1,5 +1,10 @@
 import { ref, computed, onMounted } from 'vue';
-import { getDriveManagerInstance, initializeDriveManager, isUsingMockDrive } from '@/infrastructure/google-drive/index.js';
+import {
+  fallbackToMockDriveManager,
+  getDriveManagerInstance,
+  initializeDriveManager,
+  isUsingMockDrive,
+} from '@/infrastructure/google-drive/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { removeStoredCharacterDraft } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
@@ -262,6 +267,14 @@ export function useGoogleDrive(dataManager) {
           refreshDriveFolderPath();
         }
       } catch (error) {
+        if (!isUsingMockDrive()) {
+          googleDriveManager.value = fallbackToMockDriveManager();
+          if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
+            dataManager.setGoogleDriveManager(googleDriveManager.value);
+          }
+          await handleDriveReady();
+          return;
+        }
         uiStore.isGapiInitialized = false;
         uiStore.isSignedIn = false;
         logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive');
@@ -291,7 +304,17 @@ export function useGoogleDrive(dataManager) {
 
     waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
       .then(handleDriveReady)
-      .catch((error) => logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive'));
+      .catch(async (error) => {
+        if (!isUsingMockDrive()) {
+          googleDriveManager.value = fallbackToMockDriveManager();
+          if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
+            dataManager.setGoogleDriveManager(googleDriveManager.value);
+          }
+          await handleDriveReady();
+          return;
+        }
+        logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive');
+      });
   }
 
   syncGoogleDriveManager();
