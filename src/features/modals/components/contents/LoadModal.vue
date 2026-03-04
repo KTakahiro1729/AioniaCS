@@ -2,68 +2,6 @@
   <div class="load-modal">
     <div class="load-modal__header">
       <div class="load-modal__sub-actions">
-        <div v-if="isSignedIn" class="load-modal__folder-controls">
-          <button
-            class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
-            type="button"
-            data-test="load-modal-folder-toggle"
-            @click="toggleFolderEditor"
-          >
-            {{ driveFolderLabel }}
-          </button>
-
-          <div v-if="isFolderEditorOpen" class="load-modal__folder-editor">
-            <div class="load-modal__input-group">
-              <BaseInput
-                :id="folderInputId"
-                class="load-modal__input"
-                type="text"
-                v-model="folderPathInput"
-                :placeholder="driveFolderPlaceholder"
-                :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
-                :joined="'right'"
-                @keyup.enter.prevent="commitFolderPath"
-              />
-              <button
-                class="button-base button-base--primary load-modal__apply is-joined-left"
-                type="button"
-                :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
-                data-test="load-modal-apply-folder"
-                @click="commitFolderPath"
-              >
-                {{ driveFolderChangeLabel }}
-              </button>
-            </div>
-            <div
-              v-if="isAwaitingFolderCreationChoice"
-              class="load-modal__folder-confirm"
-              role="status"
-              aria-live="polite"
-            >
-              <p class="load-modal__folder-confirm-text">{{ driveFolderCreateConfirmMessage }}</p>
-              <div class="load-modal__folder-confirm-actions">
-                <button
-                  class="button-base button-base--primary is-joined-right"
-                  type="button"
-                  :disabled="isDriveControlsDisabled"
-                  data-test="load-modal-folder-create-yes"
-                  @click="createAndApplyFolder"
-                >
-                  {{ driveFolderCreateYesLabel }}
-                </button>
-                <button
-                  class="button-base button-base--ghost is-joined-left"
-                  type="button"
-                  :disabled="isDriveControlsDisabled"
-                  data-test="load-modal-folder-create-no"
-                  @click="cancelFolderCreatePrompt"
-                >
-                  {{ driveFolderCreateNoLabel }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
         <button
           class="button-base button-base--ghost load-modal__sub-button load-modal__sub-button--compact"
           :disabled="!hasHistory"
@@ -72,6 +10,69 @@
         >
           {{ restoreHistoryLabel }}
         </button>
+      </div>
+    </div>
+
+    <div v-if="isSignedIn" class="load-modal__folder-controls">
+      <button
+        class="button-base button-base--ghost load-modal__sub-button"
+        type="button"
+        data-test="load-modal-folder-toggle"
+        @click="toggleFolderEditor"
+      >
+        {{ driveFolderLabel }}
+      </button>
+
+      <div v-if="isFolderEditorOpen" class="load-modal__folder-editor">
+        <div class="load-modal__input-group">
+          <BaseInput
+            :id="folderInputId"
+            class="load-modal__input"
+            type="text"
+            v-model="folderPathInput"
+            :placeholder="driveFolderPlaceholder"
+            :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
+            :joined="'right'"
+            @keyup.enter.prevent="commitFolderPath"
+          />
+          <button
+            class="button-base button-base--primary load-modal__apply is-joined-left"
+            type="button"
+            :disabled="isDriveControlsDisabled || isAwaitingFolderCreationChoice"
+            data-test="load-modal-apply-folder"
+            @click="commitFolderPath"
+          >
+            {{ driveFolderChangeLabel }}
+          </button>
+        </div>
+        <div
+          v-if="isAwaitingFolderCreationChoice"
+          class="load-modal__folder-confirm"
+          role="status"
+          aria-live="polite"
+        >
+          <p class="load-modal__folder-confirm-text">{{ driveFolderCreateConfirmMessage }}</p>
+          <div class="load-modal__folder-confirm-actions">
+            <button
+              class="button-base button-base--primary is-joined-right"
+              type="button"
+              :disabled="isDriveControlsDisabled"
+              data-test="load-modal-folder-create-yes"
+              @click="createAndApplyFolder"
+            >
+              {{ driveFolderCreateYesLabel }}
+            </button>
+            <button
+              class="button-base button-base--ghost is-joined-left"
+              type="button"
+              :disabled="isDriveControlsDisabled"
+              data-test="load-modal-folder-create-no"
+              @click="cancelFolderCreatePrompt"
+            >
+              {{ driveFolderCreateNoLabel }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -278,6 +279,7 @@ async function createAndApplyFolder() {
   if (!manager) {
     cancelFolderCreatePrompt();
     emit('update-drive-folder-path', targetPath);
+    isFolderEditorOpen.value = false;
     return;
   }
 
@@ -350,6 +352,7 @@ function handleLocalChange(event) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 0 14px 10px;
 }
 
 .load-modal__sub-button {
@@ -365,7 +368,7 @@ function handleLocalChange(event) {
 }
 
 .load-modal__local-actions {
-  padding: 10px 14px;
+  padding: 0 14px 10px;
   display: flex;
 }
 
@@ -382,7 +385,7 @@ function handleLocalChange(event) {
 
 .load-modal__input-group {
   display: flex;
-  align-items: stretch;
+  align-items: center;
 }
 
 .load-modal__input {
@@ -395,6 +398,10 @@ function handleLocalChange(event) {
   background-color: var(--color-panel-body);
   color: var(--color-text-primary, #fff);
   box-sizing: border-box;
+}
+
+.load-modal__input-group :deep(input.load-modal__input) {
+  height: 48px;
 }
 
 .load-modal__input:disabled {
