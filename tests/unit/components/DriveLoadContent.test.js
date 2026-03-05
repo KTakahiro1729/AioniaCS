@@ -18,8 +18,8 @@ vi.mock('@/features/modals/stores/modalStore.js', () => ({
   }),
 }));
 
-vi.mock('@/infrastructure/google-drive/googleDriveManager.js', () => ({
-  getGoogleDriveManagerInstance: () => managerMock,
+vi.mock('@/infrastructure/google-drive/index.js', () => ({
+  getDriveManagerInstance: () => managerMock,
 }));
 
 vi.mock('@/features/cloud-sync/composables/useShare.js', () => ({

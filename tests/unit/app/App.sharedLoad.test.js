@@ -23,6 +23,12 @@ vi.mock('@/features/cloud-sync/composables/useGoogleDrive.js', () => ({
   }),
 }));
 
+vi.mock('@/infrastructure/google-drive/index.js', () => ({
+  getDriveManagerInstance: () => ({}),
+  initializeDriveManager: vi.fn(),
+  isUsingMockDrive: vi.fn(),
+}));
+
 vi.mock('@/features/modals/composables/useAppModals.js', () => ({
   useAppModals: () => ({
     openLoadModal: vi.fn(),

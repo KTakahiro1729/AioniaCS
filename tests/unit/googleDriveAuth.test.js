@@ -30,6 +30,7 @@ describe('GoogleDriveManager auth', () => {
   test('ensureAccessToken requests token from backend and applies it to gapi', async () => {
     fetch.mockResolvedValue({
       ok: true,
+      headers: { get: () => 'application/json' },
       json: async () => ({ access_token: 'server-access', expires_in: 3600 }),
     });
 
