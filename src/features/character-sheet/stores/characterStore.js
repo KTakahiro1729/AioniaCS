@@ -277,9 +277,7 @@ export const useCharacterStore = defineStore('character', {
         }
       }
     },
-    handleSpeciesChange() {
-      if (this.character.species !== 'other') this.character.rareSpecies = '';
-    },
+
     initializeAll() {
       Object.assign(this.character, createCharacter());
       this.skills.splice(0, this.skills.length, ...baseSkills());

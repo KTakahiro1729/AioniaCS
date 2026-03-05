@@ -7,8 +7,7 @@ rareSpecies,"",希少種族
 occupation,"",職業
 age,null,
 gender,"",性別
-height,"",身長
-weight,"",体重
+physique,"",体格
 otherItems,"",その他
 currentScar,0,
 initialScar,0,

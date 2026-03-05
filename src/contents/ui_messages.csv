@@ -130,7 +130,7 @@ dataExport.loadError.title,読み込み失敗,,Data export load error title
 dataExport.loadError.message,{message},,Data export load error body template
 file.loadError,ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。,,File load error
 file.unsupportedFormat,対応していないファイル形式です。AioniaCSで保存したデータをご利用ください。,,File unsupported format error
-ui.header.defaultTitle,Aionia TRPG Character Sheet,,Header default title
+ui.header.defaultTitle,AioniaTRPGCharacter Sheet,,Header default title
 ui.header.helpLabel,?,,Header help label
 ui.header.newCharacter,新規,,Header new character label
 ui.header.signIn,ログイン,,Header sign in label
@@ -156,9 +156,9 @@ ui.confirmations.unsavedChanges.buttons.save,保存して続行,,Unsaved changes
 ui.confirmations.unsavedChanges.buttons.discard,保存せず続行,,Unsaved changes dialog discard button
 ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes dialog cancel button
 ui.modal.load.title,読込,,Load modal title
-ui.modal.load.buttons.loadLocal,ローカルファイルから読込,,Load modal local button
-ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button
-ui.modal.load.buttons.restoreHistory,復元,,Load modal history recovery button
+ui.modal.load.buttons.loadLocal,ローカルファイル読込,,Load modal local button
+ui.modal.load.buttons.loadDrive,Drive保存先,,Load modal drive button
+ui.modal.load.buttons.restoreHistory,未保存データ復元,,Load modal history recovery button
 ui.modal.load.signInMessage,Drive機能を使うにはGoogleにログインしてください。,,Load modal sign-in message
 ui.modal.historyRecovery.title,未保存キャラクターの復元,,History recovery modal title
 ui.modal.historyRecovery.description,未保存のキャラクターを復元します。,,History recovery modal description
@@ -203,7 +203,7 @@ sheet.sections.basicInfo.fields.species,種族,,Sheet basic info field species
 sheet.sections.basicInfo.fields.rareSpecies,種族名,,Sheet basic info field rare species
 sheet.sections.basicInfo.fields.gender,性別,,Sheet basic info field gender
 sheet.sections.basicInfo.fields.age,年齢,,Sheet basic info field age
-sheet.sections.basicInfo.fields.height,身長,,Sheet basic info field height
+sheet.sections.basicInfo.fields.height,体格,,Sheet basic info field height
 sheet.sections.basicInfo.fields.weight,体重,,Sheet basic info field weight
 sheet.sections.basicInfo.fields.origin,出身地,,Sheet basic info field origin
 sheet.sections.basicInfo.fields.occupation,職業,,Sheet basic info field occupation
@@ -218,7 +218,7 @@ sheet.sections.skills.title,技能,,Sheet skills section title
 sheet.sections.memo.title,キャラクターメモ,,Sheet memo section title
 sheet.sections.memo.subMemo.titlePlaceholder,サブメモタイトル,,Sub memo title placeholder
 sheet.sections.memo.subMemo.contentPlaceholder,サブメモ内容,,Sub memo content placeholder
-sheet.sections.memo.subMemo.spoilerLabel,ネタバレ,,Sub memo spoiler toggle label
+sheet.sections.memo.subMemo.spoilerLabel,秘密メモ,,Sub memo spoiler toggle label
 sheet.sections.memo.subMemo.spoilerNotice,※ネタバレを含む内容です,,Sub memo spoiler guard notice
 sheet.sections.memo.subMemo.readButton,読む,,Sub memo reveal button label
 sheet.sections.memo.subMemo.addButton,サブメモを追加,,Sub memo add button label

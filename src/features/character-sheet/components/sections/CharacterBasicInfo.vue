@@ -14,23 +14,18 @@
         </div>
       </div>
       <div class="info-row">
-        <div
-          class="info-item"
-          :class="{
-            'info-item--double': characterStore.character.species !== 'other',
-            'info-item--quadruple': characterStore.character.species === 'other',
-          }"
-        >
+        <div class="info-item info-item--double">
           <label for="species">{{ basicInfoTexts.fields.species }}</label>
-          <select id="species" v-model="characterStore.character.species" @change="handleSpeciesChange" :disabled="uiStore.isViewingShared">
-            <option v-for="option in AioniaGameData.speciesOptions" :key="option.value" :value="option.value" :disabled="option.disabled">
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-        <div class="info-item info-item--quadruple" v-if="characterStore.character.species === 'other'">
-          <label for="rare_species">{{ basicInfoTexts.fields.rareSpecies }}</label>
-          <input type="text" id="rare_species" v-model="characterStore.character.rareSpecies" :disabled="uiStore.isViewingShared" />
+          <input
+            type="text"
+            id="species"
+            v-model="characterStore.character.species"
+            list="species_list"
+            :disabled="uiStore.isViewingShared"
+          />
+          <datalist id="species_list">
+            <option v-for="option in AioniaGameData.speciesOptions" :key="option.value" :value="option.label" />
+          </datalist>
         </div>
         <div class="info-item info-item--double">
           <label for="occupation">{{ basicInfoTexts.fields.occupation }}</label>
@@ -46,13 +41,9 @@
           <label for="age">{{ basicInfoTexts.fields.age }}</label>
           <input type="number" id="age" v-model.number="characterStore.character.age" min="0" :disabled="uiStore.isViewingShared" />
         </div>
-        <div class="info-item info-item--quadruple">
-          <label for="height">{{ basicInfoTexts.fields.height }}</label>
-          <input type="text" id="height" v-model="characterStore.character.height" :disabled="uiStore.isViewingShared" />
-        </div>
-        <div class="info-item info-item--quadruple">
-          <label for="weight_char">{{ basicInfoTexts.fields.weight }}</label>
-          <input type="text" id="weight_char" v-model="characterStore.character.weight" :disabled="uiStore.isViewingShared" />
+        <div class="info-item info-item--double">
+          <label for="physique">{{ basicInfoTexts.fields.height }}</label>
+          <input type="text" id="physique" v-model="characterStore.character.physique" :disabled="uiStore.isViewingShared" />
         </div>
       </div>
     </div>
