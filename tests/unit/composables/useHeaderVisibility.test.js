@@ -15,6 +15,18 @@ Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
     return 80;
   },
 });
+Object.defineProperty(document.documentElement, 'scrollHeight', {
+  configurable: true,
+  get() {
+    return 2000;
+  },
+});
+Object.defineProperty(window, 'innerHeight', {
+  configurable: true,
+  get() {
+    return 1000;
+  },
+});
 
 const TestComp = {
   template: "<div ref='header' style='height:80px'></div>",

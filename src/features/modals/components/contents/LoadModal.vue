@@ -315,7 +315,7 @@ function handleLocalChange(event) {
   display: flex;
   gap: 6px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   width: 100%;
 }
 

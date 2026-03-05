@@ -130,7 +130,7 @@ dataExport.loadError.title,読み込み失敗,,Data export load error title
 dataExport.loadError.message,{message},,Data export load error body template
 file.loadError,ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。,,File load error
 file.unsupportedFormat,対応していないファイル形式です。AioniaCSで保存したデータをご利用ください。,,File unsupported format error
-ui.header.defaultTitle,AioniaTRPGCharacter Sheet,,Header default title
+ui.header.defaultTitle,Aionia TRPG Character Sheet,,Header default title
 ui.header.helpLabel,?,,Header help label
 ui.header.newCharacter,新規,,Header new character label
 ui.header.signIn,ログイン,,Header sign in label

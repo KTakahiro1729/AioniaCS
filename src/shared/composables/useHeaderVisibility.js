@@ -7,14 +7,25 @@ export function useHeaderVisibility(targetRef) {
 
   function handleScroll() {
     requestAnimationFrame(() => {
-      const y = window.scrollY;
+      // 現在のスクロール位置を取得
+      let y = window.scrollY;
+
+      // ページの最大スクロール可能量を計算
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
+      // Safariのラバーバンド対策: スクロール位置を 0 〜 maxScroll の範囲に制限
+      y = Math.max(0, Math.min(y, maxScroll));
+
       const delta = y - lastScrollY;
       currentTranslateY -= delta;
+
       if (currentTranslateY > 0) currentTranslateY = 0;
       if (currentTranslateY < -headerHeight) currentTranslateY = -headerHeight;
+
       if (targetRef.value) {
         targetRef.value.style.transform = `translateY(${currentTranslateY}px)`;
       }
+
       lastScrollY = y;
     });
   }
@@ -24,7 +35,10 @@ export function useHeaderVisibility(targetRef) {
       headerHeight = targetRef.value.offsetHeight;
       targetRef.value.style.transform = 'translateY(0px)';
     }
-    lastScrollY = window.scrollY;
+    // 初期化時も同様に範囲内に収める
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    lastScrollY = Math.max(0, Math.min(window.scrollY, maxScroll));
+
     window.addEventListener('scroll', handleScroll, { passive: true });
   });
 

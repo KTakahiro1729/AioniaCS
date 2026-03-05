@@ -1,0 +1,168 @@
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/Users/kango/Documents/Arts/Aionia/AioniaCS[39m
+
+ [32m✓[39m tests/unit/main.test.js [2m ([22m[2m13 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2mloadConfig creates default config when missing[22m[39m
+File created successfully: { id: [32m'cfg-1'[39m, name: [32m'aioniacs.cfg'[39m }
+
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2msetCharacterFolderPath updates config and clears cache[22m[39m
+File created successfully: { id: [32m'cfg-3'[39m, name: [32m'aioniacs.cfg'[39m }
+File updated successfully: { id: [32m'cfg-3'[39m, name: [32m'aioniacs.cfg'[39m }
+
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2mfindOrCreateConfiguredCharacterFolder builds nested folders from configured path[22m[39m
+File created successfully: { id: [32m'cfg-4'[39m, name: [32m'aioniacs.cfg'[39m }
+File updated successfully: { id: [32m'unused'[39m, name: [32m'cfg'[39m }
+Folder not found: Parent
+Folder created successfully: { id: [32m'folder-parent'[39m, name: [32m'Parent'[39m }
+Folder not found: Child
+Folder created successfully: { id: [32m'folder-child'[39m, name: [32m'Child'[39m }
+
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2mcreateCharacterFile uploads to configured folder[22m[39m
+File created successfully: { id: [32m'cfg-5'[39m, name: [32m'aioniacs.cfg'[39m }
+Folder not found: 慈悲なきアイオニア
+Folder created successfully: { id: [32m'folder'[39m, name: [32m'慈悲なきアイオニア'[39m }
+File created successfully: { id: [32m'file-1'[39m, name: [32m'Hero.zip'[39m }
+
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2msaveFile injects url-safe thumbnail content hints when provided[22m[39m
+File created successfully: { id: [32m'cfg-thumb'[39m, name: [32m'aioniacs.cfg'[39m }
+Folder not found: 慈悲なきアイオニア
+Folder created successfully: { id: [32m'folder-thumb'[39m, name: [32m'慈悲なきアイオニア'[39m }
+File created successfully: { id: [32m'file-thumb'[39m, name: [32m'Hero.zip'[39m }
+
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2mupdateCharacterFile patches existing file[22m[39m
+File created successfully: { id: [32m'cfg-6'[39m, name: [32m'aioniacs.cfg'[39m }
+Folder not found: 慈悲なきアイオニア
+Folder created successfully: { id: [32m'folder'[39m, name: [32m'慈悲なきアイオニア'[39m }
+File updated successfully: { id: [32m'file-1'[39m, name: [32m'Hero.zip'[39m }
+
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2mfindFileByName queries configured folder[22m[39m
+File created successfully: { id: [32m'cfg-7'[39m, name: [32m'aioniacs.cfg'[39m }
+Folder not found: 慈悲なきアイオニア
+Folder created successfully: { id: [32m'folder'[39m, name: [32m'慈悲なきアイオニア'[39m }
+
+[90mstdout[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2misFileInConfiguredFolder detects mismatched parent[22m[39m
+File created successfully: { id: [32m'cfg-8'[39m, name: [32m'aioniacs.cfg'[39m }
+Folder not found: 慈悲なきアイオニア
+Folder created successfully: { id: [32m'folder-x'[39m, name: [32m'慈悲なきアイオニア'[39m }
+
+[90mstderr[2m | tests/unit/googleDriveManager.test.js[2m > [22m[2mGoogleDriveManager configuration and folder handling[2m > [22m[2monGapiLoad rejects when gapi.load missing[22m[39m
+GDM: GAPI core script not available for gapi.load.
+
+ [32m✓[39m tests/unit/googleDriveManager.test.js [2m ([22m[2m14 tests[22m[2m)[22m[90m 70[2mms[22m[39m
+[90mstderr[2m | tests/unit/imageManager.test.js[2m > [22m[2mImageManager[2m > [22m[2mloadImage[2m > [22m[2mrejects with readError message when FileReader fails[22m[39m
+FileReader error: Error: FileReader failure
+    at [90mC:\Users\kango\Documents\Arts\Aionia\AioniaCS\[39mtests\unit\imageManager.test.js:49:52
+    at [90mfile:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:135:14
+    at [90mfile:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:60:26
+    at runTest [90m(file:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:781:17[90m)[39m
+    at runSuite [90m(file:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runSuite [90m(file:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:909:15[90m)[39m
+    at runFiles [90m(file:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:958:5[90m)[39m
+    at startTests [90m(file:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:967:3[90m)[39m
+    at [90mfile:///C:/Users/kango/Documents/Arts/Aionia/AioniaCS/[39mnode_modules/[4mvitest[24m/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+
+[90mstdout[2m | tests/unit/imageManager.test.js[2m > [22m[2mImageManager[2m > [22m[2mremoveImage[2m > [22m[2mreturns a new array without the removed image when index is valid[22m[39m
+Simulating removal of image at index: 1
+
+[90mstderr[2m | tests/unit/imageManager.test.js[2m > [22m[2mImageManager[2m > [22m[2mremoveImage[2m > [22m[2mreturns the original array when index is invalid[22m[39m
+Invalid index for image removal.
+
+ [32m✓[39m tests/unit/imageManager.test.js [2m ([22m[2m9 tests[22m[2m)[22m[90m 55[2mms[22m[39m
+ [32m✓[39m tests/unit/functions/authApi.test.js [2m ([22m[2m4 tests[22m[2m)[22m[90m 87[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useAppModals.test.js [2m ([22m[2m8 tests[22m[2m)[22m[90m 81[2mms[22m[39m
+ [32m✓[39m tests/unit/stores/characterStore.test.js [2m ([22m[2m13 tests[22m[2m)[22m[90m 117[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useLocalCharacterPersistence.test.js [2m ([22m[2m9 tests[22m[2m)[22m[90m 136[2mms[22m[39m
+[90mstderr[2m | tests/unit/dataManager.test.js[2m > [22m[2mDataManager[2m > [22m[2mhandleFileUpload[2m > [22m[2mshould call onError if ZIP loading fails (e.g. character_data.json missing)[22m[39m
+Failed to parse ZIP file: Error: character_data.json がアーカイブ内に見つかりません
+    at deserializeCharacterPayload [90m(C:\Users\kango\Documents\Arts\Aionia\AioniaCS\[39msrc\shared\utils\characterSerialization.js:199:13[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at Object.reader.onload [90m(C:\Users\kango\Documents\Arts\Aionia\AioniaCS\[39msrc\features\character-sheet\services\dataManager.js:78:31[90m)[39m
+
+ [32m✓[39m tests/unit/dataManager.test.js [2m ([22m[2m12 tests[22m[2m)[22m[90m 157[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2msaveCharacterToDrive updates an existing file when current id is set[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2mloadCharacterFromDrive loads data and updates store[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2mloadCharacterFromDrive uses provided display name in toast messages[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2mloadCharacterFromDrive falls back to character name when display name is missing[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2mloadCharacterFromDrive uses initial data without downloading[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2msaveCharacterToDrive renames file when saved name differs from character name[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2msaveCharacterToDrive uses new success message for brand-new files[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useGoogleDrive.test.js[2m > [22m[2museGoogleDrive[2m > [22m[2msaveCharacterToDrive keeps default success message when updating existing files[22m[39m
+[Vue warn]: onMounted is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+
+ [32m✓[39m tests/unit/composables/useGoogleDrive.test.js [2m ([22m[2m8 tests[22m[2m)[22m[33m 309[2mms[22m[39m
+ [32m✓[39m tests/unit/components/LoadModal.test.js [2m ([22m[2m11 tests[22m[2m)[22m[33m 499[2mms[22m[39m
+ [32m✓[39m tests/unit/components/DriveLoadContent.test.js [2m ([22m[2m8 tests[22m[2m)[22m[33m 1030[2mms[22m[39m
+ [32m✓[39m tests/unit/googleDriveAuth.test.js [2m ([22m[2m3 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+[90mstdout[2m | tests/unit/googleDriveAuth.test.js[2m > [22m[2mGoogleDriveManager auth[2m > [22m[2mensureAccessToken requests token from backend and applies it to gapi[22m[39m
+GDM: GAPI client initialized.
+
+ [32m✓[39m tests/unit/cocofoliaExporter.test.js [2m ([22m[2m4 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+ [32m✓[39m tests/unit/localesJa.test.js [2m ([22m[2m7 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useDriveLoadPageState.test.js [2m ([22m[2m4 tests[22m[2m)[22m[90m 91[2mms[22m[39m
+ [32m✓[39m tests/unit/stores/modalStore.test.js [2m ([22m[2m5 tests[22m[2m)[22m[90m 63[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useShare.test.js [2m ([22m[2m7 tests[22m[2m)[22m[90m 121[2mms[22m[39m
+[1m[33m[@vue/compiler-sfc][0m[33m `defineExpose` is a compiler macro and no longer needs to be imported.[0m
+
+ [32m✓[39m tests/unit/components/CharacterMemoSection.test.js [2m ([22m[2m3 tests[22m[2m)[22m[90m 188[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useNotifications.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 36[2mms[22m[39m
+ [32m✓[39m tests/unit/utils.test.js [2m ([22m[2m6 tests[22m[2m)[22m[90m 53[2mms[22m[39m
+ [32m✓[39m tests/unit/app/App.sharedLoad.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 273[2mms[22m[39m
+ [32m✓[39m tests/unit/components/MainHeader.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 252[2mms[22m[39m
+ [32m✓[39m tests/unit/sampleDataLoad.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 31[2mms[22m[39m
+ [33m❯[39m tests/unit/composables/useHeaderVisibility.test.js [2m ([22m[2m1 test[22m [2m|[22m [31m1 failed[39m[2m)[22m[90m 112[2mms[22m[39m
+[31m   [33m❯[31m tests/unit/composables/useHeaderVisibility.test.js[2m > [22museHeaderVisibility[2m > [22mmoves header with scroll[39m
+[31m     → expected 'translateY(0px)' to be 'translateY(-80px)' // Object.is equality[39m
+ [32m✓[39m tests/unit/loadIndicatorUtils.test.js [2m ([22m[2m5 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m tests/unit/components/AnimatedButton.test.js [2m ([22m[2m1 test[22m[2m)[22m[90m 80[2mms[22m[39m
+ [32m✓[39m tests/unit/components/SpecialSkillsSection.test.js [2m ([22m[2m1 test[22m[2m)[22m[90m 243[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/usePrint.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m tests/integrity/data-resilience.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 225[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useDynamicButtons.test.js [2m ([22m[2m4 tests[22m[2m)[22m[90m 31[2mms[22m[39m
+ [32m✓[39m tests/unit/components/MainFooter.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 167[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useAppInitialization.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/stores/uiStoreCharacters.test.js [2m ([22m[2m2 tests[22m[2m)[22m[90m 23[2mms[22m[39m
+ [32m✓[39m tests/unit/sample.test.js [2m ([22m[2m1 test[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/composables/useModal.test.js [2m ([22m[2m1 test[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m tests/unit/router/index.test.js [2m ([22m[2m1 test[22m[2m)[22m[90m 5[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m tests/unit/composables/useHeaderVisibility.test.js[2m > [22museHeaderVisibility[2m > [22mmoves header with scroll
+[31m[1mAssertionError[22m: expected 'translateY(0px)' to be 'translateY(-80px)' // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- translateY(-80px)[39m
+[31m+ translateY(0px)[39m
+
+[36m [2m❯[22m tests/unit/composables/useHeaderVisibility.test.js:[2m37:47[22m[39m
+    [90m 35| [39m    window[33m.[39m[34mdispatchEvent[39m([35mnew[39m [33mEvent[39m([32m'scroll'[39m))[33m;[39m
+    [90m 36| [39m    [35mawait[39m wrapper[33m.[39mvm[33m.[39m[34m$nextTick[39m()[33m;[39m
+    [90m 37| [39m    [34mexpect[39m(wrapper[33m.[39mvm[33m.[39mheader[33m.[39mstyle[33m.[39mtransform)[33m.[39m[34mtoBe[39m([32m'translateY(-80px)'[39m…
+    [90m   | [39m                                              [31m^[39m
+    [90m 38| [39m
+    [90m 39| [39m    window[33m.[39mscrollY [33m=[39m [34m70[39m[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m35 passed[39m[22m[90m (36)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m180 passed[39m[22m[90m (181)[39m
+[2m   Start at [22m 17:20:29
+[2m   Duration [22m 14.52s[2m (transform 4.25s, setup 2.74s, collect 18.60s, tests 4.71s, environment 76.92s, prepare 19.17s)[22m
+
