@@ -203,7 +203,7 @@ watch(
 onMounted(async () => {
   await initialize();
   pendingSharedId.value = parseSharedId();
-    try {
+  try {
     await attemptSharedLoad();
   } catch (error) {
     console.error('Failed to load shared character on mount:', error);

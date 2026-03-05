@@ -28,17 +28,8 @@ const props = defineProps({
   },
 });
 
-const {
-  displayedItems,
-  isLoading,
-  isBusy,
-  initialize,
-  revealMore,
-  refresh,
-  cleanup,
-  selectCharacter,
-  removeItem,
-} = useDriveLoadPageState();
+const { displayedItems, isLoading, isBusy, initialize, revealMore, refresh, cleanup, selectCharacter, removeItem } =
+  useDriveLoadPageState();
 
 const { showAsyncToast, logAndToastError } = useNotifications();
 const modalStore = useModalStore();
@@ -366,14 +357,14 @@ onBeforeUnmount(() => {
 .drive-load__list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  border-top: 1px solid var(--color-border-normal);
 }
 
 .drive-row {
-  border: 1px solid var(--color-border-normal);
+  border-bottom: 1px solid var(--color-border-normal);
   border-radius: 10px;
-  padding: 14px;
-  background-color: var(--color-panel-body);
+  padding: 10px 4px;
+  background-color: transparent;
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -381,13 +372,13 @@ onBeforeUnmount(() => {
 
 .drive-row__layout {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: stretch;
 }
 
 .drive-row__thumb {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
 
   border-radius: 8px;
   overflow: hidden;
@@ -425,7 +416,7 @@ onBeforeUnmount(() => {
 .drive-row__main {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .drive-row__title-row {
@@ -447,7 +438,7 @@ onBeforeUnmount(() => {
 .drive-row__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 12px;
+  gap: 8px 10px;
   justify-content: flex-end;
   align-items: stretch;
 }
@@ -468,7 +459,7 @@ onBeforeUnmount(() => {
 .drive-row__action-cluster > .button-base,
 .drive-row__confirm-actions > .button-base,
 .drive-row__delete {
-  height: 48px;
+  height: 42px;
 }
 
 .drive-row__delete-confirm {

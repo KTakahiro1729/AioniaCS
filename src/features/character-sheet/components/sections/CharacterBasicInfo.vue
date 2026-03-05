@@ -10,12 +10,7 @@
         </div>
         <div class="info-item info-item--double">
           <label for="player_name">{{ basicInfoTexts.fields.playerName }}</label>
-          <input
-            type="text"
-            id="player_name"
-            v-model="characterStore.character.playerName"
-            :disabled="uiStore.isViewingShared"
-          />
+          <input type="text" id="player_name" v-model="characterStore.character.playerName" :disabled="uiStore.isViewingShared" />
         </div>
       </div>
       <div class="info-row">

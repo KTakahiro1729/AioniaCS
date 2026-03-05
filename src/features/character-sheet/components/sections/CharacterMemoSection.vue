@@ -80,10 +80,7 @@ function loadUiState() {
 
 function persistUiState() {
   try {
-    localStorage.setItem(
-      LOCAL_STORAGE_KEY,
-      JSON.stringify({ expandedIds: [...expandedIds.value], revealedIds: [...revealedIds.value] }),
-    );
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ expandedIds: [...expandedIds.value], revealedIds: [...revealedIds.value] }));
   } catch (e) {
     // do nothing when storage is unavailable
   }
@@ -100,10 +97,8 @@ function syncUiStateWithSubMemos(list) {
     }
   });
 
-  const expandedChanged =
-    nextExpanded.size !== expandedIds.value.size || [...nextExpanded].some((id) => !expandedIds.value.has(id));
-  const revealedChanged =
-    nextRevealed.size !== revealedIds.value.size || [...nextRevealed].some((id) => !revealedIds.value.has(id));
+  const expandedChanged = nextExpanded.size !== expandedIds.value.size || [...nextExpanded].some((id) => !expandedIds.value.has(id));
+  const revealedChanged = nextRevealed.size !== revealedIds.value.size || [...nextRevealed].some((id) => !revealedIds.value.has(id));
 
   if (expandedChanged) {
     expandedIds.value = nextExpanded;

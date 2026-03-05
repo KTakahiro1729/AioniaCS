@@ -100,42 +100,6 @@ export class MockGoogleDriveManager {
 
   _seedSampleData() {
     const { folderId, normalized } = this._ensureFolderPathSync(this.state.config.characterFolderPath);
-    const now = Date.now();
-    const samples = [
-      {
-        name: '白銀の長い名前を持つキャラクター十二単風味.zip',
-        content: JSON.stringify({ name: '白銀の長い名前を持つキャラクター十二単風味' }),
-        shared: false,
-        thumbnailLink: null,
-      },
-      {
-        name: '影無き旅人.zip',
-        content: JSON.stringify({ name: '影無き旅人' }),
-        shared: true,
-        thumbnailLink: 'mock-thumbnail-seed-2',
-      },
-      {
-        name: '薄明の無貌.zip',
-        content: JSON.stringify({ name: '薄明の無貌' }),
-        shared: false,
-        thumbnailLink:
-          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEklEQVR42mP8z8BQDwAFngJ/3N/1kAAAAABJRU5ErkJggg==',
-      },
-    ];
-    samples.forEach((sample, index) => {
-      const id = `file-${this.state.fileCounter++}`;
-      this.state.files[id] = {
-        id,
-        name: sample.name,
-        content: sample.content,
-        parentId: folderId,
-        mimeType: 'application/zip',
-        modifiedTime: new Date(now - index * 45 * 60 * 1000).toISOString(),
-        createdTime: new Date(now - (index + 1) * 45 * 60 * 1000).toISOString(),
-        shared: sample.shared,
-        thumbnailLink: sample.thumbnailLink,
-      };
-    });
     this.configuredFolderId = folderId;
     this.cachedFolderPath = normalized;
   }

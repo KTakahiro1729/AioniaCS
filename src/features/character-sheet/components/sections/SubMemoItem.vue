@@ -19,12 +19,7 @@
         @change="$emit('update-title', $event.target.value)"
       />
       <label class="submemo-spoiler">
-        <input
-          type="checkbox"
-          :checked="subMemo.isSpoiler"
-          :disabled="readonly"
-          @change="$emit('update-spoiler', $event.target.checked)"
-        />
+        <input type="checkbox" :checked="subMemo.isSpoiler" :disabled="readonly" @change="$emit('update-spoiler', $event.target.checked)" />
         <span>{{ messages.spoilerLabel }}</span>
       </label>
       <button

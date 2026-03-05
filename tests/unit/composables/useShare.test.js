@@ -26,9 +26,9 @@ describe('useShare', () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = false;
     const share = useShare({ googleDriveManager: {} });
-    await expect(share.createShareLink()).rejects.toThrow('サインインしてください');
-    await expect(share.enableShare('file-1')).rejects.toThrow('サインインしてください');
-    await expect(share.disableShare('file-1')).rejects.toThrow('サインインしてください');
+    await expect(share.createShareLink()).rejects.toThrow('ログインしてください');
+    await expect(share.enableShare('file-1')).rejects.toThrow('ログインしてください');
+    await expect(share.disableShare('file-1')).rejects.toThrow('ログインしてください');
   });
 
   test('throws when drive manager missing ensureFilePublic', async () => {

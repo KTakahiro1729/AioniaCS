@@ -34,12 +34,7 @@
                 {{ driveFolderChangeLabel }}
               </button>
             </div>
-            <div
-              v-if="isAwaitingFolderCreationChoice"
-              class="load-modal__folder-confirm"
-              role="status"
-              aria-live="polite"
-            >
+            <div v-if="isAwaitingFolderCreationChoice" class="load-modal__folder-confirm" role="status" aria-live="polite">
               <p class="load-modal__folder-confirm-text">{{ driveFolderCreateConfirmMessage }}</p>
               <div class="load-modal__folder-confirm-actions">
                 <button
@@ -84,11 +79,7 @@
 
     <div class="load-modal__drive-scroll">
       <template v-if="isSignedIn">
-        <DriveLoadContent
-          :is-signed-in="isSignedIn"
-          :is-drive-ready="isDriveReady"
-          :load-character-from-drive="loadCharacterFromDrive"
-        />
+        <DriveLoadContent :is-signed-in="isSignedIn" :is-drive-ready="isDriveReady" :load-character-from-drive="loadCharacterFromDrive" />
       </template>
       <div v-else class="load-modal__signin">
         <p class="load-modal__signin-message">{{ signInMessage }}</p>
@@ -192,9 +183,7 @@ function normalizePath(path, manager) {
 }
 
 async function ensureFolderPath(path, manager, createMissing = false) {
-  const segments = normalizePath(path, manager)
-    .split('/')
-    .filter(Boolean);
+  const segments = normalizePath(path, manager).split('/').filter(Boolean);
 
   if (segments.length === 0) {
     return true;
@@ -371,6 +360,7 @@ function handleLocalChange(event) {
 .load-modal__local-actions {
   padding: 10px 14px;
   display: flex;
+  justify-content: center;
 }
 
 .load-modal__local-actions > .load-modal__sub-button {

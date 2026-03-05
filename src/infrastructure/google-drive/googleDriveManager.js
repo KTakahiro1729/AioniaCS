@@ -311,6 +311,11 @@ export class GoogleDriveManager {
       throw new Error('Authentication required.');
     }
 
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Authentication endpoint returned non-JSON response. Ensure backend is running.');
+    }
+
     const data = await response.json();
     if (!data.access_token) {
       throw new Error('Access token not available from server.');
@@ -328,7 +333,7 @@ export class GoogleDriveManager {
       return true;
     } catch (error) {
       const message = error?.message;
-      if (message === 'Authentication required.') {
+      if (message === 'Authentication required.' || message?.includes('non-JSON response')) {
         console.info('GDM: No active session found. Starting as guest.');
       } else {
         console.error('Failed to restore session:', error);

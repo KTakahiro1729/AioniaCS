@@ -107,7 +107,7 @@ describe('Cloudflare auth functions', () => {
         json: async () => ({
           access_token: 'access',
           refresh_token: 'refresh',
-          expires_in: 3600, 
+          expires_in: 3600,
           scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file',
         }),
       })
