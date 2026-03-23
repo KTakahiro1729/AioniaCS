@@ -192,6 +192,10 @@ export async function deserializeCharacterPayload(content) {
 
   if (ArrayBuffer.isView(content)) {
     const view = content instanceof Uint8Array ? content : new Uint8Array(content.buffer);
+    const MAX_ZIP_SIZE = 50 * 1024 * 1024; // 50MB
+    if (view.byteLength > MAX_ZIP_SIZE) {
+      throw new Error('ファイルサイズが上限（50MB）を超えています');
+    }
     const { default: JSZip } = await import('jszip');
     const zip = await JSZip.loadAsync(view);
     const jsonFile = zip.file('character_data.json');

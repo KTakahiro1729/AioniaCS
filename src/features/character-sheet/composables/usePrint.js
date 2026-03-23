@@ -34,6 +34,11 @@ export function formatAbilities(specialSkills, specialSkillData, specialSkillsRe
     .join('');
 }
 
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return String(text).replace(/[&<>"']/g, (m) => map[m]);
+}
+
 export function usePrint() {
   const characterStore = useCharacterStore();
 
@@ -42,7 +47,7 @@ export function usePrint() {
     let html = printTemplate;
 
     const replace = (key, val = '') => {
-      html = html.replace(new RegExp(`{{${key}}}`, 'g'), val);
+      html = html.replace(new RegExp(`{{${key}}}`, 'g'), escapeHtml(val));
     };
 
     // --- 基本情報の置換 ---
