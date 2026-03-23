@@ -135,6 +135,9 @@ const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !p
   width: 100%;
   min-height: 120px;
   resize: vertical;
+  border: none;
+  border-radius: 0;
+  display: block;
 }
 
 .submemo-guard {
