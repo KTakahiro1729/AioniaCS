@@ -1,0 +1,35 @@
+key,template,comment
+line.name,名前：{name}{player_suffix},Character name line
+line.player_suffix,（{player}）,Player suffix
+line.species,種族：{species},Species line
+line.gender,性別：{gender},Gender line
+line.age,年齢：{age},Age line
+line.origin,出身地：{origin},Origin line
+line.occupation,職業：{occupation},Occupation line
+line.faith,信仰：{faith},Faith line
+line.build,体格：{build},Build line
+line.equipment_item,{name}（{group}）,Equipment line
+memo.skill_entry,〈{name}〉,Skill entry
+memo.skill_expert_entry,〈{name}：{expert}〉,Expert skill entry
+memo.defense_no_armor,〈{name}（防具なし）〉,Defense memo entry without armor
+memo.defense_with_armor,〈{name}（防具あり）〉,Defense memo entry with armor
+command.skill,{dice} 〈{name}〉,Base skill command
+command.skill_defense_no_armor,{dice} 〈{name}（防具なし）〉,Defense command without armor
+command.skill_defense_with_armor,{dice}+2 〈{name}（防具あり）〉,Defense command with armor
+command.skill_expert,3d10 〈{name}：{expert}〉,Expert skill command
+command.weapon_damage,{formula} 〈ダメージ判定（{weapon_name}）〉,Weapon damage command
+special_skill.basic,《{name}》,Special skill label
+special_skill.with_note,《{name}：{note}》,Special skill label with note
+default.character_name,名もなき冒険者,Default character name
+default.weapon1,武器1,Default weapon1 label
+default.weapon2,武器2,Default weapon2 label
+default.armor,防具,Default armor label
+default.group_label,種別なし,Default equipment group label
+status.damage,ダメージ,Damage label
+status.scar,傷痕,Scar label
+status.stress,ストレス,Stress label
+heading.weakness,【弱点】
+heading.skills,【技能】
+heading.special_skills,【特技】
+heading.equipment,【武器・防具】
+heading.other_items,【その他所持品】

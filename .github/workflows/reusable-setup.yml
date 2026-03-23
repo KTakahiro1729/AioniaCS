@@ -1,0 +1,41 @@
+name: node-setup
+on:
+  workflow_call:
+    inputs:
+      run-command:
+        required: true
+        type: string
+      playwright:
+        required: false
+        type: boolean
+        default: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Init submodules
+        run: git submodule update --init --recursive
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Cache Playwright browsers
+        if: ${{ inputs.playwright }}
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      - name: Install Playwright Browsers
+        if: ${{ inputs.playwright }}
+        run: npx playwright install --with-deps
+      - name: Run command
+        run: ${{ inputs.run-command }}

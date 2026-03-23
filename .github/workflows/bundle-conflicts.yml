@@ -1,0 +1,22 @@
+name: Bundle Conflicts
+on:
+  pull_request:
+    types: [synchronize, opened, reopened]
+jobs:
+  bundle:
+    if: github.event.pull_request.mergeable_state == 'dirty'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find conflicted files
+        run: |
+          git fetch origin +refs/pull/${{ github.event.pull_request.number }}/merge
+          git checkout FETCH_HEAD
+          git diff --name-only --diff-filter=U > conflict_files.txt
+      - name: Archive conflicts
+        run: |
+          zip conflicts.zip -@ < conflict_files.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conflicted-files
+          path: conflicts.zip

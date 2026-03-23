@@ -1,0 +1,9 @@
+key,label
+,なし
+combat_small,小型白兵武器
+combat_medium,中型白兵武器
+combat_large,大型白兵武器
+shooting,射撃武器
+catalyst,魔術触媒
+light_armor,軽装防具
+heavy_armor,重装防具

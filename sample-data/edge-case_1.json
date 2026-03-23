@@ -1,0 +1,37 @@
+{
+  "character": {
+    "images": [],
+    "name": "EdgeCase",
+    "playerName": "Tester",
+    "species": "human",
+    "rareSpecies": "mysterious",
+    "occupation": "",
+    "age": "",
+    "gender": "",
+    "height": "",
+    "weight": "",
+    "origin": "",
+    "faith": "",
+    "otherItems": "",
+    "currentScar": 0,
+    "initialScar": 0,
+    "linkCurrentToInitialScar": true,
+    "memo": "",
+    "weaknesses": [
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" },
+      { "text": "", "acquired": "--" }
+    ]
+  },
+  "skills": [],
+  "specialSkills": [],
+  "equipments": {},
+  "histories": []
+}

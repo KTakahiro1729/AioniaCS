@@ -1,0 +1,181 @@
+/* assets/css/_layout.css */
+
+/* メイングリッドレイアウト */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px 10px;
+  grid-template-areas:
+    'character-info scar-weakness'
+    'skills special-skills'
+    'items items'
+    'memo memo'
+    'history history';
+  align-items: stretch;
+}
+
+.main-grid > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+.character-info {
+  grid-area: character-info;
+  min-height: 0;
+}
+
+.scar-weakness-wrapper {
+  grid-area: scar-weakness;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.skills {
+  grid-area: skills;
+}
+
+.special-skills {
+  grid-area: special-skills;
+}
+
+.items {
+  grid-area: items;
+}
+
+.character-memo {
+  grid-area: memo;
+}
+
+.adventure-log-section {
+  grid-area: history;
+}
+
+/* レイアウトユーティリティ (Flexbox, 表示制御) */
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-group {
+  display: flex;
+  gap: 5px;
+}
+
+.flex-item-1 {
+  flex: 1;
+}
+
+.flex-item-2 {
+  flex: 2;
+}
+
+.block-label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* フォーム行レイアウト */
+.info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-item {
+  flex: 1 1 auto;
+}
+
+.info-item--full {
+  flex-basis: 100%;
+}
+
+.info-item--double {
+  flex: 1 1 calc(50% - 2.5px);
+  min-width: 80px;
+}
+
+.info-item--triple {
+  flex: 1 1 calc(33.333% - 3.33px);
+  min-width: 90px;
+}
+
+.info-item--quadruple {
+  flex: 1 1 calc(25% - 3.75px);
+  min-width: 65px;
+}
+
+/* ==========================================================================
+   レスポンシブデザイン
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'character-info'
+      'scar-weakness'
+      'skills'
+      'special-skills'
+      'items'
+      'memo'
+      'history';
+    gap: 20px;
+  }
+
+  .scar-weakness-wrapper {
+    gap: 20px;
+  }
+
+  .adventure-log-section .history-item-inputs {
+    flex-flow: row nowrap;
+  }
+
+  .flex-weakness-acquired {
+    width: 35%;
+    min-width: 110px;
+  }
+
+  .flex-weakness-acquired select {
+    width: 100%;
+  }
+
+  .info-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-item,
+  .info-item--triple,
+  .info-item--double,
+  .info-item--quadruple {
+    flex-basis: auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .equipment-section {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .flex-weakness-acquired {
+    width: 40%;
+    min-width: 100px;
+  }
+}

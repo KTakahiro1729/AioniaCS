@@ -1,0 +1,249 @@
+key,ja,en,comment
+errors.unexpected,予期せぬエラーが発生しました,,General unexpected error message
+googleDrive.auth.connected.title,Google Drive,,Drive auth connected title
+googleDrive.auth.connected.message,接続しました,,Drive auth connected body
+googleDrive.signOut.success.title,サインアウトしました,,Drive sign out success title
+googleDrive.signOut.success.message,,,Drive sign out success body (empty)
+googleDrive.folderPicker.unavailable.title,Google Drive,,Drive folder picker unavailable title
+googleDrive.folderPicker.unavailable.message,フォルダピッカーを利用できません,,Drive folder picker unavailable body
+googleDrive.folderPicker.error.title,Google Drive,,Drive folder picker error title
+googleDrive.folderPicker.error.message,フォルダ選択をキャンセルしました,,Drive folder picker default error body
+googleDrive.save.loading.title,Google Drive,,Drive save loading title
+googleDrive.save.loading.message,保存中...,,Drive save loading body
+googleDrive.save.newLoading.title,新規キャラクター,,Drive save new character loading title
+googleDrive.save.newLoading.message,新規キャラクターを保存中,,Drive save new character loading body
+googleDrive.save.newSuccess.title,新規キャラクター,,Drive save new character success title
+googleDrive.save.newSuccess.message,新規キャラクターを保存しました,,Drive save new character success body
+googleDrive.save.success.title,保存完了,,Drive save success title
+googleDrive.save.success.message,,,Drive save success body (empty)
+googleDrive.save.error.title,保存失敗,,Drive save error title
+googleDrive.save.error.message,,,Drive save default error body (empty)
+googleDrive.load.loading.title,Google Drive,,Drive load loading title
+googleDrive.load.loading.message,{name} を読み込み中...,,Drive load loading body template
+googleDrive.load.success.title,読込完了,,Drive load success title
+googleDrive.load.success.message,{name} を読み込みました,,Drive load success body template
+googleDrive.load.error.title,読み込みエラー,,Drive load error title
+googleDrive.load.error.message,不明なエラー,,Drive load default error body
+googleDrive.load.noSelection.title,読み込みエラー,,Drive load no selection title
+googleDrive.load.noSelection.message,ファイルが選択されていません,,Drive load no selection body
+googleDrive.load.missingData.title,読み込みエラー,,Drive load missing data title
+googleDrive.load.missingData.message,キャラクターデータを取得できませんでした,,Drive load missing data body
+googleDrive.overwriteConfirm.title,上書き確認,,Drive overwrite confirm title
+googleDrive.overwriteConfirm.message,{name} は既に存在します。上書きしますか？,,Drive overwrite confirm body
+googleDrive.overwriteConfirm.buttons.overwrite,上書き,,Drive overwrite confirm button label
+googleDrive.overwriteConfirm.buttons.cancel,キャンセル,,Drive overwrite confirm cancel label
+googleDrive.apiInitError.title,Google API エラー,,Drive API init error title
+googleDrive.apiInitError.message,初期化に失敗しました,,Drive API init error body
+googleDrive.initPending.title,Google Drive,,Drive init pending title
+googleDrive.initPending.message,初期化が完了するまでお待ちください,,Drive init pending body
+googleDrive.config.loadError.title,設定読み込み失敗,,Drive config load error title
+googleDrive.config.loadError.message,保存先フォルダの取得に失敗しました,,Drive config load error body
+googleDrive.config.requiresSignIn.title,Google Drive,,Drive config requires sign in title
+googleDrive.config.requiresSignIn.message,Googleにサインインしてください,,Drive config requires sign in body
+googleDrive.config.updateSuccess.title,設定更新,,Drive config update success title
+googleDrive.config.updateSuccess.message,保存先フォルダを更新しました,,Drive config update success body
+googleDrive.config.updateError.title,設定更新失敗,,Drive config update error title
+googleDrive.config.updateError.message,保存先フォルダの更新に失敗しました,,Drive config update error body
+share.needSignIn.title,Google Drive,,Share sign-in needed title
+share.needSignIn.message,ログインしてください,,Share sign-in needed body
+share.toast.creating.title,共有リンク,,Share creating toast title
+share.toast.creating.message,作成中...,,Share creating toast body
+share.toast.success.title,共有リンク,,Share success toast title
+share.toast.success.message,共有リンクを生成しました,,Share success toast body
+share.toast.error.title,共有リンク,,Share error toast title
+share.toast.error.message,共有リンクの生成に失敗しました,,Share error toast default body
+share.toast.clipboardUnavailable.title,共有リンク,,Share clipboard unavailable toast title
+share.toast.clipboardUnavailable.message,クリップボードにアクセスできません,,Share clipboard unavailable toast body
+share.resultModal.title,共有リンク,,Share result modal title
+share.resultModal.description,共有リンクが生成されました。下のURLをコピーして共有してください。,,Share result modal description
+share.resultModal.urlLabel,共有URL,,Share result modal url label
+share.resultModal.copyLabel,コピー,,Share result modal copy button
+share.resultModal.copySuccess.title,コピー,,Share result modal copy success title
+share.resultModal.copySuccess.message,URLをクリップボードにコピーしました,,Share result modal copy success message
+share.resultModal.copyError.title,コピー失敗,,Share result modal copy error title
+share.resultModal.copyError.message,コピーに失敗しました。もう一度お試しください,,Share result modal copy error message
+share.errors.saveFailed,Google Drive への保存に失敗しました,,Share save failed error
+share.errors.shareFailed,共有リンクの取得に失敗しました,,Share retrieval failed error
+share.errors.managerMissing,Google Drive マネージャーが設定されていません,,Share manager missing error
+share.loadError.title,共有データエラー,,Share load error title
+share.loadError.message.general,共有データの読み込みに失敗しました,,Share load error general message
+share.loadError.message.fetchFailed,共有データの取得に失敗しました,,Share load error fetch failed message
+share.loadError.message.parseFailed,共有データの解析に失敗しました,,Share load error parse failed message
+driveLoadPage.title,Drive読込,,Drive load page title
+driveLoadPage.placeholder,保存済みのキャラクターシートはありません,,Drive load page placeholder
+driveLoadPage.emptyMessage,保存済みのキャラクターシートはありません,,Drive load page empty message
+driveLoadPage.buttons.back,戻る,,Drive load page back button
+driveLoadPage.buttons.refresh,更新,,Drive load page refresh button
+driveLoadPage.status.loading,読み込み中……,,Drive load page loading status
+driveLoadPage.status.refreshed,更新しました,,Drive load page refreshed status
+driveLoadPage.status.error,読み込みに失敗しました,,Drive load page error status
+driveLoadPage.status.retryHint,再試行してください,,Drive load page retry hint
+driveLoadPage.labels.untitled,名称未設定,,Drive load page untitled label
+driveLoadPage.labels.unknownCharacter,不明なキャラクター,,Drive load page unknown character label
+driveLoadPage.labels.created,作成日,,Drive load page created label
+driveLoadPage.labels.modified,更新日,,Drive load page modified label
+driveLoadPage.labels.hash,ハッシュ,,Drive load page hash label
+driveLoadPage.labels.driveHash,Driveハッシュ,,Drive load page drive hash label
+driveLoadPage.labels.cachedHash,キャッシュハッシュ,,Drive load page cached hash label
+driveLoadPage.labels.notAvailable,なし,,Drive load page not available label
+driveLoadPage.labels.unknownDate,不明な日時,,Drive load page unknown date label
+driveLoadPage.labels.selectAction,操作を選択,,Drive load page select action label
+driveLoadPage.actions.load,読込,,Drive load page load action
+driveLoadPage.actions.share,共有,,Drive load page share action
+driveLoadPage.actions.delete,削除,,Drive load page delete action
+driveLoadPage.actions.cancel,キャンセル,,Drive load page cancel action
+driveLoadPage.actions.loadAria,{name} を読み込む,,Drive load page load aria label
+driveLoadPage.actions.shareAria,{name} を共有する,,Drive load page share aria label
+driveLoadPage.actions.deleteAria,{name} を削除する,,Drive load page delete aria label
+driveLoadPage.confirmations.delete,{name} を削除しますか？,,Drive load page delete confirmation
+driveLoadPage.toasts.share.loading.title,共有リンク,,Drive load page share loading toast title
+driveLoadPage.toasts.share.loading.message,共有リンクを作成中...,,Drive load page share loading toast message
+driveLoadPage.toasts.share.success.title,共有リンク,,Drive load page share success toast title
+driveLoadPage.toasts.share.success.message,共有リンクを生成しました,,Drive load page share success toast message
+driveLoadPage.toasts.share.error.title,共有リンク,,Drive load page share error toast title
+driveLoadPage.toasts.share.error.message,共有リンクの生成に失敗しました,,Drive load page share error toast message
+driveLoadPage.toasts.delete.loading.title,削除,,Drive load page delete loading toast title
+driveLoadPage.toasts.delete.loading.message,削除中...,,Drive load page delete loading toast message
+driveLoadPage.toasts.delete.success.title,削除,,Drive load page delete success toast title
+driveLoadPage.toasts.delete.success.message,削除しました,,Drive load page delete success toast message
+driveLoadPage.toasts.delete.error.title,削除,,Drive load page delete error toast title
+driveLoadPage.toasts.delete.error.message,削除に失敗しました,,Drive load page delete error toast message
+driveLoadPage.errors.missingDriveManager,Google Drive マネージャーが設定されていません,,Drive load page missing manager error
+driveLoadPage.errors.folderUnavailable,保存先フォルダが利用できません,,Drive load page folder unavailable error
+driveLoadPage.errors.apiUnavailable,Google Drive API を利用できません,,Drive load page API unavailable error
+driveLoadPage.errors.cacheFailed,キャッシュの更新に失敗しました,,Drive load page cache failed error
+driveLoadPage.errors.syncFailed,同期に失敗しました,,Drive load page sync failed error
+characterHub.driveFolder.confirmButton,確定,,Character hub folder confirm button
+characterHub.driveFolder.label,Drive保存先,,Character hub folder label
+characterHub.driveFolder.placeholder,慈悲なきアイオニア,,Character hub folder placeholder
+characterHub.driveFolder.createConfirm,存在しないフォルダです。新しく作成しますか？,,Character hub folder create confirm message
+characterHub.driveFolder.createYes,はい,,Character hub folder create yes label
+characterHub.driveFolder.createNo,いいえ,,Character hub folder create no label
+characterHub.buttons.signIn,Googleにログイン,,Character hub sign in button
+image.loadError.title,画像読み込み失敗,,Image load error title
+image.loadError.message,{message},,Image load error body template
+image.uploadErrors.noFile,画像ファイルが選択されていません。,,Image upload no file error
+image.uploadErrors.unsupportedType,対応していない画像形式です。JPEG、PNG、GIF、WebP、SVG を指定してください。,,Image upload unsupported type error
+image.uploadErrors.tooLarge,ファイルサイズが大きすぎます（最大10MB）。,,Image upload too large error
+image.uploadErrors.readError,画像の読み込み中にエラーが発生しました。,,Image upload read error
+dataExport.loadError.title,読み込み失敗,,Data export load error title
+dataExport.loadError.message,{message},,Data export load error body template
+file.loadError,ファイルの読み込みに失敗しました。JSON形式が正しくない可能性があります。,,File load error
+file.unsupportedFormat,対応していないファイル形式です。AioniaCSで保存したデータをご利用ください。,,File unsupported format error
+ui.header.defaultTitle,Aionia TRPG Character Sheet,,Header default title
+ui.header.helpLabel,?,,Header help label
+ui.header.newCharacter,新規,,Header new character label
+ui.header.signIn,ログイン,,Header sign in label
+ui.header.signOut,ログアウト,,Header sign out label
+ui.footer.experience,経験点,,Footer experience label
+ui.footer.output,出力,,Footer output label
+ui.footer.share,共有,,Footer share label
+ui.footer.copyEdit,自分用にコピーして編集,,Footer copy/edit label
+ui.viewModeBanner,閲覧モードで表示中,,View mode banner text
+ui.buttons.saveCloudNew,新規保存,,UI save to cloud new button
+ui.buttons.saveCloudOverwrite,上書保存,,UI save to cloud overwrite button
+ui.buttons.saveCloudTitle,Google Driveに保存,,UI save to cloud tooltip
+ui.buttons.loadCloud,Drive読込,,UI load from cloud button
+ui.buttons.loadCloudTitle,Google Driveから読込む,,UI load from cloud tooltip
+ui.buttons.saveLocal,端末保存,,UI save local button
+ui.buttons.saveLocalTitle,端末に保存,,UI save local tooltip
+ui.buttons.loadLocal,読込,,UI load local button
+ui.buttons.loadLocalTitle,端末から読込む,,UI load local tooltip
+ui.buttons.save,保存,,UI save button
+ui.confirmations.unsavedChanges.title,保存されていない変更があります,,Unsaved changes dialog title
+ui.confirmations.unsavedChanges.message,現在の内容はまだ保存されていません。新規作成すると変更は失われます。続行しますか？,,Unsaved changes dialog message
+ui.confirmations.unsavedChanges.buttons.save,保存して続行,,Unsaved changes dialog save button
+ui.confirmations.unsavedChanges.buttons.discard,保存せず続行,,Unsaved changes dialog discard button
+ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes dialog cancel button
+ui.modal.load.title,読込,,Load modal title
+ui.modal.load.buttons.loadLocal,ローカルファイル読込,,Load modal local button
+ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button
+ui.modal.load.buttons.restoreHistory,未保存データ復元,,Load modal history recovery button
+ui.modal.load.signInMessage,Drive機能を使うにはGoogleにログインしてください。,,Load modal sign-in message
+ui.modal.historyRecovery.title,未保存キャラクターの復元,,History recovery modal title
+ui.modal.historyRecovery.description,未保存のキャラクターを復元します。,,History recovery modal description
+ui.modal.historyRecovery.empty,保存された履歴はありません。,,History recovery modal empty state
+ui.modal.historyRecovery.confirm,現在の編集内容は破棄されます。よろしいですか？,,History recovery modal confirmation
+ui.modal.historyRecovery.cancel,キャンセル,,History recovery modal cancel
+ui.modal.io.title,入出力,,IO modal title
+ui.modal.io.buttons.saveLocal,ローカルファイルで出力,,IO modal save local button
+ui.modal.io.buttons.print,印刷,,IO modal print button
+ui.modal.io.buttons.chatPalette,チャットパレットを出力,,IO modal chat palette button
+ui.modal.io.chatPalette.success.title,チャットパレット,,Chat palette success toast title
+ui.modal.io.chatPalette.success.message,クリップボードにコピーしました,,Chat palette success toast message
+ui.modal.io.chatPalette.error.title,チャットパレット,,Chat palette error toast title
+ui.modal.io.chatPalette.error.message,コピーに失敗しました,,Chat palette error toast message
+ui.modal.io.chatPalette.clipboardUnavailable,クリップボード機能が利用できません,,Chat palette clipboard unavailable text
+sheet.loadIndicator.label,荷重,,Load indicator label
+sheet.toggles.showDescription,説明を表示,,Toggle show description label
+sheet.images.alt,キャラクター画像,,Sheet image alt text
+sheet.images.previous,前の画像,,Sheet image previous button
+sheet.images.next,次の画像,,Sheet image next button
+sheet.images.add,画像を追加,,Sheet image add button
+sheet.images.delete,削除,,Sheet image delete button
+sheet.images.deleteAria,現在の画像を削除,,Sheet image delete aria label
+sheet.images.empty,画像はありません,,Sheet image empty state
+sheet.placeholders.expertSkill,専門技能,,Sheet placeholder expert skill
+sheet.placeholders.expertSkillDisabled,専門技能 (技能選択で有効),,Sheet placeholder expert skill disabled
+sheet.placeholders.specialSkillNote,詳細,,Sheet placeholder special skill note
+sheet.placeholders.characterMemo,キャラクター背景、設定、その他メモを記入,,Sheet placeholder character memo
+sheet.placeholders.weaponName,装備名,,Sheet placeholder weapon name
+sheet.placeholders.armorName,装備名,,Sheet placeholder armor name
+sheet.placeholders.adventureMemo,メモ,,Sheet placeholder adventure memo
+sheet.aria.deleteItem,項目を削除,,Sheet aria delete item
+sheet.aria.removeExpert,専門技能を削除,,Sheet aria remove expert
+sheet.aria.addExpert,専門技能を追加,,Sheet aria add expert
+sheet.aria.removeSpecialSkill,特技を削除,,Sheet aria remove special skill
+sheet.aria.addSpecialSkill,特技を追加,,Sheet aria add special skill
+sheet.aria.addAdventureLog,冒険記録を追加,,Sheet aria add adventure log
+sheet.sections.basicInfo.title,基本情報,,Sheet basic info section title
+sheet.sections.basicInfo.fields.name,キャラクター名,,Sheet basic info field name
+sheet.sections.basicInfo.fields.playerName,プレイヤー名,,Sheet basic info field playerName
+sheet.sections.basicInfo.fields.species,種族,,Sheet basic info field species
+sheet.sections.basicInfo.fields.rareSpecies,種族名,,Sheet basic info field rare species
+sheet.sections.basicInfo.fields.gender,性別,,Sheet basic info field gender
+sheet.sections.basicInfo.fields.age,年齢,,Sheet basic info field age
+sheet.sections.basicInfo.fields.build,体格,,Sheet basic info field build
+sheet.sections.basicInfo.fields.origin,出身地,,Sheet basic info field origin
+sheet.sections.basicInfo.fields.occupation,職業,,Sheet basic info field occupation
+sheet.sections.basicInfo.fields.faith,信仰,,Sheet basic info field faith
+sheet.sections.scar.title,傷痕,,Sheet scar section title
+sheet.sections.scar.fields.initial,初期値,,Sheet scar initial label
+sheet.sections.scar.fields.current,現在値（初期値+増加分）,,Sheet scar current label
+sheet.sections.weakness.title,弱点,,Sheet weakness section title
+sheet.sections.weakness.columns.text,弱点,,Sheet weakness column text
+sheet.sections.weakness.columns.acquired,獲得,,Sheet weakness column acquired
+sheet.sections.skills.title,技能,,Sheet skills section title
+sheet.sections.memo.title,キャラクターメモ,,Sheet memo section title
+sheet.sections.memo.subMemo.titlePlaceholder,サブメモタイトル,,Sub memo title placeholder
+sheet.sections.memo.subMemo.contentPlaceholder,サブメモ内容,,Sub memo content placeholder
+sheet.sections.memo.subMemo.spoilerLabel,秘密メモ,,Sub memo spoiler toggle label
+sheet.sections.memo.subMemo.spoilerNotice,※秘密メモです,,Sub memo spoiler guard notice
+sheet.sections.memo.subMemo.readButton,読む,,Sub memo reveal button label
+sheet.sections.memo.subMemo.addButton,サブメモを追加,,Sub memo add button label
+sheet.sections.memo.subMemo.deleteLabel,削除,,Sub memo delete button label
+sheet.sections.memo.subMemo.toggle.expand,表示,,Sub memo expand label
+sheet.sections.memo.subMemo.toggle.collapse,折りたたむ,,Sub memo collapse label
+sheet.sections.memo.subMemo.deleteConfirm.title,サブメモの削除,,Sub memo delete confirm title
+sheet.sections.memo.subMemo.deleteConfirm.message,このサブメモを削除しますか？,,Sub memo delete confirm message
+sheet.sections.memo.subMemo.deleteConfirm.delete,削除,,Sub memo delete confirm delete
+sheet.sections.memo.subMemo.deleteConfirm.cancel,キャンセル,,Sub memo delete confirm cancel
+sheet.sections.specialSkills.title,特技,,Sheet special skills section title
+sheet.sections.specialSkills.columns.group,種類,,Sheet special skills column group
+sheet.sections.specialSkills.columns.name,名称,,Sheet special skills column name
+sheet.sections.specialSkills.columns.acquired,獲得,,Sheet special skills column acquired
+sheet.sections.items.title,所持品,,Sheet items section title
+sheet.sections.items.labels.otherItems,その他所持品,,Sheet items other items label
+sheet.sections.items.labels.slots.weapon1,武器1,,Sheet items slot weapon1
+sheet.sections.items.labels.slots.weapon2,武器2,,Sheet items slot weapon2
+sheet.sections.items.labels.slots.armor,防具,,Sheet items slot armor
+sheet.sections.adventureLog.title,冒険の記録,,Sheet adventure log section title
+sheet.sections.adventureLog.columns.scenario,シナリオ名,,Sheet adventure log column scenario
+sheet.sections.adventureLog.columns.experience,経験点,,Sheet adventure log column experience
+sheet.sections.adventureLog.columns.scar,傷痕増加,,Sheet adventure log column scar
+outputButton.default,ココフォリア駒出力,,Output button default label
+outputButton.success,コピー完了！,,Output button success label
+outputButton.error,コピーエラー (fallback),,Output button error label
+outputButton.animating,冒険が始まる――,,Output button animating label
+weaknessDropdownHelp,（冒険の記録を追加すると選択肢が増えます）,,Weakness dropdown help
+specialSkillDropdownHelp,（シナリオ報酬の場合はシナリオ名を選択）,,Special skill dropdown help
