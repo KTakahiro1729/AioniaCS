@@ -129,22 +129,14 @@ const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !p
 }
 
 .submemo-body {
-  padding: 0;
+  padding: 18px;
+  background-color: var(--color-panel-body);
 }
 
 .submemo-textarea {
   width: 100%;
   min-height: 120px;
   resize: vertical;
-  border: none;
-  border-radius: 0;
-  display: block;
-}
-
-.submemo-textarea:focus {
-  border: none;
-  box-shadow: inset 0 0 0 0.2rem rgb(192 154 105 / 25%);
-  outline: none;
 }
 
 .submemo-guard {
