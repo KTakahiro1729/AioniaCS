@@ -1,4 +1,4 @@
 [[d1_databases]]
 binding = "DB" # Honoからこの名前でアクセスします
 database_name = "aionia-auth-db"
-database_id = "ad247af3-274f-4e1b-ae6f-3e58ed596ac3"
+database_id = "52ea80a1-7325-4b68-9f33-9b0dc4f24007"
