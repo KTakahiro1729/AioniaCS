@@ -23,7 +23,7 @@
         <span>{{ messages.spoilerLabel }}</span>
       </label>
       <button
-        class="button-base list-button list-button--delete"
+        class="button-base list-button list-button--delete button-base--delete"
         type="button"
         :disabled="readonly"
         :aria-label="messages.deleteLabel"
@@ -113,7 +113,7 @@ const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !p
   padding: 6px 8px;
   border-radius: 4px;
   border: 1px solid var(--color-border-normal);
-  background: transparent;
+  background: var(--color-panel-body);
   color: inherit;
 }
 
@@ -128,7 +128,7 @@ const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !p
 }
 
 .submemo-body {
-  padding: 12px;
+  padding: 0;
 }
 
 .submemo-textarea {
