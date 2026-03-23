@@ -138,15 +138,7 @@ watch(
   { immediate: true },
 );
 
-const baseDocumentTitle = messages.ui.header.defaultTitle;
-
-watch(
-  () => characterStore.character.name,
-  (name) => {
-    document.title = name ? `${name} | ${baseDocumentTitle}` : baseDocumentTitle;
-  },
-  { immediate: true },
-);
+document.title = messages.ui.header.defaultTitle;
 
 watch(
   () => modalStore.isVisible,

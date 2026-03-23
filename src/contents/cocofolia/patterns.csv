@@ -7,8 +7,7 @@ line.age,年齢：{age},Age line
 line.origin,出身地：{origin},Origin line
 line.occupation,職業：{occupation},Occupation line
 line.faith,信仰：{faith},Faith line
-line.height,身長：{height},Height line
-line.weight,体重：{weight},Weight line
+line.build,体格：{build},Build line
 line.equipment_item,{name}（{group}）,Equipment line
 memo.skill_entry,〈{name}〉,Skill entry
 memo.skill_expert_entry,〈{name}：{expert}〉,Expert skill entry

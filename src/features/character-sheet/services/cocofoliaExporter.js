@@ -45,8 +45,7 @@ export class CocofoliaExporter {
 
     if (character.gender) lines.push(this.format('line.gender', { gender: character.gender }));
     if (character.age !== null) lines.push(this.format('line.age', { age: character.age }));
-    if (character.height) lines.push(this.format('line.height', { height: character.height }));
-    if (character.weight) lines.push(this.format('line.weight', { weight: character.weight }));
+    if (character.build) lines.push(this.format('line.build', { build: character.build }));
 
     return lines;
   }

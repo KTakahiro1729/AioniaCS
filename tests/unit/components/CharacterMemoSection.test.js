@@ -39,7 +39,7 @@ describe('CharacterMemoSection', () => {
     const toggle = wrapper.find('.submemo-toggle');
     await toggle.trigger('click');
     await wrapper.vm.$nextTick();
-    expect(wrapper.text()).toContain('※ネタバレを含む内容です');
+    expect(wrapper.text()).toContain('※秘密メモです');
     await wrapper.find('.submemo-guard .button-base').trigger('click');
     await wrapper.vm.$nextTick();
     expect(wrapper.find('.submemo-textarea').element.value).toBe('Secret');
