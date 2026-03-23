@@ -54,8 +54,7 @@ export function usePrint() {
 
     replace('gender', ch.gender || '');
     replace('age', ch.age != null ? String(ch.age) : '');
-    replace('height', ch.height || '');
-    replace('weight', ch.weight || '');
+    replace('build', ch.build || '');
     replace('origin', ch.origin || '');
     replace('occupation', ch.occupation || '');
     replace('faith', ch.faith || '');
