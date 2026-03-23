@@ -8,7 +8,7 @@ export const ImageManager = {
    */
   loadImage: function (file) {
     return new Promise((resolve, reject) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       const maxSize = 10 * 1024 * 1024; // 10 MB
 
       if (!file) {
