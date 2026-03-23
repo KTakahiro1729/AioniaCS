@@ -92,6 +92,7 @@ const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !p
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
+  margin-bottom: 0;
 }
 
 .submemo-toggle {
@@ -138,6 +139,12 @@ const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !p
   border: none;
   border-radius: 0;
   display: block;
+}
+
+.submemo-textarea:focus {
+  border: none;
+  box-shadow: none;
+  outline: none;
 }
 
 .submemo-guard {
