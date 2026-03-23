@@ -1,3 +1,5 @@
+pages_build_output_dir = "dist"
+
 [[d1_databases]]
 binding = "DB" # Honoからこの名前でアクセスします
 database_name = "aionia-auth-db"
