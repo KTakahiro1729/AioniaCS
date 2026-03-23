@@ -4,8 +4,13 @@ import { handle } from 'hono/cloudflare-pages';
 
 const SESSION_COOKIE_NAME = 'aioniacs_session';
 const STATE_COOKIE_NAME = 'aioniacs_oauth_state';
-const AUTH_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file openid email profile';
-const REQUIRED_SCOPES = ['https://www.googleapis.com/auth/drive.appdata', 'https://www.googleapis.com/auth/drive.file'];
+const AUTH_SCOPE =
+  'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly openid email profile';
+const REQUIRED_SCOPES = [
+  'https://www.googleapis.com/auth/drive.appdata',
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
+];
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const STATE_TTL_SECONDS = 10 * 60; // 10 minutes
 
