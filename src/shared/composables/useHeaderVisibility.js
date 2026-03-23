@@ -7,7 +7,7 @@ export function useHeaderVisibility(targetRef) {
 
   function handleScroll() {
     requestAnimationFrame(() => {
-      const y = window.scrollY;
+      const y = Math.max(0, window.scrollY);
       const delta = y - lastScrollY;
       currentTranslateY -= delta;
       if (currentTranslateY > 0) currentTranslateY = 0;
