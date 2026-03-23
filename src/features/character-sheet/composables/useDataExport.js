@@ -31,11 +31,7 @@ export function useDataExport() {
     dataManager.handleFileUpload(
       event,
       (parsedData) => {
-        Object.assign(characterStore.character, parsedData.character);
-        characterStore.skills.splice(0, characterStore.skills.length, ...parsedData.skills);
-        characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsedData.specialSkills);
-        Object.assign(characterStore.equipments, parsedData.equipments);
-        characterStore.histories.splice(0, characterStore.histories.length, ...parsedData.histories);
+        characterStore.hydrateFromData(parsedData);
         uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
       },
       (errorMessage) =>

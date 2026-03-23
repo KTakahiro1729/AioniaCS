@@ -280,6 +280,23 @@ export const useCharacterStore = defineStore('character', {
     handleSpeciesChange() {
       if (this.character.species !== 'other') this.character.rareSpecies = '';
     },
+    hydrateFromData(parsedData) {
+      if (parsedData.character && typeof parsedData.character === 'object') {
+        Object.assign(this.character, parsedData.character);
+      }
+      if (Array.isArray(parsedData.skills)) {
+        this.skills.splice(0, this.skills.length, ...parsedData.skills);
+      }
+      if (Array.isArray(parsedData.specialSkills)) {
+        this.specialSkills.splice(0, this.specialSkills.length, ...parsedData.specialSkills);
+      }
+      if (parsedData.equipments && typeof parsedData.equipments === 'object') {
+        Object.assign(this.equipments, parsedData.equipments);
+      }
+      if (Array.isArray(parsedData.histories)) {
+        this.histories.splice(0, this.histories.length, ...parsedData.histories);
+      }
+    },
     initializeAll() {
       Object.assign(this.character, createCharacter());
       this.skills.splice(0, this.skills.length, ...baseSkills());
