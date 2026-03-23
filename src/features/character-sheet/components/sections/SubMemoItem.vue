@@ -143,7 +143,7 @@ const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !p
 
 .submemo-textarea:focus {
   border: none;
-  box-shadow: none;
+  box-shadow: inset 0 0 0 0.2rem rgb(192 154 105 / 25%);
   outline: none;
 }
 
