@@ -145,11 +145,7 @@ export function useGoogleDrive(dataManager) {
       if (!parsedData) {
         throw new Error(messages.googleDrive.load.missingData().message);
       }
-      Object.assign(characterStore.character, normalizedData.character);
-      characterStore.skills.splice(0, characterStore.skills.length, ...normalizedData.skills);
-      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...normalizedData.specialSkills);
-      Object.assign(characterStore.equipments, normalizedData.equipments);
-      characterStore.histories.splice(0, characterStore.histories.length, ...normalizedData.histories);
+      characterStore.hydrateFromData(normalizedData);
       uiStore.setCurrentDriveFileId(targetId);
       removeStoredCharacterDraft();
       uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
@@ -254,6 +250,13 @@ export function useGoogleDrive(dataManager) {
 
     scriptsWatched = true;
 
+    function applyFallbackMockDrive() {
+      googleDriveManager.value = fallbackToMockDriveManager();
+      if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
+        dataManager.setGoogleDriveManager(googleDriveManager.value);
+      }
+    }
+
     const handleDriveReady = async () => {
       if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
       console.info('Google API Loading...');
@@ -268,10 +271,7 @@ export function useGoogleDrive(dataManager) {
         }
       } catch (error) {
         if (!isUsingMockDrive()) {
-          googleDriveManager.value = fallbackToMockDriveManager();
-          if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
-            dataManager.setGoogleDriveManager(googleDriveManager.value);
-          }
+          applyFallbackMockDrive();
           await handleDriveReady();
           return;
         }
@@ -306,10 +306,7 @@ export function useGoogleDrive(dataManager) {
       .then(handleDriveReady)
       .catch(async (error) => {
         if (!isUsingMockDrive()) {
-          googleDriveManager.value = fallbackToMockDriveManager();
-          if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
-            dataManager.setGoogleDriveManager(googleDriveManager.value);
-          }
+          applyFallbackMockDrive();
           await handleDriveReady();
           return;
         }

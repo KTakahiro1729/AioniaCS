@@ -6,27 +6,20 @@ export const LOCAL_CHARACTER_STORAGE_KEY = 'aionia-character';
 export const HISTORY_STORAGE_KEY = 'aionia-local-history';
 export const MAX_HISTORY_COUNT = 3;
 
-function resolveSessionStorage(customStorage) {
+function resolveStorage(customStorage, defaultStorageKey) {
   if (typeof customStorage !== 'undefined') {
     return customStorage;
   }
-  if (typeof window !== 'undefined' && window.sessionStorage) {
-    return window.sessionStorage;
+  if (typeof window !== 'undefined' && window[defaultStorageKey]) {
+    return window[defaultStorageKey];
   }
   return null;
 }
 
-function resolveHistoryStorage(customStorage) {
-  if (typeof customStorage !== 'undefined') {
-    return customStorage;
-  }
-  if (typeof window !== 'undefined' && window.localStorage) {
-    return window.localStorage;
-  }
-  return null;
-}
-
-export function removeStoredCharacterDraft(storage = resolveSessionStorage(), storageKey = LOCAL_CHARACTER_STORAGE_KEY) {
+export function removeStoredCharacterDraft(
+  storage = resolveStorage(undefined, 'sessionStorage'),
+  storageKey = LOCAL_CHARACTER_STORAGE_KEY,
+) {
   if (!storage) {
     return;
   }
@@ -57,8 +50,8 @@ function safeParse(raw) {
 }
 
 export function useLocalCharacterPersistence(characterStore, uiStore, options = {}) {
-  const storage = resolveSessionStorage(options.storage);
-  const historyStorage = resolveHistoryStorage(options.historyStorage);
+  const storage = resolveStorage(options.storage, 'sessionStorage');
+  const historyStorage = resolveStorage(options.historyStorage, 'localStorage');
   const storageKey = options.storageKey || LOCAL_CHARACTER_STORAGE_KEY;
   const historyStorageKey = options.historyStorageKey || HISTORY_STORAGE_KEY;
   const debounceMs = typeof options.debounceMs === 'number' ? options.debounceMs : 500;
@@ -158,21 +151,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
     if (!parsed) {
       return false;
     }
-    if (parsed.character && typeof parsed.character === 'object') {
-      Object.assign(characterStore.character, parsed.character);
-    }
-    if (Array.isArray(parsed.skills)) {
-      characterStore.skills.splice(0, characterStore.skills.length, ...parsed.skills);
-    }
-    if (Array.isArray(parsed.specialSkills)) {
-      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsed.specialSkills);
-    }
-    if (parsed.equipments && typeof parsed.equipments === 'object') {
-      Object.assign(characterStore.equipments, parsed.equipments);
-    }
-    if (Array.isArray(parsed.histories)) {
-      characterStore.histories.splice(0, characterStore.histories.length, ...parsed.histories);
-    }
+    characterStore.hydrateFromData(parsed);
     return true;
   }
 
@@ -188,22 +167,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
     if (!historyItem || !historyItem.data) {
       return false;
     }
-    const parsed = historyItem.data;
-    if (parsed.character && typeof parsed.character === 'object') {
-      Object.assign(characterStore.character, parsed.character);
-    }
-    if (Array.isArray(parsed.skills)) {
-      characterStore.skills.splice(0, characterStore.skills.length, ...parsed.skills);
-    }
-    if (Array.isArray(parsed.specialSkills)) {
-      characterStore.specialSkills.splice(0, characterStore.specialSkills.length, ...parsed.specialSkills);
-    }
-    if (parsed.equipments && typeof parsed.equipments === 'object') {
-      Object.assign(characterStore.equipments, parsed.equipments);
-    }
-    if (Array.isArray(parsed.histories)) {
-      characterStore.histories.splice(0, characterStore.histories.length, ...parsed.histories);
-    }
+    characterStore.hydrateFromData(historyItem.data);
     return true;
   }
 
