@@ -62,7 +62,8 @@ export class GoogleDriveManager {
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-    this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
+    this.scope =
+      'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
     this.gapiLoadedCallback = null;
     this.aioniaFolderId = null;
     this.gapiLoadPromise = null;
