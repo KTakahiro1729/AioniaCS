@@ -73,7 +73,6 @@ export class GoogleDriveManager {
     this.configFileName = 'aioniacs.cfg';
     this.configFileId = null;
     this.config = null;
-    this.cachedFolderPath = null;
 
     // Bind methods
     this.handleSignIn = this.handleSignIn.bind(this);
@@ -82,85 +81,12 @@ export class GoogleDriveManager {
     singletonInstance = this;
   }
 
+  static get DEFAULT_FOLDER_NAME() {
+    return '慈悲なきアイオニア';
+  }
+
   getDefaultConfig() {
-    return { characterFolderPath: '慈悲なきアイオニア' };
-  }
-
-  normalizeFolderPath(rawPath) {
-    const defaultPath = this.getDefaultConfig().characterFolderPath;
-    if (typeof rawPath !== 'string') {
-      return defaultPath;
-    }
-    const unified = rawPath.replace(/\\/g, '/');
-    const segments = unified
-      .split('/')
-      .map((segment) => segment.trim())
-      .filter((segment) => segment.length > 0);
-    if (segments.length === 0) {
-      return defaultPath;
-    }
-    return segments.join('/');
-  }
-
-  getFolderSegments(path) {
-    return this.normalizeFolderPath(path).split('/');
-  }
-
-  async buildFolderPathFromId(folderId) {
-    if (!folderId) {
-      return null;
-    }
-    if (!gapi.client || !gapi.client.drive) {
-      console.error('GAPI client or Drive API not loaded for buildFolderPathFromId.');
-      return null;
-    }
-
-    await this.ensureAccessToken();
-
-    const segments = [];
-    let currentId = folderId;
-    const visited = new Set();
-    let iterations = 0;
-    const maxDepth = 50;
-
-    while (currentId && currentId !== 'root' && iterations < maxDepth) {
-      if (visited.has(currentId)) {
-        break;
-      }
-      visited.add(currentId);
-      iterations += 1;
-
-      try {
-        const response = await gapi.client.drive.files.get({
-          fileId: currentId,
-          fields: 'id, name, parents',
-        });
-        const file = response.result;
-        if (!file) {
-          break;
-        }
-        if (file.name) {
-          segments.unshift(file.name);
-        }
-        const parents = Array.isArray(file.parents) ? file.parents : [];
-        if (parents.length === 0) {
-          break;
-        }
-        if (parents.includes('root')) {
-          break;
-        }
-        [currentId] = parents;
-      } catch (error) {
-        console.log('Error resolving folder path:', error);
-        break;
-      }
-    }
-
-    if (segments.length === 0) {
-      return null;
-    }
-
-    return this.normalizeFolderPath(segments.join('/'));
+    return { characterFolderId: null };
   }
 
   async loadConfig() {
@@ -192,8 +118,7 @@ export class GoogleDriveManager {
             const parsed = typeof content === 'string' ? JSON.parse(content) : content;
             this.config = {
               ...this.getDefaultConfig(),
-              ...parsed,
-              characterFolderPath: this.normalizeFolderPath(parsed.characterFolderPath),
+              characterFolderId: parsed.characterFolderId || null,
             };
             return this.config;
           } catch (error) {
@@ -226,16 +151,6 @@ export class GoogleDriveManager {
       console.error('Error saving config file:', error);
       return null;
     }
-  }
-
-  async setCharacterFolderPath(path) {
-    const config = await this.loadConfig();
-    const normalized = this.normalizeFolderPath(path);
-    config.characterFolderPath = normalized;
-    await this.saveConfig();
-    this.aioniaFolderId = null;
-    this.cachedFolderPath = null;
-    return normalized;
   }
 
   /**
@@ -660,17 +575,12 @@ export class GoogleDriveManager {
   }
 
   /**
-   * Finds or creates the configured character folder in the user's Drive root.
+   * Ensures the character folder exists in Drive and returns its ID.
+   * Uses the stored folder ID if available; otherwise creates a new folder.
    * @returns {Promise<string|null>} The ID of the folder, or null if not available.
    */
   async findOrCreateConfiguredCharacterFolder() {
-    const config = await this.loadConfig();
-    if (!config) {
-      return null;
-    }
-
-    const normalizedPath = this.normalizeFolderPath(config.characterFolderPath);
-    if (this.aioniaFolderId && this.cachedFolderPath === normalizedPath) {
+    if (this.aioniaFolderId) {
       return this.aioniaFolderId;
     }
 
@@ -679,29 +589,42 @@ export class GoogleDriveManager {
       return null;
     }
 
-    const segments = this.getFolderSegments(normalizedPath);
-    let parentId = 'root';
-    let currentId = null;
+    const config = await this.loadConfig();
 
-    for (const segment of segments) {
-      const existing = await this.findFolder(segment, parentId);
-      if (existing && existing.id) {
-        currentId = existing.id;
-      } else {
-        const created = await this.createFolder(segment, parentId);
-        currentId = created?.id || null;
+    // Try to access the stored folder ID
+    if (config?.characterFolderId) {
+      try {
+        await this.ensureAccessToken();
+        const response = await gapi.client.drive.files.get({
+          fileId: config.characterFolderId,
+          fields: 'id, trashed',
+        });
+        if (response.result?.id && !response.result.trashed) {
+          this.aioniaFolderId = response.result.id;
+          return this.aioniaFolderId;
+        }
+      } catch (error) {
+        console.log('Stored folder ID no longer accessible, creating new folder.', error);
       }
-
-      if (!currentId) {
-        console.error(`Failed to find or create folder segment: ${segment}`);
-        return null;
-      }
-      parentId = currentId;
     }
 
-    this.aioniaFolderId = currentId;
-    this.cachedFolderPath = normalizedPath;
-    return currentId;
+    // Create a new folder with the fixed name
+    const folder = await this.createFolder(GoogleDriveManager.DEFAULT_FOLDER_NAME, 'root');
+    if (!folder?.id) {
+      console.error('Failed to create character folder.');
+      return null;
+    }
+
+    this.aioniaFolderId = folder.id;
+
+    // Persist the folder ID to config
+    if (!this.config) {
+      this.config = this.getDefaultConfig();
+    }
+    this.config.characterFolderId = folder.id;
+    await this.saveConfig();
+
+    return this.aioniaFolderId;
   }
 
   /**
