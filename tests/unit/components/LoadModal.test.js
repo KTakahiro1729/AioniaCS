@@ -157,6 +157,14 @@ describe('LoadModal', () => {
     expect(input.element.value).toBe('saved/path');
   });
 
+  test('disables folder controls when drive is not ready', async () => {
+    const wrapper = mountWithStubs(baseProps({ isSignedIn: true, isDriveReady: false }));
+    await wrapper.find('[data-test="load-modal-folder-toggle"]').trigger('click');
+    const input = wrapper.find('#load_modal_drive_folder');
+    expect(input.attributes('disabled')).toBeDefined();
+    expect(wrapper.find('[data-test="load-modal-apply-folder"]').attributes('disabled')).toBeDefined();
+  });
+
   test('shows disabled history button when no history exists', async () => {
     const wrapper = mount(LoadModal, { props: baseProps({ hasHistory: false }) });
     const historyButton = wrapper.find('[data-test="load-modal-history-button"]');
