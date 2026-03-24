@@ -62,8 +62,7 @@ export class GoogleDriveManager {
     this.apiKey = apiKey;
     this.clientId = clientId;
     this.discoveryDocs = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-    this.scope =
-      'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+    this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
     this.gapiLoadedCallback = null;
     this.aioniaFolderId = null;
     this.gapiLoadPromise = null;
@@ -107,61 +106,12 @@ export class GoogleDriveManager {
     return this.normalizeFolderPath(path).split('/');
   }
 
-  async buildFolderPathFromId(folderId) {
-    if (!folderId) {
+  async buildFolderPathFromId() {
+    const config = await this.loadConfig();
+    if (!config) {
       return null;
     }
-    if (!gapi.client || !gapi.client.drive) {
-      console.error('GAPI client or Drive API not loaded for buildFolderPathFromId.');
-      return null;
-    }
-
-    await this.ensureAccessToken();
-
-    const segments = [];
-    let currentId = folderId;
-    const visited = new Set();
-    let iterations = 0;
-    const maxDepth = 50;
-
-    while (currentId && currentId !== 'root' && iterations < maxDepth) {
-      if (visited.has(currentId)) {
-        break;
-      }
-      visited.add(currentId);
-      iterations += 1;
-
-      try {
-        const response = await gapi.client.drive.files.get({
-          fileId: currentId,
-          fields: 'id, name, parents',
-        });
-        const file = response.result;
-        if (!file) {
-          break;
-        }
-        if (file.name) {
-          segments.unshift(file.name);
-        }
-        const parents = Array.isArray(file.parents) ? file.parents : [];
-        if (parents.length === 0) {
-          break;
-        }
-        if (parents.includes('root')) {
-          break;
-        }
-        [currentId] = parents;
-      } catch (error) {
-        console.log('Error resolving folder path:', error);
-        break;
-      }
-    }
-
-    if (segments.length === 0) {
-      return null;
-    }
-
-    return this.normalizeFolderPath(segments.join('/'));
+    return this.normalizeFolderPath(config.characterFolderPath);
   }
 
   async loadConfig() {
@@ -922,15 +872,13 @@ export class GoogleDriveManager {
     await this.ensureAccessToken();
 
     try {
-      const response = await gapi.client.drive.files.get({
-        fileId,
-        fields: 'id, parents',
+      const response = await gapi.client.drive.files.list({
+        q: `'${targetFolderId}' in parents and trashed=false`,
+        fields: 'files(id)',
+        spaces: 'drive',
       });
-      const parents = response.result?.parents || response.body?.parents;
-      if (!Array.isArray(parents)) {
-        return false;
-      }
-      return parents.includes(targetFolderId);
+      const files = response.result.files || [];
+      return files.some((f) => f.id === fileId);
     } catch (error) {
       console.error('Error checking file location:', error);
       return false;

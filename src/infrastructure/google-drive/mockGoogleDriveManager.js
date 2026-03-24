@@ -147,12 +147,12 @@ export class MockGoogleDriveManager {
     return segments.join('/');
   }
 
-  async buildFolderPathFromId(folderId) {
-    if (!folderId) {
+  async buildFolderPathFromId() {
+    const config = await this.loadConfig();
+    if (!config) {
       return null;
     }
-    const path = this.buildFolderPath(folderId);
-    return path ? this.normalizeFolderPath(path) : null;
+    return this.normalizeFolderPath(config.characterFolderPath);
   }
 
   async onGapiLoad() {

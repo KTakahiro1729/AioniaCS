@@ -217,15 +217,20 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   });
 
   test('isFileInConfiguredFolder detects mismatched parent', async () => {
-    gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
+    // First two list calls: loadConfig (no config file) and findFolder (no existing folder)
+    gapi.client.drive.files.list
+      .mockResolvedValueOnce({ result: { files: [] } }) // loadConfig
+      .mockResolvedValueOnce({ result: { files: [] } }) // findFolder
+      .mockResolvedValueOnce({ result: { files: [{ id: 'other-file' }] } }); // isFileInConfiguredFolder list
     gapi.client.request.mockResolvedValueOnce({ result: { id: 'cfg-8', name: 'aioniacs.cfg' } });
     gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-x', name: '慈悲なきアイオニア' } });
-    gapi.client.drive.files.get.mockResolvedValue({ result: { parents: ['other-folder'] } });
 
     const result = await gdm.isFileInConfiguredFolder('file-xyz');
 
     expect(result).toBe(false);
-    expect(gapi.client.drive.files.get).toHaveBeenCalledWith({ fileId: 'file-xyz', fields: 'id, parents' });
+    const listCalls = gapi.client.drive.files.list.mock.calls;
+    const lastListCall = listCalls[listCalls.length - 1][0];
+    expect(lastListCall.q).toContain("'folder-x' in parents");
   });
 
   test('deleteCharacterFile removes file from drive', async () => {
