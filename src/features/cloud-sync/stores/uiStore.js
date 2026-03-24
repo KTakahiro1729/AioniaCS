@@ -6,7 +6,6 @@ export const useUiStore = defineStore('ui', {
     isSignedIn: false,
     isGapiInitialized: false,
     isLoading: false,
-    driveFolderPath: '慈悲なきアイオニア',
     currentDriveFileId: null,
     prefetchedDriveData: {},
     isViewingShared: false,
@@ -49,9 +48,6 @@ export const useUiStore = defineStore('ui', {
     },
     clearCurrentDriveFileId() {
       this.currentDriveFileId = null;
-    },
-    setDriveFolderPath(path) {
-      this.driveFolderPath = path;
     },
     setLastSavedSnapshot(snapshot) {
       this.lastSavedSnapshot = snapshot || null;

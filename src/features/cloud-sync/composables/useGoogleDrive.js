@@ -35,10 +35,6 @@ export function useGoogleDrive(dataManager) {
     if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
       dataManager.setGoogleDriveManager(googleDriveManager.value);
     }
-
-    if (googleDriveManager.value && uiStore.isSignedIn) {
-      refreshDriveFolderPath();
-    }
   }
 
   async function handleSignInClick() {
@@ -48,9 +44,7 @@ export function useGoogleDrive(dataManager) {
     const success = await googleDriveManager.value.handleSignIn();
 
     if (success) {
-      // 成功したら状態を更新して設定を再読み込み
       uiStore.isSignedIn = true;
-      await refreshDriveFolderPath();
       showToast({ type: 'success', ...messages.googleDrive.auth.connected() });
     } else {
       // 必要であればエラー時のToastなどを追加
@@ -64,52 +58,6 @@ export function useGoogleDrive(dataManager) {
     uiStore.isSignedIn = false;
     uiStore.clearCurrentDriveFileId();
     showToast({ type: 'success', ...messages.googleDrive.signOut.success() });
-  }
-
-  async function refreshDriveFolderPath() {
-    if (!googleDriveManager.value || !uiStore.isSignedIn) {
-      return;
-    }
-    try {
-      const config = await googleDriveManager.value.loadConfig();
-      if (config?.characterFolderPath) {
-        uiStore.setDriveFolderPath(config.characterFolderPath);
-      }
-    } catch (error) {
-      logAndToastError(error, messages.googleDrive.config.loadError, 'refreshDriveFolderPath');
-    }
-  }
-
-  async function updateDriveFolderPath(path) {
-    if (!googleDriveManager.value) {
-      return uiStore.driveFolderPath;
-    }
-    if (!uiStore.isSignedIn) {
-      showToast({ type: 'error', ...messages.googleDrive.config.requiresSignIn() });
-      return uiStore.driveFolderPath;
-    }
-    const normalizer =
-      typeof googleDriveManager.value.normalizeFolderPath === 'function' ? googleDriveManager.value.normalizeFolderPath(path) : path;
-
-    if (normalizer === uiStore.driveFolderPath) {
-      if (typeof googleDriveManager.value.findOrCreateConfiguredCharacterFolder === 'function') {
-        await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
-      }
-      return normalizer;
-    }
-
-    try {
-      const normalized = await googleDriveManager.value.setCharacterFolderPath(path);
-      uiStore.setDriveFolderPath(normalized);
-      if (typeof googleDriveManager.value.findOrCreateConfiguredCharacterFolder === 'function') {
-        await googleDriveManager.value.findOrCreateConfiguredCharacterFolder();
-      }
-      showToast({ type: 'success', ...messages.googleDrive.config.updateSuccess() });
-      return normalized;
-    } catch (error) {
-      logAndToastError(error, messages.googleDrive.config.updateError, 'updateDriveFolderPath');
-      return uiStore.driveFolderPath;
-    }
   }
 
   function resolveDisplayName(displayName, providedData) {
@@ -266,9 +214,6 @@ export function useGoogleDrive(dataManager) {
         uiStore.isGapiInitialized = true;
         const restored = await googleDriveManager.value.restoreSession();
         uiStore.isSignedIn = restored;
-        if (restored) {
-          refreshDriveFolderPath();
-        }
       } catch (error) {
         if (!isUsingMockDrive()) {
           applyFallbackMockDrive();
@@ -325,8 +270,6 @@ export function useGoogleDrive(dataManager) {
     isDriveReady,
     handleSignInClick,
     handleSignOutClick,
-    refreshDriveFolderPath,
-    updateDriveFolderPath,
     loadCharacterFromDrive,
     saveCharacterToDrive,
   };

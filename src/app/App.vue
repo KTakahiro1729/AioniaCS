@@ -43,7 +43,6 @@ const {
   handleSignOutClick,
   saveCharacterToDrive,
   loadCharacterFromDrive,
-  updateDriveFolderPath,
 } = useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
@@ -114,7 +113,6 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
-  updateDriveFolderPath,
   canSignInToGoogle,
   isDriveReady,
   getLocalHistoryList: getHistoryList,
