@@ -146,7 +146,7 @@ watch(
   },
 );
 
-const isDriveControlsDisabled = computed(() => !props.isSignedIn || !props.isDriveReady || isApplyingFolder.value);
+const isDriveControlsDisabled = computed(() => !props.isSignedIn || isApplyingFolder.value);
 
 function commitFolderPath() {
   if (!props.isSignedIn) {
