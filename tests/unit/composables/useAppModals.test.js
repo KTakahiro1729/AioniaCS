@@ -33,7 +33,7 @@ describe('useAppModals', () => {
       dataManager: {},
       handleSignInClick: vi.fn(),
       saveData: vi.fn(),
-      handleFileUpload: vi.fn(),
+      handleFileUpload: vi.fn().mockResolvedValue(),
       outputToCocofolia: vi.fn(),
       getChatPaletteText: vi.fn().mockResolvedValue('モックされたチャットパレット'),
       printCharacterSheet: vi.fn(),
@@ -73,7 +73,7 @@ describe('useAppModals', () => {
     expect(args.on['sign-in']).toBe(handleSignInClick);
     expect(typeof args.on['load-local']).toBe('function');
     const mockEvent = { target: { files: [] } };
-    args.on['load-local'](mockEvent);
+    await args.on['load-local'](mockEvent);
     expect(opts.handleFileUpload).toHaveBeenCalledWith(mockEvent);
   });
 
