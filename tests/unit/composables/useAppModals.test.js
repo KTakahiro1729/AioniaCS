@@ -73,7 +73,7 @@ describe('useAppModals', () => {
     expect(args.on['sign-in']).toBe(handleSignInClick);
     expect(typeof args.on['load-local']).toBe('function');
     const mockEvent = { target: { files: [] } };
-    await args.on['load-local'](mockEvent);
+    args.on['load-local'](mockEvent);
     expect(opts.handleFileUpload).toHaveBeenCalledWith(mockEvent);
   });
 
