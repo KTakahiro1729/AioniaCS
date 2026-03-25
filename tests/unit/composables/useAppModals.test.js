@@ -71,7 +71,10 @@ describe('useAppModals', () => {
     await openLoadModal();
     const args = showModalMock.mock.calls[0][0];
     expect(args.on['sign-in']).toBe(handleSignInClick);
-    expect(args.on['load-local']).toBe(opts.handleFileUpload);
+    expect(typeof args.on['load-local']).toBe('function');
+    const mockEvent = { target: { files: [] } };
+    args.on['load-local'](mockEvent);
+    expect(opts.handleFileUpload).toHaveBeenCalledWith(mockEvent);
   });
 
   test('desktop uses direct print', async () => {
