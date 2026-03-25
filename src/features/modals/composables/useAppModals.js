@@ -58,7 +58,13 @@ export function useAppModals(options) {
       props: initialProps,
       buttons: [],
       on: {
-        'load-local': handleFileUpload,
+        'load-local': async (event) => {
+          try {
+            await handleFileUpload(event);
+          } finally {
+            modalStore.hideModal();
+          }
+        },
         'sign-in': handleSignInClick,
         'open-history': () => openHistoryRecoveryModal(),
       },

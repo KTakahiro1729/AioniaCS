@@ -28,11 +28,12 @@ export function useDataExport() {
   }
 
   function handleFileUpload(event) {
-    dataManager.handleFileUpload(
+    return dataManager.handleFileUpload(
       event,
       (parsedData) => {
         characterStore.hydrateFromData(parsedData);
         uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
+        uiStore.clearCurrentDriveFileId();
       },
       (errorMessage) =>
         showToast({
