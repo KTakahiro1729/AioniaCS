@@ -26,7 +26,6 @@ export function useAppModals(options) {
     printCharacterSheet,
     openPreviewPage,
     copyEditCallback,
-    updateDriveFolderPath,
     loadCharacterFromDrive,
     canSignInToGoogle,
     isDriveReady,
@@ -44,13 +43,6 @@ export function useAppModals(options) {
       isSignedIn: uiStore.isSignedIn,
       canSignIn: canSignInToGoogle?.value ?? false,
       isDriveReady: isDriveReady?.value ?? false,
-      driveFolderPath: uiStore.driveFolderPath,
-      driveFolderLabel: messages.characterHub.driveFolder.label,
-      driveFolderChangeLabel: messages.characterHub.driveFolder.confirmButton,
-      driveFolderPlaceholder: messages.characterHub.driveFolder.placeholder,
-      driveFolderCreateConfirmMessage: messages.characterHub.driveFolder.createConfirm,
-      driveFolderCreateYesLabel: messages.characterHub.driveFolder.createYes,
-      driveFolderCreateNoLabel: messages.characterHub.driveFolder.createNo,
       loadLocalLabel: messages.ui.modal.load.buttons.loadLocal,
       restoreHistoryLabel: messages.ui.modal.load.buttons.restoreHistory,
       loadCharacterFromDrive,
@@ -68,7 +60,6 @@ export function useAppModals(options) {
       on: {
         'load-local': handleFileUpload,
         'sign-in': handleSignInClick,
-        'update-drive-folder-path': updateDriveFolderPath,
         'open-history': () => openHistoryRecoveryModal(),
       },
     });
@@ -78,7 +69,6 @@ export function useAppModals(options) {
         isSignedIn: uiStore.isSignedIn,
         canSignIn: canSignInToGoogle?.value ?? false,
         isDriveReady: isDriveReady?.value ?? false,
-        driveFolderPath: uiStore.driveFolderPath,
         hasHistory: historyExists(),
       }),
       (values) => {

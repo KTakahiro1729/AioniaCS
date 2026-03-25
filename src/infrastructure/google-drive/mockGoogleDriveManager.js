@@ -43,6 +43,10 @@ export class MockGoogleDriveManager {
     }
   }
 
+  static get DEFAULT_FOLDER_NAME() {
+    return '慈悲なきアイオニア';
+  }
+
   _getDefaultState() {
     return {
       files: {},
@@ -70,7 +74,6 @@ export class MockGoogleDriveManager {
       this._seedSampleData();
     }
     this.configuredFolderId = null;
-    this.cachedFolderPath = null;
     this._saveState();
   }
 
@@ -78,81 +81,33 @@ export class MockGoogleDriveManager {
     localStorage.setItem(this.storageKey, JSON.stringify(this.state));
   }
 
-  _ensureFolderPathSync(path) {
-    const normalized = this.normalizeFolderPath(path);
-    let parentId = 'root';
-    let currentId = null;
-    for (const segment of this.getFolderSegments(normalized)) {
-      const existing = Object.values(this.state.folders).find((folder) => folder.name === segment && folder.parentId === parentId);
-      if (existing) {
-        currentId = existing.id;
-        parentId = existing.id;
-        continue;
-      }
-      const id = `folder-${this.state.folderCounter++}`;
-      const folder = { id, name: segment, parentId };
-      this.state.folders[id] = folder;
-      currentId = id;
-      parentId = id;
+  _ensureDefaultFolder() {
+    const name = MockGoogleDriveManager.DEFAULT_FOLDER_NAME;
+    const existing = Object.values(this.state.folders).find((folder) => folder.name === name && folder.parentId === 'root');
+    if (existing) {
+      return existing.id;
     }
-    return { folderId: currentId, normalized };
+    const id = `folder-${this.state.folderCounter++}`;
+    this.state.folders[id] = { id, name, parentId: 'root' };
+    return id;
   }
 
   _seedSampleData() {
-    const { folderId, normalized } = this._ensureFolderPathSync(this.state.config.characterFolderPath);
+    const folderId = this._ensureDefaultFolder();
     this.configuredFolderId = folderId;
-    this.cachedFolderPath = normalized;
+    this.state.config.characterFolderId = folderId;
   }
 
   reset() {
     this.state = this._getDefaultState();
     this.configuredFolderId = null;
-    this.cachedFolderPath = null;
     this.currentTokenInfo = null;
     this._seedSampleData();
     this._saveState();
   }
 
   getDefaultConfig() {
-    return { characterFolderPath: '慈悲なきアイオニア' };
-  }
-
-  normalizeFolderPath(rawPath) {
-    const defaultPath = this.getDefaultConfig().characterFolderPath;
-    if (typeof rawPath !== 'string') {
-      return defaultPath;
-    }
-    const unified = rawPath.replace(/\\/g, '/');
-    const segments = unified
-      .split('/')
-      .map((segment) => segment.trim())
-      .filter((segment) => segment.length > 0);
-    if (segments.length === 0) {
-      return defaultPath;
-    }
-    return segments.join('/');
-  }
-
-  getFolderSegments(path) {
-    return this.normalizeFolderPath(path).split('/');
-  }
-
-  buildFolderPath(folderId) {
-    const segments = [];
-    let current = this.state.folders[folderId];
-    while (current) {
-      segments.unshift(current.name);
-      current = this.state.folders[current.parentId];
-    }
-    return segments.join('/');
-  }
-
-  async buildFolderPathFromId(folderId) {
-    if (!folderId) {
-      return null;
-    }
-    const path = this.buildFolderPath(folderId);
-    return path ? this.normalizeFolderPath(path) : null;
+    return { characterFolderId: null };
   }
 
   async onGapiLoad() {
@@ -196,23 +151,12 @@ export class MockGoogleDriveManager {
   }
 
   async loadConfig() {
-    this.state.config.characterFolderPath = this.normalizeFolderPath(this.state.config.characterFolderPath);
-    this.cachedFolderPath = null;
     return this.state.config;
   }
 
   async saveConfig() {
     this._saveState();
     return { id: this.configFileId, name: 'aioniacs.cfg' };
-  }
-
-  async setCharacterFolderPath(path) {
-    const normalized = this.normalizeFolderPath(path);
-    this.state.config.characterFolderPath = normalized;
-    this.configuredFolderId = null;
-    this.cachedFolderPath = null;
-    await this.saveConfig();
-    return normalized;
   }
 
   async createFolder(name, parentId = 'root') {
@@ -246,42 +190,29 @@ export class MockGoogleDriveManager {
     return folder;
   }
 
-  async ensureConfiguredFolder() {
-    const config = await this.loadConfig();
-    const path = this.normalizeFolderPath(config.characterFolderPath);
-    if (this.configuredFolderId && this.cachedFolderPath === path) {
+  async findOrCreateConfiguredCharacterFolder() {
+    if (this.configuredFolderId) {
       return this.configuredFolderId;
     }
-    const { folder, normalized } = await this.ensureFolderPath(path);
-    if (!folder) {
+
+    const config = await this.loadConfig();
+
+    // Try to use stored folder ID
+    if (config?.characterFolderId && this.state.folders[config.characterFolderId]) {
+      this.configuredFolderId = config.characterFolderId;
+      return this.configuredFolderId;
+    }
+
+    // Create a new folder with the fixed name
+    const folder = await this.createFolder(MockGoogleDriveManager.DEFAULT_FOLDER_NAME, 'root');
+    if (!folder?.id) {
       return null;
     }
+
     this.configuredFolderId = folder.id;
-    this.cachedFolderPath = normalized;
+    this.state.config.characterFolderId = folder.id;
     this._saveState();
-    return folder.id;
-  }
-
-  async ensureFolderPath(path) {
-    const normalized = this.normalizeFolderPath(path);
-    let parentId = 'root';
-    let currentFolder = null;
-    for (const segment of this.getFolderSegments(normalized)) {
-      let folder = await this.findFolder(segment, parentId);
-      if (!folder) {
-        folder = await this.createFolder(segment, parentId);
-      }
-      if (!folder) {
-        return { folder: null, normalized };
-      }
-      currentFolder = folder;
-      parentId = folder.id;
-    }
-    return { folder: currentFolder, normalized };
-  }
-
-  async findOrCreateConfiguredCharacterFolder() {
-    return this.ensureConfiguredFolder();
+    return this.configuredFolderId;
   }
 
   async listFiles(folderId, mimeType = 'application/json') {

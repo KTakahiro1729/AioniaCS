@@ -19,7 +19,6 @@ vi.mock('@/features/cloud-sync/composables/useGoogleDrive.js', () => ({
     handleSignOutClick,
     saveCharacterToDrive,
     loadCharacterFromDrive: loadCharacterFromDriveMock,
-    updateDriveFolderPath: vi.fn(),
   }),
 }));
 
