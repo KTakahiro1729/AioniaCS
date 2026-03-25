@@ -67,39 +67,45 @@ export class DataManager {
    */
   handleFileUpload(event, onSuccess, onError) {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) return Promise.resolve();
 
     const fileName = file.name;
-    const reader = new FileReader();
 
-    if (fileName.endsWith('.zip')) {
-      reader.onload = async (e) => {
-        try {
-          const rawJsonData = await deserializeCharacterPayload(e.target.result);
-          const parsedData = this.parseLoadedData(rawJsonData);
-          onSuccess(parsedData);
-        } catch (error) {
-          console.error('Failed to parse ZIP file:', error);
-          onError(messages.file.loadError + ' (ZIP: ' + error.message + ')');
-        }
-      };
-      reader.readAsArrayBuffer(file); // Read ZIP as ArrayBuffer
-    } else {
-      // Assume JSON or other text file
-      reader.onload = async (e) => {
-        const fileContent = e.target.result;
-        try {
-          const rawJsonData = await deserializeCharacterPayload(fileContent);
-          const parsedData = this.parseLoadedData(rawJsonData);
-          onSuccess(parsedData);
-        } catch (error) {
-          console.error('Failed to parse JSON file:', error);
-          onError((error && error.message) || messages.file.loadError);
-        }
-      };
-      reader.readAsText(file);
-    }
+    const promise = new Promise((resolve) => {
+      const reader = new FileReader();
+
+      if (fileName.endsWith('.zip')) {
+        reader.onload = async (e) => {
+          try {
+            const rawJsonData = await deserializeCharacterPayload(e.target.result);
+            const parsedData = this.parseLoadedData(rawJsonData);
+            onSuccess(parsedData);
+          } catch (error) {
+            console.error('Failed to parse ZIP file:', error);
+            onError(messages.file.loadError + ' (ZIP: ' + error.message + ')');
+          }
+          resolve();
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.onload = async (e) => {
+          const fileContent = e.target.result;
+          try {
+            const rawJsonData = await deserializeCharacterPayload(fileContent);
+            const parsedData = this.parseLoadedData(rawJsonData);
+            onSuccess(parsedData);
+          } catch (error) {
+            console.error('Failed to parse JSON file:', error);
+            onError((error && error.message) || messages.file.loadError);
+          }
+          resolve();
+        };
+        reader.readAsText(file);
+      }
+    });
+
     event.target.value = null;
+    return promise;
   }
 
   async _buildDriveSaveContext(character, skills, specialSkills, equipments, histories) {

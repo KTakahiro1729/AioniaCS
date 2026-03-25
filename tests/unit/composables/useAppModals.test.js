@@ -33,7 +33,7 @@ describe('useAppModals', () => {
       dataManager: {},
       handleSignInClick: vi.fn(),
       saveData: vi.fn(),
-      handleFileUpload: vi.fn(),
+      handleFileUpload: vi.fn().mockResolvedValue(),
       outputToCocofolia: vi.fn(),
       getChatPaletteText: vi.fn().mockResolvedValue('モックされたチャットパレット'),
       printCharacterSheet: vi.fn(),
@@ -71,7 +71,10 @@ describe('useAppModals', () => {
     await openLoadModal();
     const args = showModalMock.mock.calls[0][0];
     expect(args.on['sign-in']).toBe(handleSignInClick);
-    expect(args.on['load-local']).toBe(opts.handleFileUpload);
+    expect(typeof args.on['load-local']).toBe('function');
+    const mockEvent = { target: { files: [] } };
+    await args.on['load-local'](mockEvent);
+    expect(opts.handleFileUpload).toHaveBeenCalledWith(mockEvent);
   });
 
   test('desktop uses direct print', async () => {

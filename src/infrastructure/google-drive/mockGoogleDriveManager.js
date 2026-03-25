@@ -44,7 +44,7 @@ export class MockGoogleDriveManager {
   }
 
   static get DEFAULT_FOLDER_NAME() {
-    return '慈悲なきアイオニア';
+    return 'Aionia TRPG Character Sheet';
   }
 
   _getDefaultState() {
