@@ -87,14 +87,14 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   test('findOrCreateConfiguredCharacterFolder creates new folder when stored ID is invalid', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValue({ result: { id: 'cfg-new', name: 'aioniacs.cfg' } });
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'new-folder', name: '慈悲なきアイオニア' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'new-folder', name: 'Aionia TRPG Character Sheet' } });
 
     const folderId = await gdm.findOrCreateConfiguredCharacterFolder();
 
     expect(folderId).toBe('new-folder');
     expect(gapi.client.drive.files.create).toHaveBeenCalledWith({
       resource: {
-        name: '慈悲なきアイオニア',
+        name: 'Aionia TRPG Character Sheet',
         mimeType: 'application/vnd.google-apps.folder',
         parents: ['root'],
       },
@@ -107,7 +107,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValue({ result: { id: 'cfg-5', name: 'aioniacs.cfg' } });
     // createFolder for character folder
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: 'Aionia TRPG Character Sheet' } });
 
     const res = await gdm.createCharacterFile({ content: new Uint8Array([0x01, 0x02]), mimeType: 'application/zip', name: 'Hero' });
 
@@ -122,7 +122,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   test('saveFile injects url-safe thumbnail content hints when provided', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValue({ result: { id: 'cfg-thumb', name: 'aioniacs.cfg' } });
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-thumb', name: '慈悲なきアイオニア' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-thumb', name: 'Aionia TRPG Character Sheet' } });
 
     await gdm.createCharacterFile({
       content: '{}',
@@ -141,7 +141,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   test('updateCharacterFile patches existing file', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValue({ result: { id: 'cfg-6', name: 'aioniacs.cfg' } });
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: 'Aionia TRPG Character Sheet' } });
 
     await gdm.updateCharacterFile('file-1', { content: new Uint8Array([0x03, 0x04]), mimeType: 'application/zip', name: 'Hero' });
 
@@ -171,7 +171,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
       result: { files: [{ id: 'found', name: 'Hero.zip' }] },
     });
     gapi.client.request.mockResolvedValue({ result: { id: 'cfg-7', name: 'aioniacs.cfg' } });
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: '慈悲なきアイオニア' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder', name: 'Aionia TRPG Character Sheet' } });
 
     const file = await gdm.findFileByName('Hero.zip');
 
@@ -186,7 +186,7 @@ describe('GoogleDriveManager configuration and folder handling', () => {
   test('isFileInConfiguredFolder detects mismatched parent', async () => {
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });
     gapi.client.request.mockResolvedValue({ result: { id: 'cfg-8', name: 'aioniacs.cfg' } });
-    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-x', name: '慈悲なきアイオニア' } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'folder-x', name: 'Aionia TRPG Character Sheet' } });
     gapi.client.drive.files.get.mockResolvedValue({ result: { parents: ['other-folder'] } });
 
     const result = await gdm.isFileInConfiguredFolder('file-xyz');

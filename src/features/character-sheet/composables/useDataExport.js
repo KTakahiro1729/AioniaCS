@@ -33,6 +33,7 @@ export function useDataExport() {
       (parsedData) => {
         characterStore.hydrateFromData(parsedData);
         uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
+        uiStore.clearCurrentDriveFileId();
       },
       (errorMessage) =>
         showToast({
