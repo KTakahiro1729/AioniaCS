@@ -105,9 +105,9 @@ export class GoogleDriveManager {
 
     try {
       const response = await gapi.client.drive.files.list({
-        q: `name='${escapedName}' and 'root' in parents and trashed=false`,
+        q: `name='${escapedName}'`,
         fields: 'files(id, name)',
-        spaces: 'drive',
+        spaces: 'appDataFolder',
       });
       const file = response.result.files?.[0];
       if (file) {
@@ -142,7 +142,7 @@ export class GoogleDriveManager {
     await this.ensureAccessToken();
     const payload = JSON.stringify(this.config, null, 2);
     try {
-      const result = await this.saveFile('root', this.configFileName, payload, this.configFileId);
+      const result = await this.saveFile('appDataFolder', this.configFileName, payload, this.configFileId);
       if (result) {
         this.configFileId = result.id;
       }
