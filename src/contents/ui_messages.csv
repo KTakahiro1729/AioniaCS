@@ -155,6 +155,7 @@ ui.confirmations.unsavedChanges.message,現在の内容はまだ保存されて�
 ui.confirmations.unsavedChanges.buttons.save,保存して続行,,Unsaved changes dialog save button
 ui.confirmations.unsavedChanges.buttons.discard,保存せず続行,,Unsaved changes dialog discard button
 ui.confirmations.unsavedChanges.buttons.cancel,キャンセル,,Unsaved changes dialog cancel button
+ui.confirmations.loadFile.message,現在の内容はまだ保存されていません。ファイルを読み込むと変更は失われます。続行しますか？,,Load file unsaved changes message
 ui.modal.load.title,読込,,Load modal title
 ui.modal.load.buttons.loadLocal,ローカルファイル読込,,Load modal local button
 ui.modal.load.buttons.loadDrive,Driveから読み込む,,Load modal drive button

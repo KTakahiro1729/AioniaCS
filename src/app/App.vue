@@ -76,6 +76,20 @@ async function confirmDiscardingUnsavedChanges() {
   return result?.value === 'confirm';
 }
 
+async function checkUnsavedBeforeLoad() {
+  if (!hasUnsavedChanges()) return true;
+  const result = await showModal(messages.ui.confirmations.loadFile);
+  const choice = result?.value;
+  if (choice === 'save') {
+    const saved = await saveCharacterToDrive();
+    return !!saved;
+  }
+  if (choice === 'discard') {
+    return true;
+  }
+  return false;
+}
+
 const handleCreateNewCharacter = async () => {
   if (hasUnsavedChanges()) {
     const result = await showModal(messages.ui.confirmations.unsavedChanges);
@@ -110,6 +124,7 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   printCharacterSheet,
   openPreviewPage,
   loadCharacterFromDrive,
+  checkUnsavedBeforeLoad,
   copyEditCallback: () => {
     uiStore.isViewingShared = false;
   },
@@ -136,7 +151,15 @@ watch(
   { immediate: true },
 );
 
-document.title = messages.ui.header.defaultTitle;
+const defaultDocumentTitle = messages.ui.header.defaultTitle;
+document.title = defaultDocumentTitle;
+
+watch(
+  () => characterStore.character.name,
+  (name) => {
+    document.title = name ? `${name} | ${defaultDocumentTitle}` : defaultDocumentTitle;
+  },
+);
 
 watch(
   () => modalStore.isVisible,

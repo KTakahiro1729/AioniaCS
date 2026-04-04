@@ -72,9 +72,10 @@ describe('useAppModals', () => {
     const args = showModalMock.mock.calls[0][0];
     expect(args.on['sign-in']).toBe(handleSignInClick);
     expect(typeof args.on['load-local']).toBe('function');
-    const mockEvent = { target: { files: [] } };
+    const mockFile = new File(['{}'], 'test.zip', { type: 'application/zip' });
+    const mockEvent = { target: { files: [mockFile] } };
     await args.on['load-local'](mockEvent);
-    expect(opts.handleFileUpload).toHaveBeenCalledWith(mockEvent);
+    expect(opts.handleFileUpload).toHaveBeenCalledWith({ target: { files: [mockFile], value: '' } });
   });
 
   test('desktop uses direct print', async () => {

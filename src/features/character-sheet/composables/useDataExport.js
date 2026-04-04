@@ -31,6 +31,7 @@ export function useDataExport() {
     return dataManager.handleFileUpload(
       event,
       (parsedData) => {
+        characterStore.initializeAll();
         characterStore.hydrateFromData(parsedData);
         uiStore.setLastSavedSnapshot(buildSnapshotFromStore(characterStore));
         uiStore.clearCurrentDriveFileId();
