@@ -2,10 +2,23 @@ import { defineAsyncComponent, watch } from 'vue';
 import { useModal } from './useModal.js';
 import { useModalStore } from '@/features/modals/stores/modalStore.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
-const LoadModal = defineAsyncComponent(() => import('@/features/modals/components/contents/LoadModal.vue'));
-const HistoryRecoveryModal = defineAsyncComponent(() => import('@/features/modals/components/contents/HistoryRecoveryModal.vue'));
-const IoModal = defineAsyncComponent(() => import('@/features/modals/components/contents/IoModal.vue'));
-const ShareResultModal = defineAsyncComponent(() => import('@/features/modals/components/contents/ShareResultModal.vue'));
+function lazyModal(loader) {
+  return defineAsyncComponent({
+    loader,
+    onError(error, retry, fail) {
+      if (error.message.includes('dynamically imported module') || error.message.includes('Failed to fetch')) {
+        window.location.reload();
+      } else {
+        fail();
+      }
+    },
+  });
+}
+
+const LoadModal = lazyModal(() => import('@/features/modals/components/contents/LoadModal.vue'));
+const HistoryRecoveryModal = lazyModal(() => import('@/features/modals/components/contents/HistoryRecoveryModal.vue'));
+const IoModal = lazyModal(() => import('@/features/modals/components/contents/IoModal.vue'));
+const ShareResultModal = lazyModal(() => import('@/features/modals/components/contents/ShareResultModal.vue'));
 import { isDesktopDevice } from '@/shared/utils/device.js';
 import { messages } from '@/i18n/index.js';
 import { useShare } from '@/features/cloud-sync/composables/useShare.js';
