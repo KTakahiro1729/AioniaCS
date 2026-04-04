@@ -226,6 +226,15 @@ export const messages = {
           { label: t('ui.confirmations.unsavedChanges.buttons.cancel'), value: 'cancel', variant: 'secondary' },
         ],
       },
+      loadFile: {
+        title: t('ui.confirmations.unsavedChanges.title'),
+        message: t('ui.confirmations.loadFile.message'),
+        buttons: [
+          { label: t('ui.confirmations.unsavedChanges.buttons.save'), value: 'save', variant: 'primary' },
+          { label: t('ui.confirmations.unsavedChanges.buttons.discard'), value: 'discard', variant: 'secondary' },
+          { label: t('ui.confirmations.unsavedChanges.buttons.cancel'), value: 'cancel', variant: 'secondary' },
+        ],
+      },
     },
     modal: {
       load: {

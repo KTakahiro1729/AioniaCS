@@ -27,6 +27,7 @@ export function useAppModals(options) {
     openPreviewPage,
     copyEditCallback,
     loadCharacterFromDrive,
+    checkUnsavedBeforeLoad,
     canSignInToGoogle,
     isDriveReady,
     getLocalHistoryList,
@@ -59,11 +60,18 @@ export function useAppModals(options) {
       buttons: [],
       on: {
         'load-local': async (event) => {
-          try {
-            await handleFileUpload(event);
-          } finally {
-            modalStore.hideModal();
+          // Capture file before modal changes may remove the input element
+          const file = event.target.files?.[0];
+          if (!file) return;
+
+          modalStore.hideModal();
+
+          if (typeof checkUnsavedBeforeLoad === 'function') {
+            const confirmed = await checkUnsavedBeforeLoad();
+            if (!confirmed) return;
           }
+
+          await handleFileUpload({ target: { files: [file], value: '' } });
         },
         'sign-in': handleSignInClick,
         'open-history': () => openHistoryRecoveryModal(),
