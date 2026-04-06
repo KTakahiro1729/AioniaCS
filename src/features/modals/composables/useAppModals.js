@@ -7,6 +7,13 @@ function lazyModal(loader) {
     loader,
     onError(error, retry, fail) {
       if (error.message.includes('dynamically imported module') || error.message.includes('Failed to fetch')) {
+        const lastReload = sessionStorage.getItem('vite-preload-reload');
+        const now = Date.now();
+        if (lastReload && now - Number(lastReload) < 10000) {
+          fail();
+          return;
+        }
+        sessionStorage.setItem('vite-preload-reload', now.toString());
         window.location.reload();
       } else {
         fail();
