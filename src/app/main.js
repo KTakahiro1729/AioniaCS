@@ -5,6 +5,15 @@ import { router } from './router/index.js';
 import { initializeDriveManager } from '@/infrastructure/google-drive/index.js';
 import '@/shared/styles/style.css';
 
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  const lastReload = sessionStorage.getItem('vite-preload-reload');
+  const now = Date.now();
+  if (lastReload && now - Number(lastReload) < 10000) return;
+  sessionStorage.setItem('vite-preload-reload', now.toString());
+  window.location.reload();
+});
+
 initializeDriveManager(import.meta.env.VITE_GOOGLE_API_KEY, import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
 const app = createApp(RootApp);
