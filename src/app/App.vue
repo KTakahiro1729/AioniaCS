@@ -29,7 +29,7 @@ const characterStore = useCharacterStore();
 const uiStore = useUiStore();
 const initialCharacterSnapshot = ref(buildSnapshotFromStore(characterStore));
 uiStore.setLastSavedSnapshot(initialCharacterSnapshot.value);
-const { clearLocalDraft, getHistoryList, restoreFromHistory } = useLocalCharacterPersistence(characterStore, uiStore);
+const { clearLocalDraft, getHistoryList, restoreFromHistory } = useLocalCharacterPersistence(characterStore);
 useKeyboardHandling();
 
 const { dataManager, saveData, handleFileUpload, outputToCocofolia, getChatPaletteText } = useDataExport();
@@ -110,7 +110,6 @@ const handleCreateNewCharacter = async () => {
   clearLocalDraft();
   characterStore.initializeAll();
   uiStore.clearCurrentDriveFileId();
-  uiStore.isViewingShared = false;
   uiStore.setLastSavedSnapshot(initialCharacterSnapshot.value);
 };
 
@@ -125,15 +124,11 @@ const { openLoadModal, openIoModal, openShareModal } = useAppModals({
   openPreviewPage,
   loadCharacterFromDrive,
   checkUnsavedBeforeLoad,
-  copyEditCallback: () => {
-    uiStore.isViewingShared = false;
-  },
   canSignInToGoogle,
   isDriveReady,
   getLocalHistoryList: getHistoryList,
   restoreCharacterFromHistory: (item) => {
     restoreFromHistory(item);
-    uiStore.isViewingShared = false;
     uiStore.clearCurrentDriveFileId();
   },
 });
@@ -195,7 +190,7 @@ async function attemptSharedLoad() {
   }
   const loaded = await loadCharacterFromDrive(pendingSharedId.value);
   if (loaded) {
-    uiStore.isViewingShared = true;
+    uiStore.clearCurrentDriveFileId();
     clearSharedIdFromUrl();
     pendingSharedId.value = null;
   }
@@ -243,9 +238,6 @@ onMounted(async () => {
     @help-mouseleave="handleHelpIconMouseLeave"
     @help-click="handleHelpIconClick"
   />
-  <div v-if="uiStore.isViewingShared" class="view-mode-banner">
-    {{ messages.ui.viewModeBanner }}
-  </div>
   <CharacterSheetLayout />
   <MainFooter
     :experience-status-class="experienceStatusClass"
@@ -256,9 +248,7 @@ onMounted(async () => {
     :experience-label="messages.ui.footer.experience"
     :output-label="messages.ui.footer.output"
     :share-label="messages.ui.footer.share"
-    :copy-edit-label="messages.ui.footer.copyEdit"
     :save-label="messages.ui.buttons.save"
-    :is-viewing-shared="uiStore.isViewingShared"
     @open-output-modal="openIoModal"
     @share="openShareModal"
   />
@@ -266,12 +256,3 @@ onMounted(async () => {
   <BaseModal />
   <NotificationContainer />
 </template>
-
-<style scoped>
-.view-mode-banner {
-  background: #333;
-  color: #fff;
-  text-align: center;
-  padding: 0.5rem;
-}
-</style>

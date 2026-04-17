@@ -45,7 +45,6 @@ export function useAppModals(options) {
     getChatPaletteText,
     printCharacterSheet,
     openPreviewPage,
-    copyEditCallback,
     loadCharacterFromDrive,
     checkUnsavedBeforeLoad,
     canSignInToGoogle,
@@ -170,12 +169,6 @@ export function useAppModals(options) {
   }
 
   async function openShareModal() {
-    if (uiStore.isViewingShared) {
-      if (typeof copyEditCallback === 'function') {
-        copyEditCallback();
-      }
-      return;
-    }
     if (!uiStore.isSignedIn) {
       showToast({ type: 'error', ...messages.share.needSignIn() });
       return;

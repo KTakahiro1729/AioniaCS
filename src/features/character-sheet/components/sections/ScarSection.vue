@@ -10,7 +10,6 @@
             id="initial_scar"
             v-model.number="characterStore.character.initialScar"
             min="0"
-            :disabled="uiStore.isViewingShared"
           />
         </div>
         <div class="info-item info-item--double">
@@ -32,11 +31,9 @@
 <script setup>
 import { computed } from 'vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
-const uiStore = useUiStore();
 const scarTexts = messages.sheet.sections.scar;
 const calculatedScar = computed(() => characterStore.calculatedScar);
 </script>

@@ -6,11 +6,11 @@
       <div class="info-row">
         <div class="info-item info-item--double">
           <label for="name">{{ basicInfoTexts.fields.name }}</label>
-          <input type="text" id="name" v-model="characterStore.character.name" :disabled="uiStore.isViewingShared" />
+          <input type="text" id="name" v-model="characterStore.character.name" />
         </div>
         <div class="info-item info-item--double">
           <label for="player_name">{{ basicInfoTexts.fields.playerName }}</label>
-          <input type="text" id="player_name" v-model="characterStore.character.playerName" :disabled="uiStore.isViewingShared" />
+          <input type="text" id="player_name" v-model="characterStore.character.playerName" />
         </div>
       </div>
       <div class="info-row">
@@ -21,7 +21,6 @@
             id="species"
             list="species-options"
             v-model="speciesDisplayValue"
-            :disabled="uiStore.isViewingShared"
             @change="handleSpeciesInput"
           />
           <datalist id="species-options">
@@ -30,21 +29,21 @@
         </div>
         <div class="info-item info-item--double">
           <label for="occupation">{{ basicInfoTexts.fields.occupation }}</label>
-          <input type="text" id="occupation" v-model="characterStore.character.occupation" :disabled="uiStore.isViewingShared" />
+          <input type="text" id="occupation" v-model="characterStore.character.occupation" />
         </div>
       </div>
       <div class="info-row">
         <div class="info-item info-item--quadruple">
           <label for="gender">{{ basicInfoTexts.fields.gender }}</label>
-          <input type="text" id="gender" v-model="characterStore.character.gender" :disabled="uiStore.isViewingShared" />
+          <input type="text" id="gender" v-model="characterStore.character.gender" />
         </div>
         <div class="info-item info-item--quadruple">
           <label for="age">{{ basicInfoTexts.fields.age }}</label>
-          <input type="number" id="age" v-model.number="characterStore.character.age" min="0" :disabled="uiStore.isViewingShared" />
+          <input type="number" id="age" v-model.number="characterStore.character.age" min="0" />
         </div>
         <div class="info-item info-item--double">
           <label for="build">{{ basicInfoTexts.fields.build }}</label>
-          <input type="text" id="build" v-model="characterStore.character.build" :disabled="uiStore.isViewingShared" />
+          <input type="text" id="build" v-model="characterStore.character.build" />
         </div>
       </div>
     </div>
@@ -56,11 +55,9 @@ import { ref, computed, watch } from 'vue';
 import CharacterImageDisplay from '@/features/character-sheet/components/ui/CharacterImageDisplay.vue';
 import { AioniaGameData } from '@/data/gameData.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
-const uiStore = useUiStore();
 const basicInfoTexts = messages.sheet.sections.basicInfo;
 
 const speciesComboOptions = computed(() =>

@@ -23,7 +23,6 @@
         <BaseListItem
           v-for="(history, index) in characterStore.adventureLog"
           :key="index"
-          :show-delete-button="!uiStore.isViewingShared"
           :can-delete="!(characterStore.adventureLog.length <= 1 && !hasHistoryContent(history))"
           @delete-item="characterStore.removeHistoryItem(index)"
         >
@@ -34,7 +33,6 @@
                   type="text"
                   :model-value="history.sessionName"
                   @update:model-value="(v) => characterStore.updateHistoryItem(index, 'sessionName', v)"
-                  :disabled="uiStore.isViewingShared"
                 />
               </div>
               <div class="flex-history-exp">
@@ -43,7 +41,6 @@
                   min="0"
                   :model-value="history.gotExperiments"
                   @update:model-value="(v) => characterStore.updateHistoryItem(index, 'gotExperiments', v)"
-                  :disabled="uiStore.isViewingShared"
                 />
               </div>
               <div class="flex-history-scar">
@@ -52,7 +49,6 @@
                   min="0"
                   :model-value="history.increasedScar"
                   @update:model-value="(v) => characterStore.updateHistoryItem(index, 'increasedScar', v)"
-                  :disabled="uiStore.isViewingShared"
                 />
               </div>
               <div class="flex-history-memo">
@@ -61,14 +57,13 @@
                   :placeholder="sheetMessages.placeholders.adventureMemo"
                   :model-value="history.memo"
                   @update:model-value="(v) => characterStore.updateHistoryItem(index, 'memo', v)"
-                  :disabled="uiStore.isViewingShared"
                 />
               </div>
             </div>
           </div>
         </BaseListItem>
       </ul>
-      <div class="add-button-container-left" v-if="!uiStore.isViewingShared">
+      <div class="add-button-container-left">
         <button
           type="button"
           class="button-base list-button list-button--add"
@@ -86,11 +81,9 @@
 import BaseInput from '@/shared/ui/base/BaseInput.vue';
 import BaseListItem from '@/shared/ui/base/BaseListItem.vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
-const uiStore = useUiStore();
 const sheetMessages = messages.sheet;
 
 function hasHistoryContent(h) {

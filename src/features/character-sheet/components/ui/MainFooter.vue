@@ -10,12 +10,12 @@
     </button>
     <button
       class="button-base footer-button footer-button--share"
-      :aria-label="isViewingShared ? copyEditLabel : shareLabel"
+      :aria-label="shareLabel"
       :disabled="isShareDisabled"
       @click="handleShareClick"
     >
       <span class="icon-svg icon-svg--footer icon-svg-share"></span>
-      {{ isViewingShared ? copyEditLabel : shareLabel }}
+      {{ shareLabel }}
     </button>
     <button class="button-base footer-button footer-button--save" :disabled="isSaveDisabled" @click="handleSave" :title="saveLabel">
       <span class="icon-svg icon-svg--footer" :class="saveIconClass"></span>
@@ -34,11 +34,9 @@ const props = defineProps({
   currentExperiencePoints: Number,
   maxExperiencePoints: Number,
   currentWeight: Number,
-  isViewingShared: Boolean,
   saveToDrive: Function,
   outputLabel: String,
   shareLabel: String,
-  copyEditLabel: String,
   saveLabel: String,
 });
 
@@ -46,7 +44,7 @@ const emit = defineEmits(['open-output-modal', 'share']);
 
 const uiStore = useUiStore();
 
-const isShareDisabled = computed(() => !uiStore.isSignedIn && !props.isViewingShared);
+const isShareDisabled = computed(() => !uiStore.isSignedIn);
 const isSaveDisabled = computed(() => !uiStore.isSignedIn);
 const saveIconClass = computed(() => 'icon-svg-cloud-upload');
 

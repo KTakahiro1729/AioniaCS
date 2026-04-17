@@ -1,6 +1,6 @@
 <template>
   <li class="base-list-item">
-    <div v-if="showDeleteButton" class="delete-button-wrapper">
+    <div class="delete-button-wrapper">
       <button
         type="button"
         class="button-base button-base--delete list-button"
@@ -19,7 +19,6 @@
 import { messages } from '@/i18n/index.js';
 
 defineProps({
-  showDeleteButton: Boolean,
   canDelete: { type: Boolean, default: true },
 });
 const emit = defineEmits(['delete-item']);

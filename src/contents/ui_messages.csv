@@ -138,8 +138,6 @@ ui.header.signOut,ログアウト,,Header sign out label
 ui.footer.experience,経験点,,Footer experience label
 ui.footer.output,出力,,Footer output label
 ui.footer.share,共有,,Footer share label
-ui.footer.copyEdit,自分用にコピーして編集,,Footer copy/edit label
-ui.viewModeBanner,閲覧モードで表示中,,View mode banner text
 ui.buttons.saveCloudNew,新規保存,,UI save to cloud new button
 ui.buttons.saveCloudOverwrite,上書保存,,UI save to cloud overwrite button
 ui.buttons.saveCloudTitle,Google Driveに保存,,UI save to cloud tooltip

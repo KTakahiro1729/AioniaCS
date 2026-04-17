@@ -8,7 +8,6 @@ export const useUiStore = defineStore('ui', {
     isLoading: false,
     currentDriveFileId: null,
     prefetchedDriveData: {},
-    isViewingShared: false,
     showSpecialSkillDescriptions: false,
     showItemDescriptions: false,
     lastSavedSnapshot: null,

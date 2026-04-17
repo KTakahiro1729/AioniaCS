@@ -201,9 +201,7 @@ export const messages = {
       experience: t('ui.footer.experience'),
       output: t('ui.footer.output'),
       share: t('ui.footer.share'),
-      copyEdit: t('ui.footer.copyEdit'),
     },
-    viewModeBanner: t('ui.viewModeBanner'),
     buttons: {
       saveCloudNew: t('ui.buttons.saveCloudNew'),
       saveCloudOverwrite: t('ui.buttons.saveCloudOverwrite'),

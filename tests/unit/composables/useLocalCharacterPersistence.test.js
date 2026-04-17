@@ -3,7 +3,6 @@ import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import {
   useLocalCharacterPersistence,
   LOCAL_CHARACTER_STORAGE_KEY,
@@ -42,7 +41,6 @@ describe('useLocalCharacterPersistence', () => {
 
   function mountComposable(options = {}) {
     const characterStore = useCharacterStore();
-    const uiStore = useUiStore();
     const resolvedOptions = { debounceMs: 0, ...options };
     if (!Object.prototype.hasOwnProperty.call(resolvedOptions, 'storage')) {
       resolvedOptions.storage = storage;
@@ -50,8 +48,8 @@ describe('useLocalCharacterPersistence', () => {
     if (!Object.prototype.hasOwnProperty.call(resolvedOptions, 'historyStorage')) {
       resolvedOptions.historyStorage = historyStorage;
     }
-    const instance = useLocalCharacterPersistence(characterStore, uiStore, resolvedOptions);
-    return { instance, characterStore, uiStore };
+    const instance = useLocalCharacterPersistence(characterStore, resolvedOptions);
+    return { instance, characterStore };
   }
 
   test('uses sessionStorage by default when available', async () => {
@@ -62,8 +60,7 @@ describe('useLocalCharacterPersistence', () => {
       localStorage: localStorageMock,
     });
     const characterStore = useCharacterStore();
-    const uiStore = useUiStore();
-    useLocalCharacterPersistence(characterStore, uiStore, { debounceMs: 0 });
+    useLocalCharacterPersistence(characterStore, { debounceMs: 0 });
 
     characterStore.character.name = 'Session Scoped';
     await nextTick();
@@ -115,18 +112,6 @@ describe('useLocalCharacterPersistence', () => {
     const savedHistory = JSON.parse(historyStorage.getItem(HISTORY_STORAGE_KEY));
     expect(savedHistory[0].data.character.images).toEqual([]);
     expect(savedHistory[0].meta.name).toBe('History Save');
-  });
-
-  test('skips persistence when viewing shared sheet', async () => {
-    const { characterStore, uiStore } = mountComposable();
-    uiStore.isViewingShared = true;
-
-    characterStore.character.name = 'Should Not Save';
-    await nextTick();
-    vi.runAllTimers();
-
-    expect(storage.setItem).not.toHaveBeenCalled();
-    expect(historyStorage.setItem).not.toHaveBeenCalled();
   });
 
   test('clearLocalDraft removes stored payload', () => {

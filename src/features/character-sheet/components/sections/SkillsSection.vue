@@ -4,13 +4,13 @@
     <ul class="skills-list box-content list-reset">
       <li v-for="skill in localSkills" :key="skill.id" class="skill-list">
         <div class="skill-header">
-          <input type="checkbox" :id="skill.id" v-model="skill.checked" :disabled="uiStore.isViewingShared" />
+          <input type="checkbox" :id="skill.id" v-model="skill.checked" />
           <label :for="skill.id" class="skill-name">{{ skill.name }}</label>
         </div>
         <div v-if="skill.canHaveExperts && skill.checked" class="experts-section">
           <ul class="expert-list list-reset">
             <li v-for="(expert, expIndex) in skill.experts" :key="expIndex" class="base-list-item">
-              <div class="delete-button-wrapper" v-if="!uiStore.isViewingShared">
+              <div class="delete-button-wrapper">
                 <button
                   type="button"
                   class="button-base button-base--delete list-button"
@@ -25,12 +25,12 @@
                 type="text"
                 v-model="expert.value"
                 :placeholder="expertPlaceholder(skill)"
-                :disabled="!skill.checked || uiStore.isViewingShared"
+                :disabled="!skill.checked"
                 class="flex-grow"
               />
             </li>
           </ul>
-          <div class="add-button-container-left" v-if="!uiStore.isViewingShared">
+          <div class="add-button-container-left">
             <button
               type="button"
               class="button-base list-button list-button--add"
@@ -48,11 +48,9 @@
 
 <script setup>
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
-const uiStore = useUiStore();
 const sheetMessages = messages.sheet;
 const localSkills = characterStore.skills;
 const expertPlaceholder = (skill) =>

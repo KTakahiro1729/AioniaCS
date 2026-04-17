@@ -38,7 +38,6 @@ describe('useAppModals', () => {
       getChatPaletteText: vi.fn().mockResolvedValue('モックされたチャットパレット'),
       printCharacterSheet: vi.fn(),
       openPreviewPage: vi.fn(),
-      copyEditCallback: vi.fn(),
       canSignInToGoogle: ref(true),
       isDriveReady: ref(true),
       ...overrides,
@@ -131,16 +130,6 @@ describe('useAppModals', () => {
     const { openShareModal } = useAppModals(createOptions());
     await openShareModal();
     expect(showToastMock).toHaveBeenCalled();
-    expect(showAsyncToastMock).not.toHaveBeenCalled();
-  });
-
-  test('openShareModal uses copy edit callback for shared view', async () => {
-    const uiStore = useUiStore();
-    uiStore.isViewingShared = true;
-    const copyEditCallback = vi.fn();
-    const { openShareModal } = useAppModals(createOptions({ copyEditCallback }));
-    await openShareModal();
-    expect(copyEditCallback).toHaveBeenCalled();
     expect(showAsyncToastMock).not.toHaveBeenCalled();
   });
 

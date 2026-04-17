@@ -14,12 +14,4 @@ describe('useAppInitialization', () => {
     await initialize();
     expect(uiStore.isLoading).toBe(false);
   });
-
-  test('leaves viewing flags untouched', async () => {
-    const uiStore = useUiStore();
-    uiStore.isViewingShared = true;
-    const { initialize } = useAppInitialization();
-    await initialize();
-    expect(uiStore.isViewingShared).toBe(true);
-  });
 });

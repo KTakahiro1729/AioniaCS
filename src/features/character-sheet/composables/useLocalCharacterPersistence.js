@@ -49,7 +49,7 @@ function safeParse(raw) {
   }
 }
 
-export function useLocalCharacterPersistence(characterStore, uiStore, options = {}) {
+export function useLocalCharacterPersistence(characterStore, options = {}) {
   const storage = resolveStorage(options.storage, 'sessionStorage');
   const historyStorage = resolveStorage(options.historyStorage, 'localStorage');
   const storageKey = options.storageKey || LOCAL_CHARACTER_STORAGE_KEY;
@@ -62,7 +62,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
   const defaultPayload = deepClone(buildStorePayload(characterStore));
 
   function persistToStorage() {
-    if (!storage || uiStore.isViewingShared) {
+    if (!storage) {
       return false;
     }
     const payload = buildStorePayload(characterStore);
@@ -76,7 +76,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
   }
 
   function persistToHistory() {
-    if (!historyStorage || uiStore.isViewingShared) {
+    if (!historyStorage) {
       return false;
     }
     const payload = buildStorePayload(characterStore);
@@ -114,7 +114,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
   }
 
   function schedulePersist() {
-    if (!storage || uiStore.isViewingShared) {
+    if (!storage) {
       return;
     }
     if (debounceHandle) {
@@ -127,7 +127,7 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
   }
 
   function scheduleHistoryPersist() {
-    if (!historyStorage || uiStore.isViewingShared) {
+    if (!historyStorage) {
       return;
     }
     if (historyDebounceHandle) {
@@ -182,16 +182,6 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
     { deep: true },
   );
 
-  const stopSharedWatch = watch(
-    () => uiStore.isViewingShared,
-    (isViewingShared) => {
-      if (!isViewingShared) {
-        schedulePersist();
-        scheduleHistoryPersist();
-      }
-    },
-  );
-
   const stop = () => {
     if (debounceHandle) {
       clearTimeout(debounceHandle);
@@ -202,7 +192,6 @@ export function useLocalCharacterPersistence(characterStore, uiStore, options = 
       historyDebounceHandle = null;
     }
     stopPersistenceWatch?.();
-    stopSharedWatch?.();
   };
 
   return {
