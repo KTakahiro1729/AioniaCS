@@ -22,7 +22,6 @@
                   :id="slot.key"
                   v-model="characterStore.equipments[slot.key].group"
                   class="flex-item-1"
-                  :disabled="uiStore.isViewingShared"
                   :title="equipmentDescriptions[slot.key]"
                 >
                   <option v-for="option in gameData[slot.optionsKey]" :key="option.value" :value="option.value">
@@ -35,7 +34,6 @@
                   v-model="characterStore.equipments[slot.key].name"
                   :placeholder="sheetMessages.placeholders[slot.placeholderKey]"
                   class="flex-item-2"
-                  :disabled="uiStore.isViewingShared"
                 />
               </div>
               <textarea
@@ -54,7 +52,6 @@
           id="other_items"
           class="items-textarea"
           v-model="characterStore.character.otherItems"
-          :readonly="uiStore.isViewingShared"
         ></textarea>
       </div>
     </div>

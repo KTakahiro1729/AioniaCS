@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <div class="image-controls" v-if="!uiStore.isViewingShared">
+    <div class="image-controls">
       <input type="file" id="character_image_upload" @change="handleImageUpload" accept="image/*" style="display: none" />
       <label for="character_image_upload" class="button-base imagefile-button imagefile-button--upload">
         {{ sheetMessages.images.add }}
@@ -47,7 +47,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
 import { ImageManager } from '@/features/character-sheet/services/imageManager.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useNotifications } from '@/features/notifications/composables/useNotifications.js';
 import { messages } from '@/i18n/index.js';
 
@@ -58,7 +57,6 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['update:images']);
-const uiStore = useUiStore();
 const { showToast } = useNotifications();
 const sheetMessages = messages.sheet;
 

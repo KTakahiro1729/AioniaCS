@@ -20,7 +20,7 @@
       </ul>
       <ul class="list-reset special-skills-list">
         <li v-for="(specialSkill, index) in localSpecialSkills" :key="index" class="base-list-item special-skill-item">
-          <div class="delete-button-wrapper flex-item-delete" v-if="!uiStore.isViewingShared">
+          <div class="delete-button-wrapper flex-item-delete">
             <button
               type="button"
               class="button-base button-base--delete list-button"
@@ -37,7 +37,6 @@
                 v-model="specialSkill.group"
                 @change="updateSpecialSkillOptions(index)"
                 class="flex-item-group"
-                :disabled="uiStore.isViewingShared"
               >
                 <option v-for="option in AioniaGameData.specialSkillGroupOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
@@ -48,20 +47,19 @@
                 type="text"
                 v-model="specialSkill.name"
                 class="flex-item-name"
-                :disabled="uiStore.isViewingShared"
               />
               <select
                 v-else
                 v-model="specialSkill.name"
                 @change="updateSpecialSkillNoteVisibility(index)"
-                :disabled="!specialSkill.group || uiStore.isViewingShared"
+                :disabled="!specialSkill.group"
                 class="flex-item-name"
                 :title="getSpecialSkillDescription(specialSkill)"
               >
                 <option value="">---</option>
                 <option v-for="opt in availableSpecialSkillNames(index)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
-              <select v-model="specialSkill.acquired" class="flex-item-acquired" :disabled="!specialSkill.group || uiStore.isViewingShared">
+              <select v-model="specialSkill.acquired" class="flex-item-acquired" :disabled="!specialSkill.group">
                 <option
                   v-for="option in characterStore.acquisitionOptionsForSpecialSkills"
                   :key="option.value"
@@ -77,7 +75,6 @@
               v-model="specialSkill.note"
               class="special-skill-note-input"
               :placeholder="sheetMessages.placeholders.specialSkillNote"
-              :disabled="uiStore.isViewingShared"
             ></textarea>
             <input
               v-else
@@ -86,7 +83,6 @@
               v-show="specialSkill.showNote"
               class="special-skill-note-input"
               :placeholder="sheetMessages.placeholders.specialSkillNote"
-              :disabled="uiStore.isViewingShared"
             />
             <textarea
               v-if="uiStore.showSpecialSkillDescriptions && specialSkill.group !== 'free' && getSpecialSkillDescription(specialSkill)"
@@ -99,7 +95,7 @@
       </ul>
       <div
         class="add-button-container-left"
-        v-if="!uiStore.isViewingShared && localSpecialSkills.length < AioniaGameData.config.maxSpecialSkills"
+        v-if="localSpecialSkills.length < AioniaGameData.config.maxSpecialSkills"
       >
         <button
           type="button"

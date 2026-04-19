@@ -15,17 +15,15 @@
         type="text"
         :value="subMemo.title"
         :placeholder="messages.titlePlaceholder"
-        :readonly="readonly"
         @change="$emit('update-title', $event.target.value)"
       />
       <label class="submemo-spoiler">
-        <input type="checkbox" :checked="subMemo.isSpoiler" :disabled="readonly" @change="$emit('update-spoiler', $event.target.checked)" />
+        <input type="checkbox" :checked="subMemo.isSpoiler" @change="$emit('update-spoiler', $event.target.checked)" />
         <span>{{ messages.spoilerLabel }}</span>
       </label>
       <button
         class="button-base list-button list-button--delete button-base--delete"
         type="button"
-        :disabled="readonly"
         :aria-label="messages.deleteLabel"
         @click="$emit('request-remove')"
       >
@@ -34,16 +32,10 @@
     </div>
     <Transition name="fade">
       <div v-show="!collapsed" class="submemo-body">
-        <div v-if="showGuard" class="submemo-guard">
-          <p>{{ messages.spoilerNotice }}</p>
-          <button class="button-base" type="button" @click="$emit('reveal')">{{ messages.readButton }}</button>
-        </div>
         <textarea
-          v-else
           class="submemo-textarea"
           :placeholder="messages.contentPlaceholder"
           :value="subMemo.content"
-          :readonly="readonly"
           @change="$emit('update-content', $event.target.value)"
         ></textarea>
       </div>
@@ -52,9 +44,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-
-const props = defineProps({
+defineProps({
   subMemo: {
     type: Object,
     required: true,
@@ -67,17 +57,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  revealed: {
-    type: Boolean,
-    default: false,
-  },
-  readonly: {
-    type: Boolean,
-    default: false,
-  },
 });
-
-const showGuard = computed(() => props.readonly && props.subMemo.isSpoiler && !props.revealed);
 </script>
 
 <style scoped>

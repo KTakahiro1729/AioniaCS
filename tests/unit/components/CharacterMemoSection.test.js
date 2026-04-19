@@ -4,7 +4,6 @@ import { mount } from '@vue/test-utils';
 import { setActivePinia, createPinia } from 'pinia';
 import CharacterMemoSection from '@/features/character-sheet/components/sections/CharacterMemoSection.vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 const mockShowModal = vi.fn();
 vi.mock('@/features/modals/composables/useModal.js', () => ({
@@ -28,23 +27,6 @@ describe('CharacterMemoSection', () => {
     await toggle.trigger('click');
     await wrapper.vm.$nextTick();
     expect(wrapper.find('.submemo-body').element.style.display).not.toBe('none');
-  });
-
-  test('shows spoiler guard until revealed', async () => {
-    const store = useCharacterStore();
-    const uiStore = useUiStore();
-    uiStore.isViewingShared = true;
-    const memo = store.addSubMemo({ isSpoiler: true, content: 'Secret' });
-    const wrapper = mount(CharacterMemoSection);
-    const toggle = wrapper.find('.submemo-toggle');
-    await toggle.trigger('click');
-    await wrapper.vm.$nextTick();
-    expect(wrapper.text()).toContain('※秘密メモです');
-    await wrapper.find('.submemo-guard .button-base').trigger('click');
-    await wrapper.vm.$nextTick();
-    expect(wrapper.find('.submemo-textarea').element.value).toBe('Secret');
-    const saved = JSON.parse(localStorage.getItem('aioniacs_ui_submemos_state'));
-    expect(saved.revealedIds).toContain(memo.id);
   });
 
   test('confirms before deleting sub memo', async () => {

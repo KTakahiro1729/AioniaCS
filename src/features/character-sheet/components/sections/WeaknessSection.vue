@@ -15,10 +15,10 @@
         <li v-for="(weakness, index) in characterStore.character.weaknesses" :key="index" class="base-list-item">
           <div class="flex-weakness-number">{{ index < 9 ? index + 1 : 'X' }}</div>
           <div class="flex-weakness-text">
-            <input type="text" v-model="weakness.text" :disabled="uiStore.isViewingShared" />
+            <input type="text" v-model="weakness.text" />
           </div>
           <div class="flex-weakness-acquired">
-            <select v-model="weakness.acquired" :disabled="uiStore.isViewingShared">
+            <select v-model="weakness.acquired">
               <option v-for="option in sessionNames" :key="option.value" :value="option.value" :disabled="option.disabled">
                 {{ option.text }}
               </option>
@@ -33,11 +33,9 @@
 <script setup>
 import { computed } from 'vue';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
-import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { messages } from '@/i18n/index.js';
 
 const characterStore = useCharacterStore();
-const uiStore = useUiStore();
 const weaknessTexts = messages.sheet.sections.weakness;
 const sessionNames = computed(() => characterStore.sessionNamesForWeaknessDropdown);
 </script>

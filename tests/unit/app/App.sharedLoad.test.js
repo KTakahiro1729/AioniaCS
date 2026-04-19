@@ -96,9 +96,10 @@ describe('App sharedId loading', () => {
     window.history.replaceState({}, '', `${window.location.origin}/?sharedId=drive-file-1`);
   });
 
-  it('loads shared drive id on mount when signed in and ready', async () => {
+  it('loads shared drive id as an editable copy on mount when signed in and ready', async () => {
     const uiStore = useUiStore();
     uiStore.isSignedIn = true;
+    uiStore.setCurrentDriveFileId('drive-file-1');
     loadCharacterFromDriveMock.mockResolvedValue({ ok: true });
 
     mount(App);
@@ -106,7 +107,7 @@ describe('App sharedId loading', () => {
 
     expect(loadCharacterFromDriveMock).toHaveBeenCalledWith('drive-file-1');
     expect(new URL(window.location.href).searchParams.get('sharedId')).toBeNull();
-    expect(uiStore.isViewingShared).toBe(true);
+    expect(uiStore.currentDriveFileId).toBeNull();
   });
 
   it('defers shared load until drive is ready', async () => {
