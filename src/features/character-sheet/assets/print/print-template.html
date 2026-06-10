@@ -8,7 +8,6 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400&family=Shippori+Mincho:wght@400;500;700&family=UnifrakturMaguntia&family=Zen+Kurenaido&display=swap"
       rel="stylesheet"
     />
-    <link href="./css/print-styles.css" rel="stylesheet" />
   </head>
 
   <body>
@@ -308,48 +307,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td class="col-scenario writein-area">{{adventure-scenario-0}}</td>
-                  <td class="col-memo writein-area">{{adventure-memo-0}}</td>
-                  <td class="col-spacer spacer writein-area"></td>
-                  <td class="col-experience writein-area">{{adventure-experience-0}}</td>
-                </tr>
-                <tr>
-                  <td class="col-scenario writein-area">{{adventure-scenario-1}}</td>
-                  <td class="col-memo writein-area">{{adventure-memo-1}}</td>
-                  <td class="col-spacer spacer writein-area"></td>
-                  <td class="col-experience writein-area">{{adventure-experience-1}}</td>
-                </tr>
-                <tr>
-                  <td class="col-scenario writein-area">{{adventure-scenario-2}}</td>
-                  <td class="col-memo writein-area">{{adventure-memo-2}}</td>
-                  <td class="col-spacer spacer writein-area"></td>
-                  <td class="col-experience writein-area">{{adventure-experience-2}}</td>
-                </tr>
-                <tr>
-                  <td class="col-scenario writein-area">{{adventure-scenario-3}}</td>
-                  <td class="col-memo writein-area">{{adventure-memo-3}}</td>
-                  <td class="col-spacer spacer writein-area"></td>
-                  <td class="col-experience writein-area">{{adventure-experience-3}}</td>
-                </tr>
-                <tr>
-                  <td class="col-scenario writein-area">{{adventure-scenario-4}}</td>
-                  <td class="col-memo writein-area">{{adventure-memo-4}}</td>
-                  <td class="col-spacer spacer writein-area"></td>
-                  <td class="col-experience writein-area">{{adventure-experience-4}}</td>
-                </tr>
-                <tr>
-                  <td class="col-scenario writein-area">{{adventure-scenario-5}}</td>
-                  <td class="col-memo writein-area">{{adventure-memo-5}}</td>
-                  <td class="col-spacer spacer writein-area"></td>
-                  <td class="col-experience writein-area">{{adventure-experience-5}}</td>
-                </tr>
-                <tr>
-                  <td class="col-scenario writein-area">{{adventure-scenario-6}}</td>
-                  <td class="col-memo writein-area">{{adventure-memo-6}}</td>
-                  <td class="col-spacer spacer writein-area"></td>
-                  <td class="col-experience writein-area">{{adventure-experience-6}}</td>
-                </tr>
+                <!-- @adventure-rows -->
               </tbody>
             </table>
           </div>
@@ -386,5 +344,66 @@
         <line x1="759.5" y1="707" x2="794" y2="707" stroke="#A6A6A6" stroke-width="0.5" />
       </svg>
     </div>
+
+    <!-- 冒険の記録が7件を超えた場合の継続ページ（printHtmlBuilderが必要数だけ複製する） -->
+    <!-- @extra-pages -->
+    <template id="adventure-extra-page">
+      <div class="page page-extra">
+        <!-- ヘッダーのガイドライン -->
+        <div class="header-guideline cap-line"></div>
+        <div class="header-guideline base-line"></div>
+
+        <!-- ページタイトル -->
+        <header class="page-header">
+          <h1 class="page-header-title">Aionia TRPG Character Sheet</h1>
+        </header>
+
+        <!-- メインコンテンツ部分（継続ページ） -->
+        <main class="main-container">
+          <section class="subcontainer adventure-container adventure-container--full">
+            <header class="subcontainer-header">冒険の記録</header>
+            <div class="adventure-content">
+              <table class="adventure-table">
+                <thead>
+                  <tr>
+                    <th class="col-scenario">シナリオ名</th>
+                    <th class="col-memo">メモ</th>
+                    <th class="col-spacer"></th>
+                    <th class="col-experience">経験点</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- @adventure-rows -->
+                </tbody>
+              </table>
+            </div>
+            <footer class="subcontainer-footer">adventure</footer>
+          </section>
+        </main>
+
+        <!-- フッターのガイドライン -->
+        <div class="footer-guideline footer-baseline-1"></div>
+        <div class="footer-guideline footer-baseline-2"></div>
+
+        <!-- フッターテキスト -->
+        <footer class="page-footer">
+          <div class="page-footer-text">本キャラクターシートはAioniaCSで作成されました。</div>
+          <div class="page-footer-text">AioniaCSは「イチ（フシギ製作所）」が権利を有する『慈悲なきアイオニア』の二次創作物です。</div>
+        </footer>
+
+        <!-- はみ出し線（SVG） -->
+        <svg class="extension-lines" viewBox="0 0 794 1123" preserveAspectRatio="none">
+          <!-- 外枠の延長線 -->
+          <line x1="34.5" y1="0" x2="34.5" y2="76" stroke="#A6A6A6" stroke-width="0.5" />
+          <line x1="759.5" y1="0" x2="759.5" y2="76" stroke="#A6A6A6" stroke-width="0.5" />
+          <line x1="34.5" y1="1047" x2="34.5" y2="1123" stroke="#A6A6A6" stroke-width="0.5" />
+          <line x1="759.5" y1="1047" x2="759.5" y2="1123" stroke="#A6A6A6" stroke-width="0.5" />
+          <line x1="0" y1="76.5" x2="34.5" y2="76.5" stroke="#A6A6A6" stroke-width="0.5" />
+          <line x1="0" y1="1046.5" x2="34.5" y2="1046.5" stroke="#A6A6A6" stroke-width="0.5" />
+          <line x1="759.5" y1="76.5" x2="794" y2="76.5" stroke="#A6A6A6" stroke-width="0.5" />
+          <line x1="759.5" y1="1046.5" x2="794" y2="1046.5" stroke="#A6A6A6" stroke-width="0.5" />
+        </svg>
+      </div>
+    </template>
   </body>
 </html>
