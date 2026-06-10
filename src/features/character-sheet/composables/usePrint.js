@@ -1,5 +1,6 @@
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { AioniaGameData } from '@/data/gameData.js';
+import { buildPrintHtml } from '@/features/character-sheet/composables/printHtmlBuilder.js';
 import printTemplate from '@/features/character-sheet/assets/print/print-template.html?raw';
 import printStyles from '@/features/character-sheet/assets/print/print-styles.css?raw';
 
@@ -34,83 +35,76 @@ export function formatAbilities(specialSkills, specialSkillData, specialSkillsRe
     .join('');
 }
 
-function escapeHtml(text) {
-  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-  return String(text).replace(/[&<>"']/g, (m) => map[m]);
-}
-
 export function usePrint() {
   const characterStore = useCharacterStore();
 
   function buildHtml() {
     const ch = characterStore.character;
-    let html = printTemplate;
+    const values = {};
 
-    const replace = (key, val = '') => {
-      html = html.replace(new RegExp(`{{${key}}}`, 'g'), escapeHtml(val));
-    };
-
-    // --- 基本情報の置換 ---
-    replace('character-name', ch.name || '');
-    replace('player-name', ch.playerName || '');
+    // --- 基本情報 ---
+    values['character-name'] = ch.name || '';
+    values['player-name'] = ch.playerName || '';
 
     const speciesLabel = AioniaGameData.speciesLabelMap[ch.species] || ch.species || '';
-    replace('race', speciesLabel === '未選択' ? '' : speciesLabel);
+    values['race'] = speciesLabel === '未選択' ? '' : speciesLabel;
 
-    replace('gender', ch.gender || '');
-    replace('age', ch.age != null ? String(ch.age) : '');
-    replace('build', ch.build || '');
-    replace('origin', ch.origin || '');
-    replace('occupation', ch.occupation || '');
-    replace('faith', ch.faith || '');
-    replace('current-scar-value', String(characterStore.calculatedScar ?? ''));
-    replace('current-experience-value', String(characterStore.currentExperiencePoints + '/' + characterStore.maxExperiencePoints));
+    values['gender'] = ch.gender || '';
+    values['age'] = ch.age != null ? String(ch.age) : '';
+    values['build'] = ch.build || '';
+    values['origin'] = ch.origin || '';
+    values['occupation'] = ch.occupation || '';
+    values['faith'] = ch.faith || '';
+    values['current-scar-value'] = String(characterStore.calculatedScar ?? '');
+    values['current-experience-value'] = String(characterStore.currentExperiencePoints + '/' + characterStore.maxExperiencePoints);
 
-    // --- 弱点の置換 ---
+    // --- 弱点 ---
     for (let i = 0; i < 10; i++) {
       const w = ch.weaknesses[i] || {};
-      replace(`weakness-content-${i}`, w.text || '');
-      replace(`weakness-acquired-${i}`, w.acquired === '--' ? '' : w.acquired || '');
+      values[`weakness-content-${i}`] = w.text || '';
+      values[`weakness-acquired-${i}`] = w.acquired === '--' ? '' : w.acquired || '';
     }
 
-    // --- 技能・特技の置換 ---
-    replace('skills-content', formatSkills(characterStore.skills));
-    replace(
-      'abilities-content',
-      formatAbilities(characterStore.specialSkills, AioniaGameData.specialSkillData, AioniaGameData.specialSkillsRequiringNote),
+    // --- 技能・特技 ---
+    values['skills-content'] = formatSkills(characterStore.skills);
+    values['abilities-content'] = formatAbilities(
+      characterStore.specialSkills,
+      AioniaGameData.specialSkillData,
+      AioniaGameData.specialSkillsRequiringNote,
     );
 
-    // --- 装備品の置換 ---
+    // --- 装備品 ---
     const eq = characterStore.equipments;
     const weapon1Label = AioniaGameData.equipmentGroupLabelMap[eq.weapon1.group] || '';
-    replace('weapon1-type', weapon1Label === 'なし' ? '' : weapon1Label);
-    replace('weapon1-detail', eq.weapon1.name || '');
+    values['weapon1-type'] = weapon1Label === 'なし' ? '' : weapon1Label;
+    values['weapon1-detail'] = eq.weapon1.name || '';
 
     const weapon2Label = AioniaGameData.equipmentGroupLabelMap[eq.weapon2.group] || '';
-    replace('weapon2-type', weapon2Label === 'なし' ? '' : weapon2Label);
-    replace('weapon2-detail', eq.weapon2.name || '');
+    values['weapon2-type'] = weapon2Label === 'なし' ? '' : weapon2Label;
+    values['weapon2-detail'] = eq.weapon2.name || '';
 
     const armorLabel = AioniaGameData.equipmentGroupLabelMap[eq.armor.group] || '';
-    replace('armor-type', armorLabel === 'なし' ? '' : armorLabel);
-    replace('armor-detail', eq.armor.name || '');
-    replace('equipment-weight-value', String(characterStore.currentWeight || ''));
+    values['armor-type'] = armorLabel === 'なし' ? '' : armorLabel;
+    values['armor-detail'] = eq.armor.name || '';
+    values['equipment-weight-value'] = String(characterStore.currentWeight || '');
 
-    // --- 2ページ目の置換 ---
-    replace('inventory-content', ch.otherItems || '');
-    replace('background-content', ch.memo || '');
+    // --- 2ページ目 ---
+    values['inventory-content'] = ch.otherItems || '';
+    values['background-content'] = ch.memo || '';
 
-    for (let i = 0; i < 7; i++) {
-      const h = characterStore.adventureLog[i] || {};
-      replace(`adventure-scenario-${i}`, h.sessionName || '');
-      replace(`adventure-memo-${i}`, h.memo || '');
-      replace(`adventure-experience-${i}`, h.gotExperiments != null ? String(h.gotExperiments) : '');
-    }
+    // 冒険の記録は全件渡し、7件を超えた分は継続ページとして動的生成される
+    const adventureEntries = characterStore.adventureLog.map((h) => ({
+      scenario: h?.sessionName || '',
+      memo: h?.memo || '',
+      experience: h?.gotExperiments != null ? String(h.gotExperiments) : '',
+    }));
 
-    // --- 残りのプレースホルダをクリア & CSSを注入 ---
-    html = html.replace(/{{[^}]+}}/g, '');
-    html = html.replace('</head>', `<style>${printStyles}</style></head>`);
-
-    return html;
+    return buildPrintHtml({
+      template: printTemplate,
+      styles: printStyles,
+      values,
+      adventureEntries,
+    });
   }
 
   function printCharacterSheet() {
@@ -132,18 +126,24 @@ export function usePrint() {
       iframe.style.visibility = 'hidden';
 
       iframe.onload = () => {
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch (e) {
-          console.error('印刷実行中にエラーが発生しました:', e);
-        } finally {
-          setTimeout(() => {
-            if (document.body.contains(iframe)) {
-              document.body.removeChild(iframe);
-            }
-          }, 500);
-        }
+        // Webフォント適用前に印刷すると字幅が変わり折返し位置がずれるため、
+        // 読み込み完了を待つ（時間がかかる場合は2秒で打ち切り）
+        const fontsReady = Promise.resolve(iframe.contentDocument?.fonts?.ready).catch(() => {});
+        const timeout = new Promise((resolve) => setTimeout(resolve, 2000));
+        Promise.race([fontsReady, timeout]).then(() => {
+          try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+          } catch (e) {
+            console.error('印刷実行中にエラーが発生しました:', e);
+          } finally {
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            }, 500);
+          }
+        });
       };
       iframe.onerror = (e) => {
         console.error('iframeの読み込み中にエラーが発生しました:', e);
