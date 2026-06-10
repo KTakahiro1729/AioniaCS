@@ -51,23 +51,6 @@
     "vite": "^6.3.5",
     "vitest": "^1.4.0"
   },
-  "lint-staged": {
-    "*.{js,vue}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.css": [
-      "stylelint --fix",
-      "prettier --write"
-    ],
-    "*.html": [
-      "htmlhint",
-      "prettier --write"
-    ],
-    "{src,tests}/**/*.{js,vue}": [
-      "bash -c 'vitest run'"
-    ]
-  },
   "keywords": [],
   "author": "",
   "license": "MIT"
