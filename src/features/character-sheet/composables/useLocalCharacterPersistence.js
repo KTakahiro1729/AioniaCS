@@ -36,6 +36,14 @@ function buildStorePayload(characterStore) {
   };
 }
 
+// character.id is not assigned anywhere yet, so fall back to the character
+// name to decide whether a history entry is "the same character" — otherwise
+// every entry compares as undefined === undefined and wipes the whole list.
+function historyDedupKey(item) {
+  const character = item?.data?.character;
+  return character?.id ?? character?.name ?? '';
+}
+
 function safeParse(raw) {
   if (!raw) {
     return null;
@@ -98,7 +106,7 @@ export function useLocalCharacterPersistence(characterStore, options = {}) {
       data: cloned,
     };
     const filtered = Array.isArray(currentHistory)
-      ? currentHistory.filter((item) => item?.data?.character?.id !== historyItem.data?.character?.id)
+      ? currentHistory.filter((item) => historyDedupKey(item) !== historyDedupKey(historyItem))
       : [];
     filtered.unshift(historyItem);
     if (filtered.length > MAX_HISTORY_COUNT) {

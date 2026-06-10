@@ -1,10 +1,12 @@
+import js from '@eslint/js';
 import globals from 'globals';
 import pluginVue from 'eslint-plugin-vue';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
+  js.configs.recommended,
   {
-    files: ['src/**/*.js', 'tests/**/*.js', './*.js', 'vite.config.js'],
+    files: ['src/**/*.js', 'src/**/*.vue', 'tests/**/*.js', './*.js', 'vite.config.js'],
     languageOptions: {
       sourceType: 'module',
       ecmaVersion: 'latest',
@@ -12,18 +14,9 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.vitest,
-        // プロジェクト固有のグローバル変数
-        AioniaGameData: 'readonly',
-        deepClone: 'readonly',
-        createWeaknessArray: 'readonly',
-        ImageManager: 'readonly',
-        DataManager: 'readonly',
-        CocofoliaExporter: 'readonly',
-        GoogleDriveManager: 'readonly',
-        Vue: 'readonly',
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
+        // Google API クライアントはスクリプトタグ経由で読み込まれるグローバル
+        gapi: 'readonly',
+        google: 'readonly',
       },
     },
     plugins: {

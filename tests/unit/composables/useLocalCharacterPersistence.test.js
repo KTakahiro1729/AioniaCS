@@ -114,6 +114,27 @@ describe('useLocalCharacterPersistence', () => {
     expect(savedHistory[0].meta.name).toBe('History Save');
   });
 
+  test('replaces history entry for the same character and keeps other characters', () => {
+    const { instance, characterStore } = mountComposable({ historyDebounceMs: 0 });
+
+    characterStore.character.name = 'Alice';
+    instance.persistToHistory();
+    characterStore.character.occupation = 'Knight';
+    instance.persistToHistory();
+
+    let savedHistory = JSON.parse(historyStorage.getItem(HISTORY_STORAGE_KEY));
+    expect(savedHistory).toHaveLength(1);
+    expect(savedHistory[0].meta.occupation).toBe('Knight');
+
+    characterStore.character.name = 'Bob';
+    instance.persistToHistory();
+
+    savedHistory = JSON.parse(historyStorage.getItem(HISTORY_STORAGE_KEY));
+    expect(savedHistory).toHaveLength(2);
+    expect(savedHistory[0].meta.name).toBe('Bob');
+    expect(savedHistory[1].meta.name).toBe('Alice');
+  });
+
   test('clearLocalDraft removes stored payload', () => {
     storage.setItem(LOCAL_CHARACTER_STORAGE_KEY, JSON.stringify({ character: { name: 'To Remove' } }));
     removeStoredCharacterDraft(storage);

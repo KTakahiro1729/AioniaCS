@@ -25,7 +25,7 @@ const props = defineProps({
   helpText: String,
 });
 
-const emit = defineEmits(['close']);
+defineEmits(['close']);
 
 const panelEl = ref(null);
 const sections = ref([]);

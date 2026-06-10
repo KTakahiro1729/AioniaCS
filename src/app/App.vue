@@ -36,14 +36,8 @@ const { dataManager, saveData, handleFileUpload, outputToCocofolia, getChatPalet
 const { printCharacterSheet, openPreviewPage } = usePrint();
 const { showModal } = useModal();
 
-const {
-  canSignInToGoogle,
-  isDriveReady,
-  handleSignInClick,
-  handleSignOutClick,
-  saveCharacterToDrive,
-  loadCharacterFromDrive,
-} = useGoogleDrive(dataManager);
+const { canSignInToGoogle, isDriveReady, handleSignInClick, handleSignOutClick, saveCharacterToDrive, loadCharacterFromDrive } =
+  useGoogleDrive(dataManager);
 
 const { helpState, isHelpVisible, handleHelpIconMouseOver, handleHelpIconMouseLeave, handleHelpIconClick, closeHelpPanel } = useHelp(
   helpPanelRef,
@@ -67,14 +61,6 @@ const isCharacterSheetEmpty = computed(() => {
   }
   return currentSnapshot === initialCharacterSnapshot.value;
 });
-
-async function confirmDiscardingUnsavedChanges() {
-  if (!hasUnsavedChanges()) {
-    return true;
-  }
-  const result = await showModal(messages.ui.confirmations.unsavedChanges);
-  return result?.value === 'confirm';
-}
 
 async function checkUnsavedBeforeLoad() {
   if (!hasUnsavedChanges()) return true;

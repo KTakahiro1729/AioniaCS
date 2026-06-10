@@ -58,12 +58,6 @@ export function useAppInitialization() {
         uiStore.isGapiInitialized = true;
         const restored = await driveManager.restoreSession();
         uiStore.isSignedIn = restored;
-        if (restored && typeof driveManager.loadConfig === 'function') {
-          const config = await driveManager.loadConfig();
-          if (config?.characterFolderPath) {
-            uiStore.setDriveFolderPath(config.characterFolderPath);
-          }
-        }
       } catch (error) {
         console.error('Failed to initialize Drive manager:', error);
         if (usingMock) {

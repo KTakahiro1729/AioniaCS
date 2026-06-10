@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.24.7",
+    "@eslint/js": "^9.39.4",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vitest/ui": "^1.4.0",
     "cross-env": "^7.0.3",
@@ -49,23 +50,6 @@
     "stylelint-config-standard": "^38.0.0",
     "vite": "^6.3.5",
     "vitest": "^1.4.0"
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.css": [
-      "stylelint --fix",
-      "prettier --write"
-    ],
-    "*.html": [
-      "htmlhint",
-      "prettier --write"
-    ],
-    "src/**/*.{js,jsx,ts,tsx}, tests/unit/**/*.{js,jsx,ts,tsx}": [
-      "vitest --run"
-    ]
   },
   "keywords": [],
   "author": "",
