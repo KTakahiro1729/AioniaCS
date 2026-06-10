@@ -1,10 +1,5 @@
 import { ref, computed, onMounted } from 'vue';
-import {
-  fallbackToMockDriveManager,
-  getDriveManagerInstance,
-  initializeDriveManager,
-  isUsingMockDrive,
-} from '@/infrastructure/google-drive/index.js';
+import { getDriveManagerInstance, initializeDriveManager, isUsingMockDrive } from '@/infrastructure/google-drive/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 import { useCharacterStore } from '@/features/character-sheet/stores/characterStore.js';
 import { removeStoredCharacterDraft } from '@/features/character-sheet/composables/useLocalCharacterPersistence.js';
@@ -148,12 +143,14 @@ export function useGoogleDrive(dataManager) {
         targetFileId,
       )
       .then(async (result) => {
-        if (result) {
-          uiStore.setCurrentDriveFileId(result.id);
-          uiStore.setLastSavedSnapshot(snapshotToSave);
-          return renameDriveFileIfNeeded(result);
+        if (!result) {
+          // GoogleDriveManagerはAPIエラー時にnullを返すため、ここで失敗として
+          // 扱わないと保存されていないのに成功トーストが表示されてしまう
+          throw new Error(messages.googleDrive.save.error().message);
         }
-        return result;
+        uiStore.setCurrentDriveFileId(result.id);
+        uiStore.setLastSavedSnapshot(snapshotToSave);
+        return renameDriveFileIfNeeded(result);
       });
 
     showAsyncToast(
@@ -166,7 +163,7 @@ export function useGoogleDrive(dataManager) {
       'saveCharacterToDrive',
     );
 
-    return savePromise;
+    return savePromise.catch(() => null);
   }
 
   async function renameDriveFileIfNeeded(result) {
@@ -198,13 +195,6 @@ export function useGoogleDrive(dataManager) {
 
     scriptsWatched = true;
 
-    function applyFallbackMockDrive() {
-      googleDriveManager.value = fallbackToMockDriveManager();
-      if (googleDriveManager.value && typeof dataManager.setGoogleDriveManager === 'function') {
-        dataManager.setGoogleDriveManager(googleDriveManager.value);
-      }
-    }
-
     const handleDriveReady = async () => {
       if (uiStore.isGapiInitialized || !googleDriveManager.value) return;
       console.info('Google API Loading...');
@@ -215,11 +205,9 @@ export function useGoogleDrive(dataManager) {
         const restored = await googleDriveManager.value.restoreSession();
         uiStore.isSignedIn = restored;
       } catch (error) {
-        if (!isUsingMockDrive()) {
-          applyFallbackMockDrive();
-          await handleDriveReady();
-          return;
-        }
+        // 以前はここでモックDriveに無言で切り替えていたが、その場合
+        // 保存が「成功」してもGoogleドライブには何も書き込まれない。
+        // 偽の成功よりエラーを明示する方が安全なので、未接続として扱う。
         uiStore.isGapiInitialized = false;
         uiStore.isSignedIn = false;
         logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive');
@@ -249,12 +237,9 @@ export function useGoogleDrive(dataManager) {
 
     waitForScript('script[src="https://apis.google.com/js/api.js"]', () => window.gapi && window.gapi.load)
       .then(handleDriveReady)
-      .catch(async (error) => {
-        if (!isUsingMockDrive()) {
-          applyFallbackMockDrive();
-          await handleDriveReady();
-          return;
-        }
+      .catch((error) => {
+        uiStore.isGapiInitialized = false;
+        uiStore.isSignedIn = false;
         logAndToastError(error, messages.googleDrive.apiInitError, 'initializeGoogleDrive');
       });
   }

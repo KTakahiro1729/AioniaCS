@@ -185,6 +185,27 @@ describe('useGoogleDrive', () => {
     expect(result).toEqual({ id: 'existing-id', name: 'Knight.zip' });
   });
 
+  test('saveCharacterToDrive treats a null result as failure instead of success', async () => {
+    const dataManager = {
+      saveCharacterToDrive: vi.fn().mockResolvedValue(null),
+      googleDriveManager: {},
+      getDriveFileName: vi.fn().mockReturnValue('Hero.zip'),
+    };
+    const { saveCharacterToDrive } = useGoogleDrive(dataManager);
+    const uiStore = useUiStore();
+    uiStore.isGapiInitialized = true;
+    uiStore.isSignedIn = true;
+
+    const result = await saveCharacterToDrive();
+
+    expect(result).toBeNull();
+    expect(uiStore.currentDriveFileId).toBeNull();
+    expect(uiStore.lastSavedSnapshot).toBeNull();
+    // showAsyncToastに渡されたPromiseはrejectし、エラートーストが表示される
+    const toastPromise = showAsyncToastMock.mock.calls[showAsyncToastMock.mock.calls.length - 1][0];
+    await expect(toastPromise).rejects.toThrow(messages.googleDrive.save.error().message);
+  });
+
   test('saveCharacterToDrive uses new success message for brand-new files', async () => {
     const dataManager = {
       saveCharacterToDrive: vi.fn().mockResolvedValue({ id: 'new-id', name: 'Rookie.zip' }),

@@ -87,6 +87,12 @@ defineExpose({ panelEl });
   z-index: 200;
   max-width: 90%;
   width: 400px;
+
+  /* fixed配置のためページスクロールが効かない。内容が画面より長い場合に
+     備えてパネル自体をスクロール可能にする（112px = top 92px + 下余白20px） */
+  max-height: calc(100vh - 112px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: 0.9em;
   color: var(--color-text-normal);
 }
