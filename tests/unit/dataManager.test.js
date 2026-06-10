@@ -306,4 +306,20 @@ describe('DataManager', () => {
       expect(dm.googleDriveManager.createCharacterFile).toHaveBeenCalled();
     });
   });
+
+  describe('_normalizeSpecialSkillsData', () => {
+    test('preserves acquired field from loaded data', () => {
+      const normalized = dm._normalizeSpecialSkillsData([{ group: '武勇', name: '剛力', note: '', acquired: '作成時' }]);
+
+      expect(normalized[0].acquired).toBe('作成時');
+    });
+
+    test('defaults acquired when missing from loaded data', () => {
+      const normalized = dm._normalizeSpecialSkillsData([{ group: '武勇', name: '剛力', note: '' }]);
+
+      expect(normalized[0].acquired).toBe('経験点消費');
+      // 補充された空の特技にもデフォルト値が入る
+      expect(normalized[normalized.length - 1].acquired).toBe('経験点消費');
+    });
+  });
 });

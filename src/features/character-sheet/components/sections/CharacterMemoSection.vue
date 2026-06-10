@@ -63,7 +63,7 @@ function loadUiState() {
     if (!raw) return new Set();
     const parsed = JSON.parse(raw);
     return new Set(parsed?.expandedIds || []);
-  } catch (e) {
+  } catch {
     return new Set();
   }
 }
@@ -71,7 +71,7 @@ function loadUiState() {
 function persistUiState() {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ expandedIds: [...expandedIds.value] }));
-  } catch (e) {
+  } catch {
     // do nothing when storage is unavailable
   }
 }

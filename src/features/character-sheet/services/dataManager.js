@@ -385,6 +385,7 @@ export class DataManager {
           name: loadedSS.name || '',
           note: loadedSS.note || '',
           showNote: this.gameData.specialSkillsRequiringNote.includes(loadedSS.name || ''),
+          acquired: loadedSS.acquired || '経験点消費',
         });
       } else {
         // Fill with empty special skill objects if loaded data is shorter
@@ -393,6 +394,7 @@ export class DataManager {
           name: '',
           note: '',
           showNote: false,
+          acquired: '経験点消費',
         });
       }
     }

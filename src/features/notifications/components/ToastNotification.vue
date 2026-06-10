@@ -11,6 +11,6 @@
 </template>
 
 <script setup>
-const props = defineProps({ toast: Object });
-const emit = defineEmits(['close']);
+defineProps({ toast: Object });
+defineEmits(['close']);
 </script>

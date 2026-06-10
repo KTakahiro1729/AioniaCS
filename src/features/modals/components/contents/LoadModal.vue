@@ -39,7 +39,7 @@
 <script setup>
 import DriveLoadContent from '@/features/modals/components/contents/DriveLoadContent.vue';
 
-const props = defineProps({
+defineProps({
   isSignedIn: Boolean,
   canSignIn: Boolean,
   isDriveReady: Boolean,
