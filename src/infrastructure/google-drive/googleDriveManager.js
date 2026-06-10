@@ -96,8 +96,8 @@ export class GoogleDriveManager {
     }
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for loadConfig.');
-      this.config = this.getDefaultConfig();
-      return this.config;
+      // キャッシュすると以降ずっと空の設定が返り続けるため、キャッシュせず返す
+      return this.getDefaultConfig();
     }
 
     await this.ensureAccessToken();
@@ -133,14 +133,16 @@ export class GoogleDriveManager {
       console.error('Error loading config file:', error);
     }
 
-    this.config = this.getDefaultConfig();
-    // 一覧取得自体が失敗した時に保存すると、既存の設定ファイルと重複した
-    // aioniacs.cfgを作ってしまう（次回どちらが読まれるかは不定になる）ため、
-    // 「確実に存在しない」と分かった場合だけ既定値を永続化する
+    // 一覧取得自体が失敗した場合はキャッシュも永続化もしない。
+    // キャッシュすると通信回復後も空の設定が返り続け、永続化すると既存の
+    // 設定ファイルと重複したaioniacs.cfgを作ってしまうため、
+    // 「確実に存在しない」と分かった場合だけ既定値を確定させる
     if (listSucceeded) {
+      this.config = this.getDefaultConfig();
       await this.saveConfig();
+      return this.config;
     }
-    return this.config;
+    return this.getDefaultConfig();
   }
 
   async saveConfig() {

@@ -112,6 +112,21 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     expect(gapi.client.request).not.toHaveBeenCalled();
   });
 
+  test('loadConfig retries after a failed listing instead of caching the default config', async () => {
+    gapi.client.drive.files.list
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValueOnce({ result: { files: [{ id: 'cfg-retry', name: 'aioniacs.cfg' }] } });
+    gapi.client.drive.files.get.mockResolvedValue({ body: JSON.stringify({ characterFolderId: 'folder-after-retry' }) });
+
+    const failedConfig = await gdm.loadConfig();
+    expect(failedConfig.characterFolderId).toBeNull();
+
+    // 通信回復後の呼び出しでは保存済みの設定が読み直されること
+    const retriedConfig = await gdm.loadConfig();
+    expect(retriedConfig.characterFolderId).toBe('folder-after-retry');
+    expect(gdm.configFileId).toBe('cfg-retry');
+  });
+
   test('findOrCreateConfiguredCharacterFolder recreates folder when cached folder is trashed', async () => {
     gdm.config = { characterFolderId: 'trashed-folder' };
     gdm.aioniaFolderId = 'trashed-folder';
