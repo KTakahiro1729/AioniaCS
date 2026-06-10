@@ -70,17 +70,6 @@ export function resetDriveManagerForTests() {
   }
 }
 
-export function fallbackToMockDriveManager(apiKey = env?.VITE_GOOGLE_API_KEY, clientId = env?.VITE_GOOGLE_CLIENT_ID) {
-  if (runtimeUseMockDrive && sharedInstance) {
-    return sharedInstance;
-  }
-  runtimeUseMockDrive = true;
-  sharedInstance = null;
-  currentInitializer = initializeMockGoogleDriveManager;
-  currentGetter = getMockGoogleDriveManagerInstance;
-  return initializeDriveManager(apiKey, clientId);
-}
-
 export function isUsingMockDrive() {
   return runtimeUseMockDrive;
 }

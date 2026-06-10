@@ -1,4 +1,4 @@
-import { fallbackToMockDriveManager, initializeDriveManager, isUsingMockDrive } from '@/infrastructure/google-drive/index.js';
+import { initializeDriveManager, isUsingMockDrive } from '@/infrastructure/google-drive/index.js';
 import { useUiStore } from '@/features/cloud-sync/stores/uiStore.js';
 
 function waitForGoogleScript() {
@@ -66,14 +66,14 @@ export function useAppInitialization() {
         }
       } catch (error) {
         console.error('Failed to initialize Drive manager:', error);
-        if (!usingMock) {
-          const mockManager = fallbackToMockDriveManager(import.meta.env.VITE_GOOGLE_API_KEY, import.meta.env.VITE_GOOGLE_CLIENT_ID);
-          await mockManager.onGapiLoad();
-          uiStore.isGapiInitialized = true;
-          uiStore.isSignedIn = await mockManager.restoreSession();
-        } else {
+        if (usingMock) {
           uiStore.isGapiInitialized = true;
           uiStore.isSignedIn = true;
+        } else {
+          // モックDriveへの無言フォールバックは廃止。実際には保存されないのに
+          // 「保存成功」と表示される事故を防ぐため、未接続のままにする。
+          uiStore.isGapiInitialized = false;
+          uiStore.isSignedIn = false;
         }
       }
     } else if (usingMock) {

@@ -102,6 +102,57 @@ describe('GoogleDriveManager configuration and folder handling', () => {
     });
   });
 
+  test('loadConfig does not persist a new config file when listing fails', async () => {
+    gapi.client.drive.files.list.mockRejectedValue(new Error('network error'));
+
+    const config = await gdm.loadConfig();
+
+    expect(config.characterFolderId).toBeNull();
+    // 一覧取得に失敗しただけで保存すると重複したaioniacs.cfgが作られるため、書き込みしない
+    expect(gapi.client.request).not.toHaveBeenCalled();
+  });
+
+  test('loadConfig retries after a failed listing instead of caching the default config', async () => {
+    gapi.client.drive.files.list
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValueOnce({ result: { files: [{ id: 'cfg-retry', name: 'aioniacs.cfg' }] } });
+    gapi.client.drive.files.get.mockResolvedValue({ body: JSON.stringify({ characterFolderId: 'folder-after-retry' }) });
+
+    const failedConfig = await gdm.loadConfig();
+    expect(failedConfig.characterFolderId).toBeNull();
+
+    // 通信回復後の呼び出しでは保存済みの設定が読み直されること
+    const retriedConfig = await gdm.loadConfig();
+    expect(retriedConfig.characterFolderId).toBe('folder-after-retry');
+    expect(gdm.configFileId).toBe('cfg-retry');
+  });
+
+  test('findOrCreateConfiguredCharacterFolder recreates folder when cached folder is trashed', async () => {
+    gdm.config = { characterFolderId: 'trashed-folder' };
+    gdm.aioniaFolderId = 'trashed-folder';
+    gapi.client.drive.files.get.mockResolvedValue({ result: { id: 'trashed-folder', trashed: true } });
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'fresh-folder', name: 'Aionia TRPG Character Sheet' } });
+    gapi.client.request.mockResolvedValue({ result: { id: 'cfg-9', name: 'aioniacs.cfg' } });
+
+    const folderId = await gdm.findOrCreateConfiguredCharacterFolder();
+
+    expect(folderId).toBe('fresh-folder');
+    expect(gdm.config.characterFolderId).toBe('fresh-folder');
+    expect(gapi.client.drive.files.create).toHaveBeenCalledTimes(1);
+  });
+
+  test('concurrent findOrCreateConfiguredCharacterFolder calls create only one folder', async () => {
+    gdm.config = { characterFolderId: null };
+    gapi.client.drive.files.create.mockResolvedValue({ result: { id: 'only-folder', name: 'Aionia TRPG Character Sheet' } });
+    gapi.client.request.mockResolvedValue({ result: { id: 'cfg-10', name: 'aioniacs.cfg' } });
+
+    const [first, second] = await Promise.all([gdm.findOrCreateConfiguredCharacterFolder(), gdm.findOrCreateConfiguredCharacterFolder()]);
+
+    expect(first).toBe('only-folder');
+    expect(second).toBe('only-folder');
+    expect(gapi.client.drive.files.create).toHaveBeenCalledTimes(1);
+  });
+
   test('createCharacterFile uploads to configured folder', async () => {
     // loadConfig: no config file found → saves default config
     gapi.client.drive.files.list.mockResolvedValue({ result: { files: [] } });

@@ -65,6 +65,7 @@ export class GoogleDriveManager {
     this.scope = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
     this.gapiLoadedCallback = null;
     this.aioniaFolderId = null;
+    this.folderLookupPromise = null;
     this.gapiLoadPromise = null;
     this.currentTokenInfo = null;
     this.authStatusEndpoint = '/api/auth/status';
@@ -95,20 +96,22 @@ export class GoogleDriveManager {
     }
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for loadConfig.');
-      this.config = this.getDefaultConfig();
-      return this.config;
+      // キャッシュすると以降ずっと空の設定が返り続けるため、キャッシュせず返す
+      return this.getDefaultConfig();
     }
 
     await this.ensureAccessToken();
 
     const escapedName = this.configFileName.replace(/'/g, "\\'");
 
+    let listSucceeded = false;
     try {
       const response = await gapi.client.drive.files.list({
         q: `name='${escapedName}'`,
         fields: 'files(id, name)',
         spaces: 'appDataFolder',
       });
+      listSucceeded = true;
       const file = response.result.files?.[0];
       if (file) {
         this.configFileId = file.id;
@@ -130,9 +133,16 @@ export class GoogleDriveManager {
       console.error('Error loading config file:', error);
     }
 
-    this.config = this.getDefaultConfig();
-    await this.saveConfig();
-    return this.config;
+    // 一覧取得自体が失敗した場合はキャッシュも永続化もしない。
+    // キャッシュすると通信回復後も空の設定が返り続け、永続化すると既存の
+    // 設定ファイルと重複したaioniacs.cfgを作ってしまうため、
+    // 「確実に存在しない」と分かった場合だけ既定値を確定させる
+    if (listSucceeded) {
+      this.config = this.getDefaultConfig();
+      await this.saveConfig();
+      return this.config;
+    }
+    return this.getDefaultConfig();
   }
 
   async saveConfig() {
@@ -577,13 +587,20 @@ export class GoogleDriveManager {
   /**
    * Ensures the character folder exists in Drive and returns its ID.
    * Uses the stored folder ID if available; otherwise creates a new folder.
+   * Concurrent calls share the same lookup to avoid creating duplicate folders.
    * @returns {Promise<string|null>} The ID of the folder, or null if not available.
    */
   async findOrCreateConfiguredCharacterFolder() {
-    if (this.aioniaFolderId) {
-      return this.aioniaFolderId;
+    if (this.folderLookupPromise) {
+      return this.folderLookupPromise;
     }
+    this.folderLookupPromise = this._findOrCreateConfiguredCharacterFolder().finally(() => {
+      this.folderLookupPromise = null;
+    });
+    return this.folderLookupPromise;
+  }
 
+  async _findOrCreateConfiguredCharacterFolder() {
     if (!gapi.client || !gapi.client.drive) {
       console.error('GAPI client or Drive API not loaded for findOrCreateConfiguredCharacterFolder.');
       return null;
@@ -591,21 +608,26 @@ export class GoogleDriveManager {
 
     const config = await this.loadConfig();
 
-    // Try to access the stored folder ID
-    if (config?.characterFolderId) {
+    // メモリキャッシュも信用せず毎回存在確認する。セッション中にユーザーが
+    // Drive上でフォルダを削除した場合、ゴミ箱内のフォルダを親にした保存が
+    // 成功してしまい、シートがゴミ箱に消える事故を防ぐため。
+    const candidateId = this.aioniaFolderId || config?.characterFolderId;
+    if (candidateId) {
       try {
         await this.ensureAccessToken();
         const response = await gapi.client.drive.files.get({
-          fileId: config.characterFolderId,
+          fileId: candidateId,
           fields: 'id, trashed',
         });
         if (response.result?.id && !response.result.trashed) {
           this.aioniaFolderId = response.result.id;
           return this.aioniaFolderId;
         }
+        console.log('Configured folder is trashed, creating new folder.');
       } catch (error) {
         console.log('Stored folder ID no longer accessible, creating new folder.', error);
       }
+      this.aioniaFolderId = null;
     }
 
     // Create a new folder with the fixed name
